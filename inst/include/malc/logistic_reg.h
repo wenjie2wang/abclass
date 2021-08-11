@@ -27,26 +27,31 @@ namespace Malc {
         arma::rowvec x_scale_;  // the column scale of x_
         // for regularized coordinate majorization descent
         arma::rowvec cmd_lowerbound_; // 1 by p
-        arma::mat coef0_;        // coef before rescaling: p by (k - 1)
+        // for one lambda
+        arma::mat coef0_;         // coef (not scaled for the origin x_)
+        arma::mat en_coef0_;      // (not scaled) elastic net estimates
 
     public:
+        // common
         arma::mat l1_penalty_factor_; // adaptive weights for lasso penalty
         double l1_lambda_max_;        // the "big enough" lambda => zero coef
+        double alpha_;
+        double pmin_ = 1e-5;
+        bool path = false;
+
         // for a sinle l1_lambda and l2_lambda
-        double alpha_;           // tuning parameter
+        double lambda_;
         double l1_lambda_;       // tuning parameter for lasso penalty
         double l2_lambda_;       // tuning parameter for ridge penalty
-        arma::mat coef_;         // coef (rescaled for origin x_)
-        arma::mat en_coef_;      // (rescaled) elastic net estimates
-        arma::mat pred_mat_;     // prediction matrix: n by k
-        arma::mat prob_mat_;     // class conditional probability matrix: n by k
-        double pmin_ = 1e-5;
-
+        // class conditional probability matrix: n by k
+        arma::mat coef_;
+        arma::mat prob_mat_;    // for coef_
+        arma::mat en_prob_mat_; // for en_coef_
         // for a lambda sequence
-        // arma::vec lambda_vec_;   // lambda sequence
-        // arma::mat coef_mat_;     // coef matrix (rescaled for origin x_)
-        // arma::mat en_coef_mat_;  // elastic net estimates
-        // arma::uvec coef_df_vec_; // coef df vector
+        arma::vec lambda_path_;   // lambda sequence
+        arma::cube coef_path_;
+        arma::cube prob_path_;
+        arma::cube en_prob_path_;
 
         // default constructor
         LogisticReg() {}
@@ -90,6 +95,8 @@ namespace Malc {
             }
             // set vertex matrix
             set_vertex_matrix(y_, k_);
+            // set the CMD lowerbound (which needs to be done only once)
+            set_cmd_lowerbound();
         }
         // prepare the vertex matrix for observed y {1, ..., k}
         inline void set_vertex_matrix(const arma::uvec& y,
@@ -103,29 +110,34 @@ namespace Malc {
             }
         }
         // transfer coef for standardized data to coef for non-standardized data
-        inline void rescale_coef()
+        inline arma::mat rescale_coef(const arma::mat& beta) const
         {
-            coef_ = coef0_;
+            arma::mat out { beta };
             if (standardize_) {
                 if (intercept_) {
                     // for each columns
                     for (size_t k { 0 }; k < km1_; ++k) {
-                        arma::vec coef_k { coef0_.col(k) };
-                        coef_(0, k) = coef0_(0, k) -
+                        arma::vec coef_k { beta.col(k) };
+                        out(0, k) = beta(0, k) -
                             arma::as_scalar((x_center_ / x_scale_) *
                                             coef_k.tail_rows(p0_));
-                        for (size_t l { 1 }; l < coef_k.n_elem; ++l) {
-                            coef_(l, k) = coef_k(l) / x_scale_(l - 1);
+                        for (size_t l { 1 }; l < p1_; ++l) {
+                            out(l, k) = coef_k(l) / x_scale_(l - 1);
                         }
                     }
                 } else {
                     for (size_t k { 0 }; k < km1_; ++k) {
                         for (size_t l { 0 }; l < p0_; ++l) {
-                            coef_(l, k) /= x_scale_(l);
+                            out(l, k) /= x_scale_(l);
                         }
                     }
                 }
             }
+            return out;
+        }
+        inline void rescale_coef()
+        {
+            coef_ = rescale_coef(coef0_);
         }
         // compute cov lowerbound used in regularied model
         inline void set_cmd_lowerbound()
@@ -135,7 +147,7 @@ namespace Malc {
         // objective function without regularization
         inline double objective0(const arma::vec& inner) const
         {
-            return arma::sum(1.0 / (1.0 + arma::exp(inner))) / n_obs_;
+            return arma::sum(arma::log(1.0 + arma::exp(- inner))) / n_obs_;
         }
         inline double regularization(const arma::mat& beta) const
         {
@@ -193,22 +205,27 @@ namespace Malc {
             }
             return out;
         }
-        // inner products
-        inline void compute_pred_mat()
-        {
-            arma::mat x_beta { x_ * coef0_ };
-            pred_mat_ = x_beta * vertex_.t();
-        }
         // class conditional probability
+        inline arma::mat compute_prob_mat(const arma::mat& beta) const
+        {
+            arma::mat out { x_ * beta };
+            out *= vertex_.t();
+            for (size_t j { 0 }; j < k_; ++j) {
+                out.col(j)  = 1 / loss_derivative(out.col(j));
+            }
+            arma::vec row_sums { arma::sum(out, 1) };
+            for (size_t j { 0 }; j < k_; ++j) {
+                out.col(j) /= row_sums;
+            }
+            return out;
+        }
         inline void compute_prob_mat()
         {
-            prob_mat_ = arma::zeros(n_obs_, k_);
-            for (size_t j { 0 }; j < k_; ++j) {
-                prob_mat_.col(j)  = 1 / loss_derivative(pred_mat_.col(j));
-            }
-            for (size_t i { 0 }; i < n_obs_; ++i) {
-                prob_mat_.row(i) /= arma::sum(prob_mat_.row(i));
-            }
+            prob_mat_ = compute_prob_mat(coef0_);
+        }
+        inline void compute_en_prob_mat()
+        {
+            en_prob_mat_ = compute_prob_mat(en_coef0_);
         }
         // run one cycle of coordinate descent over a given active set
         inline void run_one_active_cycle(arma::mat& beta,
@@ -234,8 +251,8 @@ namespace Malc {
                                          const bool verbose);
 
         // for a perticular lambda
-        inline void elastic_net(const double l1_lambda,
-                                const double l2_lambda,
+        inline void elastic_net(const double lambda,
+                                const double alpha,
                                 const arma::mat& l1_penalty_factor,
                                 const arma::mat& start,
                                 const unsigned int max_iter,
@@ -244,6 +261,17 @@ namespace Malc {
                                 const bool early_stop,
                                 const bool verbose);
 
+        // for a sequence of lambda's
+        inline void elastic_net_path(const arma::vec& lambda,
+                                     const double alpha,
+                                     const unsigned int nlambda,
+                                     const double lambda_min_ratio,
+                                     const arma::mat& l1_penalty_factor,
+                                     const unsigned int max_iter,
+                                     const double rel_tol,
+                                     const double pmin,
+                                     const bool early_stop,
+                                     const bool verbose);
 
     };                          // end of class
 
@@ -381,8 +409,8 @@ namespace Malc {
     // for particular lambda's
     // lambda_1 * factor * lasso + lambda_2 * ridge
     inline void LogisticReg::elastic_net(
-        const double l1_lambda,
-        const double l2_lambda,
+        const double lambda,
+        const double alpha,
         const arma::mat& l1_penalty_factor,
         const arma::mat& start,
         const unsigned int max_iter,
@@ -392,11 +420,17 @@ namespace Malc {
         const bool verbose
         )
     {
+        // check alpha
+        if ((alpha < 0) || (alpha > 1)) {
+            throw std::range_error("The 'alpha' must be between 0 and 1.");
+        }
+        alpha_ = alpha;
+        if ((pmin < 0) || (pmin > 1)) {
+            throw std::range_error("The 'pmin' must be between 0 and 1.");
+        }
         pmin_ = pmin;
-        l1_lambda_ = l1_lambda;
-        l2_lambda_ = l2_lambda;
-        // set the CMD lowerbound (which needs to be done only once)
-        set_cmd_lowerbound();
+        l1_lambda_ = lambda * alpha;
+        l2_lambda_ = 0.5 * lambda * (1 - alpha);
         // set penalty terms
         l1_penalty_factor_ = arma::ones(p0_, km1_);
         if (arma::size(l1_penalty_factor) == arma::size(l1_penalty_factor_)) {
@@ -426,14 +460,13 @@ namespace Malc {
                                  l1_lambda_max_, l2_lambda_, l1_penalty_factor_,
                                  false, max_iter, rel_tol, early_stop, verbose);
         }
-        coef0_ = beta;
-        rescale_coef();
-
         // early exit for lambda greater than lambda_max
-        if (l1_lambda >= l1_lambda_max_) {
-            en_coef_ = coef_;
-            compute_pred_mat();
-            compute_prob_mat();
+        if (l1_lambda_ >= l1_lambda_max_) {
+            coef0_ = beta;
+            en_coef0_ = beta;
+            // compute_prob_mat();
+            // en_prob_mat_ = prob_mat_;
+            rescale_coef();
             return;
         }
 
@@ -491,16 +524,160 @@ namespace Malc {
                 kkt_failed = false;
             }
         }
-        // compute elastic net estimates, then rescale them back
-        coef0_ = (1 + l2_lambda) * beta;
-        rescale_coef();
-        en_coef_ = coef_;
-        // overwrite the naive elastic net estimate
+        // compute elastic net estimates
         coef0_ = beta;
-        rescale_coef();
+        en_coef0_ = (1 + l2_lambda_) * coef0_;
         // compute probability matrix
-        compute_pred_mat();
         compute_prob_mat();
+        compute_en_prob_mat();
+        // rescale coef back
+        rescale_coef();
+    }
+
+    // for a sequence of lambda's
+    // lambda * (penalty_factor * alpha * lasso + (1 - alpha) / 2 * ridge)
+    inline void LogisticReg::elastic_net_path(
+        const arma::vec& lambda,
+        const double alpha,
+        const unsigned int nlambda,
+        const double lambda_min_ratio,
+        const arma::mat& l1_penalty_factor,
+        const unsigned int max_iter,
+        const double rel_tol,
+        const double pmin,
+        const bool early_stop,
+        const bool verbose
+        )
+    {
+        // check alpha
+        if ((alpha < 0) || (alpha > 1)) {
+            throw std::range_error("The 'alpha' must be between 0 and 1.");
+        }
+        alpha_ = alpha;
+        if ((pmin < 0) || (pmin > 1)) {
+            throw std::range_error("The 'pmin' must be between 0 and 1.");
+        }
+        pmin_ = pmin;
+        // set penalty terms
+        l1_penalty_factor_ = arma::ones(p0_, km1_);
+        if (arma::size(l1_penalty_factor) == arma::size(l1_penalty_factor_)) {
+            l1_penalty_factor_ = l1_penalty_factor * p0_ /
+                arma::accu(l1_penalty_factor);
+        }
+        // update penalty for intercept
+        if (intercept_) {
+            l1_penalty_factor_ = arma::join_vert(
+                arma::zeros<arma::rowvec>(km1_), l1_penalty_factor_);
+        }
+        // for one lambda
+        arma::vec one_inner { arma::zeros(n_obs_) };
+        arma::mat one_beta { arma::zeros(p1_, km1_) };
+        arma::mat one_grad_beta { arma::abs(gradient(one_inner)) },
+            one_strong_rhs { one_grad_beta };
+        // large enough lambda for all-zero coef (except intercept terms)
+        // excluding variable with zero penalty factor
+        arma::uvec active_l1_penalty { arma::find(l1_penalty_factor_ > 0) };
+        double lambda_max {
+            arma::max(one_grad_beta.elem(active_l1_penalty) /
+                      l1_penalty_factor_.elem(active_l1_penalty)) /
+            std::max(alpha, 1e-3)
+        };
+        // set up lambda sequence
+        if (lambda.empty()) {
+            double log_lambda_max { std::log(lambda_max) };
+            lambda_path_ = arma::exp(
+                arma::linspace(log_lambda_max,
+                               log_lambda_max + std::log(lambda_min_ratio),
+                               nlambda)
+                );
+        } else {
+            lambda_path_ = arma::reverse(arma::unique(lambda));
+        }
+        // initialize the estimate matrix
+        coef_path_ = arma::cube(p1_, km1_, lambda_path_.n_elem);
+        prob_path_ = arma::cube(n_obs_, k_, lambda_path_.n_elem);
+        en_prob_path_ = prob_path_;
+        // get the solution (intercepts) of l1_lambda_max for a warm start
+        arma::umat is_active_strong { arma::zeros<arma::umat>(p1_, km1_) };
+        if (intercept_) {
+            l1_lambda_max_ = lambda_max * alpha;
+            l2_lambda_ = 0.5 * lambda_max * (1 - alpha);
+            // only need to estimate intercept
+            is_active_strong.row(0) = arma::ones<arma::umat>(1, km1_);
+            run_cmd_active_cycle(one_beta, one_inner, is_active_strong,
+                                 l1_lambda_max_, l2_lambda_, l1_penalty_factor_,
+                                 false, max_iter, rel_tol, early_stop, verbose);
+        }
+        // optim with varying active set when p > n
+        bool varying_active_set { false };
+        if (p1_ > n_obs_ || p1_ > 50) {
+            varying_active_set = true;
+        }
+        double old_l1_lambda { l1_lambda_ };
+        // main loop: for each lambda
+        for (size_t li { 0 }; li < lambda_path_.n_elem; ++li) {
+            lambda_ = lambda_path_(li);
+            l1_lambda_ = lambda_ * alpha;
+            l2_lambda_ = 0.5 * lambda_ * (1 - alpha);
+            // early exit for lambda greater than lambda_max
+            if (l1_lambda_ >= l1_lambda_max_) {
+                coef_path_.slice(li) = rescale_coef(one_beta);
+                prob_path_.slice(li) = compute_prob_mat(one_beta);
+                en_prob_path_.slice(li) = prob_path_.slice(li);
+                continue;
+            }
+            // update active set by strong rule
+            one_grad_beta = arma::abs(gradient(one_inner));
+            one_strong_rhs = (2 * l1_lambda_ - old_l1_lambda) *
+                l1_penalty_factor_;
+            for (size_t j { 0 }; j < km1_; ++j) {
+                for (size_t l { int_intercept_ }; l < p1_; ++l) {
+                    if (one_grad_beta(l, j) >= one_strong_rhs(l, j)) {
+                        is_active_strong(l, j) = 1;
+                    } else {
+                        one_beta(l, j) = 0;
+                    }
+                }
+            }
+            arma::umat is_active_strong_new { is_active_strong };
+            bool kkt_failed { true };
+            one_strong_rhs = l1_lambda_ * l1_penalty_factor_;
+            // eventually, strong rule will guess correctly
+            while (kkt_failed) {
+                // update beta
+                run_cmd_active_cycle(one_beta, one_inner, is_active_strong,
+                                     l1_lambda_, l2_lambda_,
+                                     l1_penalty_factor_, varying_active_set,
+                                     max_iter, rel_tol, early_stop, verbose);
+                // check kkt condition
+                for (size_t j { 0 }; j < km1_; ++j) {
+                    for (size_t l { int_intercept_ }; l < p1_; ++l) {
+                        if (is_active_strong(l, j)) {
+                            continue;
+                        }
+                        if (std::abs(cmd_gradient(one_inner, l, j)) >
+                            one_strong_rhs(l, j)) {
+                            // update active set
+                            is_active_strong_new(l, j) = 1;
+                        }
+                    }
+                }
+                if (l1_norm(is_active_strong - is_active_strong_new)) {
+                    is_active_strong = is_active_strong_new;
+                } else {
+                    kkt_failed = false;
+                }
+            }
+            // compute elastic net estimates
+            coef0_ = one_beta;
+            en_coef0_ = (1 + l2_lambda_) * one_beta;
+            coef_path_.slice(li) = rescale_coef(coef0_);
+            // compute probability matrix
+            prob_path_.slice(li) = compute_prob_mat(coef0_);
+            en_prob_path_.slice(li) = compute_prob_mat(en_coef0_);
+        }
+
+
     }
 
 }  // Malc
