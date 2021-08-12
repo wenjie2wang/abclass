@@ -206,9 +206,10 @@ namespace Malc {
             return out;
         }
         // class conditional probability
-        inline arma::mat compute_prob_mat(const arma::mat& beta) const
+        inline arma::mat compute_prob_mat(const arma::mat& beta,
+                                          const arma::mat& x) const
         {
-            arma::mat out { x_ * beta };
+            arma::mat out { x * beta };
             out *= vertex_.t();
             for (size_t j { 0 }; j < k_; ++j) {
                 out.col(j)  = 1 / loss_derivative(out.col(j));
@@ -219,14 +220,43 @@ namespace Malc {
             }
             return out;
         }
-        inline void compute_prob_mat()
+        inline arma::mat compute_prob_mat(const arma::mat& beta) const
+        {
+            return compute_prob_mat(beta, x_);
+        }
+        inline void set_prob_mat()
         {
             prob_mat_ = compute_prob_mat(coef0_);
         }
-        inline void compute_en_prob_mat()
+        inline void set_en_prob_mat()
         {
             en_prob_mat_ = compute_prob_mat(en_coef0_);
         }
+
+        // predict categories for the training set
+        inline arma::uvec predict_cat(const arma::mat& prob_mat) const
+        {
+            return arma::index_max(prob_mat, 1) + 1;
+        }
+        inline double precision(const arma::mat& beta,
+                                const arma::mat& x,
+                                const arma::uvec& y) const
+        {
+            arma::mat prob_mat { compute_prob_mat(beta, x) };
+            arma::uvec max_idx { predict_cat(prob_mat) };
+            return static_cast<double>(arma::sum(max_idx == y)) / y.n_elem;
+        }
+        inline double precision() const
+        {
+            arma::uvec max_idx { predict_cat(prob_mat_) };
+            return static_cast<double>(arma::sum(max_idx == y_)) / y_.n_elem;
+        }
+        inline double en_precision() const
+        {
+            arma::uvec max_idx { predict_cat(en_prob_mat_) };
+            return static_cast<double>(arma::sum(max_idx == y_)) / y_.n_elem;
+        }
+
         // run one cycle of coordinate descent over a given active set
         inline void run_one_active_cycle(arma::mat& beta,
                                          arma::vec& inner,
@@ -272,6 +302,9 @@ namespace Malc {
                                      const double pmin,
                                      const bool early_stop,
                                      const bool verbose);
+
+        // for a sequence of lambda's with cross-validation
+        inline void cv_elastic_net();
 
     };                          // end of class
 
@@ -464,8 +497,8 @@ namespace Malc {
         if (l1_lambda_ >= l1_lambda_max_) {
             coef0_ = beta;
             en_coef0_ = beta;
-            // compute_prob_mat();
-            // en_prob_mat_ = prob_mat_;
+            set_prob_mat();
+            en_prob_mat_ = prob_mat_;
             rescale_coef();
             return;
         }
@@ -528,8 +561,8 @@ namespace Malc {
         coef0_ = beta;
         en_coef0_ = (1 + l2_lambda_) * coef0_;
         // compute probability matrix
-        compute_prob_mat();
-        compute_en_prob_mat();
+        set_prob_mat();
+        set_en_prob_mat();
         // rescale coef back
         rescale_coef();
     }
@@ -630,6 +663,7 @@ namespace Malc {
             one_grad_beta = arma::abs(gradient(one_inner));
             one_strong_rhs = (2 * l1_lambda_ - old_l1_lambda) *
                 l1_penalty_factor_;
+            old_l1_lambda = l1_lambda_;
             for (size_t j { 0 }; j < km1_; ++j) {
                 for (size_t l { int_intercept_ }; l < p1_; ++l) {
                     if (one_grad_beta(l, j) >= one_strong_rhs(l, j)) {
