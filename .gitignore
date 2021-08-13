@@ -5,5 +5,9 @@
 *~
 .Rhistory
 .clang_complete
+GPATH
+GRTAGS
+GTAGS
+TAGS
 reference
 working
