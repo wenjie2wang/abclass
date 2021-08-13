@@ -1,8 +1,11 @@
 #ifndef LOGISTIC_REG_H
 #define LOGISTIC_REG_H
 
+#include <vector>
 #include <RcppArmadillo.h>
+#include "cross-validation.h"
 #include "utils.h"
+
 
 namespace Malc {
 
@@ -304,7 +307,18 @@ namespace Malc {
                                      const bool verbose);
 
         // for a sequence of lambda's with cross-validation
-        inline void cv_elastic_net();
+        inline void cv_elastic_net(const arma::vec& lambda,
+                                   const double alpha,
+                                   const unsigned int nlambda,
+                                   const double lambda_min_ratio,
+                                   const arma::mat& l1_penalty_factor,
+                                   const unsigned int n_folds,
+                                   const bool stratified,
+                                   const unsigned int max_iter,
+                                   const double rel_tol,
+                                   const double pmin,
+                                   const bool early_stop,
+                                   const bool verbose);
 
     };                          // end of class
 
@@ -710,9 +724,30 @@ namespace Malc {
             prob_path_.slice(li) = compute_prob_mat(coef0_);
             en_prob_path_.slice(li) = compute_prob_mat(en_coef0_);
         }
+    }
 
+    // cross-validation
+    inline void LogisticReg::cv_elastic_net(
+        const arma::vec& lambda,
+        const double alpha,
+        const unsigned int nlambda,
+        const double lambda_min_ratio,
+        const arma::mat& l1_penalty_factor,
+        const unsigned int n_folds,
+        const bool stratified,
+        const unsigned int max_iter,
+        const double rel_tol,
+        const double pmin,
+        const bool early_stop,
+        const bool verbose
+        )
+    {
+        std::vector<arma::uvec> train_idx, test_idx;
 
     }
+
+
+
 
 }  // Malc
 

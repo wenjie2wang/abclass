@@ -1,6 +1,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#include <vector>
 #include <RcppArmadillo.h>
 #include "simplex.h"
 
@@ -112,6 +113,29 @@ namespace Malc {
         }
     }
 
+    // set difference for vector a and vector b
+    template <typename T, template <typename> class ARMA_VEC_TYPE>
+    inline ARMA_VEC_TYPE<T> vec_diff(const ARMA_VEC_TYPE<T>& a,
+                                     const ARMA_VEC_TYPE<T>& b)
+    {
+        std::vector<T> res;
+        ARMA_VEC_TYPE<T> s_a { arma::sort(a) };
+        ARMA_VEC_TYPE<T> s_b { arma::sort(b) };
+        std::set_difference(s_a.begin(), s_a.end(),
+                            s_b.begin(), s_b.end(),
+                            std::inserter(res, res.begin()));
+        return arma::sort(arma::conv_to<ARMA_VEC_TYPE<T>>::from(res));
+    }
+
+    template <typename T>
+    inline T join_vectors(const std::vector<T>& x)
+    {
+        T out { x.at(0) };
+        for (size_t i { 1 }; i < x.size(); ++i) {
+            out = arma::join_cols(out, x.at(i));
+        }
+        return out;
+    }
 
 }  // Malc
 
