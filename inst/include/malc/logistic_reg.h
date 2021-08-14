@@ -3,9 +3,8 @@
 
 #include <vector>
 #include <RcppArmadillo.h>
-#include "cross-validation.h"
 #include "utils.h"
-
+#include "cross-validation.h"
 
 namespace Malc {
 
@@ -40,7 +39,7 @@ namespace Malc {
         double l1_lambda_max_;        // the "big enough" lambda => zero coef
         double alpha_;
         double pmin_ = 1e-5;
-        bool path = false;
+        bool path_ = true;
 
         // for a sinle l1_lambda and l2_lambda
         double lambda_;
@@ -49,12 +48,18 @@ namespace Malc {
         // class conditional probability matrix: n by k
         arma::mat coef_;
         arma::mat prob_mat_;    // for coef_
+        arma::mat en_coef_;
         arma::mat en_prob_mat_; // for en_coef_
         // for a lambda sequence
         arma::vec lambda_path_;   // lambda sequence
         arma::cube coef_path_;
         arma::cube prob_path_;
+        arma::mat cv_miss_number_;
+        arma::mat cv_precision_;
+        arma::cube en_coef_path_;
         arma::cube en_prob_path_;
+        arma::mat cv_en_miss_number_;
+        arma::mat cv_en_precision_;
 
         // default constructor
         LogisticReg() {}
@@ -141,6 +146,7 @@ namespace Malc {
         inline void rescale_coef()
         {
             coef_ = rescale_coef(coef0_);
+            en_coef_ = rescale_coef(en_coef0_);
         }
         // compute cov lowerbound used in regularied model
         inline void set_cmd_lowerbound()
@@ -241,6 +247,16 @@ namespace Malc {
         {
             return arma::index_max(prob_mat, 1) + 1;
         }
+        // number of incorrect classification
+        inline unsigned int miss_number(const arma::mat& beta,
+                                        const arma::mat& x,
+                                        const arma::uvec& y) const
+        {
+            arma::mat prob_mat { compute_prob_mat(beta, x) };
+            arma::uvec max_idx { predict_cat(prob_mat) };
+            return static_cast<double>(arma::sum(max_idx != y));
+        }
+        // precision
         inline double precision(const arma::mat& beta,
                                 const arma::mat& x,
                                 const arma::uvec& y) const
@@ -300,25 +316,13 @@ namespace Malc {
                                      const unsigned int nlambda,
                                      const double lambda_min_ratio,
                                      const arma::mat& l1_penalty_factor,
+                                     const unsigned int nfolds,
+                                     const bool stratified,
                                      const unsigned int max_iter,
                                      const double rel_tol,
                                      const double pmin,
                                      const bool early_stop,
                                      const bool verbose);
-
-        // for a sequence of lambda's with cross-validation
-        inline void cv_elastic_net(const arma::vec& lambda,
-                                   const double alpha,
-                                   const unsigned int nlambda,
-                                   const double lambda_min_ratio,
-                                   const arma::mat& l1_penalty_factor,
-                                   const unsigned int n_folds,
-                                   const bool stratified,
-                                   const unsigned int max_iter,
-                                   const double rel_tol,
-                                   const double pmin,
-                                   const bool early_stop,
-                                   const bool verbose);
 
     };                          // end of class
 
@@ -574,6 +578,7 @@ namespace Malc {
         // compute elastic net estimates
         coef0_ = beta;
         en_coef0_ = (1 + l2_lambda_) * coef0_;
+        en_coef0_(0) = coef0_(0);   // for intercept
         // compute probability matrix
         set_prob_mat();
         set_en_prob_mat();
@@ -589,6 +594,8 @@ namespace Malc {
         const unsigned int nlambda,
         const double lambda_min_ratio,
         const arma::mat& l1_penalty_factor,
+        const unsigned int nfolds,
+        const bool stratified,
         const unsigned int max_iter,
         const double rel_tol,
         const double pmin,
@@ -629,6 +636,8 @@ namespace Malc {
                       l1_penalty_factor_.elem(active_l1_penalty)) /
             std::max(alpha, 1e-3)
         };
+        l1_lambda_max_ = lambda_max * alpha;
+        l2_lambda_ = 0.5 * lambda_max * (1 - alpha);
         // set up lambda sequence
         if (lambda.empty()) {
             double log_lambda_max { std::log(lambda_max) };
@@ -642,13 +651,12 @@ namespace Malc {
         }
         // initialize the estimate matrix
         coef_path_ = arma::cube(p1_, km1_, lambda_path_.n_elem);
+        en_coef_path_ = coef_path_;
         prob_path_ = arma::cube(n_obs_, k_, lambda_path_.n_elem);
         en_prob_path_ = prob_path_;
         // get the solution (intercepts) of l1_lambda_max for a warm start
         arma::umat is_active_strong { arma::zeros<arma::umat>(p1_, km1_) };
         if (intercept_) {
-            l1_lambda_max_ = lambda_max * alpha;
-            l2_lambda_ = 0.5 * lambda_max * (1 - alpha);
             // only need to estimate intercept
             is_active_strong.row(0) = arma::ones<arma::umat>(1, km1_);
             run_cmd_active_cycle(one_beta, one_inner, is_active_strong,
@@ -660,7 +668,7 @@ namespace Malc {
         if (p1_ > n_obs_ || p1_ > 50) {
             varying_active_set = true;
         }
-        double old_l1_lambda { l1_lambda_ };
+        double old_l1_lambda { l1_lambda_max_ };
         // main loop: for each lambda
         for (size_t li { 0 }; li < lambda_path_.n_elem; ++li) {
             lambda_ = lambda_path_(li);
@@ -669,6 +677,7 @@ namespace Malc {
             // early exit for lambda greater than lambda_max
             if (l1_lambda_ >= l1_lambda_max_) {
                 coef_path_.slice(li) = rescale_coef(one_beta);
+                en_coef_path_.slice(li) = coef_path_.slice(li);
                 prob_path_.slice(li) = compute_prob_mat(one_beta);
                 en_prob_path_.slice(li) = prob_path_.slice(li);
                 continue;
@@ -719,31 +728,49 @@ namespace Malc {
             // compute elastic net estimates
             coef0_ = one_beta;
             en_coef0_ = (1 + l2_lambda_) * one_beta;
+            en_coef0_(0) = one_beta(0);
             coef_path_.slice(li) = rescale_coef(coef0_);
+            en_coef_path_.slice(li) = rescale_coef(en_coef0_);
             // compute probability matrix
             prob_path_.slice(li) = compute_prob_mat(coef0_);
             en_prob_path_.slice(li) = compute_prob_mat(en_coef0_);
         }
-    }
-
-    // cross-validation
-    inline void LogisticReg::cv_elastic_net(
-        const arma::vec& lambda,
-        const double alpha,
-        const unsigned int nlambda,
-        const double lambda_min_ratio,
-        const arma::mat& l1_penalty_factor,
-        const unsigned int n_folds,
-        const bool stratified,
-        const unsigned int max_iter,
-        const double rel_tol,
-        const double pmin,
-        const bool early_stop,
-        const bool verbose
-        )
-    {
-        std::vector<arma::uvec> train_idx, test_idx;
-
+        // cross-validation
+        if (nfolds > 0) {
+            cv_miss_number_ = cv_en_miss_number_ =
+                cv_precision_ = cv_en_precision_ =
+                arma::zeros(lambda_path_.n_elem, nfolds);
+            arma::uvec strata;
+            if (stratified) {
+                strata = y_ - 1;
+            }
+            CrossValidation cv_obj { n_obs_, nfolds, strata };
+            for (size_t i { 0 }; i < nfolds; ++i) {
+                arma::mat train_x { x_.rows(cv_obj.train_index_.at(i)) };
+                if (intercept_) {
+                    train_x = train_x.tail_cols(p0_);
+                }
+                arma::uvec train_y { y_.rows(cv_obj.train_index_.at(i)) };
+                arma::mat test_x { x_.rows(cv_obj.test_index_.at(i)) };
+                arma::uvec test_y { y_.rows(cv_obj.test_index_.at(i)) };
+                LogisticReg reg_obj { train_x, train_y, intercept_, false };
+                reg_obj.elastic_net_path(lambda_path_, alpha,
+                                         nlambda, lambda_min_ratio,
+                                         l1_penalty_factor, 0, true,
+                                         max_iter, rel_tol, pmin,
+                                         early_stop, false);
+                for (size_t l { 0 }; l < lambda_path_.n_elem; ++l) {
+                    cv_miss_number_(l, i) = reg_obj.miss_number(
+                        reg_obj.coef_path_.slice(l), test_x, test_y);
+                    cv_en_miss_number_(l, i) = reg_obj.miss_number(
+                        reg_obj.en_coef_path_.slice(l), test_x, test_y);
+                    cv_precision_(l, i) = reg_obj.precision(
+                        reg_obj.coef_path_.slice(l), test_x, test_y);
+                    cv_en_precision_(l, i) = reg_obj.precision(
+                        reg_obj.en_coef_path_.slice(l), test_x, test_y);
+                }
+            }
+        }
     }
 
 
