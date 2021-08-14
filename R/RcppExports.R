@@ -5,8 +5,8 @@ rcpp_logistic_reg <- function(x, y, lambda, alpha, penalty_factor, start, interc
     .Call('_malc_rcpp_logistic_reg', PACKAGE = 'malc', x, y, lambda, alpha, penalty_factor, start, intercept, standardize, max_iter, rel_tol, pmin, early_stop, verbose)
 }
 
-rcpp_logistic_path <- function(x, y, lambda, alpha, nlambda, lambda_min_ratio, penalty_factor, intercept = TRUE, standardize = TRUE, max_iter = 200L, rel_tol = 1e-3, pmin = 1e-5, early_stop = FALSE, verbose = FALSE) {
-    .Call('_malc_rcpp_logistic_path', PACKAGE = 'malc', x, y, lambda, alpha, nlambda, lambda_min_ratio, penalty_factor, intercept, standardize, max_iter, rel_tol, pmin, early_stop, verbose)
+rcpp_logistic_path <- function(x, y, lambda, alpha, nlambda, lambda_min_ratio, penalty_factor, nfolds = 0L, stratified = TRUE, intercept = TRUE, standardize = TRUE, max_iter = 200L, rel_tol = 1e-3, pmin = 1e-5, early_stop = FALSE, verbose = FALSE) {
+    .Call('_malc_rcpp_logistic_path', PACKAGE = 'malc', x, y, lambda, alpha, nlambda, lambda_min_ratio, penalty_factor, nfolds, stratified, intercept, standardize, max_iter, rel_tol, pmin, early_stop, verbose)
 }
 
 rcpp_precision <- function(new_x, new_y, beta) {

@@ -29,6 +29,7 @@ Rcpp::List rcpp_logistic_reg(
     return Rcpp::List::create(
         Rcpp::Named("coefficients") = object.coef_,
         Rcpp::Named("class_prob") = object.prob_mat_,
+        Rcpp::Named("en_coefficients") = object.en_coef_,
         Rcpp::Named("en_class_prob") = object.en_prob_mat_,
         Rcpp::Named("training_precision") = Rcpp::NumericVector::create(
             Rcpp::Named("naive", train_acc),
@@ -55,6 +56,8 @@ Rcpp::List rcpp_logistic_path(
     const unsigned int nlambda,
     const double lambda_min_ratio,
     const arma::mat& penalty_factor,
+    const unsigned int nfolds = 0,
+    const bool stratified = true,
     const bool intercept = true,
     const bool standardize = true,
     const unsigned int max_iter = 200,
@@ -69,12 +72,13 @@ Rcpp::List rcpp_logistic_path(
     };
     // object.set_offset(offset);
     object.elastic_net_path(lambda, alpha, nlambda, lambda_min_ratio,
-                            penalty_factor, max_iter, rel_tol,
-                            pmin, early_stop, verbose);
+                            penalty_factor, nfolds, stratified,
+                            max_iter, rel_tol, pmin, early_stop, verbose);
     Rcpp::NumericVector lambda_vec { Malc::arma2rvec(object.lambda_path_) };
     return Rcpp::List::create(
         Rcpp::Named("coefficients") = object.coef_path_,
         Rcpp::Named("class_prob") = object.prob_path_,
+        Rcpp::Named("en_coefficients") = object.en_coef_path_,
         Rcpp::Named("en_class_prob") = object.en_prob_path_,
         Rcpp::Named("regularization") = Rcpp::List::create(
             Rcpp::Named("lambda") = lambda_vec,
@@ -83,6 +87,12 @@ Rcpp::List rcpp_logistic_path(
             Rcpp::Named("l2_lambda") = 0.5 * (1 - alpha) * lambda_vec,
             Rcpp::Named("l1_lambda_max") = object.l1_lambda_max_,
             Rcpp::Named("l1_penalty_factor") = object.l1_penalty_factor_
+            ),
+        Rcpp::Named("cross_validation") = Rcpp::List::create(
+            Rcpp::Named("miss_number") = object.cv_miss_number_,
+            Rcpp::Named("precision") = object.cv_precision_,
+            Rcpp::Named("en_miss_number") = object.cv_en_miss_number_,
+            Rcpp::Named("en_precision") = object.cv_en_precision_
             )
         );
 }
