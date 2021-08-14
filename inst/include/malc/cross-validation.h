@@ -9,15 +9,17 @@ namespace Malc {
 
     class CrossValidation {
     private:
+
+        typedef std::vector<arma::uvec> cv_index;
+        typedef std::vector<cv_index> cv_indices;
+
         unsigned long n_obs_;
         unsigned long n_folds_ = 10;
 
         // generate cross-validation indices
         // for given number of folds and number of observations
-        inline std::vector<arma::uvec> get_cv_test_index(
-            const unsigned long n_obs,
-            const unsigned long n_folds = 10
-            )
+        inline cv_index get_cv_test_index(const unsigned long n_obs,
+                                          const unsigned long n_folds) const
         {
             // number of observations must be at least two
             if (n_obs < 2) {
@@ -32,7 +34,7 @@ namespace Malc {
                     );
             }
             // define output
-            std::vector<arma::uvec> out;
+            cv_index out;
             // observation indices random permuted
             arma::uvec obs_idx { arma::randperm(n_obs) };
             // remaining number of observations
@@ -48,29 +50,63 @@ namespace Malc {
             return out;
         }
 
-    public:
-        std::vector<arma::uvec> train_index;
-        std::vector<arma::uvec> test_index;
-
-        // default constructor
-        CrossValidation();
-
-        // major constructor
-        CrossValidation(const unsigned long n_obs,
-                        const unsigned long n_folds) :
-            n_obs_ { n_obs },
-            n_folds_ { n_folds }
+        // random split
+        inline cv_indices split(const long n_obs,
+                                const long n_folds) const
         {
-            test_index = get_cv_test_index(n_obs_, n_folds_);
+            cv_index test_idx, train_idx;
+            test_idx = get_cv_test_index(n_obs, n_folds);
             arma::uvec all_index {
                 arma::regspace<arma::uvec>(0, n_obs - 1)
             };
             for (size_t i {0}; i < n_folds_; ++i) {
-                train_index.push_back(
-                    vec_diff(all_index, test_index.at(i))
+                train_idx.push_back(
+                    vec_diff(all_index, test_idx.at(i))
                     );
             }
+            return { train_idx, test_idx };
         }
+
+        // strata takes values from {0, ..., k}
+        inline cv_indices stratified_split(const arma::uvec& strata,
+                                           const unsigned long n_folds) const
+        {
+            const unsigned int n_strata { arma::max(strata) + 1 };
+            // for the first strata
+            arma::uvec k_idx { arma::find(strata == 0) };
+            unsigned int n_k { k_idx.n_elem };
+            cv_indices tmp_cv { split(n_k, n_folds) };
+            cv_index train_index, test_index;
+            for (size_t ii { 0 }; ii < n_folds; ++ii) {
+                train_index.push_back(k_idx.elem(tmp_cv.at(0).at(ii)));
+                test_index.push_back(k_idx.elem(tmp_cv.at(1).at(ii)));
+            }
+            // for the remaining strata
+            for (size_t j { 1 }; j < n_strata; ++j) {
+                k_idx = arma::find(strata == j);
+                n_k = k_idx.n_elem;
+                tmp_cv = split(n_k, n_folds);
+                for (size_t ii { 0 }; ii < n_folds; ++ii) {
+                    train_index.at(ii) = arma::join_cols(
+                        train_index.at(ii),
+                        k_idx.elem(tmp_cv.at(0).at(ii))
+                        );
+                    test_index.at(ii) = arma::join_cols(
+                        test_index.at(ii),
+                        k_idx.elem(tmp_cv.at(0).at(ii))
+                        );
+                }
+            }
+            cv_indices out { train_index, test_index };
+            return out;
+        }
+
+    public:
+        cv_index train_index_;
+        cv_index test_index_;
+
+        // default constructor
+        CrossValidation();
 
         // explicit constructor
         explicit CrossValidation(const unsigned long n_obs) :
@@ -79,38 +115,23 @@ namespace Malc {
             CrossValidation(n_obs_, 10);
         }
 
-        // strata takes values from {0, ..., k}
+        // major constructor
         CrossValidation(const unsigned long n_obs,
                         const unsigned long n_folds,
-                        const arma::uvec& strata) :
+                        const arma::uvec& strata = arma::uvec()) :
             n_obs_ { n_obs },
             n_folds_ { n_folds }
         {
-            const unsigned int n_strata { arma::max(strata) + 1 };
-            // for the first strata
-            arma::uvec k_idx { arma::find(strata == 0) };
-            unsigned int n_k { k_idx.n_elem };
-            CrossValidation cv_obj { n_k, n_folds };
-            for (size_t ii { 0 }; ii < n_folds; ++ii) {
-                train_index.push_back(k_idx.elem(cv_obj.train_index.at(ii)));
-                test_index.push_back(k_idx.elem(cv_obj.test_index.at(ii)));
+            const bool stratified { ! strata.empty() };
+            cv_indices res;
+            if (stratified) {
+                res = stratified_split(strata, n_folds);
+            } else {
+                res = split(n_obs, n_folds);
             }
-            // for the remaining strata
-            for (size_t j { 1 }; j < n_strata; ++j) {
-                k_idx = arma::find(strata == j);
-                n_k = k_idx.n_elem;
-                cv_obj = CrossValidation(n_k, n_folds);
-                for (size_t ii { 0 }; ii < n_folds; ++ii) {
-                    train_index.at(ii) = arma::join_cols(
-                        train_index.at(ii),
-                        k_idx.elem(cv_obj.train_index.at(ii))
-                        );
-                    test_index.at(ii) = arma::join_cols(
-                        test_index.at(ii),
-                        k_idx.elem(cv_obj.test_index.at(ii))
-                        );
-                }
-            }
+            train_index_ = res.at(0);
+            test_index_ = res.at(1);
+
         }
 
         // helper function
