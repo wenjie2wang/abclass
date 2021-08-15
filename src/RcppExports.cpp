@@ -61,16 +61,39 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// rcpp_precision
-Rcpp::List rcpp_precision(const arma::mat& new_x, const arma::uvec& new_y, const arma::mat& beta);
-RcppExport SEXP _malc_rcpp_precision(SEXP new_xSEXP, SEXP new_ySEXP, SEXP betaSEXP) {
+// rcpp_prob_mat
+arma::mat rcpp_prob_mat(const arma::mat& beta, const arma::mat& x);
+RcppExport SEXP _malc_rcpp_prob_mat(SEXP betaSEXP, SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(rcpp_prob_mat(beta, x));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rcpp_predict_cat
+arma::uvec rcpp_predict_cat(const arma::mat& prob_mat);
+RcppExport SEXP _malc_rcpp_predict_cat(SEXP prob_matSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type prob_mat(prob_matSEXP);
+    rcpp_result_gen = Rcpp::wrap(rcpp_predict_cat(prob_mat));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rcpp_accuracy
+Rcpp::List rcpp_accuracy(const arma::mat& new_x, const arma::uvec& new_y, const arma::mat& beta);
+RcppExport SEXP _malc_rcpp_accuracy(SEXP new_xSEXP, SEXP new_ySEXP, SEXP betaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::mat& >::type new_x(new_xSEXP);
     Rcpp::traits::input_parameter< const arma::uvec& >::type new_y(new_ySEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type beta(betaSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpp_precision(new_x, new_y, beta));
+    rcpp_result_gen = Rcpp::wrap(rcpp_accuracy(new_x, new_y, beta));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -78,7 +101,9 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_malc_rcpp_logistic_reg", (DL_FUNC) &_malc_rcpp_logistic_reg, 13},
     {"_malc_rcpp_logistic_path", (DL_FUNC) &_malc_rcpp_logistic_path, 16},
-    {"_malc_rcpp_precision", (DL_FUNC) &_malc_rcpp_precision, 3},
+    {"_malc_rcpp_prob_mat", (DL_FUNC) &_malc_rcpp_prob_mat, 2},
+    {"_malc_rcpp_predict_cat", (DL_FUNC) &_malc_rcpp_predict_cat, 1},
+    {"_malc_rcpp_accuracy", (DL_FUNC) &_malc_rcpp_accuracy, 3},
     {NULL, NULL, 0}
 };
 

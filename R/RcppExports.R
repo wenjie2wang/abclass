@@ -9,7 +9,15 @@ rcpp_logistic_path <- function(x, y, lambda, alpha, nlambda, lambda_min_ratio, p
     .Call('_malc_rcpp_logistic_path', PACKAGE = 'malc', x, y, lambda, alpha, nlambda, lambda_min_ratio, penalty_factor, nfolds, stratified, intercept, standardize, max_iter, rel_tol, pmin, early_stop, verbose)
 }
 
-rcpp_precision <- function(new_x, new_y, beta) {
-    .Call('_malc_rcpp_precision', PACKAGE = 'malc', new_x, new_y, beta)
+rcpp_prob_mat <- function(beta, x) {
+    .Call('_malc_rcpp_prob_mat', PACKAGE = 'malc', beta, x)
+}
+
+rcpp_predict_cat <- function(prob_mat) {
+    .Call('_malc_rcpp_predict_cat', PACKAGE = 'malc', prob_mat)
+}
+
+rcpp_accuracy <- function(new_x, new_y, beta) {
+    .Call('_malc_rcpp_accuracy', PACKAGE = 'malc', new_x, new_y, beta)
 }
 

@@ -1,3 +1,4 @@
+#include <cmath>
 #include <RcppArmadillo.h>
 #include <malc.h>
 
@@ -97,11 +98,12 @@ Rcpp::List rcpp_logistic_path(
         );
 }
 
-arma::vec loss_derivative(const arma::vec& u)
+arma::vec logistic_derivative(const arma::vec& u)
 {
     return - 1.0 / (1.0 + arma::exp(u));
 }
 
+// [[Rcpp::export]]
 arma::mat rcpp_prob_mat(const arma::mat& beta,
                         const arma::mat& x)
 {
@@ -111,7 +113,7 @@ arma::mat rcpp_prob_mat(const arma::mat& beta,
     arma::mat vertex { sim.get_vertex() };
     out *= vertex.t();
     for (size_t j { 0 }; j < k; ++j) {
-        out.col(j)  = 1 / loss_derivative(out.col(j));
+        out.col(j)  = 1 / logistic_derivative(out.col(j));
     }
     arma::vec row_sums { arma::sum(out, 1) };
     for (size_t j { 0 }; j < k; ++j) {
@@ -120,6 +122,7 @@ arma::mat rcpp_prob_mat(const arma::mat& beta,
     return out;
 }
 
+// [[Rcpp::export]]
 arma::uvec rcpp_predict_cat(const arma::mat& prob_mat)
 {
     return arma::index_max(prob_mat, 1) + 1;
@@ -132,9 +135,12 @@ Rcpp::List rcpp_accuracy(const arma::mat& new_x,
 {
     arma::mat prob_mat { rcpp_prob_mat(beta, new_x) };
     arma::uvec max_idx { rcpp_predict_cat(prob_mat) };
-    double acc {
-        static_cast<double>(arma::sum(max_idx == new_y)) / new_y.n_elem
-    };
+    double acc;
+    if (new_y.empty()) {
+        acc = std::nan("1");
+    } else {
+        acc = static_cast<double>(arma::sum(max_idx == new_y)) / new_y.n_elem;
+    }
     return Rcpp::List::create(
         Rcpp::Named("class_prob", prob_mat),
         Rcpp::Named("predicted", max_idx),

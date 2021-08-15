@@ -27,7 +27,6 @@ malc_logistic <- function(x, y, lambda, alpha = 1, penalty_factor = NULL,
     )
     ## post-process
     fit$category <- cat_y
-    fit$category$y <- NULL
     fit$call <- Call
     fit$intercept <- intercept
     fit$control <- list(
@@ -82,7 +81,6 @@ malc_logistic_path <- function(x, y, lambda = NULL, alpha = 1, nlambda = 100,
     )
     ## post-process
     fit$category <- cat_y
-    fit$category$y <- NULL
     fit$call <- Call
     fit$intercept <- intercept
     fit$control <- list(
