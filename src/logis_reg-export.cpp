@@ -24,14 +24,14 @@ Rcpp::List rcpp_logistic_reg(
     };
     object.elastic_net(lambda, alpha, penalty_factor,
                        start, max_iter, rel_tol, pmin, early_stop, verbose);
-    double train_acc { object.precision() };
-    double train_en_acc { object.en_precision() };
+    double train_acc { object.accuracy() };
+    double train_en_acc { object.en_accuracy() };
     return Rcpp::List::create(
         Rcpp::Named("coefficients") = object.coef_,
         Rcpp::Named("class_prob") = object.prob_mat_,
         Rcpp::Named("en_coefficients") = object.en_coef_,
         Rcpp::Named("en_class_prob") = object.en_prob_mat_,
-        Rcpp::Named("training_precision") = Rcpp::NumericVector::create(
+        Rcpp::Named("training_accuracy") = Rcpp::NumericVector::create(
             Rcpp::Named("naive", train_acc),
             Rcpp::Named("en", train_en_acc)
             ),
@@ -90,9 +90,9 @@ Rcpp::List rcpp_logistic_path(
             ),
         Rcpp::Named("cross_validation") = Rcpp::List::create(
             Rcpp::Named("miss_number") = object.cv_miss_number_,
-            Rcpp::Named("precision") = object.cv_precision_,
+            Rcpp::Named("accuracy") = object.cv_accuracy_,
             Rcpp::Named("en_miss_number") = object.cv_en_miss_number_,
-            Rcpp::Named("en_precision") = object.cv_en_precision_
+            Rcpp::Named("en_accuracy") = object.cv_en_accuracy_
             )
         );
 }
@@ -126,7 +126,7 @@ arma::uvec rcpp_predict_cat(const arma::mat& prob_mat)
 }
 
 // [[Rcpp::export]]
-Rcpp::List rcpp_precision(const arma::mat& new_x,
+Rcpp::List rcpp_accuracy(const arma::mat& new_x,
                           const arma::uvec& new_y,
                           const arma::mat& beta)
 {
@@ -138,6 +138,6 @@ Rcpp::List rcpp_precision(const arma::mat& new_x,
     return Rcpp::List::create(
         Rcpp::Named("class_prob", prob_mat),
         Rcpp::Named("predicted", max_idx),
-        Rcpp::Named("precision", acc)
+        Rcpp::Named("accuracy", acc)
         );
 }

@@ -55,11 +55,11 @@ namespace Malc {
         arma::cube coef_path_;
         arma::cube prob_path_;
         arma::mat cv_miss_number_;
-        arma::mat cv_precision_;
+        arma::mat cv_accuracy_;
         arma::cube en_coef_path_;
         arma::cube en_prob_path_;
         arma::mat cv_en_miss_number_;
-        arma::mat cv_en_precision_;
+        arma::mat cv_en_accuracy_;
 
         // default constructor
         LogisticReg() {}
@@ -256,8 +256,8 @@ namespace Malc {
             arma::uvec max_idx { predict_cat(prob_mat) };
             return static_cast<double>(arma::sum(max_idx != y));
         }
-        // precision
-        inline double precision(const arma::mat& beta,
+        // accuracy
+        inline double accuracy(const arma::mat& beta,
                                 const arma::mat& x,
                                 const arma::uvec& y) const
         {
@@ -265,12 +265,12 @@ namespace Malc {
             arma::uvec max_idx { predict_cat(prob_mat) };
             return static_cast<double>(arma::sum(max_idx == y)) / y.n_elem;
         }
-        inline double precision() const
+        inline double accuracy() const
         {
             arma::uvec max_idx { predict_cat(prob_mat_) };
             return static_cast<double>(arma::sum(max_idx == y_)) / y_.n_elem;
         }
-        inline double en_precision() const
+        inline double en_accuracy() const
         {
             arma::uvec max_idx { predict_cat(en_prob_mat_) };
             return static_cast<double>(arma::sum(max_idx == y_)) / y_.n_elem;
@@ -738,7 +738,7 @@ namespace Malc {
         // cross-validation
         if (nfolds > 0) {
             cv_miss_number_ = cv_en_miss_number_ =
-                cv_precision_ = cv_en_precision_ =
+                cv_accuracy_ = cv_en_accuracy_ =
                 arma::zeros(lambda_path_.n_elem, nfolds);
             arma::uvec strata;
             if (stratified) {
@@ -764,9 +764,9 @@ namespace Malc {
                         reg_obj.coef_path_.slice(l), test_x, test_y);
                     cv_en_miss_number_(l, i) = reg_obj.miss_number(
                         reg_obj.en_coef_path_.slice(l), test_x, test_y);
-                    cv_precision_(l, i) = reg_obj.precision(
+                    cv_accuracy_(l, i) = reg_obj.accuracy(
                         reg_obj.coef_path_.slice(l), test_x, test_y);
-                    cv_en_precision_(l, i) = reg_obj.precision(
+                    cv_en_accuracy_(l, i) = reg_obj.accuracy(
                         reg_obj.en_coef_path_.slice(l), test_x, test_y);
                 }
             }
