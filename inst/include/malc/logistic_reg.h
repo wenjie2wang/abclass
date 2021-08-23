@@ -1,5 +1,5 @@
-#ifndef LOGISTIC_REG_H
-#define LOGISTIC_REG_H
+#ifndef MALC_LOGISTIC_REG_H
+#define MALC_LOGISTIC_REG_H
 
 #include <vector>
 #include <RcppArmadillo.h>
@@ -19,6 +19,7 @@ namespace Malc {
         unsigned int p1_;       // number of predictors (with intercept)
         arma::mat x_;           // (standardized) x_: n by p (with intercept)
         arma::uvec y_;          // y vector ranging in {1, ..., k}
+        arma::vec obs_weight_;  // optional observation weights: of length n
         arma::mat vertex_;      // unique vertex: k by (k - 1)
         arma::mat vertex_mat_;  // vertex matrix: n by (k - 1)
         // arma::mat offset_;      // offset term: n by (k - 1)
@@ -69,7 +70,8 @@ namespace Malc {
         LogisticReg(const arma::mat& x,
                     const arma::uvec& y,
                     const bool intercept = true,
-                    const bool standardize = true) :
+                    const bool standardize = true,
+                    const arma::vec& weight = arma::vec()) :
             x_ (x),
             y_ (y),
             intercept_ (intercept),
@@ -81,6 +83,11 @@ namespace Malc {
             n_obs_ = x_.n_rows;
             p0_ = x_.n_cols;
             p1_ = p0_ + int_intercept_;
+            if (weight.n_elem != n_obs_) {
+                obs_weight_ = arma::ones(n_obs_);
+            } else {
+                obs_weight_ = weight / arma::sum(weight) * n_obs_;
+            }
             if (standardize_) {
                 if (intercept_) {
                     x_center_ = arma::mean(x_);
@@ -151,7 +158,9 @@ namespace Malc {
         // compute cov lowerbound used in regularied model
         inline void set_cmd_lowerbound()
         {
-            cmd_lowerbound_ = arma::sum(arma::square(x_), 0) / (4 * x_.n_rows);
+            arma::mat sqx { arma::square(x_) };
+            sqx.each_col() %= obs_weight_;
+            cmd_lowerbound_ = arma::sum(sqx, 0) / (4 * n_obs_);
         }
         // objective function without regularization
         inline double objective0(const arma::vec& inner) const
@@ -199,7 +208,7 @@ namespace Malc {
                 } else if (p_est > 1 - pmin_) {
                     p_est = 1 - pmin_;
                 }
-                out += vertex_mat_(i, j) * x_(i, l) * p_est;
+                out += obs_weight_(i) * vertex_mat_(i, j) * x_(i, l) * p_est;
             }
             return - out / n_obs_;
         }
@@ -323,6 +332,12 @@ namespace Malc {
                                      const double pmin,
                                      const bool early_stop,
                                      const bool verbose);
+
+        // getters
+        inline arma::vec get_weight() const
+        {
+            return obs_weight_;
+        }
 
     };                          // end of class
 
@@ -773,9 +788,6 @@ namespace Malc {
         }
     }
 
-
-
-
 }  // Malc
 
-#endif /* LOGISTIC_REG_H */
+#endif /* MALC_LOGISTIC_REG_H */

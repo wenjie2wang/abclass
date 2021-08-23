@@ -11,6 +11,7 @@ Rcpp::List rcpp_logistic_reg(
     const double alpha,
     const arma::mat& penalty_factor,
     const arma::mat& start,
+    const arma::vec& weight,
     const bool intercept = true,
     const bool standardize = true,
     const unsigned int max_iter = 200,
@@ -21,7 +22,7 @@ Rcpp::List rcpp_logistic_reg(
     )
 {
     Malc::LogisticReg object {
-        x, y, intercept, standardize
+        x, y, intercept, standardize, weight
     };
     object.elastic_net(lambda, alpha, penalty_factor,
                        start, max_iter, rel_tol, pmin, early_stop, verbose);
@@ -32,6 +33,7 @@ Rcpp::List rcpp_logistic_reg(
         Rcpp::Named("class_prob") = object.prob_mat_,
         Rcpp::Named("en_coefficients") = object.en_coef_,
         Rcpp::Named("en_class_prob") = object.en_prob_mat_,
+        Rcpp::Named("weight") = object.get_weight(),
         Rcpp::Named("training_accuracy") = Rcpp::NumericVector::create(
             Rcpp::Named("naive", train_acc),
             Rcpp::Named("en", train_en_acc)
@@ -57,6 +59,7 @@ Rcpp::List rcpp_logistic_path(
     const unsigned int nlambda,
     const double lambda_min_ratio,
     const arma::mat& penalty_factor,
+    const arma::vec& weight,
     const unsigned int nfolds = 0,
     const bool stratified = true,
     const bool intercept = true,
@@ -69,7 +72,7 @@ Rcpp::List rcpp_logistic_path(
     )
 {
     Malc::LogisticReg object {
-        x, y, intercept, standardize
+        x, y, intercept, standardize, weight
     };
     // object.set_offset(offset);
     object.elastic_net_path(lambda, alpha, nlambda, lambda_min_ratio,
@@ -81,6 +84,7 @@ Rcpp::List rcpp_logistic_path(
         Rcpp::Named("class_prob") = object.prob_path_,
         Rcpp::Named("en_coefficients") = object.en_coef_path_,
         Rcpp::Named("en_class_prob") = object.en_prob_path_,
+        Rcpp::Named("weight") = object.get_weight(),
         Rcpp::Named("regularization") = Rcpp::List::create(
             Rcpp::Named("lambda") = lambda_vec,
             Rcpp::Named("alpha") = alpha,
