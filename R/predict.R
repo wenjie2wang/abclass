@@ -1,27 +1,25 @@
 ##' @importFrom stats predict
-predict.malc_logistic_path <- function(object, newx = NULL, newy = NULL, ...)
+predict.malc_logistic_path <- function(object, newx, newy = NULL, ...)
 {
     n_slice <- dim(object$coefficients)[3L]
-    ## return results for the training set
-    if (is.null(newx)) {
-        out <- lapply(seq_len(n_slice), function(i) {
-                       tmp <- rcpp_predict_cat(object$class_prob[, , i])
-                       list(
-                           class_prob = object$class_prob[, , i],
-                           predicted = tmp,
-                           accuracy = mean(tmp == object$category$y)
-                       )
-                   })
-        return(out)
+    if (missing(newx)) {
+        stop("The 'newx' must be specified.")
     }
-    ## else
     if (! is.matrix(newx)) {
         newx <- as.matrix(newx)
     }
     if (object$intercept) {
         newx <- cbind(1, newx)
     }
-    newy <- null2num0(newy)
+    newy <- if (! is.null(newy)) {
+                char_y <- as.character(newy)
+                all_y_cat <- unique(c(object$category$label,
+                                      sort(unique(char_y))))
+                factor_y <- factor(char_y, level = all_y_cat)
+                as.integer(factor_y)
+            } else {
+                null2num0(newy)
+            }
     lapply(seq_len(n_slice), function(i) {
         tmp <- rcpp_accuracy(newx, newy, object$coefficients[, , i])
         if (is.nan(tmp$accuracy)) tmp$accuracy <- NA_real_
