@@ -32,7 +32,7 @@ namespace Malc {
         arma::rowvec cmd_lowerbound_; // 1 by p
         // for one lambda
         arma::mat coef0_;         // coef (not scaled for the origin x_)
-        arma::mat en_coef0_;      // (not scaled) elastic net estimates
+        // arma::mat en_coef0_;      // (not scaled) elastic net estimates
 
     public:
         // common
@@ -48,17 +48,17 @@ namespace Malc {
         double l2_lambda_;       // tuning parameter for ridge penalty
         // class conditional probability matrix: n by k
         arma::mat coef_;
-        arma::mat prob_mat_;    // for coef_
-        arma::mat en_coef_;
-        arma::mat en_prob_mat_; // for en_coef_
+        // arma::mat prob_mat_;    // for coef_
+        // arma::mat en_coef_;
+        // arma::mat en_prob_mat_; // for en_coef_
         // for a lambda sequence
         arma::vec lambda_path_;   // lambda sequence
         arma::cube coef_path_;
-        arma::cube prob_path_;
+        // arma::cube prob_path_;
         arma::mat cv_miss_number_;
         arma::mat cv_accuracy_;
-        arma::cube en_coef_path_;
-        arma::cube en_prob_path_;
+        // arma::cube en_coef_path_;
+        // arma::cube en_prob_path_;
         arma::mat cv_en_miss_number_;
         arma::mat cv_en_accuracy_;
 
@@ -153,7 +153,7 @@ namespace Malc {
         inline void rescale_coef()
         {
             coef_ = rescale_coef(coef0_);
-            en_coef_ = rescale_coef(en_coef0_);
+            // en_coef_ = rescale_coef(en_coef0_);
         }
         // compute cov lowerbound used in regularied model
         inline void set_cmd_lowerbound()
@@ -242,14 +242,14 @@ namespace Malc {
         {
             return compute_prob_mat(beta, x_);
         }
-        inline void set_prob_mat()
-        {
-            prob_mat_ = compute_prob_mat(coef0_);
-        }
-        inline void set_en_prob_mat()
-        {
-            en_prob_mat_ = compute_prob_mat(en_coef0_);
-        }
+        // inline void set_prob_mat()
+        // {
+        //     prob_mat_ = compute_prob_mat(coef0_);
+        // }
+        // inline void set_en_prob_mat()
+        // {
+        //     en_prob_mat_ = compute_prob_mat(en_coef0_);
+        // }
 
         // predict categories for the training set
         inline arma::uvec predict_cat(const arma::mat& prob_mat) const
@@ -274,16 +274,16 @@ namespace Malc {
             arma::uvec max_idx { predict_cat(prob_mat) };
             return static_cast<double>(arma::sum(max_idx == y)) / y.n_elem;
         }
-        inline double accuracy() const
-        {
-            arma::uvec max_idx { predict_cat(prob_mat_) };
-            return static_cast<double>(arma::sum(max_idx == y_)) / y_.n_elem;
-        }
-        inline double en_accuracy() const
-        {
-            arma::uvec max_idx { predict_cat(en_prob_mat_) };
-            return static_cast<double>(arma::sum(max_idx == y_)) / y_.n_elem;
-        }
+        // inline double accuracy() const
+        // {
+        //     arma::uvec max_idx { predict_cat(prob_mat_) };
+        //     return static_cast<double>(arma::sum(max_idx == y_)) / y_.n_elem;
+        // }
+        // inline double en_accuracy() const
+        // {
+        //     arma::uvec max_idx { predict_cat(en_prob_mat_) };
+        //     return static_cast<double>(arma::sum(max_idx == y_)) / y_.n_elem;
+        // }
 
         // run one cycle of coordinate descent over a given active set
         inline void run_one_active_cycle(arma::mat& beta,
@@ -529,9 +529,9 @@ namespace Malc {
         // early exit for lambda greater than lambda_max
         if (l1_lambda_ >= l1_lambda_max_) {
             coef0_ = beta;
-            en_coef0_ = beta;
-            set_prob_mat();
-            en_prob_mat_ = prob_mat_;
+            // en_coef0_ = beta;
+            // set_prob_mat();
+            // en_prob_mat_ = prob_mat_;
             rescale_coef();
             return;
         }
@@ -592,11 +592,13 @@ namespace Malc {
         }
         // compute elastic net estimates
         coef0_ = beta;
-        en_coef0_ = (1 + l2_lambda_) * coef0_;
-        en_coef0_(0) = coef0_(0);   // for intercept
-        // compute probability matrix
-        set_prob_mat();
-        set_en_prob_mat();
+        // en_coef0_ = (1 + l2_lambda_) * coef0_;
+        // en_coef0_(0) = coef0_(0);   // for intercept
+
+        // compute probability matrix, disable now
+        // set_prob_mat();
+        // set_en_prob_mat();
+
         // rescale coef back
         rescale_coef();
     }
@@ -666,9 +668,9 @@ namespace Malc {
         }
         // initialize the estimate matrix
         coef_path_ = arma::cube(p1_, km1_, lambda_path_.n_elem);
-        en_coef_path_ = coef_path_;
-        prob_path_ = arma::cube(n_obs_, k_, lambda_path_.n_elem);
-        en_prob_path_ = prob_path_;
+        // en_coef_path_ = coef_path_;
+        // prob_path_ = arma::cube(n_obs_, k_, lambda_path_.n_elem);
+        // en_prob_path_ = prob_path_;
         // get the solution (intercepts) of l1_lambda_max for a warm start
         arma::umat is_active_strong { arma::zeros<arma::umat>(p1_, km1_) };
         if (intercept_) {
@@ -692,9 +694,9 @@ namespace Malc {
             // early exit for lambda greater than lambda_max
             if (l1_lambda_ >= l1_lambda_max_) {
                 coef_path_.slice(li) = rescale_coef(one_beta);
-                en_coef_path_.slice(li) = coef_path_.slice(li);
-                prob_path_.slice(li) = compute_prob_mat(one_beta);
-                en_prob_path_.slice(li) = prob_path_.slice(li);
+                // en_coef_path_.slice(li) = coef_path_.slice(li);
+                // prob_path_.slice(li) = compute_prob_mat(one_beta);
+                // en_prob_path_.slice(li) = prob_path_.slice(li);
                 continue;
             }
             // update active set by strong rule
@@ -742,13 +744,13 @@ namespace Malc {
             }
             // compute elastic net estimates
             coef0_ = one_beta;
-            en_coef0_ = (1 + l2_lambda_) * one_beta;
-            en_coef0_(0) = one_beta(0);
+            // en_coef0_ = (1 + l2_lambda_) * one_beta;
+            // en_coef0_(0) = one_beta(0);
             coef_path_.slice(li) = rescale_coef(coef0_);
-            en_coef_path_.slice(li) = rescale_coef(en_coef0_);
+            // en_coef_path_.slice(li) = rescale_coef(en_coef0_);
             // compute probability matrix
-            prob_path_.slice(li) = compute_prob_mat(coef0_);
-            en_prob_path_.slice(li) = compute_prob_mat(en_coef0_);
+            // prob_path_.slice(li) = compute_prob_mat(coef0_);
+            // en_prob_path_.slice(li) = compute_prob_mat(en_coef0_);
         }
         // cross-validation
         if (nfolds > 0) {
@@ -777,12 +779,12 @@ namespace Malc {
                 for (size_t l { 0 }; l < lambda_path_.n_elem; ++l) {
                     cv_miss_number_(l, i) = reg_obj.miss_number(
                         reg_obj.coef_path_.slice(l), test_x, test_y);
-                    cv_en_miss_number_(l, i) = reg_obj.miss_number(
-                        reg_obj.en_coef_path_.slice(l), test_x, test_y);
+                    // cv_en_miss_number_(l, i) = reg_obj.miss_number(
+                    //     reg_obj.en_coef_path_.slice(l), test_x, test_y);
                     cv_accuracy_(l, i) = reg_obj.accuracy(
                         reg_obj.coef_path_.slice(l), test_x, test_y);
-                    cv_en_accuracy_(l, i) = reg_obj.accuracy(
-                        reg_obj.en_coef_path_.slice(l), test_x, test_y);
+                    // cv_en_accuracy_(l, i) = reg_obj.accuracy(
+                    //     reg_obj.en_coef_path_.slice(l), test_x, test_y);
                 }
             }
         }
