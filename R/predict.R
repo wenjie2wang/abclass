@@ -15,7 +15,7 @@ predict.malc_logistic_path <- function(object, newx, newy = NULL, ...)
                 char_y <- as.character(newy)
                 all_y_cat <- unique(c(object$category$label,
                                       sort(unique(char_y))))
-                factor_y <- factor(char_y, level = all_y_cat)
+                factor_y <- factor(char_y, levels = all_y_cat)
                 as.integer(factor_y)
             } else {
                 null2num0(newy)
