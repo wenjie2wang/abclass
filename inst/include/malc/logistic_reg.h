@@ -36,7 +36,6 @@ namespace Malc {
 
     public:
         // common
-        arma::mat l1_penalty_factor_; // adaptive weights for lasso penalty
         double l1_lambda_max_;        // the "big enough" lambda => zero coef
         double alpha_;
         double pmin_ = 1e-5;
@@ -171,13 +170,10 @@ namespace Malc {
         {
             if (intercept_) {
                 arma::mat beta0int { beta.tail_rows(p0_) };
-                return l1_lambda_ *
-                    arma::accu(beta0int %
-                               arma::abs(l1_penalty_factor_.tail_rows(p0_))) +
+                return l1_lambda_ * arma::accu(beta0int) +
                     l2_lambda_ * arma::accu(arma::square(beta0int));
             }
-            return l1_lambda_ *
-                arma::accu(arma::abs(l1_penalty_factor_ % beta)) +
+            return l1_lambda_ * arma::accu(arma::abs(beta)) +
                 l2_lambda_ * arma::accu(arma::square(beta));
         }
         // objective function with regularization
@@ -267,8 +263,8 @@ namespace Malc {
         }
         // accuracy
         inline double accuracy(const arma::mat& beta,
-                                const arma::mat& x,
-                                const arma::uvec& y) const
+                               const arma::mat& x,
+                               const arma::uvec& y) const
         {
             arma::mat prob_mat { compute_prob_mat(beta, x) };
             arma::uvec max_idx { predict_cat(prob_mat) };
@@ -291,7 +287,6 @@ namespace Malc {
                                          arma::umat& is_active,
                                          const double l1_lambda,
                                          const double l2_lambda,
-                                         const arma::mat& l1_penalty_factor,
                                          const bool update_active,
                                          const bool early_stop,
                                          const bool verbose);
@@ -301,7 +296,6 @@ namespace Malc {
                                          arma::umat& is_active,
                                          const double l1_lambda,
                                          const double l2_lambda,
-                                         const arma::mat& l1_penatly_factor,
                                          const bool varying_active_set,
                                          const unsigned int max_iter,
                                          const double rel_tol,
@@ -311,7 +305,6 @@ namespace Malc {
         // for a perticular lambda
         inline void elastic_net(const double lambda,
                                 const double alpha,
-                                const arma::mat& l1_penalty_factor,
                                 const arma::mat& start,
                                 const unsigned int max_iter,
                                 const double rel_tol,
@@ -324,7 +317,6 @@ namespace Malc {
                                      const double alpha,
                                      const unsigned int nlambda,
                                      const double lambda_min_ratio,
-                                     const arma::mat& l1_penalty_factor,
                                      const unsigned int nfolds,
                                      const bool stratified,
                                      const unsigned int max_iter,
@@ -347,7 +339,6 @@ namespace Malc {
         arma::umat& is_active,
         const double l1_lambda,
         const double l2_lambda,
-        const arma::mat& l1_penalty_factor,
         const bool update_active = false,
         const bool early_stop = false,
         const bool verbose = false
@@ -367,10 +358,9 @@ namespace Malc {
                     double tmp { beta(l, j) };
                     // update beta
                     beta(l, j) = soft_threshold(
-                        cmd_lowerbound_(l) * beta(l, j) - dlj,
-                        l1_penalty_factor(l, j) * l1_lambda
+                        cmd_lowerbound_(l) * beta(l, j) - dlj, l1_lambda
                         ) / (cmd_lowerbound_(l) + 2 * l2_lambda *
-                             static_cast<double>(l >= int_intercept_));
+                                      static_cast<double>(l >= int_intercept_));
                     inner += (beta(l, j) - tmp) *
                         (x_.col(l) % vertex_mat_.col(j));
                     if (update_active) {
@@ -413,7 +403,6 @@ namespace Malc {
         arma::umat& is_active,
         const double l1_lambda,
         const double l2_lambda,
-        const arma::mat& l1_penalty_factor,
         const bool varying_active_set,
         const unsigned int max_iter,
         const double rel_tol = false,
@@ -433,8 +422,7 @@ namespace Malc {
                 // cycles over the active set
                 while (ii < max_iter) {
                     run_one_active_cycle(beta, inner, is_active_stored,
-                                         l1_lambda, l2_lambda,
-                                         l1_penalty_factor, true,
+                                         l1_lambda, l2_lambda, true,
                                          early_stop, verbose);
                     if (rel_l1_norm(beta, beta0) < rel_tol) {
                         break;
@@ -444,8 +432,7 @@ namespace Malc {
                 }
                 // run a full cycle over the converged beta
                 run_one_active_cycle(beta, inner, is_active_new,
-                                     l1_lambda, l2_lambda,
-                                     l1_penalty_factor, true,
+                                     l1_lambda, l2_lambda, true,
                                      early_stop, verbose);
                 // check two active sets coincide
                 if (l1_norm(is_active_new - is_active_stored)) {
@@ -460,8 +447,7 @@ namespace Malc {
             // regular coordinate descent
             while (i < max_iter) {
                 run_one_active_cycle(beta, inner, is_active_stored,
-                                     l1_lambda, l2_lambda,
-                                     l1_penalty_factor, false,
+                                     l1_lambda, l2_lambda, false,
                                      early_stop, verbose);
                 if (rel_l1_norm(beta, beta0) < rel_tol) {
                     break;
@@ -473,11 +459,10 @@ namespace Malc {
     }
 
     // for particular lambda's
-    // lambda_1 * factor * lasso + lambda_2 * ridge
+    // lambda_1 * lasso + lambda_2 * ridge
     inline void LogisticReg::elastic_net(
         const double lambda,
         const double alpha,
-        const arma::mat& l1_penalty_factor,
         const arma::mat& start,
         const unsigned int max_iter,
         const double rel_tol,
@@ -497,33 +482,21 @@ namespace Malc {
         pmin_ = pmin;
         l1_lambda_ = lambda * alpha;
         l2_lambda_ = 0.5 * lambda * (1 - alpha);
-        // set penalty terms
-        l1_penalty_factor_ = arma::ones(p0_, km1_);
-        if (arma::size(l1_penalty_factor) == arma::size(l1_penalty_factor_)) {
-            l1_penalty_factor_ = l1_penalty_factor * p0_ /
-                arma::accu(l1_penalty_factor);
-        }
         arma::vec inner { arma::zeros(n_obs_) };
         arma::mat beta { arma::zeros(p1_, km1_) };
         arma::mat grad_zero { arma::abs(gradient(inner)) };
         arma::mat grad_beta { grad_zero }, strong_rhs { grad_beta };
         // large enough lambda for all-zero coef (except intercept terms)
         // excluding variable with zero penalty factor
-        arma::uvec active_l1_penalty { arma::find(l1_penalty_factor_ > 0) };
         grad_zero = grad_zero.tail_rows(p0_);
-        l1_lambda_max_ = arma::max(grad_zero.elem(active_l1_penalty) /
-                                   l1_penalty_factor_.elem(active_l1_penalty));
-        if (intercept_) {
-            l1_penalty_factor_ = arma::join_vert(
-                arma::zeros<arma::rowvec>(km1_), l1_penalty_factor_);
-        }
+        l1_lambda_max_ = arma::max(arma::conv_to<arma::vec>::from(grad_zero));
         // get the solution (intercepts) of l1_lambda_max for a warm start
         arma::umat is_active_strong { arma::zeros<arma::umat>(p1_, km1_) };
         if (intercept_) {
             // only need to estimate intercept
             is_active_strong.row(0) = arma::ones<arma::umat>(1, km1_);
             run_cmd_active_cycle(beta, inner, is_active_strong,
-                                 l1_lambda_max_, l2_lambda_, l1_penalty_factor_,
+                                 l1_lambda_max_, l2_lambda_,
                                  false, max_iter, rel_tol, early_stop, verbose);
         }
         // early exit for lambda greater than lambda_max
@@ -543,7 +516,7 @@ namespace Malc {
 
         // update active set by strong rule
         grad_beta = arma::abs(gradient(inner));
-        strong_rhs = (2 * l1_lambda_ - l1_lambda_max_) * l1_penalty_factor_;
+        strong_rhs = (2 * l1_lambda_ - l1_lambda_max_);
 
         for (size_t j { 0 }; j < km1_; ++j) {
             for (size_t l { int_intercept_ }; l < p1_; ++l) {
@@ -563,12 +536,12 @@ namespace Malc {
         }
 
         bool kkt_failed { true };
-        strong_rhs = l1_lambda_ * l1_penalty_factor_;
+        strong_rhs = l1_lambda_;
         // eventually, strong rule will guess correctly
         while (kkt_failed) {
             // update beta
             run_cmd_active_cycle(beta, inner, is_active_strong,
-                                 l1_lambda_, l2_lambda_, l1_penalty_factor_,
+                                 l1_lambda_, l2_lambda_,
                                  varying_active_set,
                                  max_iter, rel_tol, early_stop, verbose);
             // check kkt condition
@@ -604,13 +577,12 @@ namespace Malc {
     }
 
     // for a sequence of lambda's
-    // lambda * (penalty_factor * alpha * lasso + (1 - alpha) / 2 * ridge)
+    // lambda * (alpha * lasso + (1 - alpha) / 2 * ridge)
     inline void LogisticReg::elastic_net_path(
         const arma::vec& lambda,
         const double alpha,
         const unsigned int nlambda,
         const double lambda_min_ratio,
-        const arma::mat& l1_penalty_factor,
         const unsigned int nfolds,
         const bool stratified,
         const unsigned int max_iter,
@@ -629,29 +601,15 @@ namespace Malc {
             throw std::range_error("The 'pmin' must be between 0 and 1.");
         }
         pmin_ = pmin;
-        // set penalty terms
-        l1_penalty_factor_ = arma::ones(p0_, km1_);
-        if (arma::size(l1_penalty_factor) == arma::size(l1_penalty_factor_)) {
-            l1_penalty_factor_ = l1_penalty_factor * p0_ /
-                arma::accu(l1_penalty_factor);
-        }
-        // update penalty for intercept
-        if (intercept_) {
-            l1_penalty_factor_ = arma::join_vert(
-                arma::zeros<arma::rowvec>(km1_), l1_penalty_factor_);
-        }
         // for one lambda
         arma::vec one_inner { arma::zeros(n_obs_) };
         arma::mat one_beta { arma::zeros(p1_, km1_) };
         arma::mat one_grad_beta { arma::abs(gradient(one_inner)) },
             one_strong_rhs { one_grad_beta };
         // large enough lambda for all-zero coef (except intercept terms)
-        // excluding variable with zero penalty factor
-        arma::uvec active_l1_penalty { arma::find(l1_penalty_factor_ > 0) };
         double lambda_max {
-            arma::max(one_grad_beta.elem(active_l1_penalty) /
-                      l1_penalty_factor_.elem(active_l1_penalty)) /
-            std::max(alpha, 1e-3)
+            arma::max(arma::conv_to<arma::vec>::from(one_grad_beta)) /
+            std::max(alpha, 1e-2)
         };
         l1_lambda_max_ = lambda_max * alpha;
         l2_lambda_ = 0.5 * lambda_max * (1 - alpha);
@@ -677,7 +635,7 @@ namespace Malc {
             // only need to estimate intercept
             is_active_strong.row(0) = arma::ones<arma::umat>(1, km1_);
             run_cmd_active_cycle(one_beta, one_inner, is_active_strong,
-                                 l1_lambda_max_, l2_lambda_, l1_penalty_factor_,
+                                 l1_lambda_max_, l2_lambda_,
                                  false, max_iter, rel_tol, early_stop, verbose);
         }
         // optim with varying active set when p > n
@@ -701,8 +659,7 @@ namespace Malc {
             }
             // update active set by strong rule
             one_grad_beta = arma::abs(gradient(one_inner));
-            one_strong_rhs = (2 * l1_lambda_ - old_l1_lambda) *
-                l1_penalty_factor_;
+            one_strong_rhs = (2 * l1_lambda_ - old_l1_lambda);
             old_l1_lambda = l1_lambda_;
             for (size_t j { 0 }; j < km1_; ++j) {
                 for (size_t l { int_intercept_ }; l < p1_; ++l) {
@@ -715,13 +672,13 @@ namespace Malc {
             }
             arma::umat is_active_strong_new { is_active_strong };
             bool kkt_failed { true };
-            one_strong_rhs = l1_lambda_ * l1_penalty_factor_;
+            one_strong_rhs = l1_lambda_;
             // eventually, strong rule will guess correctly
             while (kkt_failed) {
                 // update beta
                 run_cmd_active_cycle(one_beta, one_inner, is_active_strong,
                                      l1_lambda_, l2_lambda_,
-                                     l1_penalty_factor_, varying_active_set,
+                                     varying_active_set,
                                      max_iter, rel_tol, early_stop, verbose);
                 // check kkt condition
                 for (size_t j { 0 }; j < km1_; ++j) {
@@ -773,7 +730,7 @@ namespace Malc {
                 LogisticReg reg_obj { train_x, train_y, intercept_, false };
                 reg_obj.elastic_net_path(lambda_path_, alpha,
                                          nlambda, lambda_min_ratio,
-                                         l1_penalty_factor, 0, true,
+                                         0, true,
                                          max_iter, rel_tol, pmin,
                                          early_stop, false);
                 for (size_t l { 0 }; l < lambda_path_.n_elem; ++l) {

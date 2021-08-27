@@ -1,6 +1,6 @@
 Package: malc
 Title: Multi-Category Angle-Based Large-Margin Classifiers
-Version: 0.1.0.9001
+Version: 0.1.0.9002
 Authors@R: c(
     person(given = "Wenjie", family = "Wang",
            email = "wang@wwenjie.org",
@@ -16,8 +16,6 @@ Imports:
 LinkingTo:
     Rcpp,
     RcppArmadillo
-Suggests:
-    tinytest
 License: GPL (>= 3)
 URL: https://github.com/wenjie2wang/malc
 BugReports: https://github.com/wenjie2wang/malc/issues

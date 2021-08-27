@@ -13,8 +13,8 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // rcpp_logistic_reg
-Rcpp::List rcpp_logistic_reg(const arma::mat& x, const arma::uvec& y, const double lambda, const double alpha, const arma::mat& penalty_factor, const arma::mat& start, const arma::vec& weight, const bool intercept, const bool standardize, const unsigned int max_iter, const double rel_tol, const double pmin, const bool early_stop, const bool verbose);
-RcppExport SEXP _malc_rcpp_logistic_reg(SEXP xSEXP, SEXP ySEXP, SEXP lambdaSEXP, SEXP alphaSEXP, SEXP penalty_factorSEXP, SEXP startSEXP, SEXP weightSEXP, SEXP interceptSEXP, SEXP standardizeSEXP, SEXP max_iterSEXP, SEXP rel_tolSEXP, SEXP pminSEXP, SEXP early_stopSEXP, SEXP verboseSEXP) {
+Rcpp::List rcpp_logistic_reg(const arma::mat& x, const arma::uvec& y, const double lambda, const double alpha, const arma::mat& start, const arma::vec& weight, const bool intercept, const bool standardize, const unsigned int max_iter, const double rel_tol, const double pmin, const bool early_stop, const bool verbose);
+RcppExport SEXP _malc_rcpp_logistic_reg(SEXP xSEXP, SEXP ySEXP, SEXP lambdaSEXP, SEXP alphaSEXP, SEXP startSEXP, SEXP weightSEXP, SEXP interceptSEXP, SEXP standardizeSEXP, SEXP max_iterSEXP, SEXP rel_tolSEXP, SEXP pminSEXP, SEXP early_stopSEXP, SEXP verboseSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -22,7 +22,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::uvec& >::type y(ySEXP);
     Rcpp::traits::input_parameter< const double >::type lambda(lambdaSEXP);
     Rcpp::traits::input_parameter< const double >::type alpha(alphaSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type penalty_factor(penalty_factorSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type start(startSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type weight(weightSEXP);
     Rcpp::traits::input_parameter< const bool >::type intercept(interceptSEXP);
@@ -32,13 +31,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const double >::type pmin(pminSEXP);
     Rcpp::traits::input_parameter< const bool >::type early_stop(early_stopSEXP);
     Rcpp::traits::input_parameter< const bool >::type verbose(verboseSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpp_logistic_reg(x, y, lambda, alpha, penalty_factor, start, weight, intercept, standardize, max_iter, rel_tol, pmin, early_stop, verbose));
+    rcpp_result_gen = Rcpp::wrap(rcpp_logistic_reg(x, y, lambda, alpha, start, weight, intercept, standardize, max_iter, rel_tol, pmin, early_stop, verbose));
     return rcpp_result_gen;
 END_RCPP
 }
 // rcpp_logistic_path
-Rcpp::List rcpp_logistic_path(const arma::mat& x, const arma::uvec& y, const arma::vec& lambda, const double alpha, const unsigned int nlambda, const double lambda_min_ratio, const arma::mat& penalty_factor, const arma::vec& weight, const unsigned int nfolds, const bool stratified, const bool intercept, const bool standardize, const unsigned int max_iter, const double rel_tol, const double pmin, const bool early_stop, const bool verbose);
-RcppExport SEXP _malc_rcpp_logistic_path(SEXP xSEXP, SEXP ySEXP, SEXP lambdaSEXP, SEXP alphaSEXP, SEXP nlambdaSEXP, SEXP lambda_min_ratioSEXP, SEXP penalty_factorSEXP, SEXP weightSEXP, SEXP nfoldsSEXP, SEXP stratifiedSEXP, SEXP interceptSEXP, SEXP standardizeSEXP, SEXP max_iterSEXP, SEXP rel_tolSEXP, SEXP pminSEXP, SEXP early_stopSEXP, SEXP verboseSEXP) {
+Rcpp::List rcpp_logistic_path(const arma::mat& x, const arma::uvec& y, const arma::vec& lambda, const double alpha, const unsigned int nlambda, const double lambda_min_ratio, const arma::vec& weight, const unsigned int nfolds, const bool stratified, const bool intercept, const bool standardize, const unsigned int max_iter, const double rel_tol, const double pmin, const bool early_stop, const bool verbose);
+RcppExport SEXP _malc_rcpp_logistic_path(SEXP xSEXP, SEXP ySEXP, SEXP lambdaSEXP, SEXP alphaSEXP, SEXP nlambdaSEXP, SEXP lambda_min_ratioSEXP, SEXP weightSEXP, SEXP nfoldsSEXP, SEXP stratifiedSEXP, SEXP interceptSEXP, SEXP standardizeSEXP, SEXP max_iterSEXP, SEXP rel_tolSEXP, SEXP pminSEXP, SEXP early_stopSEXP, SEXP verboseSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -48,7 +47,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const double >::type alpha(alphaSEXP);
     Rcpp::traits::input_parameter< const unsigned int >::type nlambda(nlambdaSEXP);
     Rcpp::traits::input_parameter< const double >::type lambda_min_ratio(lambda_min_ratioSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type penalty_factor(penalty_factorSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type weight(weightSEXP);
     Rcpp::traits::input_parameter< const unsigned int >::type nfolds(nfoldsSEXP);
     Rcpp::traits::input_parameter< const bool >::type stratified(stratifiedSEXP);
@@ -59,7 +57,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const double >::type pmin(pminSEXP);
     Rcpp::traits::input_parameter< const bool >::type early_stop(early_stopSEXP);
     Rcpp::traits::input_parameter< const bool >::type verbose(verboseSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpp_logistic_path(x, y, lambda, alpha, nlambda, lambda_min_ratio, penalty_factor, weight, nfolds, stratified, intercept, standardize, max_iter, rel_tol, pmin, early_stop, verbose));
+    rcpp_result_gen = Rcpp::wrap(rcpp_logistic_path(x, y, lambda, alpha, nlambda, lambda_min_ratio, weight, nfolds, stratified, intercept, standardize, max_iter, rel_tol, pmin, early_stop, verbose));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -101,8 +99,8 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_malc_rcpp_logistic_reg", (DL_FUNC) &_malc_rcpp_logistic_reg, 14},
-    {"_malc_rcpp_logistic_path", (DL_FUNC) &_malc_rcpp_logistic_path, 17},
+    {"_malc_rcpp_logistic_reg", (DL_FUNC) &_malc_rcpp_logistic_reg, 13},
+    {"_malc_rcpp_logistic_path", (DL_FUNC) &_malc_rcpp_logistic_path, 16},
     {"_malc_rcpp_prob_mat", (DL_FUNC) &_malc_rcpp_prob_mat, 2},
     {"_malc_rcpp_predict_cat", (DL_FUNC) &_malc_rcpp_predict_cat, 1},
     {"_malc_rcpp_accuracy", (DL_FUNC) &_malc_rcpp_accuracy, 3},
