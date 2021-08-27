@@ -485,11 +485,11 @@ namespace Malc {
         arma::vec inner { arma::zeros(n_obs_) };
         arma::mat beta { arma::zeros(p1_, km1_) };
         arma::mat grad_zero { arma::abs(gradient(inner)) };
-        arma::mat grad_beta { grad_zero }, strong_rhs { grad_beta };
+        arma::mat grad_beta { grad_zero };
         // large enough lambda for all-zero coef (except intercept terms)
         // excluding variable with zero penalty factor
         grad_zero = grad_zero.tail_rows(p0_);
-        l1_lambda_max_ = arma::max(arma::conv_to<arma::vec>::from(grad_zero));
+        l1_lambda_max_ = arma::max(arma::max(grad_zero));
         // get the solution (intercepts) of l1_lambda_max for a warm start
         arma::umat is_active_strong { arma::zeros<arma::umat>(p1_, km1_) };
         if (intercept_) {
@@ -516,11 +516,11 @@ namespace Malc {
 
         // update active set by strong rule
         grad_beta = arma::abs(gradient(inner));
-        strong_rhs = (2 * l1_lambda_ - l1_lambda_max_);
+        double strong_rhs { 2 * l1_lambda_ - l1_lambda_max_ };
 
         for (size_t j { 0 }; j < km1_; ++j) {
             for (size_t l { int_intercept_ }; l < p1_; ++l) {
-                if (grad_beta(l, j) >= strong_rhs(l, j)) {
+                if (grad_beta(l, j) >= strong_rhs) {
                     is_active_strong(l, j) = 1;
                 } else {
                     beta(l, j) = 0;
@@ -550,8 +550,7 @@ namespace Malc {
                     if (is_active_strong(l, j)) {
                         continue;
                     }
-                    if (std::abs(cmd_gradient(inner, l, j)) >
-                        strong_rhs(l, j)) {
+                    if (std::abs(cmd_gradient(inner, l, j)) > strong_rhs) {
                         // update active set
                         is_active_strong_new(l, j) = 1;
                     }
@@ -604,12 +603,11 @@ namespace Malc {
         // for one lambda
         arma::vec one_inner { arma::zeros(n_obs_) };
         arma::mat one_beta { arma::zeros(p1_, km1_) };
-        arma::mat one_grad_beta { arma::abs(gradient(one_inner)) },
-            one_strong_rhs { one_grad_beta };
+        arma::mat one_grad_beta { arma::abs(gradient(one_inner)) };
+        double one_strong_rhs { 0 };
         // large enough lambda for all-zero coef (except intercept terms)
         double lambda_max {
-            arma::max(arma::conv_to<arma::vec>::from(one_grad_beta)) /
-            std::max(alpha, 1e-2)
+            arma::max(arma::max(one_grad_beta)) / std::max(alpha, 1e-2)
         };
         l1_lambda_max_ = lambda_max * alpha;
         l2_lambda_ = 0.5 * lambda_max * (1 - alpha);
@@ -659,11 +657,11 @@ namespace Malc {
             }
             // update active set by strong rule
             one_grad_beta = arma::abs(gradient(one_inner));
-            one_strong_rhs = (2 * l1_lambda_ - old_l1_lambda);
+            one_strong_rhs = 2 * l1_lambda_ - old_l1_lambda;
             old_l1_lambda = l1_lambda_;
             for (size_t j { 0 }; j < km1_; ++j) {
                 for (size_t l { int_intercept_ }; l < p1_; ++l) {
-                    if (one_grad_beta(l, j) >= one_strong_rhs(l, j)) {
+                    if (one_grad_beta(l, j) >= one_strong_rhs) {
                         is_active_strong(l, j) = 1;
                     } else {
                         one_beta(l, j) = 0;
@@ -687,7 +685,7 @@ namespace Malc {
                             continue;
                         }
                         if (std::abs(cmd_gradient(one_inner, l, j)) >
-                            one_strong_rhs(l, j)) {
+                            one_strong_rhs) {
                             // update active set
                             is_active_strong_new(l, j) = 1;
                         }
