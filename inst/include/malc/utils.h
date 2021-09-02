@@ -4,6 +4,7 @@
 #include <vector>
 #include <RcppArmadillo.h>
 #include "simplex.h"
+#include "string.h"
 
 namespace Malc {
 
@@ -40,21 +41,20 @@ namespace Malc {
     {
         if (x < 0) {
             return - 1.0;
-        } else if (x > 0) {
-            return 1.0;
-        } else {
-            return 0.0;
         }
+        if (x > 0) {
+            return 1.0;
+        }
+        return 0.0;
     }
     // positive part
     template <typename T_scalar>
-    inline T_scalar positive(T_scalar x)
+    inline T_scalar positive(const T_scalar x)
     {
         if (x < 0) {
             return 0;
-        } else {
-            return x;
         }
+        return x;
     }
     // soft-thresholding operator
     inline double soft_threshold(const double beta, const double lambda)
@@ -105,12 +105,11 @@ namespace Malc {
     template <typename T>
     inline double rel_l1_norm(const T& x_old, const T& x_new)
     {
-        double denom { l1_norm(x_new + x_old) };
+        double denom { l1_norm(x_new + x_old) + 1.0 };
         if (isAlmostEqual(denom, 0)) {
             return 0;
-        } else {
-            return l1_norm(x_new - x_old) / denom;
         }
+        return l1_norm(x_new - x_old) / denom;
     }
 
     // set difference for vector a and vector b
@@ -128,13 +127,9 @@ namespace Malc {
     }
 
     template <typename T>
-    inline T join_vectors(const std::vector<T>& x)
+    inline void msg(const T& m)
     {
-        T out { x.at(0) };
-        for (size_t i { 1 }; i < x.size(); ++i) {
-            out = arma::join_cols(out, x.at(i));
-        }
-        return out;
+        Rcpp::Rcout << m << std::endl;
     }
 
 }  // Malc
