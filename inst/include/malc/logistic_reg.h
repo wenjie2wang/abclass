@@ -1,6 +1,7 @@
 #ifndef MALC_LOGISTIC_REG_H
 #define MALC_LOGISTIC_REG_H
 
+#include <utility>
 #include <vector>
 #include <RcppArmadillo.h>
 #include "utils.h"
@@ -22,17 +23,17 @@ namespace Malc {
         arma::vec obs_weight_;  // optional observation weights: of length n
         arma::mat vertex_;      // unique vertex: k by (k - 1)
         arma::mat vertex_mat_;  // vertex matrix: n by (k - 1)
-        // arma::mat offset_;      // offset term: n by (k - 1)
         bool intercept_;
         unsigned int int_intercept_;
         bool standardize_;      // is x_ standardized (column-wise)
         arma::rowvec x_center_; // the column center of x_
         arma::rowvec x_scale_;  // the column scale of x_
+
         // for regularized coordinate majorization descent
         arma::rowvec cmd_lowerbound_; // 1 by p
+
         // for one lambda
         arma::mat coef0_;         // coef (not scaled for the origin x_)
-        // arma::mat en_coef0_;      // (not scaled) elastic net estimates
 
     public:
         // common
@@ -98,9 +99,12 @@ namespace Malc {
                     if (x_scale_(j) > 0) {
                         x_.col(j) = (x_.col(j) - x_center_(j)) / x_scale_(j);
                     } else {
-                        throw std::range_error(
-                            "The design 'x_' contains constant column."
-                            );
+                        // throw std::range_error(
+                        //     "The design 'x_' contains constant column."
+                        //     );
+                        x_.col(j) = arma::zeros(x_.n_rows);
+                        // make scale(j) nonzero for rescaling
+                        x_scale_(j) = - 1.0;
                     }
                 }
             }
@@ -212,10 +216,10 @@ namespace Malc {
         inline arma::mat gradient(const arma::vec& inner) const
         {
             arma::mat out { arma::zeros(p1_, km1_) };
-            for (size_t j { 0 }; j < km1_; ++j) {
-                for (size_t l { 0 }; l < p1_; ++l) {
-                    out(l, j) = cmd_gradient(inner, l, j);
-                }
+            arma::mat::row_col_iterator it { out.begin_row_col() };
+            arma::mat::row_col_iterator it_end { out.end_row_col() };
+            for (; it != it_end; ++it) {
+                *it = cmd_gradient(inner, it.row(), it.col());
             }
             return out;
         }
@@ -351,29 +355,42 @@ namespace Malc {
             beta_old = beta;
             inner_old = inner;
         }
-        for (size_t j { 0 }; j < km1_; ++j) {
-            for (size_t l { 0 }; l < p1_; ++l) {
-                if (is_active(l, j) > 0) {
-                    dlj = cmd_gradient(inner, l, j);
-                    double tmp { beta(l, j) };
-                    // update beta
-                    beta(l, j) = soft_threshold(
-                        cmd_lowerbound_(l) * beta(l, j) - dlj, l1_lambda
-                        ) / (cmd_lowerbound_(l) + 2 * l2_lambda *
-                                      static_cast<double>(l >= int_intercept_));
-                    inner += (beta(l, j) - tmp) *
-                        (x_.col(l) % vertex_mat_.col(j));
-                    if (update_active) {
-                        // check if it has been shrinkaged to zero
-                        if (isAlmostEqual(beta(l, j), 0)) {
-                            is_active(l, j) = 0;
-                        } else {
-                            is_active(l, j) = 1;
-                        }
+        arma::umat::row_col_iterator it { is_active.begin_row_col() };
+        arma::umat::row_col_iterator it_end { is_active.end_row_col() };
+        arma::umat is_active_new { is_active };
+        for (; it != it_end; ++it) {
+            arma::uword l { it.row() };
+            arma::uword j { it.col() };
+            if (is_active(l, j) > 0) {
+                dlj = cmd_gradient(inner, l, j);
+                double tmp { beta(l, j) };
+                // if cmd_lowerbound = 0 and l1_lambda > 0, numer will be 0
+                double numer {
+                    soft_threshold(cmd_lowerbound_(l) * beta(l, j) - dlj,
+                                   l1_lambda)
+                };
+                // update beta
+                if (isAlmostEqual(numer, 0)) {
+                    beta(l, j) = 0;
+                } else {
+                    double denom { cmd_lowerbound_(l) + 2 * l2_lambda *
+                        static_cast<double>(l >= int_intercept_)
+                    };
+                    beta(l, j) = numer / denom;
+                }
+                inner += (beta(l, j) - tmp) *
+                    (x_.col(l) % vertex_mat_.col(j));
+                if (update_active) {
+                    // check if it has been shrinkaged to zero
+                    if (isAlmostEqual(beta(l, j), 0)) {
+                        is_active(l, j) = 0;
+                    } else {
+                        is_active(l, j) = 1;
                     }
                 }
             }
         }
+        is_active = std::move(is_active_new);
         // if early stop, check improvement
         if (early_stop || verbose) {
             double ell_old { objective(inner_old, beta_old) };
@@ -435,7 +452,7 @@ namespace Malc {
                                      l1_lambda, l2_lambda, true,
                                      early_stop, verbose);
                 // check two active sets coincide
-                if (l1_norm(is_active_new - is_active_stored)) {
+                if (l1_norm(is_active_new - is_active_stored) > 0) {
                     // if different, repeat this process
                     ii = 0;
                     i++;
@@ -547,7 +564,7 @@ namespace Malc {
             // check kkt condition
             for (size_t j { 0 }; j < km1_; ++j) {
                 for (size_t l { int_intercept_ }; l < p1_; ++l) {
-                    if (is_active_strong(l, j)) {
+                    if (is_active_strong(l, j) > 0) {
                         continue;
                     }
                     if (std::abs(cmd_gradient(inner, l, j)) > strong_rhs) {
@@ -556,7 +573,7 @@ namespace Malc {
                     }
                 }
             }
-            if (l1_norm(is_active_strong - is_active_strong_new)) {
+            if (l1_norm(is_active_strong - is_active_strong_new) > 0) {
                 is_active_strong = is_active_strong_new;
             } else {
                 kkt_failed = false;
@@ -681,7 +698,7 @@ namespace Malc {
                 // check kkt condition
                 for (size_t j { 0 }; j < km1_; ++j) {
                     for (size_t l { int_intercept_ }; l < p1_; ++l) {
-                        if (is_active_strong(l, j)) {
+                        if (is_active_strong(l, j) > 0) {
                             continue;
                         }
                         if (std::abs(cmd_gradient(one_inner, l, j)) >
@@ -691,7 +708,7 @@ namespace Malc {
                         }
                     }
                 }
-                if (l1_norm(is_active_strong - is_active_strong_new)) {
+                if (l1_norm(is_active_strong - is_active_strong_new) > 0) {
                     is_active_strong = is_active_strong_new;
                 } else {
                     kkt_failed = false;

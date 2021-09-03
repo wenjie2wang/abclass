@@ -47,19 +47,14 @@ namespace Malc {
         }
         return 0.0;
     }
-    // positive part
-    template <typename T_scalar>
-    inline T_scalar positive(const T_scalar x)
-    {
-        if (x < 0) {
-            return 0;
-        }
-        return x;
-    }
     // soft-thresholding operator
     inline double soft_threshold(const double beta, const double lambda)
     {
-        return positive(std::abs(beta) - lambda) * sign(beta);
+        double tmp { std::abs(beta) - lambda };
+        if (tmp < 0) {
+            return 0;
+        }
+        return tmp * sign(beta);
     }
 
     // compare double-precision numbers for almost equality
