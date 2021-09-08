@@ -229,13 +229,17 @@ namespace Malc {
         {
             arma::mat out { x * beta };
             out *= vertex_.t();
-            for (size_t j { 0 }; j < k_; ++j) {
-                out.col(j)  = 1 / loss_derivative(out.col(j));
-            }
+            // for (size_t j { 0 }; j < k_; ++j) {
+            //     out.col(j)  = 1 / loss_derivative(out.col(j));
+            // }
+            out.each_col( [&](arma::vec& a) {
+                a = 1.0 / loss_derivative(a);
+            });
             arma::vec row_sums { arma::sum(out, 1) };
-            for (size_t j { 0 }; j < k_; ++j) {
-                out.col(j) /= row_sums;
-            }
+            // for (size_t j { 0 }; j < k_; ++j) {
+            //     out.col(j) /= row_sums;
+            // }
+            out.each_col( [&row_sums](arma::vec& a) { a /= row_sums; } ) ;
             return out;
         }
         inline arma::mat compute_prob_mat(const arma::mat& beta) const
