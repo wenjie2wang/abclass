@@ -19,10 +19,9 @@ namespace Malc {
         unsigned int p0_;       // number of predictors without intercept
         unsigned int p1_;       // number of predictors (with intercept)
         arma::mat x_;           // (standardized) x_: n by p (with intercept)
-        arma::uvec y_;          // y vector ranging in {1, ..., k}
+        arma::uvec y_;          // y vector ranging in {0, ..., k - 1}
         arma::vec obs_weight_;  // optional observation weights: of length n
         arma::mat vertex_;      // unique vertex: k by (k - 1)
-        arma::mat vertex_mat_;  // vertex matrix: n by (k - 1)
         bool intercept_;
         unsigned int int_intercept_;
         bool standardize_;      // is x_ standardized (column-wise)
@@ -59,8 +58,8 @@ namespace Malc {
         arma::mat cv_accuracy_;
         // arma::cube en_coef_path_;
         // arma::cube en_prob_path_;
-        arma::mat cv_en_miss_number_;
-        arma::mat cv_en_accuracy_;
+        // arma::mat cv_en_miss_number_;
+        // arma::mat cv_en_accuracy_;
 
         // default constructor
         LogisticReg() {}
@@ -78,7 +77,7 @@ namespace Malc {
             standardize_ (standardize)
         {
             int_intercept_ = static_cast<unsigned int>(intercept_);
-            k_ = arma::max(y_);
+            k_ = arma::max(y_) + 1; // assume y in {0, ..., k-1}
             km1_ = k_ - 1;
             n_obs_ = x_.n_rows;
             p0_ = x_.n_cols;
@@ -112,20 +111,15 @@ namespace Malc {
                 x_ = arma::join_horiz(arma::ones(x_.n_rows), x_);
             }
             // set vertex matrix
-            set_vertex_matrix(y_, k_);
+            set_vertex_matrix(k_);
             // set the CMD lowerbound (which needs to be done only once)
             set_cmd_lowerbound();
         }
         // prepare the vertex matrix for observed y {1, ..., k}
-        inline void set_vertex_matrix(const arma::uvec& y,
-                                      const unsigned int k)
+        inline void set_vertex_matrix(const unsigned int k)
         {
             Simplex sim { k };
             vertex_ = sim.get_vertex();
-            vertex_mat_ = arma::zeros(y.n_elem, k - 1);
-            for (size_t i { 0 }; i < y.n_elem; ++i) {
-                vertex_mat_.row(i) = vertex_.row(y(i) - 1);
-            }
         }
         // transfer coef for standardized data to coef for non-standardized data
         inline arma::mat rescale_coef(const arma::mat& beta) const
@@ -208,7 +202,7 @@ namespace Malc {
                 } else if (p_est > 1 - pmin_) {
                     p_est = 1 - pmin_;
                 }
-                out += obs_weight_(i) * vertex_mat_(i, j) * x_(i, l) * p_est;
+                out += obs_weight_(i) * vertex_(y_(i), j) * x_(i, l) * p_est;
             }
             return - out / n_obs_;
         }
@@ -359,37 +353,41 @@ namespace Malc {
             beta_old = beta;
             inner_old = inner;
         }
-        arma::umat::row_col_iterator it { is_active.begin_row_col() };
-        arma::umat::row_col_iterator it_end { is_active.end_row_col() };
+        // arma::umat::row_col_iterator it { is_active.begin_row_col() };
+        // arma::umat::row_col_iterator it_end { is_active.end_row_col() };
         arma::umat is_active_new { is_active };
-        for (; it != it_end; ++it) {
-            arma::uword l { it.row() };
-            arma::uword j { it.col() };
-            if (is_active(l, j) > 0) {
-                dlj = cmd_gradient(inner, l, j);
-                double tmp { beta(l, j) };
-                // if cmd_lowerbound = 0 and l1_lambda > 0, numer will be 0
-                double numer {
-                    soft_threshold(cmd_lowerbound_(l) * beta(l, j) - dlj,
-                                   l1_lambda)
-                };
-                // update beta
-                if (isAlmostEqual(numer, 0)) {
-                    beta(l, j) = 0;
-                } else {
-                    double denom { cmd_lowerbound_(l) + 2 * l2_lambda *
-                        static_cast<double>(l >= int_intercept_)
+        for (size_t j {0}; j < is_active.n_cols; ++j) {
+            arma::vec vj { vertex_.col(j) };
+            vj = vj.elem(y_);
+            for (size_t l {0}; l < is_active.n_rows; ++l) {
+                // arma::uword l { it.row() };
+                // arma::uword j { it.col() };
+                if (is_active(l, j) > 0) {
+                    dlj = cmd_gradient(inner, l, j);
+                    double tmp { beta(l, j) };
+                    // if cmd_lowerbound = 0 and l1_lambda > 0, numer will be 0
+                    double numer {
+                        soft_threshold(cmd_lowerbound_(l) * beta(l, j) - dlj,
+                                       l1_lambda)
                     };
-                    beta(l, j) = numer / denom;
-                }
-                inner += (beta(l, j) - tmp) *
-                    (x_.col(l) % vertex_mat_.col(j));
-                if (update_active) {
-                    // check if it has been shrinkaged to zero
-                    if (isAlmostEqual(beta(l, j), 0)) {
-                        is_active(l, j) = 0;
+                    // update beta
+                    if (isAlmostEqual(numer, 0)) {
+                        beta(l, j) = 0;
                     } else {
-                        is_active(l, j) = 1;
+                        double denom { cmd_lowerbound_(l) + 2 * l2_lambda *
+                            static_cast<double>(l >= int_intercept_)
+                        };
+                        beta(l, j) = numer / denom;
+                    }
+                    // FIXME
+                    inner += (beta(l, j) - tmp) * (x_.col(l) % vj);
+                    if (update_active) {
+                        // check if it has been shrinkaged to zero
+                        if (isAlmostEqual(beta(l, j), 0)) {
+                            is_active(l, j) = 0;
+                        } else {
+                            is_active(l, j) = 1;
+                        }
                     }
                 }
             }
@@ -730,12 +728,11 @@ namespace Malc {
         }
         // cross-validation
         if (nfolds > 0) {
-            cv_miss_number_ = cv_en_miss_number_ =
-                cv_accuracy_ = cv_en_accuracy_ =
+            cv_miss_number_ = cv_accuracy_ =
                 arma::zeros(lambda_path_.n_elem, nfolds);
             arma::uvec strata;
             if (stratified) {
-                strata = y_ - 1;
+                strata = y_;
             }
             CrossValidation cv_obj { n_obs_, nfolds, strata };
             for (size_t i { 0 }; i < nfolds; ++i) {

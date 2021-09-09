@@ -13,7 +13,7 @@ malc_logistic <- function(x, y, lambda, alpha = 1,
     ## model fitting
     fit <- rcpp_logistic_reg(
         x = x,
-        y = as.matrix(cat_y$y),
+        y = cat_y$y - 1L,
         lambda = lambda,
         alpha = alpha,
         start = null2mat0(start),
@@ -64,7 +64,7 @@ malc_logistic_path <- function(x, y, lambda = NULL, alpha = 1, nlambda = 100,
     ## model fitting
     fit <- rcpp_logistic_path(
         x = x,
-        y = as.matrix(cat_y$y),
+        y = cat_y$y - 1L,
         lambda = null2num0(lambda),
         alpha = alpha,
         nlambda = nlambda,

@@ -1,7 +1,7 @@
 ## convert all the categories to {1, ..., k}
 cat2z <- function(y) {
     fac_y <- as.factor(y)
-    list(y = as.numeric(fac_y),
+    list(y = as.integer(fac_y),
          label = levels(fac_y),
          class_y = class(y))
 }
