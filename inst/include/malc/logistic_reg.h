@@ -290,7 +290,6 @@ namespace Malc {
                                          const double l1_lambda,
                                          const double l2_lambda,
                                          const bool update_active,
-                                         const bool early_stop,
                                          const bool verbose);
         // run a complete cycle of CMD for a given active set and given lambda's
         inline void run_cmd_active_cycle(arma::mat& beta,
@@ -301,7 +300,6 @@ namespace Malc {
                                          const bool varying_active_set,
                                          const unsigned int max_iter,
                                          const double rel_tol,
-                                         const bool early_stop,
                                          const bool verbose);
 
         // for a perticular lambda
@@ -311,7 +309,6 @@ namespace Malc {
                                 const unsigned int max_iter,
                                 const double rel_tol,
                                 const double pmin,
-                                const bool early_stop,
                                 const bool verbose);
 
         // for a sequence of lambda's
@@ -324,7 +321,6 @@ namespace Malc {
                                      const unsigned int max_iter,
                                      const double rel_tol,
                                      const double pmin,
-                                     const bool early_stop,
                                      const bool verbose);
 
         // getters
@@ -342,14 +338,13 @@ namespace Malc {
         const double l1_lambda,
         const double l2_lambda,
         const bool update_active = false,
-        const bool early_stop = false,
         const bool verbose = false
         )
     {
         double dlj { 0.0 };
         arma::mat beta_old;
         arma::vec inner_old;
-        if (early_stop || verbose) {
+        if (verbose) {
             beta_old = beta;
             inner_old = inner;
         }
@@ -379,7 +374,6 @@ namespace Malc {
                         };
                         beta(l, j) = numer / denom;
                     }
-                    // FIXME
                     inner += (beta(l, j) - tmp) * (x_.col(l) % vj);
                     if (update_active) {
                         // check if it has been shrinkaged to zero
@@ -394,7 +388,7 @@ namespace Malc {
         }
         is_active = std::move(is_active_new);
         // if early stop, check improvement
-        if (early_stop || verbose) {
+        if (verbose) {
             double ell_old { objective(inner_old, beta_old) };
             double ell_new { objective(inner, beta) };
             if (verbose) {
@@ -402,14 +396,12 @@ namespace Malc {
                 Rprintf("  from %15.15f\n", ell_old);
                 Rprintf("    to %15.15f\n", ell_new);
             }
-            if (early_stop && ell_new > ell_old) {
-                if (verbose) {
-                    Rcpp::Rcout << "Warning: "
-                                << "the objective function somehow increased\n";
-                    Rcpp::Rcout << "\nEarly stopped the CMD iterations "
-                                << "with estimates from the last step"
-                                << std::endl;
-                }
+            if (ell_new > ell_old) {
+                Rcpp::Rcout << "Warning: "
+                            << "the objective function somehow increased\n";
+                Rcpp::Rcout << "\nEarly stopped the CMD iterations "
+                            << "with estimates from the last step"
+                            << std::endl;
                 beta = beta_old;
                 inner = inner_old;
             }
@@ -425,7 +417,6 @@ namespace Malc {
         const bool varying_active_set,
         const unsigned int max_iter,
         const double rel_tol = false,
-        const bool early_stop = false,
         const bool verbose = false
         )
     {
@@ -441,8 +432,7 @@ namespace Malc {
                 // cycles over the active set
                 while (ii < max_iter) {
                     run_one_active_cycle(beta, inner, is_active_stored,
-                                         l1_lambda, l2_lambda, true,
-                                         early_stop, verbose);
+                                         l1_lambda, l2_lambda, true, verbose);
                     if (rel_l1_norm(beta, beta0) < rel_tol) {
                         break;
                     }
@@ -451,8 +441,7 @@ namespace Malc {
                 }
                 // run a full cycle over the converged beta
                 run_one_active_cycle(beta, inner, is_active_new,
-                                     l1_lambda, l2_lambda, true,
-                                     early_stop, verbose);
+                                     l1_lambda, l2_lambda, true, verbose);
                 // check two active sets coincide
                 if (l1_norm(is_active_new - is_active_stored) > 0) {
                     // if different, repeat this process
@@ -466,8 +455,7 @@ namespace Malc {
             // regular coordinate descent
             while (i < max_iter) {
                 run_one_active_cycle(beta, inner, is_active_stored,
-                                     l1_lambda, l2_lambda, false,
-                                     early_stop, verbose);
+                                     l1_lambda, l2_lambda, false, verbose);
                 if (rel_l1_norm(beta, beta0) < rel_tol) {
                     break;
                 }
@@ -486,7 +474,6 @@ namespace Malc {
         const unsigned int max_iter,
         const double rel_tol,
         const double pmin,
-        const bool early_stop,
         const bool verbose
         )
     {
@@ -516,7 +503,7 @@ namespace Malc {
             is_active_strong.row(0) = arma::ones<arma::umat>(1, km1_);
             run_cmd_active_cycle(beta, inner, is_active_strong,
                                  l1_lambda_max_, l2_lambda_,
-                                 false, max_iter, rel_tol, early_stop, verbose);
+                                 false, max_iter, rel_tol, verbose);
         }
         // early exit for lambda greater than lambda_max
         if (l1_lambda_ >= l1_lambda_max_) {
@@ -562,7 +549,7 @@ namespace Malc {
             run_cmd_active_cycle(beta, inner, is_active_strong,
                                  l1_lambda_, l2_lambda_,
                                  varying_active_set,
-                                 max_iter, rel_tol, early_stop, verbose);
+                                 max_iter, rel_tol, verbose);
             // check kkt condition
             for (size_t j { 0 }; j < km1_; ++j) {
                 for (size_t l { int_intercept_ }; l < p1_; ++l) {
@@ -606,7 +593,6 @@ namespace Malc {
         const unsigned int max_iter,
         const double rel_tol,
         const double pmin,
-        const bool early_stop,
         const bool verbose
         )
     {
@@ -653,7 +639,7 @@ namespace Malc {
             is_active_strong.row(0) = arma::ones<arma::umat>(1, km1_);
             run_cmd_active_cycle(one_beta, one_inner, is_active_strong,
                                  l1_lambda_max_, l2_lambda_,
-                                 false, max_iter, rel_tol, early_stop, verbose);
+                                 false, max_iter, rel_tol, verbose);
         }
         // optim with varying active set when p > n
         bool varying_active_set { false };
@@ -696,7 +682,7 @@ namespace Malc {
                 run_cmd_active_cycle(one_beta, one_inner, is_active_strong,
                                      l1_lambda_, l2_lambda_,
                                      varying_active_set,
-                                     max_iter, rel_tol, early_stop, verbose);
+                                     max_iter, rel_tol, verbose);
                 // check kkt condition
                 for (size_t j { 0 }; j < km1_; ++j) {
                     for (size_t l { int_intercept_ }; l < p1_; ++l) {
@@ -745,10 +731,8 @@ namespace Malc {
                 arma::uvec test_y { y_.rows(cv_obj.test_index_.at(i)) };
                 LogisticReg reg_obj { train_x, train_y, intercept_, false };
                 reg_obj.elastic_net_path(lambda_path_, alpha,
-                                         nlambda, lambda_min_ratio,
-                                         0, true,
-                                         max_iter, rel_tol, pmin,
-                                         early_stop, false);
+                                         nlambda, lambda_min_ratio, 0, true,
+                                         max_iter, rel_tol, pmin, false);
                 for (size_t l { 0 }; l < lambda_path_.n_elem; ++l) {
                     cv_miss_number_(l, i) = reg_obj.miss_number(
                         reg_obj.coef_path_.slice(l), test_x, test_y);
