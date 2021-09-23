@@ -1,5 +1,5 @@
-#ifndef SIMPLEX_H
-#define SIMPLEX_H
+#ifndef MALC_SIMPLEX_H
+#define MALC_SIMPLEX_H
 
 #include <RcppArmadillo.h>
 #include <stdexcept>
@@ -54,4 +54,4 @@ namespace Malc {
 
 }  // Malc
 
-#endif /* SIMPLEX_H */
+#endif /* MALC_SIMPLEX_H */

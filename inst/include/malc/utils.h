@@ -1,5 +1,5 @@
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef MALC_UTILS_H
+#define MALC_UTILS_H
 
 #include <vector>
 #include <RcppArmadillo.h>
@@ -130,4 +130,4 @@ namespace Malc {
 }  // Malc
 
 
-#endif /* UTILS_H */
+#endif /* MALC_UTILS_H */

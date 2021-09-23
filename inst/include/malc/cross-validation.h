@@ -1,5 +1,5 @@
-#ifndef CROSS_VALIDATION_H
-#define CROSS_VALIDATION_H
+#ifndef MALC_CROSS_VALIDATION_H
+#define MALC_CROSS_VALIDATION_H
 
 #include <vector>
 #include <RcppArmadillo.h>
@@ -148,4 +148,4 @@ namespace Malc {
 }  // Malc
 
 
-#endif /* CROSS_VALIDATION_H */
+#endif /* MALC_CROSS_VALIDATION_H */
