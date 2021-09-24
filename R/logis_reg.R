@@ -2,7 +2,7 @@ malc_logistic <- function(x, y, lambda, alpha = 1,
                           start = NULL, weight = NULL,
                           intercept = TRUE, standardize = TRUE,
                           max_iter = 200, rel_tol = 1e-3, pmin = 1e-5,
-                          early_stop = FALSE, verbose = FALSE, ...)
+                          verbose = FALSE, ...)
 {
     Call <- match.call()
     ## pre-process
@@ -23,7 +23,6 @@ malc_logistic <- function(x, y, lambda, alpha = 1,
         max_iter = max_iter,
         rel_tol = rel_tol,
         pmin = pmin,
-        early_stop = early_stop,
         verbose = verbose
     )
     ## post-process
@@ -36,7 +35,6 @@ malc_logistic <- function(x, y, lambda, alpha = 1,
         max_iter = max_iter,
         rel_tol = rel_tol,
         pmin = pmin,
-        early_stop = early_stop,
         verbose = verbose
     )
     class(fit) <- "malc_logistic"
@@ -50,7 +48,7 @@ malc_logistic_path <- function(x, y, lambda = NULL, alpha = 1, nlambda = 100,
                                nfolds = 0, stratified = TRUE,
                                intercept = TRUE, standardize = TRUE,
                                max_iter = 200, rel_tol = 1e-3, pmin = 1e-5,
-                               early_stop = FALSE, verbose = FALSE, ...)
+                               verbose = FALSE, ...)
 {
     Call <- match.call()
     ## pre-process
@@ -77,7 +75,6 @@ malc_logistic_path <- function(x, y, lambda = NULL, alpha = 1, nlambda = 100,
         max_iter = max_iter,
         rel_tol = rel_tol,
         pmin = pmin,
-        early_stop = early_stop,
         verbose = verbose
     )
     ## post-process
@@ -89,7 +86,6 @@ malc_logistic_path <- function(x, y, lambda = NULL, alpha = 1, nlambda = 100,
         max_iter = max_iter,
         rel_tol = rel_tol,
         pmin = pmin,
-        early_stop = early_stop,
         verbose = verbose
     )
     class(fit) <- "malc_logistic_path"

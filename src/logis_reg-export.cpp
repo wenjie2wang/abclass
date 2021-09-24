@@ -16,7 +16,6 @@ Rcpp::List rcpp_logistic_reg(
     const unsigned int max_iter = 200,
     const double rel_tol = 1e-3,
     const double pmin = 1e-5,
-    const bool early_stop = false,
     const bool verbose = false
     )
 {
@@ -24,7 +23,7 @@ Rcpp::List rcpp_logistic_reg(
         x, y, intercept, standardize, weight
     };
     object.elastic_net(lambda, alpha,
-                       start, max_iter, rel_tol, pmin, early_stop, verbose);
+                       start, max_iter, rel_tol, pmin, verbose);
     return Rcpp::List::create(
         Rcpp::Named("coefficients") = object.coef_,
         Rcpp::Named("weight") = object.get_weight(),
@@ -55,7 +54,32 @@ Rcpp::List rcpp_logistic_path(
     const unsigned int max_iter = 200,
     const double rel_tol = 1e-3,
     const double pmin = 1e-5,
-    const bool early_stop = false,
+    const bool verbose = false
+    )
+{
+    Malc::LogisticReg object {
+        x, y, intercept, standardize, weight
+    };
+    object.elastic_net_path(lambda, alpha, nlambda, lambda_min_ratio,
+                            nfolds, stratified,
+                            max_iter, rel_tol, pmin, verbose);
+    Rcpp::NumericVector lambda_vec { Malc::arma2rvec(object.lambda_path_) };
+    return Rcpp::List::create(
+        Rcpp::Named("coefficients") = object.coef_path_,
+        Rcpp::Named("weight") = object.get_weight(),
+        Rcpp::Named("regularization") = Rcpp::List::create(
+            Rcpp::Named("lambda") = lambda_vec,
+            Rcpp::Named("alpha") = alpha,
+            Rcpp::Named("l1_lambda") = alpha * lambda_vec,
+            Rcpp::Named("l2_lambda") = 0.5 * (1 - alpha) * lambda_vec,
+            Rcpp::Named("l1_lambda_max") = object.l1_lambda_max_
+            ),
+        Rcpp::Named("cross_validation") = Rcpp::List::create(
+            Rcpp::Named("miss_number") = object.cv_miss_number_,
+            Rcpp::Named("accuracy") = object.cv_accuracy_
+            )
+        );
+}
     const bool verbose = false
     )
 {
