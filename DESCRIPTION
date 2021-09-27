@@ -1,6 +1,6 @@
 Package: malc
 Title: Multi-Category Angle-Based Large-Margin Classifiers
-Version: 0.1.0.9003
+Version: 0.1.0.9004
 Authors@R: c(
     person(given = "Wenjie", family = "Wang",
            email = "wang@wwenjie.org",
@@ -20,4 +20,4 @@ License: GPL (>= 3)
 URL: https://github.com/wenjie2wang/malc
 BugReports: https://github.com/wenjie2wang/malc/issues
 Encoding: UTF-8
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
