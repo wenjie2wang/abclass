@@ -192,6 +192,14 @@ namespace Malc {
         {
             return - 1.0 / (1.0 + std::exp(u));
         }
+        inline arma::vec neg_loss_derivative(const arma::vec& u) const
+        {
+            return 1.0 / (1.0 + arma::exp(u));
+        }
+        inline double neg_loss_derivative(const double u) const
+        {
+            return 1.0 / (1.0 + std::exp(u));
+        }
         // define gradient function at k-th dimension
         inline double cmd_gradient(const arma::vec& inner,
                                    const unsigned int l,
@@ -199,24 +207,38 @@ namespace Malc {
         {
             double out { 0.0 };
             for (size_t i { 0 }; i < inner.n_elem; ++i) {
-                double p_est { - loss_derivative(inner(i)) };
-                if (p_est < pmin_){
-                    p_est = pmin_;
-                } else if (p_est > 1 - pmin_) {
-                    p_est = 1 - pmin_;
-                }
+                double p_est { neg_loss_derivative(inner(i)) };
+                // if (p_est < pmin_) {
+                //     p_est = pmin_;
+                // } else if (p_est > 1 - pmin_) {
+                //     p_est = 1 - pmin_;
+                // }
                 out += obs_weight_(i) * vertex_(y_(i), j) * x_(i, l) * p_est;
             }
-            return - out / n_obs_;
+            return - out / static_cast<double>(n_obs_);
         }
         // gradient matrix
         inline arma::mat gradient(const arma::vec& inner) const
         {
             arma::mat out { arma::zeros(p1_, km1_) };
+            arma::vec p_vec { neg_loss_derivative(inner) };
+            // for (size_t i { 0 }; i < p_vec.n_elem; ++i) {
+            //     if (p_vec(i) < pmin_) {
+            //         p_vec(i) = pmin_;
+            //     } else if (p_vec(i) > 1 - pmin_) {
+            //         p_vec(i) = 1 - pmin_;
+            //     }
+            // }
             arma::mat::row_col_iterator it { out.begin_row_col() };
             arma::mat::row_col_iterator it_end { out.end_row_col() };
             for (; it != it_end; ++it) {
-                *it = cmd_gradient(inner, it.row(), it.col());
+                double tmp { 0.0 };
+                for (size_t i { 0 }; i < inner.n_elem; ++i) {
+                    tmp += obs_weight_(i) * vertex_(y_(i), it.col()) *
+                        x_(i, it.row()) * p_vec(i);
+                }
+                *it = - tmp / static_cast<double>(n_obs_);
+                // *it = cmd_gradient(inner, it.row(), it.col());
             }
             return out;
         }
