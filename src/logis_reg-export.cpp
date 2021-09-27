@@ -80,29 +80,41 @@ Rcpp::List rcpp_logistic_path(
             )
         );
 }
+
+// [[Rcpp::export]]
+Rcpp::List rcpp_logistic_et(
+    const arma::mat& x,
+    const arma::uvec& y,
+    const arma::vec& lambda,
+    const double alpha,
+    const unsigned int nlambda,
+    const double lambda_min_ratio,
+    const arma::vec& weight,
+    const bool intercept = true,
+    const bool standardize = true,
+    const unsigned int max_iter = 50,
+    const double rel_tol = 1e-3,
+    const double pmin = 1e-5,
     const bool verbose = false
     )
 {
     Malc::LogisticReg object {
         x, y, intercept, standardize, weight
     };
-    object.elastic_net_path(lambda, alpha, nlambda, lambda_min_ratio,
-                            nfolds, stratified,
-                            max_iter, rel_tol, pmin, early_stop, verbose);
-    Rcpp::NumericVector lambda_vec { Malc::arma2rvec(object.lambda_path_) };
+    object.et_tune_net(lambda, alpha, nlambda, lambda_min_ratio,
+                       max_iter, rel_tol, pmin, verbose);
     return Rcpp::List::create(
-        Rcpp::Named("coefficients") = object.coef_path_,
-        Rcpp::Named("weight") = object.get_weight(),
+        Rcpp::Named("coefficients") = object.coef_,
+        Rcpp::Named("weight") = Malc::arma2rvec(object.get_weight()),
         Rcpp::Named("regularization") = Rcpp::List::create(
-            Rcpp::Named("lambda") = lambda_vec,
+            Rcpp::Named("lambda") = Malc::arma2rvec(object.lambda_path_),
             Rcpp::Named("alpha") = alpha,
-            Rcpp::Named("l1_lambda") = alpha * lambda_vec,
-            Rcpp::Named("l2_lambda") = 0.5 * (1 - alpha) * lambda_vec,
             Rcpp::Named("l1_lambda_max") = object.l1_lambda_max_
             ),
-        Rcpp::Named("cross_validation") = Rcpp::List::create(
-            Rcpp::Named("miss_number") = object.cv_miss_number_,
-            Rcpp::Named("accuracy") = object.cv_accuracy_
+        Rcpp::Named("tuned") = Rcpp::List::create(
+            Rcpp::Named("lambda") = object.lambda_,
+            Rcpp::Named("l1_lambda") = object.l1_lambda_,
+            Rcpp::Named("l2_lambda") = object.l2_lambda_
             )
         );
 }

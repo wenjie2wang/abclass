@@ -40,16 +40,19 @@ namespace Malc {
         double alpha_;
         double pmin_ = 1e-5;
         bool path_ = true;
+        bool et_tune_ = false;
 
         // for a sinle l1_lambda and l2_lambda
         double lambda_;
         double l1_lambda_;       // tuning parameter for lasso penalty
         double l2_lambda_;       // tuning parameter for ridge penalty
+
         // class conditional probability matrix: n by k
         arma::mat coef_;
         // arma::mat prob_mat_;    // for coef_
         // arma::mat en_coef_;
         // arma::mat en_prob_mat_; // for en_coef_
+
         // for a lambda sequence
         arma::vec lambda_path_;   // lambda sequence
         arma::cube coef_path_;
@@ -322,6 +325,16 @@ namespace Malc {
                                      const double rel_tol,
                                      const double pmin,
                                      const bool verbose);
+
+        // tune by introducing pseudo-features
+        inline void et_tune_net(const arma::vec& lambda,
+                                const double alpha,
+                                const unsigned int nlambda,
+                                const double lambda_min_ratio,
+                                const unsigned int max_iter,
+                                const double rel_tol,
+                                const double pmin,
+                                const bool verbose);
 
         // getters
         inline arma::vec get_weight() const
@@ -732,20 +745,172 @@ namespace Malc {
                 LogisticReg reg_obj { train_x, train_y, intercept_, false };
                 reg_obj.elastic_net_path(lambda_path_, alpha,
                                          nlambda, lambda_min_ratio, 0, true,
-                                         max_iter, rel_tol, pmin, false);
+                                         max_iter, rel_tol, pmin_, false);
                 for (size_t l { 0 }; l < lambda_path_.n_elem; ++l) {
                     cv_miss_number_(l, i) = reg_obj.miss_number(
                         reg_obj.coef_path_.slice(l), test_x, test_y);
-                    // cv_en_miss_number_(l, i) = reg_obj.miss_number(
-                    //     reg_obj.en_coef_path_.slice(l), test_x, test_y);
                     cv_accuracy_(l, i) = reg_obj.accuracy(
                         reg_obj.coef_path_.slice(l), test_x, test_y);
-                    // cv_en_accuracy_(l, i) = reg_obj.accuracy(
-                    //     reg_obj.en_coef_path_.slice(l), test_x, test_y);
                 }
             }
         }
     }
+
+    // lambda * (alpha * lasso + (1 - alpha) / 2 * ridge)
+    // efficient-tuning by introducing pseudo-features
+    inline void LogisticReg::et_tune_net(
+        const arma::vec& lambda,
+        const double alpha,
+        const unsigned int nlambda,
+        const double lambda_min_ratio,
+        const unsigned int max_iter,
+        const double rel_tol,
+        const double pmin = 1e-5,
+        const bool verbose = false
+        )
+    {
+        et_tune_ = true;
+        // checks
+        if ((alpha < 0) || (alpha > 1)) {
+            throw std::range_error("The 'alpha' must be between 0 and 1.");
+        }
+        alpha_ = alpha;
+        if ((pmin < 0) || (pmin > 1)) {
+            throw std::range_error("The 'pmin' must be between 0 and 1.");
+        }
+        pmin_ = pmin;
+
+        // create pseudo-features
+        arma::uvec perm_idx { arma::randperm(n_obs_) };
+        arma::mat x_perm { x_.rows(perm_idx) };
+        if (intercept_) {
+            x_perm = x_perm.tail_cols(p0_);
+        }
+        x_ = arma::join_rows(x_, std::move(x_perm));
+        arma::rowvec pseudo_cmd_lowerbound { cmd_lowerbound_ };
+        if (intercept_) {
+            pseudo_cmd_lowerbound = cmd_lowerbound_.tail_cols(p0_);
+        }
+        cmd_lowerbound_ = arma::join_rows(cmd_lowerbound_,
+                                          std::move(pseudo_cmd_lowerbound));
+        unsigned int p0_0 { p0_ };
+        unsigned int p1_0 { p1_ };
+        p0_ += p0_0;
+        p1_ += p0_0;
+
+        arma::mat one_beta { arma::zeros(p1_, km1_) };
+        arma::vec one_inner { arma::zeros(n_obs_) };
+        arma::mat one_grad_beta { arma::abs(gradient(one_inner)) };
+        double one_strong_rhs { 0 };
+        // for x with pseudo features
+        double lambda_max {
+            arma::max(arma::max(one_grad_beta)) / std::max(alpha, 1e-2)
+        };
+        l1_lambda_max_ = lambda_max * alpha;
+        l2_lambda_ = 0.5 * lambda_max * (1 - alpha);
+        // set up lambda sequence if needed
+        if (lambda.empty()) {
+            double log_lambda_max { std::log(lambda_max) };
+            lambda_path_ = arma::exp(
+                arma::linspace(log_lambda_max,
+                               log_lambda_max + std::log(lambda_min_ratio),
+                               nlambda)
+                );
+        } else {
+            lambda_path_ = arma::reverse(arma::unique(lambda));
+        }
+        // estimated intercepts
+        arma::umat is_active_strong { arma::zeros<arma::umat>(p1_, km1_) };
+        if (intercept_) {
+            // only need to estimate intercept
+            is_active_strong.row(0) = arma::ones<arma::umat>(1, km1_);
+            run_cmd_active_cycle(one_beta, one_inner, is_active_strong,
+                                 l1_lambda_max_, l2_lambda_,
+                                 false, max_iter, rel_tol, false);
+        }
+        // varying active set
+        bool varying_active_set { true };
+        double old_l1_lambda { l1_lambda_max_ };
+        // main loop: for each lambda
+        for (size_t li { 0 }; li < lambda_path_.n_elem; ++li) {
+            lambda_ = lambda_path_(li);
+            l1_lambda_ = lambda_ * alpha;
+            l2_lambda_ = 0.5 * lambda_ * (1 - alpha);
+            // early exit for lambda greater than lambda_max
+            if (l1_lambda_ >= l1_lambda_max_) {
+                coef0_ = one_beta;
+                continue;
+            }
+            // update active set by strong rule
+            one_grad_beta = arma::abs(gradient(one_inner));
+            one_strong_rhs = 2 * l1_lambda_ - old_l1_lambda;
+            old_l1_lambda = l1_lambda_;
+            for (size_t j { 0 }; j < km1_; ++j) {
+                for (size_t l { int_intercept_ }; l < p1_; ++l) {
+                    if (one_grad_beta(l, j) >= one_strong_rhs) {
+                        is_active_strong(l, j) = 1;
+                    } else {
+                        one_beta(l, j) = 0;
+                    }
+                }
+            }
+            arma::umat is_active_strong_new { is_active_strong };
+            bool kkt_failed { true };
+            one_strong_rhs = l1_lambda_;
+            // eventually, strong rule will guess correctly
+            while (kkt_failed) {
+                // update beta
+                run_cmd_active_cycle(one_beta, one_inner, is_active_strong,
+                                     l1_lambda_, l2_lambda_,
+                                     varying_active_set,
+                                     max_iter, rel_tol, verbose);
+                // check kkt condition
+                for (size_t j { 0 }; j < km1_; ++j) {
+                    for (size_t l { int_intercept_ }; l < p1_; ++l) {
+                        if (is_active_strong(l, j) > 0) {
+                            continue;
+                        }
+                        if (std::abs(cmd_gradient(one_inner, l, j)) >
+                            one_strong_rhs) {
+                            // update active set
+                            is_active_strong_new(l, j) = 1;
+                        }
+                    }
+                }
+                if (l1_norm(is_active_strong - is_active_strong_new) > 0) {
+                    is_active_strong = is_active_strong_new;
+                } else {
+                    kkt_failed = false;
+                }
+            }
+            // check if any pseudo-feature is selected
+            if (arma::any(arma::any(one_beta.tail_rows(p0_0) != 0))) {
+                if (verbose) {
+                    Rcpp::Rcout << "Pseudo-features selected." << std::endl;
+                }
+                // set the last lambda
+                if (li > 0) {
+                    lambda_ = lambda_path_(li - 1);
+                    l1_lambda_ = lambda_ * alpha;
+                    l2_lambda_ = 0.5 * lambda_ * (1 - alpha);
+                } else {
+                    lambda_ = l1_lambda_ = l2_lambda_ = std::nan("1");
+                }
+                break;
+            }
+            // continue
+            coef0_ = one_beta;
+        }
+        // get original x
+        p0_ = p0_0;
+        p1_ = p1_0;
+        cmd_lowerbound_ = cmd_lowerbound_.head_cols(p1_);
+        x_ = x_.head_cols(p1_);
+        coef0_ = coef0_.head_rows(p1_);
+        // rescale coef for output
+        coef_ = rescale_coef(coef0_);
+    }
+
 
 }  // Malc
 
