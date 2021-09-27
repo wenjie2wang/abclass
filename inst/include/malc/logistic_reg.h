@@ -49,9 +49,6 @@ namespace Malc {
 
         // class conditional probability matrix: n by k
         arma::mat coef_;
-        // arma::mat prob_mat_;    // for coef_
-        // arma::mat en_coef_;
-        // arma::mat en_prob_mat_; // for en_coef_
 
         // for a lambda sequence
         arma::vec lambda_path_;   // lambda sequence
@@ -59,10 +56,6 @@ namespace Malc {
         // arma::cube prob_path_;
         arma::mat cv_miss_number_;
         arma::mat cv_accuracy_;
-        // arma::cube en_coef_path_;
-        // arma::cube en_prob_path_;
-        // arma::mat cv_en_miss_number_;
-        // arma::mat cv_en_accuracy_;
 
         // default constructor
         LogisticReg() {}
@@ -187,14 +180,6 @@ namespace Malc {
         }
 
         // the first derivative of the loss function
-        inline arma::vec loss_derivative(const arma::vec& u) const
-        {
-            return - 1.0 / (1.0 + arma::exp(u));
-        }
-        inline double loss_derivative(const double u) const
-        {
-            return - 1.0 / (1.0 + std::exp(u));
-        }
         inline arma::vec neg_loss_derivative(const arma::vec& u) const
         {
             return 1.0 / (1.0 + arma::exp(u));
@@ -203,6 +188,15 @@ namespace Malc {
         {
             return 1.0 / (1.0 + std::exp(u));
         }
+        inline arma::vec loss_derivative(const arma::vec& u) const
+        {
+            return - neg_loss_derivative(u);
+        }
+        inline double loss_derivative(const double u) const
+        {
+            return - neg_loss_derivative(u);
+        }
+
         // define gradient function at k-th dimension
         inline double cmd_gradient(const arma::vec& inner,
                                    const unsigned int l,
@@ -268,14 +262,6 @@ namespace Malc {
         {
             return compute_prob_mat(beta, x_);
         }
-        // inline void set_prob_mat()
-        // {
-        //     prob_mat_ = compute_prob_mat(coef0_);
-        // }
-        // inline void set_en_prob_mat()
-        // {
-        //     en_prob_mat_ = compute_prob_mat(en_coef0_);
-        // }
 
         // predict categories for the training set
         inline arma::uvec predict_cat(const arma::mat& prob_mat) const
@@ -305,11 +291,6 @@ namespace Malc {
         //     arma::uvec max_idx { predict_cat(prob_mat_) };
         //     return static_cast<double>(arma::sum(max_idx == y_)) / y_.n_elem;
         // }
-        // inline double en_accuracy() const
-        // {
-        //     arma::uvec max_idx { predict_cat(en_prob_mat_) };
-        //     return static_cast<double>(arma::sum(max_idx == y_)) / y_.n_elem;
-        // }
 
         // run one cycle of coordinate descent over a given active set
         inline void run_one_active_cycle(arma::mat& beta,
@@ -319,7 +300,7 @@ namespace Malc {
                                          const double l2_lambda,
                                          const bool update_active,
                                          const bool verbose);
-        // run a complete cycle of CMD for a given active set and given lambda's
+        // run complete cycles of CMD for a given active set and given lambda's
         inline void run_cmd_active_cycle(arma::mat& beta,
                                          arma::vec& inner,
                                          arma::umat& is_active,
@@ -329,6 +310,18 @@ namespace Malc {
                                          const unsigned int max_iter,
                                          const double rel_tol,
                                          const bool verbose);
+        // one full cycle for coordinate-descent
+        inline void run_one_full_cycle(arma::mat& beta,
+                                       arma::vec& inner,
+                                       const double l1_lambda,
+                                       const double l2_lambda);
+        // run full cycles of CMD for given lambda's
+        inline void run_cmd_full_cycle(arma::mat& beta,
+                                       arma::vec& inner,
+                                       const double l1_lambda,
+                                       const double l2_lambda,
+                                       const unsigned int max_iter,
+                                       const double rel_tol);
 
         // for a perticular lambda
         inline void elastic_net(const double lambda,
@@ -496,7 +489,60 @@ namespace Malc {
         }
     }
 
-    // for particular lambda's
+    // one full cycle for coordinate-descent
+    inline void LogisticReg::run_one_full_cycle(
+        arma::mat& beta,
+        arma::vec& inner,
+        const double l1_lambda,
+        const double l2_lambda
+        )
+    {
+        for (size_t j {0}; j < beta.n_cols; ++j) {
+            arma::vec vj { vertex_.col(j) };
+            vj = vj.elem(y_);
+            for (size_t l {0}; l < beta.n_rows; ++l) {
+                double dlj { cmd_gradient(inner, l, j) };
+                double tmp { beta(l, j) };
+                // if cmd_lowerbound = 0 and l1_lambda > 0, numer will be 0
+                double numer {
+                    soft_threshold(
+                        cmd_lowerbound_(l) * beta(l, j) - dlj,
+                        l1_lambda * static_cast<double>(l >= int_intercept_)
+                        )
+                };
+                // update beta
+                if (isAlmostEqual(numer, 0)) {
+                    beta(l, j) = 0;
+                } else {
+                    double denom { cmd_lowerbound_(l) + 2 * l2_lambda *
+                        static_cast<double>(l >= int_intercept_)
+                    };
+                    beta(l, j) = numer / denom;
+                }
+                inner += (beta(l, j) - tmp) * (x_.col(l) % vj);
+            }
+        }
+    }
+    inline void LogisticReg::run_cmd_full_cycle(
+        arma::mat& beta,
+        arma::vec& inner,
+        const double l1_lambda,
+        const double l2_lambda,
+        const unsigned int max_iter,
+        const double rel_tol = false
+        )
+    {
+        arma::mat beta0 { beta };
+        for (size_t i {0}; i < max_iter; ++i) {
+            run_one_full_cycle(beta, inner, l1_lambda, l2_lambda);
+            if (rel_l1_norm(beta, beta0) < rel_tol) {
+                break;
+            }
+            beta0 = beta;
+        }
+    }
+
+    // for a particular lambda
     // lambda_1 * lasso + lambda_2 * ridge
     inline void LogisticReg::elastic_net(
         const double lambda,
@@ -521,8 +567,24 @@ namespace Malc {
         l2_lambda_ = 0.5 * lambda * (1 - alpha);
         arma::vec inner { arma::zeros(n_obs_) };
         arma::mat beta { arma::zeros(p1_, km1_) };
+        // ridge penalty only
+        if (isAlmostEqual(l1_lambda_, 0.0)) {
+            // use the input start if correctly specified
+            // FIXME: not scaled to x_
+            if (start.size() == x_.size()) {
+                beta = start;
+            }
+            run_cmd_full_cycle(beta, inner, l1_lambda_, l2_lambda_,
+                               max_iter, rel_tol);
+            // compute elastic net estimates
+            coef0_ = beta;
+            // rescale coef back
+            rescale_coef();
+            // done
+            return;
+        }
+        // else alpha > 0
         arma::mat grad_zero { arma::abs(gradient(inner)) };
-        arma::mat grad_beta { grad_zero };
         // large enough lambda for all-zero coef (except intercept terms)
         // excluding variable with zero penalty factor
         grad_zero = grad_zero.tail_rows(p0_);
@@ -539,22 +601,19 @@ namespace Malc {
         // early exit for lambda greater than lambda_max
         if (l1_lambda_ >= l1_lambda_max_) {
             coef0_ = beta;
-            // en_coef0_ = beta;
-            // set_prob_mat();
-            // en_prob_mat_ = prob_mat_;
             rescale_coef();
             return;
         }
-
         // use the input start if correctly specified
+        // FIXME: not scaled to x_
         if (start.size() == x_.size()) {
             beta = start;
         }
-
+        arma::umat is_active_strong_new { is_active_strong };
+        bool varying_active_set { true };
         // update active set by strong rule
-        grad_beta = arma::abs(gradient(inner));
+        arma::mat grad_beta { arma::abs(gradient(inner)) };
         double strong_rhs { 2 * l1_lambda_ - l1_lambda_max_ };
-
         for (size_t j { 0 }; j < km1_; ++j) {
             for (size_t l { int_intercept_ }; l < p1_; ++l) {
                 if (grad_beta(l, j) >= strong_rhs) {
@@ -564,14 +623,6 @@ namespace Malc {
                 }
             }
         }
-
-        arma::umat is_active_strong_new { is_active_strong };
-        // optim with varying active set when p > n
-        bool varying_active_set { false };
-        if (p1_ > n_obs_ || p1_ > 50) {
-            varying_active_set = true;
-        }
-
         bool kkt_failed { true };
         strong_rhs = l1_lambda_;
         // eventually, strong rule will guess correctly
@@ -601,13 +652,6 @@ namespace Malc {
         }
         // compute elastic net estimates
         coef0_ = beta;
-        // en_coef0_ = (1 + l2_lambda_) * coef0_;
-        // en_coef0_(0) = coef0_(0);   // for intercept
-
-        // compute probability matrix, disable now
-        // set_prob_mat();
-        // set_en_prob_mat();
-
         // rescale coef back
         rescale_coef();
     }
@@ -635,111 +679,117 @@ namespace Malc {
         if ((pmin < 0) || (pmin > 1)) {
             throw std::range_error("The 'pmin' must be between 0 and 1.");
         }
-        path_ = true;
+        // path_ = true;           // FIXME: not used now
         pmin_ = pmin;
-        // for one lambda
+        // initialize
         arma::vec one_inner { arma::zeros(n_obs_) };
         arma::mat one_beta { arma::zeros(p1_, km1_) };
-        arma::mat one_grad_beta { arma::abs(gradient(one_inner)) };
-        double one_strong_rhs { 0 };
-        // large enough lambda for all-zero coef (except intercept terms)
-        double lambda_max {
-            arma::max(arma::max(one_grad_beta)) / std::max(alpha, 1e-2)
-        };
-        l1_lambda_max_ = lambda_max * alpha;
-        l2_lambda_ = 0.5 * lambda_max * (1 - alpha);
-        // set up lambda sequence
-        if (lambda.empty()) {
-            double log_lambda_max { std::log(lambda_max) };
-            lambda_path_ = arma::exp(
-                arma::linspace(log_lambda_max,
-                               log_lambda_max + std::log(lambda_min_ratio),
-                               nlambda)
-                );
-        } else {
+        arma::mat one_grad_beta;
+        double lambda_max { 0.0 };
+        const bool is_ridge_only { isAlmostEqual(alpha, 0.0) };
+        // if alpha = 0 and lambda is specified
+        if (is_ridge_only && ! lambda.empty()) {
             lambda_path_ = arma::reverse(arma::unique(lambda));
-        }
-        // initialize the estimate matrix
-        coef_path_ = arma::cube(p1_, km1_, lambda_path_.n_elem);
-        // en_coef_path_ = coef_path_;
-        // prob_path_ = arma::cube(n_obs_, k_, lambda_path_.n_elem);
-        // en_prob_path_ = prob_path_;
-        // get the solution (intercepts) of l1_lambda_max for a warm start
-        arma::umat is_active_strong { arma::zeros<arma::umat>(p1_, km1_) };
-        if (intercept_) {
-            // only need to estimate intercept
-            is_active_strong.row(0) = arma::ones<arma::umat>(1, km1_);
-            run_cmd_active_cycle(one_beta, one_inner, is_active_strong,
-                                 l1_lambda_max_, l2_lambda_,
-                                 false, max_iter, rel_tol, verbose);
-        }
-        // optim with varying active set when p > n
-        bool varying_active_set { false };
-        if (p1_ > n_obs_ || p1_ > 50) {
-            varying_active_set = true;
-        }
-        double old_l1_lambda { l1_lambda_max_ };
-        // main loop: for each lambda
-        for (size_t li { 0 }; li < lambda_path_.n_elem; ++li) {
-            lambda_ = lambda_path_(li);
-            l1_lambda_ = lambda_ * alpha;
-            l2_lambda_ = 0.5 * lambda_ * (1 - alpha);
-            // early exit for lambda greater than lambda_max
-            if (l1_lambda_ >= l1_lambda_max_ && alpha > 0) {
-                coef_path_.slice(li) = rescale_coef(one_beta);
-                // en_coef_path_.slice(li) = coef_path_.slice(li);
-                // prob_path_.slice(li) = compute_prob_mat(one_beta);
-                // en_prob_path_.slice(li) = prob_path_.slice(li);
-                continue;
-            }
-            // update active set by strong rule
+        } else {
             one_grad_beta = arma::abs(gradient(one_inner));
-            one_strong_rhs = 2 * l1_lambda_ - old_l1_lambda;
-            old_l1_lambda = l1_lambda_;
-            for (size_t j { 0 }; j < km1_; ++j) {
-                for (size_t l { int_intercept_ }; l < p1_; ++l) {
-                    if (one_grad_beta(l, j) >= one_strong_rhs) {
-                        is_active_strong(l, j) = 1;
-                    } else {
-                        one_beta(l, j) = 0;
-                    }
-                }
+            // large enough lambda for all-zero coef (except intercept terms)
+            lambda_max = arma::max(arma::max(one_grad_beta)) /
+                std::max(alpha, 1e-2);
+            // set up lambda sequence
+            if (lambda.empty()) {
+                double log_lambda_max { std::log(lambda_max) };
+                lambda_path_ = arma::exp(
+                    arma::linspace(log_lambda_max,
+                                   log_lambda_max + std::log(lambda_min_ratio),
+                                   nlambda)
+                    );
+            } else {
+                lambda_path_ = arma::reverse(arma::unique(lambda));
             }
-            arma::umat is_active_strong_new { is_active_strong };
-            bool kkt_failed { true };
-            one_strong_rhs = l1_lambda_;
-            // eventually, strong rule will guess correctly
-            while (kkt_failed) {
-                // update beta
+        }
+        // initialize the estimate cube
+        coef_path_ = arma::cube(p1_, km1_, lambda_path_.n_elem);
+        // for ridge penalty
+        if (is_ridge_only) {
+            for (size_t li { 0 }; li < lambda_path_.n_elem; ++li) {
+                run_cmd_full_cycle(one_beta, one_inner,
+                                   l1_lambda_, l2_lambda_,
+                                   max_iter, rel_tol);
+                coef0_ = one_beta;
+                coef_path_.slice(li) = rescale_coef(coef0_);
+            }
+        } else {
+            // if l1_lambda > 0
+            double one_strong_rhs { 0.0 };
+            l1_lambda_max_ = lambda_max * alpha;
+            l2_lambda_ = 0.5 * lambda_max * (1 - alpha);
+            // get the solution (intercepts) of l1_lambda_max for a warm start
+            arma::umat is_active_strong { arma::zeros<arma::umat>(p1_, km1_) };
+            if (intercept_) {
+                // only need to estimate intercept
+                is_active_strong.row(0) = arma::ones<arma::umat>(1, km1_);
                 run_cmd_active_cycle(one_beta, one_inner, is_active_strong,
-                                     l1_lambda_, l2_lambda_,
-                                     varying_active_set,
-                                     max_iter, rel_tol, verbose);
-                // check kkt condition
+                                     l1_lambda_max_, l2_lambda_,
+                                     false, max_iter, rel_tol, verbose);
+            }
+            // optim with varying active set when p > n
+            bool varying_active_set { true };
+            double old_l1_lambda { l1_lambda_max_ }; // for strong rule
+            // main loop: for each lambda
+            for (size_t li { 0 }; li < lambda_path_.n_elem; ++li) {
+                lambda_ = lambda_path_(li);
+                l1_lambda_ = lambda_ * alpha;
+                l2_lambda_ = 0.5 * lambda_ * (1 - alpha);
+                // early exit for lambda greater than lambda_max
+                if (l1_lambda_ >= l1_lambda_max_ && alpha > 0) {
+                    coef_path_.slice(li) = rescale_coef(one_beta);
+                    continue;
+                }
+                // update active set by strong rule
+                one_grad_beta = arma::abs(gradient(one_inner));
+                one_strong_rhs = 2 * l1_lambda_ - old_l1_lambda;
+                old_l1_lambda = l1_lambda_;
                 for (size_t j { 0 }; j < km1_; ++j) {
                     for (size_t l { int_intercept_ }; l < p1_; ++l) {
-                        if (is_active_strong(l, j) > 0) {
-                            continue;
-                        }
-                        if (std::abs(cmd_gradient(one_inner, l, j)) >
-                            one_strong_rhs) {
-                            // update active set
-                            is_active_strong_new(l, j) = 1;
+                        if (one_grad_beta(l, j) >= one_strong_rhs) {
+                            is_active_strong(l, j) = 1;
+                        } else {
+                            one_beta(l, j) = 0;
                         }
                     }
                 }
-                if (l1_norm(is_active_strong - is_active_strong_new) > 0) {
-                    is_active_strong = is_active_strong_new;
-                } else {
-                    kkt_failed = false;
+                arma::umat is_active_strong_new { is_active_strong };
+                bool kkt_failed { true };
+                one_strong_rhs = l1_lambda_;
+                // eventually, strong rule will guess correctly
+                while (kkt_failed) {
+                    // update beta
+                    run_cmd_active_cycle(one_beta, one_inner, is_active_strong,
+                                         l1_lambda_, l2_lambda_,
+                                         varying_active_set,
+                                         max_iter, rel_tol, verbose);
+                    // check kkt condition
+                    for (size_t j { 0 }; j < km1_; ++j) {
+                        for (size_t l { int_intercept_ }; l < p1_; ++l) {
+                            if (is_active_strong(l, j) > 0) {
+                                continue;
+                            }
+                            if (std::abs(cmd_gradient(one_inner, l, j)) >
+                                one_strong_rhs) {
+                                // update active set
+                                is_active_strong_new(l, j) = 1;
+                            }
+                        }
+                    }
+                    if (l1_norm(is_active_strong - is_active_strong_new) > 0) {
+                        is_active_strong = is_active_strong_new;
+                    } else {
+                        kkt_failed = false;
+                    }
                 }
+                coef0_ = one_beta;
+                coef_path_.slice(li) = rescale_coef(coef0_);
             }
-            // compute elastic net estimates
-            coef0_ = one_beta;
-            coef_path_.slice(li) = rescale_coef(coef0_);
-            // compute probability matrix
-            // prob_path_.slice(li) = compute_prob_mat(coef0_);
-            // en_prob_path_.slice(li) = compute_prob_mat(en_coef0_);
         }
         // cross-validation
         if (nfolds > 0) {
