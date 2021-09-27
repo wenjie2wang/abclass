@@ -1,4 +1,31 @@
 ##' @importFrom stats predict
+predict.malc_logistic <- function(object, newx, newy = NULL, ...)
+{
+    if (missing(newx)) {
+        stop("The 'newx' must be specified.")
+    }
+    if (! is.matrix(newx)) {
+        newx <- as.matrix(newx)
+    }
+    if (object$intercept) {
+        newx <- cbind(1, newx)
+    }
+    newy <- if (! is.null(newy)) {
+                char_y <- as.character(newy)
+                all_y_cat <- unique(c(object$category$label,
+                                      sort(unique(char_y))))
+                factor_y <- factor(char_y, levels = all_y_cat)
+                as.integer(factor_y) - 1L
+            } else {
+                null2num0(newy)
+            }
+    out <- rcpp_accuracy(newx, newy, object$coefficients)
+    if (is.nan(out$accuracy))
+        out$accuracy <- NA_real_
+    out
+}
+
+
 predict.malc_logistic_path <- function(object, newx, newy = NULL, ...)
 {
     n_slice <- dim(object$coefficients)[3L]
@@ -16,7 +43,7 @@ predict.malc_logistic_path <- function(object, newx, newy = NULL, ...)
                 all_y_cat <- unique(c(object$category$label,
                                       sort(unique(char_y))))
                 factor_y <- factor(char_y, levels = all_y_cat)
-                as.integer(factor_y)
+                as.integer(factor_y) - 1L
             } else {
                 null2num0(newy)
             }
