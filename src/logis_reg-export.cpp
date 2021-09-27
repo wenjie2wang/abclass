@@ -26,7 +26,7 @@ Rcpp::List rcpp_logistic_reg(
                        start, max_iter, rel_tol, pmin, verbose);
     return Rcpp::List::create(
         Rcpp::Named("coefficients") = object.coef_,
-        Rcpp::Named("weight") = object.get_weight(),
+        Rcpp::Named("weight") = Malc::arma2rvec(object.get_weight()),
         Rcpp::Named("regularization") = Rcpp::List::create(
             Rcpp::Named("lambda") = lambda,
             Rcpp::Named("alpha") = alpha,
@@ -66,7 +66,7 @@ Rcpp::List rcpp_logistic_path(
     Rcpp::NumericVector lambda_vec { Malc::arma2rvec(object.lambda_path_) };
     return Rcpp::List::create(
         Rcpp::Named("coefficients") = object.coef_path_,
-        Rcpp::Named("weight") = object.get_weight(),
+        Rcpp::Named("weight") = Malc::arma2rvec(object.get_weight()),
         Rcpp::Named("regularization") = Rcpp::List::create(
             Rcpp::Named("lambda") = lambda_vec,
             Rcpp::Named("alpha") = alpha,
@@ -146,7 +146,7 @@ arma::mat rcpp_prob_mat(const arma::mat& beta,
 // [[Rcpp::export]]
 arma::uvec rcpp_predict_cat(const arma::mat& prob_mat)
 {
-    return arma::index_max(prob_mat, 1) + 1;
+    return arma::index_max(prob_mat, 1);
 }
 
 // [[Rcpp::export]]

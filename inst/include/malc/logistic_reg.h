@@ -155,6 +155,7 @@ namespace Malc {
             coef_ = rescale_coef(coef0_);
             // en_coef_ = rescale_coef(en_coef0_);
         }
+
         // compute cov lowerbound used in regularied model
         inline void set_cmd_lowerbound()
         {
@@ -167,7 +168,8 @@ namespace Malc {
         {
             return arma::sum(arma::log(1.0 + arma::exp(- inner))) / n_obs_;
         }
-        inline double regularization(const arma::mat& beta) const
+
+        inline double en_regularization(const arma::mat& beta) const
         {
             if (intercept_) {
                 arma::mat beta0int { beta.tail_rows(p0_) };
@@ -181,8 +183,9 @@ namespace Malc {
         inline double objective(const arma::vec& inner,
                                 const arma::mat& beta) const
         {
-            return objective0(inner) + regularization(beta);
+            return objective0(inner) + en_regularization(beta);
         }
+
         // the first derivative of the loss function
         inline arma::vec loss_derivative(const arma::vec& u) const
         {
@@ -277,7 +280,7 @@ namespace Malc {
         // predict categories for the training set
         inline arma::uvec predict_cat(const arma::mat& prob_mat) const
         {
-            return arma::index_max(prob_mat, 1) + 1;
+            return arma::index_max(prob_mat, 1);
         }
         // number of incorrect classification
         inline unsigned int miss_number(const arma::mat& beta,
@@ -377,12 +380,10 @@ namespace Malc {
         )
     {
         double dlj { 0.0 };
-        arma::mat beta_old;
-        arma::vec inner_old;
+        double ell_verbose;
         if (verbose) {
-            beta_old = beta;
-            inner_old = inner;
-        }
+            ell_verbose = objective(inner, beta);
+        };
         // arma::umat::row_col_iterator it { is_active.begin_row_col() };
         // arma::umat::row_col_iterator it_end { is_active.end_row_col() };
         arma::umat is_active_new { is_active };
@@ -397,8 +398,10 @@ namespace Malc {
                     double tmp { beta(l, j) };
                     // if cmd_lowerbound = 0 and l1_lambda > 0, numer will be 0
                     double numer {
-                        soft_threshold(cmd_lowerbound_(l) * beta(l, j) - dlj,
-                                       l1_lambda)
+                        soft_threshold(
+                            cmd_lowerbound_(l) * beta(l, j) - dlj,
+                            l1_lambda * static_cast<double>(l >= int_intercept_)
+                            )
                     };
                     // update beta
                     if (isAlmostEqual(numer, 0)) {
@@ -424,21 +427,14 @@ namespace Malc {
         is_active = std::move(is_active_new);
         // if early stop, check improvement
         if (verbose) {
-            double ell_old { objective(inner_old, beta_old) };
-            double ell_new { objective(inner, beta) };
-            if (verbose) {
-                Rcpp::Rcout << "The objective function changed\n";
-                Rprintf("  from %15.15f\n", ell_old);
-                Rprintf("    to %15.15f\n", ell_new);
-            }
-            if (ell_new > ell_old) {
+            double ell_old { ell_verbose };
+            Rcpp::Rcout << "The objective function changed\n";
+            Rprintf("  from %15.15f\n", ell_verbose);
+            ell_verbose = objective(inner, beta);
+            Rprintf("    to %15.15f\n", ell_verbose);
+            if (ell_verbose > ell_old) {
                 Rcpp::Rcout << "Warning: "
                             << "the objective function somehow increased\n";
-                Rcpp::Rcout << "\nEarly stopped the CMD iterations "
-                            << "with estimates from the last step"
-                            << std::endl;
-                beta = beta_old;
-                inner = inner_old;
             }
         }
     }
@@ -639,6 +635,7 @@ namespace Malc {
         if ((pmin < 0) || (pmin > 1)) {
             throw std::range_error("The 'pmin' must be between 0 and 1.");
         }
+        path_ = true;
         pmin_ = pmin;
         // for one lambda
         arma::vec one_inner { arma::zeros(n_obs_) };
@@ -688,7 +685,7 @@ namespace Malc {
             l1_lambda_ = lambda_ * alpha;
             l2_lambda_ = 0.5 * lambda_ * (1 - alpha);
             // early exit for lambda greater than lambda_max
-            if (l1_lambda_ >= l1_lambda_max_) {
+            if (l1_lambda_ >= l1_lambda_max_ && alpha > 0) {
                 coef_path_.slice(li) = rescale_coef(one_beta);
                 // en_coef_path_.slice(li) = coef_path_.slice(li);
                 // prob_path_.slice(li) = compute_prob_mat(one_beta);
@@ -739,10 +736,7 @@ namespace Malc {
             }
             // compute elastic net estimates
             coef0_ = one_beta;
-            // en_coef0_ = (1 + l2_lambda_) * one_beta;
-            // en_coef0_(0) = one_beta(0);
             coef_path_.slice(li) = rescale_coef(coef0_);
-            // en_coef_path_.slice(li) = rescale_coef(en_coef0_);
             // compute probability matrix
             // prob_path_.slice(li) = compute_prob_mat(coef0_);
             // en_prob_path_.slice(li) = compute_prob_mat(en_coef0_);
