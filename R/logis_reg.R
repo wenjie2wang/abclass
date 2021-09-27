@@ -1,7 +1,7 @@
 malc_logistic <- function(x, y, lambda, alpha = 1,
                           start = NULL, weight = NULL,
                           intercept = TRUE, standardize = TRUE,
-                          max_iter = 200, rel_tol = 1e-3, pmin = 1e-5,
+                          max_iter = 50, rel_tol = 1e-3, pmin = 1e-5,
                           verbose = FALSE, ...)
 {
     Call <- match.call()
@@ -47,7 +47,7 @@ malc_logistic_path <- function(x, y, lambda = NULL, alpha = 1, nlambda = 100,
                                lambda_min_ratio = NULL, weight = NULL,
                                nfolds = 0, stratified = TRUE,
                                intercept = TRUE, standardize = TRUE,
-                               max_iter = 200, rel_tol = 1e-3, pmin = 1e-5,
+                               max_iter = 50, rel_tol = 1e-3, pmin = 1e-5,
                                verbose = FALSE, ...)
 {
     Call <- match.call()

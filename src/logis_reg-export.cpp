@@ -164,7 +164,7 @@ Rcpp::List rcpp_accuracy(const arma::mat& new_x,
     }
     return Rcpp::List::create(
         Rcpp::Named("class_prob", prob_mat),
-        Rcpp::Named("predicted", max_idx),
+        Rcpp::Named("predicted", Malc::arma2rvec(max_idx)),
         Rcpp::Named("accuracy", acc)
         );
 }
