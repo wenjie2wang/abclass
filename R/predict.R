@@ -50,6 +50,7 @@ predict.malc_logistic_path <- function(object, newx, newy = NULL, ...)
     lapply(seq_len(n_slice), function(i) {
         tmp <- rcpp_accuracy(newx, newy, object$coefficients[, , i])
         if (is.nan(tmp$accuracy)) tmp$accuracy <- NA_real_
+        tmp$predicted <- tmp$predicted + 1L
         tmp
     })
 }

@@ -870,7 +870,7 @@ namespace Malc {
         double one_strong_rhs { 0 };
         // for x with pseudo features
         double lambda_max {
-            arma::max(arma::max(one_grad_beta)) / std::max(alpha, 1e-2)
+            arma::max(arma::max(one_grad_beta)) / std::max(alpha, 1e-3)
         };
         l1_lambda_max_ = lambda_max * alpha;
         l2_lambda_ = 0.5 * lambda_max * (1 - alpha);
