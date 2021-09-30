@@ -689,6 +689,7 @@ namespace Malc {
         const bool is_ridge_only { isAlmostEqual(alpha, 0.0) };
         // if alpha = 0 and lambda is specified
         if (is_ridge_only && ! lambda.empty()) {
+            l1_lambda_max_ = 0.0;
             lambda_path_ = arma::reverse(arma::unique(lambda));
         } else {
             one_grad_beta = arma::abs(gradient(one_inner));
@@ -713,7 +714,7 @@ namespace Malc {
         if (is_ridge_only) {
             for (size_t li { 0 }; li < lambda_path_.n_elem; ++li) {
                 run_cmd_full_cycle(one_beta, one_inner,
-                                   l1_lambda_, l2_lambda_,
+                                   0.0, lambda_path_(li),
                                    max_iter, rel_tol);
                 coef0_ = one_beta;
                 coef_path_.slice(li) = rescale_coef(coef0_);
