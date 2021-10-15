@@ -1,5 +1,5 @@
 ##' @importFrom stats predict
-predict.malc_logistic <- function(object, newx, newy = NULL, ...)
+predict.abclass_logistic_net <- function(object, newx, newy = NULL, ...)
 {
     if (missing(newx)) {
         stop("The 'newx' must be specified.")
@@ -20,13 +20,14 @@ predict.malc_logistic <- function(object, newx, newy = NULL, ...)
                 null2num0(newy)
             }
     out <- rcpp_accuracy(newx, newy, object$coefficients)
+    out$predicted <- out$predicted + 1L
     if (is.nan(out$accuracy))
         out$accuracy <- NA_real_
     out
 }
 
 
-predict.malc_logistic_path <- function(object, newx, newy = NULL, ...)
+predict.abclass_logistic_net_path <- function(object, newx, newy = NULL, ...)
 {
     n_slice <- dim(object$coefficients)[3L]
     if (missing(newx)) {
