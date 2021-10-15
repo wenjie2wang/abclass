@@ -1,12 +1,12 @@
-#ifndef MALC_UTILS_H
-#define MALC_UTILS_H
+#ifndef ABCLASS_UTILS_H
+#define ABCLASS_UTILS_H
 
 #include <vector>
 #include <RcppArmadillo.h>
 #include "simplex.h"
 #include "string.h"
 
-namespace Malc {
+namespace Abclass {
 
     // convert arma vector type to Rcpp vector type
     template <typename T>
@@ -127,7 +127,7 @@ namespace Malc {
         Rcpp::Rcout << m << std::endl;
     }
 
-}  // Malc
+}
 
 
-#endif /* MALC_UTILS_H */
+#endif

@@ -1,5 +1,5 @@
-#ifndef MALC_LOGISTIC_NET_CV_H
-#define MALC_LOGISTIC_NET_CV_H
+#ifndef ABCLASS_LOGISTIC_NET_CV_H
+#define ABCLASS_LOGISTIC_NET_CV_H
 
 #include <utility>
 #include <vector>
@@ -9,7 +9,7 @@
 #include "logistic_net.h"
 
 
-namespace Malc {
+namespace Abclass {
 
     class LogisticNetCV: public LogisticNet
     {
@@ -68,8 +68,6 @@ namespace Malc {
 
 
 
-}  // Malc
+}
 
-
-
-#endif /* MALC_LOGISTIC_NET_CV_H */
+#endif

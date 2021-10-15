@@ -13,8 +13,8 @@
 ##' Association}, 106(493), 166--177.
 ##'
 ##' @importFrom Rcpp sourceCpp
-##' @useDynLib malc
+##' @useDynLib abclass
 ##'
 ##' @docType package
-##' @name malc
+##' @name abclass
 NULL

@@ -1,11 +1,11 @@
-#ifndef MALC_CROSS_VALIDATION_H
-#define MALC_CROSS_VALIDATION_H
+#ifndef ABCLASS_CROSS_VALIDATION_H
+#define ABCLASS_CROSS_VALIDATION_H
 
 #include <vector>
 #include <RcppArmadillo.h>
 #include "utils.h"
 
-namespace Malc {
+namespace Abclass {
 
     class CrossValidation {
     private:
@@ -145,7 +145,7 @@ namespace Malc {
         }
 
     };
-}  // Malc
+}
 
 
-#endif /* MALC_CROSS_VALIDATION_H */
+#endif

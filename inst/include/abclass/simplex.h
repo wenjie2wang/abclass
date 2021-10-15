@@ -1,10 +1,10 @@
-#ifndef MALC_SIMPLEX_H
-#define MALC_SIMPLEX_H
+#ifndef ABCLASS_SIMPLEX_H
+#define ABCLASS_SIMPLEX_H
 
 #include <RcppArmadillo.h>
 #include <stdexcept>
 
-namespace Malc {
+namespace Abclass {
 
     class Simplex
     {
@@ -52,6 +52,6 @@ namespace Malc {
 
     };
 
-}  // Malc
+}
 
-#endif /* MALC_SIMPLEX_H */
+#endif

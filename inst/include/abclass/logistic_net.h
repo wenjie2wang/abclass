@@ -1,12 +1,12 @@
-#ifndef MALC_LOGISTIC_NET_H
-#define MALC_LOGISTIC_NET_H
+#ifndef ABCLASS_LOGISTIC_NET_H
+#define ABCLASS_LOGISTIC_NET_H
 
 #include <utility>
 #include <vector>
 #include <RcppArmadillo.h>
 #include "utils.h"
 
-namespace Malc {
+namespace Abclass {
 
     // define class for inputs and outputs
     class LogisticNet

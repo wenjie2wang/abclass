@@ -2,22 +2,22 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 rcpp_logistic_net <- function(x, y, lambda, alpha, start, weight, intercept = TRUE, standardize = TRUE, max_iter = 1000L, rel_tol = 1e-5, pmin = 1e-5, verbose = FALSE) {
-    .Call('_malc_rcpp_logistic_net', PACKAGE = 'malc', x, y, lambda, alpha, start, weight, intercept, standardize, max_iter, rel_tol, pmin, verbose)
+    .Call('_abclass_rcpp_logistic_net', PACKAGE = 'abclass', x, y, lambda, alpha, start, weight, intercept, standardize, max_iter, rel_tol, pmin, verbose)
 }
 
 rcpp_logistic_net_path <- function(x, y, lambda, alpha, nlambda, lambda_min_ratio, weight, intercept = TRUE, standardize = TRUE, max_iter = 200L, rel_tol = 1e-3, pmin = 1e-5, verbose = FALSE) {
-    .Call('_malc_rcpp_logistic_net_path', PACKAGE = 'malc', x, y, lambda, alpha, nlambda, lambda_min_ratio, weight, intercept, standardize, max_iter, rel_tol, pmin, verbose)
+    .Call('_abclass_rcpp_logistic_net_path', PACKAGE = 'abclass', x, y, lambda, alpha, nlambda, lambda_min_ratio, weight, intercept, standardize, max_iter, rel_tol, pmin, verbose)
 }
 
 rcpp_prob_mat <- function(beta, x) {
-    .Call('_malc_rcpp_prob_mat', PACKAGE = 'malc', beta, x)
+    .Call('_abclass_rcpp_prob_mat', PACKAGE = 'abclass', beta, x)
 }
 
 rcpp_predict_cat <- function(prob_mat) {
-    .Call('_malc_rcpp_predict_cat', PACKAGE = 'malc', prob_mat)
+    .Call('_abclass_rcpp_predict_cat', PACKAGE = 'abclass', prob_mat)
 }
 
 rcpp_accuracy <- function(new_x, new_y, beta) {
-    .Call('_malc_rcpp_accuracy', PACKAGE = 'malc', new_x, new_y, beta)
+    .Call('_abclass_rcpp_accuracy', PACKAGE = 'abclass', new_x, new_y, beta)
 }
 

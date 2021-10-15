@@ -1,13 +1,16 @@
-Package: malc
-Title: Multi-Category Angle-Based Large-Margin Classifiers
-Version: 0.1.0.9005
+Package: abclass
+Title: Angle-Based Large-Margin Classifiers
+Version: 0.1.0.9006
 Authors@R: c(
     person(given = "Wenjie", family = "Wang",
            email = "wang@wwenjie.org",
            role = c("aut", "cre"),
-           comment = c(ORCID = "0000-0003-0363-3180"))
+           comment = c(ORCID = "0000-0003-0363-3180")),
+    person(family = "Eli Lilly and Company",
+           role = "cph")
     )
 Description: Multi-category angle-based large-margin classifiers.
+    See Zhang and Liu (2014) <doi:10.1093/biomet/asu017> for details.
 Depends:
     R (>= 3.5.0)
 Imports:
@@ -17,7 +20,7 @@ LinkingTo:
     Rcpp,
     RcppArmadillo
 License: GPL (>= 3)
-URL: https://github.com/wenjie2wang/malc
-BugReports: https://github.com/wenjie2wang/malc/issues
+URL: https://github.com/wenjie2wang/abclass
+BugReports: https://github.com/wenjie2wang/abclass/issues
 Encoding: UTF-8
 RoxygenNote: 7.1.2

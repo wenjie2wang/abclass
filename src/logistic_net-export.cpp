@@ -1,6 +1,6 @@
 #include <cmath>
 #include <RcppArmadillo.h>
-#include <malc.h>
+#include <abclass.h>
 
 
 // [[Rcpp::export]]
@@ -19,14 +19,14 @@ Rcpp::List rcpp_logistic_net(
     const bool verbose = false
     )
 {
-    Malc::LogisticNet object {
+    Abclass::LogisticNet object {
         x, y, intercept, standardize, weight
     };
     object.fit(lambda, alpha,
                start, max_iter, rel_tol, pmin, verbose);
     return Rcpp::List::create(
         Rcpp::Named("coefficients") = object.coef_,
-        Rcpp::Named("weight") = Malc::arma2rvec(object.get_weight()),
+        Rcpp::Named("weight") = Abclass::arma2rvec(object.get_weight()),
         Rcpp::Named("regularization") = Rcpp::List::create(
             Rcpp::Named("lambda") = lambda,
             Rcpp::Named("alpha") = alpha,
@@ -54,15 +54,15 @@ Rcpp::List rcpp_logistic_net_path(
     const bool verbose = false
     )
 {
-    Malc::LogisticNet object {
+    Abclass::LogisticNet object {
         x, y, intercept, standardize, weight
     };
     object.path(lambda, alpha, nlambda, lambda_min_ratio,
                 max_iter, rel_tol, pmin, verbose);
-    Rcpp::NumericVector lambda_vec { Malc::arma2rvec(object.lambda_path_) };
+    Rcpp::NumericVector lambda_vec { Abclass::arma2rvec(object.lambda_path_) };
     return Rcpp::List::create(
         Rcpp::Named("coefficients") = object.coef_path_,
-        Rcpp::Named("weight") = Malc::arma2rvec(object.get_weight()),
+        Rcpp::Named("weight") = Abclass::arma2rvec(object.get_weight()),
         Rcpp::Named("regularization") = Rcpp::List::create(
             Rcpp::Named("lambda") = lambda_vec,
             Rcpp::Named("alpha") = alpha,
@@ -84,7 +84,7 @@ arma::mat rcpp_prob_mat(const arma::mat& beta,
 {
     arma::mat out { x * beta };
     unsigned int k { beta.n_cols + 1 };
-    Malc::Simplex sim { k };
+    Abclass::Simplex sim { k };
     arma::mat vertex { sim.get_vertex() };
     out *= vertex.t();
     for (size_t j { 0 }; j < k; ++j) {
@@ -118,7 +118,7 @@ Rcpp::List rcpp_accuracy(const arma::mat& new_x,
     }
     return Rcpp::List::create(
         Rcpp::Named("class_prob", prob_mat),
-        Rcpp::Named("predicted", Malc::arma2rvec(max_idx)),
+        Rcpp::Named("predicted", Abclass::arma2rvec(max_idx)),
         Rcpp::Named("accuracy", acc)
         );
 }
