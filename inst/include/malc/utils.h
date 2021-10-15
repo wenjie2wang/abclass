@@ -100,7 +100,7 @@ namespace Malc {
     template <typename T>
     inline double rel_l1_norm(const T& x_old, const T& x_new)
     {
-        double denom { l1_norm(x_new + x_old) + 1.0 };
+        double denom { l1_norm(x_new + x_old) };
         if (isAlmostEqual(denom, 0)) {
             return 0;
         }
