@@ -69,8 +69,8 @@ namespace Abclass {
             standardize_ (standardize)
         {
             int_intercept_ = static_cast<unsigned int>(intercept_);
-            k_ = arma::max(y_) + 1; // assume y in {0, ..., k-1}
-            km1_ = k_ - 1;
+            km1_ = arma::max(y_); // assume y in {0, ..., k-1}
+            k_ = km1_ + 1;
             n_obs_ = x_.n_rows;
             dn_obs_ = static_cast<double>(n_obs_);
             p0_ = x_.n_cols;
@@ -362,6 +362,10 @@ namespace Abclass {
         double dlj { 0.0 };
         double ell_verbose;
         if (verbose) {
+            Rcpp::Rcout << "\nStarting values of beta:\n";
+            Rcpp::Rcout << beta << std::endl;
+            Rcpp::Rcout << "\nThe active set of beta:\n";
+            Rcpp::Rcout << is_active << std::endl;
             ell_verbose = objective(inner, beta);
         };
         // arma::umat::row_col_iterator it { is_active.begin_row_col() };
@@ -444,7 +448,7 @@ namespace Abclass {
                 while (ii < max_iter) {
                     run_one_active_cycle(beta, inner, is_active_stored,
                                          l1_lambda, l2_lambda, true, verbose);
-                    if (rel_l1_norm(beta, beta0) < rel_tol) {
+                    if (rel_diff(beta, beta0) < rel_tol) {
                         break;
                     }
                     beta0 = beta;
@@ -467,7 +471,7 @@ namespace Abclass {
             while (i < max_iter) {
                 run_one_active_cycle(beta, inner, is_active_stored,
                                      l1_lambda, l2_lambda, false, verbose);
-                if (rel_l1_norm(beta, beta0) < rel_tol) {
+                if (rel_diff(beta, beta0) < rel_tol) {
                     break;
                 }
                 beta0 = beta;
@@ -522,7 +526,7 @@ namespace Abclass {
         arma::mat beta0 { beta };
         for (size_t i {0}; i < max_iter; ++i) {
             run_one_full_cycle(beta, inner, l1_lambda, l2_lambda);
-            if (rel_l1_norm(beta, beta0) < rel_tol) {
+            if (rel_diff(beta, beta0) < rel_tol) {
                 break;
             }
             beta0 = beta;
@@ -578,7 +582,7 @@ namespace Abclass {
         // large enough lambda for all-zero coef (except intercept terms)
         // excluding variable with zero penalty factor
         grad_zero = grad_zero.tail_rows(p0_);
-        l1_lambda_max_ = arma::max(arma::max(grad_zero));
+        l1_lambda_max_ = grad_zero.max();
         // get the solution (intercepts) of l1_lambda_max for a warm start
         arma::umat is_active_strong { arma::zeros<arma::umat>(p1_, km1_) };
         if (intercept_) {
@@ -603,7 +607,7 @@ namespace Abclass {
             }
         }
         arma::umat is_active_strong_new { is_active_strong };
-        bool varying_active_set { true };
+        bool varying_active_set { false };
         // update active set by strong rule
         arma::mat grad_beta { arma::abs(gradient(inner)) };
         double strong_rhs { 2 * l1_lambda_ - l1_lambda_max_ };
@@ -684,8 +688,7 @@ namespace Abclass {
         } else {
             one_grad_beta = arma::abs(gradient(one_inner));
             // large enough lambda for all-zero coef (except intercept terms)
-            lambda_max = arma::max(arma::max(one_grad_beta)) /
-                std::max(alpha, 1e-2);
+            lambda_max = one_grad_beta.max() / std::max(alpha, 1e-2);
             // set up lambda sequence
             if (lambda.empty()) {
                 double log_lambda_max { std::log(lambda_max) };
@@ -773,8 +776,18 @@ namespace Abclass {
                         }
                     }
                     if (l1_norm(is_active_strong - is_active_strong_new) > 0) {
+                        if (verbose) {
+                            Rcpp::Rcout << "\nThe strong rule failed."
+                                        << "\nOld active set:\n";
+                            Rcpp::Rcout << is_active_strong << std::endl;
+                            Rcpp::Rcout << "\nNew active set:\n";
+                            Rcpp::Rcout << is_active_strong_new << std::endl;
+                        }
                         is_active_strong = is_active_strong_new;
                     } else {
+                        if (verbose) {
+                            Rcpp::Rcout << "\nThe strong rule worked.\n";
+                        }
                         kkt_failed = false;
                     }
                 }

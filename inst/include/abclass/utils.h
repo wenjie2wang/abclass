@@ -96,15 +96,15 @@ namespace Abclass {
     {
         return arma::accu(arma::abs(x));
     }
-    // function computing relateive tolerance based on l1_norm
+
+    // function check convergence
     template <typename T>
-    inline double rel_l1_norm(const T& x_old, const T& x_new)
+    inline double rel_diff(const T& x_old, const T& x_new)
     {
-        double denom { l1_norm(x_new + x_old) };
-        if (isAlmostEqual(denom, 0)) {
-            return 0;
-        }
-        return l1_norm(x_new - x_old) / denom;
+        arma::mat tmp_mat { arma::abs(x_new - x_old) };
+        double numer { tmp_mat.max() };
+        double denom { 1.0 + l1_norm(x_new) };
+        return numer / denom;
     }
 
     // set difference for vector a and vector b
