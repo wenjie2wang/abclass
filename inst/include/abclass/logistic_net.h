@@ -111,6 +111,11 @@ namespace Abclass {
             Simplex sim { k };
             vertex_ = sim.get_vertex();
         }
+        inline arma::vec get_vertex_y(const unsigned int j) const
+        {
+            arma::vec vj { vertex_.col(j) };
+            return vj.elem(y_);
+        }
         // transfer coef for standardized data to coef for non-standardized data
         inline arma::mat rescale_coef(const arma::mat& beta) const
         {
@@ -202,44 +207,58 @@ namespace Abclass {
             return - neg_loss_derivative(u);
         }
 
-        // define gradient function at k-th dimension
+        // define gradient function at (l, j)
         inline double cmd_gradient(const arma::vec& inner,
-                                   const unsigned int l,
-                                   const unsigned int j) const
+                                   const arma::vec& vj_xl) const
         {
-            double out { 0.0 };
-            for (size_t i { 0 }; i < inner.n_elem; ++i) {
-                double p_est { neg_loss_derivative(inner(i)) };
-                if (p_est < pmin_) {
-                    p_est = pmin_;
-                } else if (p_est > 1 - pmin_) {
-                    p_est = 1 - pmin_;
-                }
-                out += obs_weight_(i) * vertex_(y_(i), j) * x_(i, l) * p_est;
-            }
-            return - out / static_cast<double>(n_obs_);
+            // double out { 0.0 };
+            // for (size_t i { 0 }; i < inner.n_elem; ++i) {
+            //     double p_est { neg_loss_derivative(inner(i)) };
+            //     // if (p_est < pmin_) {
+            //     //     p_est = pmin_;
+            //     // } else if (p_est > 1 - pmin_) {
+            //     //     p_est = 1 - pmin_;
+            //     // }
+            //     out += obs_weight_(i) * vertex_(y_(i), j) * x_(i, l) * p_est;
+            // }
+            arma::vec p_est { neg_loss_derivative(inner) };
+            p_est = obs_weight_ % vj_xl % p_est;
+            return - arma::mean(p_est);
+        }
+        // define gradient function at (l, j)
+        inline double cmd_gradient2(const arma::vec& p_est,
+                                    const arma::vec& vj_xl) const
+        {
+            return - arma::mean(obs_weight_ % vj_xl % p_est);
         }
         // gradient matrix
         inline arma::mat gradient(const arma::vec& inner) const
         {
             arma::mat out { arma::zeros(p1_, km1_) };
             arma::vec p_vec { neg_loss_derivative(inner) };
-            for (size_t i { 0 }; i < p_vec.n_elem; ++i) {
-                if (p_vec(i) < pmin_) {
-                    p_vec(i) = pmin_;
-                } else if (p_vec(i) > 1 - pmin_) {
-                    p_vec(i) = 1 - pmin_;
+            // for (size_t i { 0 }; i < p_vec.n_elem; ++i) {
+            //     if (p_vec(i) < pmin_) {
+            //         p_vec(i) = pmin_;
+            //     } else if (p_vec(i) > 1 - pmin_) {
+            //         p_vec(i) = 1 - pmin_;
+            //     }
+            // }
+            // arma::mat::row_col_iterator it { out.begin_row_col() };
+            // arma::mat::row_col_iterator it_end { out.end_row_col() };
+            // for (; it != it_end; ++it) {
+            //     double tmp { 0.0 };
+            //     for (size_t i { 0 }; i < inner.n_elem; ++i) {
+            //         tmp += obs_weight_(i) * vertex_(y_(i), it.col()) *
+            //             x_(i, it.row()) * p_vec(i);
+            //     }
+            //     *it = - tmp / dn_obs_;
+            // }
+            for (size_t j {0}; j < km1_; ++j) {
+                const arma::vec v_j { get_vertex_y(j) };
+                for (size_t l {0}; l < p1_; ++l) {
+                    const arma::vec vj_xl { v_j % x_.col(l) };
+                    out(l, j) = cmd_gradient2(p_vec, vj_xl);
                 }
-            }
-            arma::mat::row_col_iterator it { out.begin_row_col() };
-            arma::mat::row_col_iterator it_end { out.end_row_col() };
-            for (; it != it_end; ++it) {
-                double tmp { 0.0 };
-                for (size_t i { 0 }; i < inner.n_elem; ++i) {
-                    tmp += obs_weight_(i) * vertex_(y_(i), it.col()) *
-                        x_(i, it.row()) * p_vec(i);
-                }
-                *it = - tmp / dn_obs_;
             }
             return out;
         }
@@ -372,13 +391,13 @@ namespace Abclass {
         // arma::umat::row_col_iterator it_end { is_active.end_row_col() };
         arma::umat is_active_new { is_active };
         for (size_t j {0}; j < is_active.n_cols; ++j) {
-            arma::vec vj { vertex_.col(j) };
-            vj = vj.elem(y_);
+            arma::vec v_j { get_vertex_y(j) };
             for (size_t l {0}; l < is_active.n_rows; ++l) {
                 // arma::uword l { it.row() };
                 // arma::uword j { it.col() };
+                arma::vec vj_xl { x_.col(l) % v_j };
                 if (is_active(l, j) > 0) {
-                    dlj = cmd_gradient(inner, l, j);
+                    dlj = cmd_gradient(inner, vj_xl);
                     double tmp { beta(l, j) };
                     // if cmd_lowerbound = 0 and l1_lambda > 0, numer will be 0
                     double numer {
@@ -396,7 +415,7 @@ namespace Abclass {
                         };
                         beta(l, j) = numer / denom;
                     }
-                    inner += (beta(l, j) - tmp) * (x_.col(l) % vj);
+                    inner += (beta(l, j) - tmp) * vj_xl;
                     if (update_active) {
                         // check if it has been shrinkaged to zero
                         if (isAlmostEqual(beta(l, j), 0)) {
@@ -489,10 +508,10 @@ namespace Abclass {
         )
     {
         for (size_t j {0}; j < beta.n_cols; ++j) {
-            arma::vec vj { vertex_.col(j) };
-            vj = vj.elem(y_);
+            arma::vec v_j { get_vertex_y(j) };
             for (size_t l {0}; l < beta.n_rows; ++l) {
-                double dlj { cmd_gradient(inner, l, j) };
+                arma::vec vj_xl { v_j % x_.col(l) };
+                double dlj { cmd_gradient(inner, vj_xl) };
                 double tmp { beta(l, j) };
                 // if cmd_lowerbound = 0 and l1_lambda > 0, numer will be 0
                 double numer {
@@ -510,7 +529,7 @@ namespace Abclass {
                     };
                     beta(l, j) = numer / denom;
                 }
-                inner += (beta(l, j) - tmp) * (x_.col(l) % vj);
+                inner += (beta(l, j) - tmp) * vj_xl;
             }
         }
     }
@@ -631,11 +650,13 @@ namespace Abclass {
                                  max_iter, rel_tol, verbose);
             // check kkt condition
             for (size_t j { 0 }; j < km1_; ++j) {
+                arma::vec v_j { get_vertex_y(j) };
                 for (size_t l { int_intercept_ }; l < p1_; ++l) {
                     if (is_active_strong(l, j) > 0) {
                         continue;
                     }
-                    if (std::abs(cmd_gradient(inner, l, j)) > strong_rhs) {
+                    arma::vec vj_xl { v_j % x_.col(l) };
+                    if (std::abs(cmd_gradient(inner, vj_xl)) > strong_rhs) {
                         // update active set
                         is_active_strong_new(l, j) = 1;
                     }
@@ -764,11 +785,13 @@ namespace Abclass {
                                          max_iter, rel_tol, verbose);
                     // check kkt condition
                     for (size_t j { 0 }; j < km1_; ++j) {
+                        arma::vec v_j { get_vertex_y(j) };
                         for (size_t l { int_intercept_ }; l < p1_; ++l) {
                             if (is_active_strong(l, j) > 0) {
                                 continue;
                             }
-                            if (std::abs(cmd_gradient(one_inner, l, j)) >
+                            arma::vec vj_xl { v_j % x_.col(l) };
+                            if (std::abs(cmd_gradient(one_inner, vj_xl)) >
                                 one_strong_rhs) {
                                 // update active set
                                 is_active_strong_new(l, j) = 1;
