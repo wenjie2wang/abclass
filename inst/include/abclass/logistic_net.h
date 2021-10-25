@@ -516,7 +516,7 @@ namespace Abclass {
                 // if cmd_lowerbound = 0 and l1_lambda > 0, numer will be 0
                 double numer {
                     soft_threshold(
-                        cmd_lowerbound_(l) * beta(l, j) - dlj,
+                        cmd_lowerbound_(l) * tmp - dlj,
                         l1_lambda * static_cast<double>(l >= int_intercept_)
                         )
                 };
@@ -539,7 +539,7 @@ namespace Abclass {
         const double l1_lambda,
         const double l2_lambda,
         const unsigned int max_iter,
-        const double rel_tol = false
+        const double rel_tol
         )
     {
         arma::mat beta0 { beta };
