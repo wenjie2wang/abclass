@@ -49,7 +49,7 @@ predict.abclass_logistic_net_path <- function(object, newx, newy = NULL, ...)
                 null2num0(newy)
             }
     lapply(seq_len(n_slice), function(i) {
-        tmp <- rcpp_accuracy(newx, newy, object$coefficients[, , i])
+        tmp <- rcpp_accuracy(newx, newy, as.matrix(object$coefficients[, , i]))
         if (is.nan(tmp$accuracy)) tmp$accuracy <- NA_real_
         tmp$predicted <- tmp$predicted + 1L
         tmp
