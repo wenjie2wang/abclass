@@ -13,6 +13,8 @@ Rcpp::List rcpp_logistic_net(
     const arma::vec& weight,
     const bool intercept = true,
     const bool standardize = true,
+    const unsigned int nfolds = 0,
+    const bool stratified_cv = true,
     const unsigned int max_iter = 1000,
     const double rel_tol = 1e-5,
     const double pmin = 1e-5,
@@ -24,9 +26,22 @@ Rcpp::List rcpp_logistic_net(
     };
     object.fit(lambda, alpha,
                start, max_iter, rel_tol, pmin, verbose);
+    object.path_ = false;
+    arma::vec cv_acc;
+    if (nfolds > 0) {
+    Abclass::LogisticNetCV cv_object = object;
+        arma::uvec strata;
+        if (stratified_cv) {
+            strata = y;
+        }
+        cv_object.set(nfolds, strata);
+        cv_object.tune(max_iter, rel_tol);
+        cv_acc = cv_object.cv_accuracy_.row(0);
+    }
     return Rcpp::List::create(
         Rcpp::Named("coefficients") = object.coef_,
         Rcpp::Named("weight") = Abclass::arma2rvec(object.get_weight()),
+        Rcpp::Named("cv_accuracy") = Abclass::arma2rvec(cv_acc),
         Rcpp::Named("regularization") = Rcpp::List::create(
             Rcpp::Named("lambda") = lambda,
             Rcpp::Named("alpha") = alpha,
@@ -48,6 +63,8 @@ Rcpp::List rcpp_logistic_net_path(
     const arma::vec& weight,
     const bool intercept = true,
     const bool standardize = true,
+    const unsigned int nfolds = 0,
+    const bool stratified_cv = true,
     const unsigned int max_iter = 200,
     const double rel_tol = 1e-3,
     const double pmin = 1e-5,
@@ -60,9 +77,22 @@ Rcpp::List rcpp_logistic_net_path(
     object.path(lambda, alpha, nlambda, lambda_min_ratio,
                 max_iter, rel_tol, pmin, verbose);
     Rcpp::NumericVector lambda_vec { Abclass::arma2rvec(object.lambda_path_) };
+    object.path_ = true;
+    arma::mat cv_acc;
+    if (nfolds > 0) {
+        Abclass::LogisticNetCV cv_object { object };
+        arma::uvec strata;
+        if (stratified_cv) {
+            strata = y;
+        }
+        cv_object.set(nfolds, strata);
+        cv_object.tune(max_iter, rel_tol);
+        cv_acc = cv_object.cv_accuracy_;
+    }
     return Rcpp::List::create(
         Rcpp::Named("coefficients") = object.coef_path_,
         Rcpp::Named("weight") = Abclass::arma2rvec(object.get_weight()),
+        Rcpp::Named("cv_accuracy") = cv_acc,
         Rcpp::Named("regularization") = Rcpp::List::create(
             Rcpp::Named("lambda") = lambda_vec,
             Rcpp::Named("alpha") = alpha,
