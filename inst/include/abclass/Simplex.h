@@ -4,23 +4,24 @@
 #include <RcppArmadillo.h>
 #include <stdexcept>
 
-namespace Abclass {
+namespace abclass
+{
 
     class Simplex
     {
     private:
-        unsigned int k_ { 2 };     // dimensions
-
+        unsigned int k_;        // dimensions
         // k vertex row vectors in R^(k-1) => k by (k - 1)
         arma::mat vertex_;
 
     public:
         // default constructor
-        Simplex() {}
-
-        Simplex(const unsigned int k)
+        Simplex(const unsigned int k = 2)
         {
-            set_k(k);
+            if (k < 2) {
+                throw std::range_error("k must be an integer > 1.");
+            }
+            k_ = k;
             vertex_ = arma::zeros(k_, k_ - 1);
             const arma::rowvec tmp { arma::ones<arma::rowvec>(k_ - 1) };
             vertex_.row(0) = std::pow(k_ - 1.0, - 0.5) * tmp;
@@ -32,14 +33,6 @@ namespace Abclass {
         }
 
         // setter and getter
-        inline void set_k(const unsigned int k)
-        {
-            if (k < 2) {
-                throw std::range_error("k must be an integer > 1.");
-            }
-            k_ = k;
-        }
-
         inline unsigned int get_k() const
         {
             return k_;

@@ -5,7 +5,7 @@
 #include <RcppArmadillo.h>
 #include "utils.h"
 
-namespace Abclass {
+namespace abclass {
 
     class CrossValidation {
     private:

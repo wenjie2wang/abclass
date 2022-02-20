@@ -9,7 +9,7 @@
 #include "logistic_net.h"
 
 
-namespace Abclass {
+namespace abclass {
 
     class LogisticNetCV: public LogisticNet
     {

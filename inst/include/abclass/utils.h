@@ -3,10 +3,8 @@
 
 #include <vector>
 #include <RcppArmadillo.h>
-#include "simplex.h"
-#include "string.h"
 
-namespace Abclass {
+namespace abclass {
 
     // convert arma vector type to Rcpp vector type
     template <typename T>
@@ -101,7 +99,7 @@ namespace Abclass {
     template <typename T>
     inline double rel_diff(const T& x_old, const T& x_new)
     {
-        arma::mat tmp_mat { arma::abs(x_new - x_old) };
+        T tmp_mat { arma::abs(x_new - x_old) };
         double numer { tmp_mat.max() };
         double denom { 1.0 + l1_norm(x_new) };
         return numer / denom;
