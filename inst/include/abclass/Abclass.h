@@ -157,12 +157,10 @@ namespace abclass
         {
             // pred_f: n x (k - 1) matrix
             // vertex_: k x (k - 1) matrix
-            arma::mat inner_mat { pred_f * vertex_.t() }; // n x k
-            arma::mat out {
-                inner_mat.each_col([&](const arma::vec& a) {
-                    1.0 / loss_derivative(a);
-                })
-            };
+            arma::mat out { pred_f * vertex_.t() }; // n x k
+            out.each_col([&](arma::vec& a) {
+                a = 1.0 / loss_derivative(a);
+            });
             arma::vec row_sums { arma::sum(out, 1) };
             out.each_col() /= row_sums;
             return out;
