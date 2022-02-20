@@ -7,55 +7,6 @@
 Rcpp::List rcpp_logistic_net(
     const arma::mat& x,
     const arma::uvec& y,
-    const double lambda,
-    const double alpha,
-    const arma::mat& start,
-    const arma::vec& weight,
-    const bool intercept = true,
-    const bool standardize = true,
-    const unsigned int nfolds = 0,
-    const bool stratified_cv = true,
-    const unsigned int max_iter = 1000,
-    const double rel_tol = 1e-5,
-    const double pmin = 1e-5,
-    const bool verbose = false
-    )
-{
-    Abclass::LogisticNet object {
-        x, y, intercept, standardize, weight
-    };
-    object.fit(lambda, alpha,
-               start, max_iter, rel_tol, pmin, verbose);
-    object.path_ = false;
-    arma::vec cv_acc;
-    if (nfolds > 0) {
-    Abclass::LogisticNetCV cv_object = object;
-        arma::uvec strata;
-        if (stratified_cv) {
-            strata = y;
-        }
-        cv_object.set(nfolds, strata);
-        cv_object.tune(max_iter, rel_tol);
-        cv_acc = cv_object.cv_accuracy_.row(0);
-    }
-    return Rcpp::List::create(
-        Rcpp::Named("coefficients") = object.coef_,
-        Rcpp::Named("weight") = Abclass::arma2rvec(object.get_weight()),
-        Rcpp::Named("cv_accuracy") = Abclass::arma2rvec(cv_acc),
-        Rcpp::Named("regularization") = Rcpp::List::create(
-            Rcpp::Named("lambda") = lambda,
-            Rcpp::Named("alpha") = alpha,
-            Rcpp::Named("l1_lambda") = object.l1_lambda_,
-            Rcpp::Named("l2_lambda") = object.l2_lambda_,
-            Rcpp::Named("l1_lambda_max") = object.l1_lambda_max_
-            )
-        );
-}
-
-// [[Rcpp::export]]
-Rcpp::List rcpp_logistic_net_path(
-    const arma::mat& x,
-    const arma::uvec& y,
     const arma::vec& lambda,
     const double alpha,
     const unsigned int nlambda,
@@ -63,41 +14,23 @@ Rcpp::List rcpp_logistic_net_path(
     const arma::vec& weight,
     const bool intercept = true,
     const bool standardize = true,
-    const unsigned int nfolds = 0,
-    const bool stratified_cv = true,
-    const unsigned int max_iter = 200,
-    const double rel_tol = 1e-3,
-    const double pmin = 1e-5,
-    const bool verbose = false
+    const unsigned int max_iter = 1000,
+    const double rel_tol = 1e-5,
+    const bool varying_active_set = true,
+    const unsigned int verbose = 0
     )
 {
-    Abclass::LogisticNet object {
+    abclass::LogisticNet object {
         x, y, intercept, standardize, weight
     };
-    object.path(lambda, alpha, nlambda, lambda_min_ratio,
-                max_iter, rel_tol, pmin, verbose);
-    Rcpp::NumericVector lambda_vec { Abclass::arma2rvec(object.lambda_path_) };
-    object.path_ = true;
-    arma::mat cv_acc;
-    if (nfolds > 0) {
-        Abclass::LogisticNetCV cv_object { object };
-        arma::uvec strata;
-        if (stratified_cv) {
-            strata = y;
-        }
-        cv_object.set(nfolds, strata);
-        cv_object.tune(max_iter, rel_tol);
-        cv_acc = cv_object.cv_accuracy_;
-    }
+    object.fit(lambda, alpha, nlambda, lambda_min_ratio,
+               max_iter, rel_tol, varying_active_set, verbose);
     return Rcpp::List::create(
-        Rcpp::Named("coefficients") = object.coef_path_,
-        Rcpp::Named("weight") = Abclass::arma2rvec(object.get_weight()),
-        Rcpp::Named("cv_accuracy") = cv_acc,
+        Rcpp::Named("coefficients") = object.coef_,
+        Rcpp::Named("weight") = abclass::arma2rvec(object.get_weight()),
         Rcpp::Named("regularization") = Rcpp::List::create(
-            Rcpp::Named("lambda") = lambda_vec,
+            Rcpp::Named("lambda") = lambda,
             Rcpp::Named("alpha") = alpha,
-            Rcpp::Named("l1_lambda") = alpha * lambda_vec,
-            Rcpp::Named("l2_lambda") = 0.5 * (1 - alpha) * lambda_vec,
             Rcpp::Named("l1_lambda_max") = object.l1_lambda_max_
             )
         );
@@ -114,7 +47,7 @@ arma::mat rcpp_prob_mat(const arma::mat& beta,
 {
     arma::mat out { x * beta };
     unsigned int k { beta.n_cols + 1 };
-    Abclass::Simplex sim { k };
+    abclass::Simplex sim { k };
     arma::mat vertex { sim.get_vertex() };
     out *= vertex.t();
     for (size_t j { 0 }; j < k; ++j) {
@@ -148,7 +81,7 @@ Rcpp::List rcpp_accuracy(const arma::mat& new_x,
     }
     return Rcpp::List::create(
         Rcpp::Named("class_prob", prob_mat),
-        Rcpp::Named("predicted", Abclass::arma2rvec(max_idx)),
+        Rcpp::Named("predicted", abclass::arma2rvec(max_idx)),
         Rcpp::Named("accuracy", acc)
         );
 }
