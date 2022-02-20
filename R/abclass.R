@@ -1,6 +1,6 @@
 ##' Multi-Category Angle-Based Large-Margin Classifiers
 ##'
-##' The package malc provides implementations of multi-category angle-based
+##' This package provides implementations of multi-category angle-based
 ##' large-margin classifiers for high-dimensional data.
 ##'
 ##' @references
