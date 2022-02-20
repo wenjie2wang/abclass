@@ -91,7 +91,8 @@ namespace abclass
         inline void run_one_full_cycle(arma::mat& beta,
                                        arma::vec& inner,
                                        const double l1_lambda,
-                                       const double l2_lambda);
+                                       const double l2_lambda,
+                                       const unsigned int verbose);
 
         // run full cycles of CMD for given lambda's
         inline void run_cmd_full_cycle(arma::mat& beta,
@@ -99,18 +100,30 @@ namespace abclass
                                        const double l1_lambda,
                                        const double l2_lambda,
                                        const unsigned int max_iter,
-                                       const double rel_tol);
+                                       const double rel_tol,
+                                       const unsigned int verbose);
 
     public:
         // inherit constructors
         using Abclass::Abclass;
 
+        // regularization
         // the "big" enough lambda => zero coef unless alpha = 0
         double l1_lambda_max_;
         double lambda_max_;
-        double alpha_;          // [0, 1]
-        arma::vec lambda_;      // lambda sequence
-        arma::cube coef_;       // p1_ by km1_
+        double alpha_;            // [0, 1]
+        arma::vec lambda_;        // lambda sequence
+
+        // estimates
+        arma::cube coef_;         // p1_ by km1_
+
+        // control
+        double rel_tol_;          // relative tolerance for convergence check
+        unsigned int max_iter_;   // maximum number of iterations
+        bool varying_active_set_; // if active set should be adaptive
+
+        // cache
+        unsigned int num_iter_;   // number of CMD cycles till convergence
 
         // for a sequence of lambda's
         inline void fit(const arma::vec& lambda,
@@ -150,11 +163,11 @@ namespace abclass
         const unsigned int verbose
         )
     {
-        double dlj { 0.0 }, ell_verbose { 0.0 };
+        double ell_verbose { 0.0 };
         if (verbose > 1) {
             Rcpp::Rcout << "\nStarting values of beta:\n";
             Rcpp::Rcout << beta << "\n";
-            Rcpp::Rcout << "\nThe active set of beta:\n";
+            Rcpp::Rcout << "The active set of beta:\n";
             Rcpp::Rcout << is_active << "\n";
             ell_verbose = objective(inner, beta, l1_lambda, l2_lambda);
         };
@@ -165,7 +178,7 @@ namespace abclass
                     continue;
                 }
                 arma::vec vj_xl { x_.col(l) % v_j };
-                dlj = cmd_gradient(inner, vj_xl);
+                double dlj { cmd_gradient(inner, vj_xl) };
                 double tmp { beta(l, j) };
                 // if cmd_lowerbound = 0 and l1_lambda > 0, numer will be 0
                 double numer {
@@ -223,30 +236,42 @@ namespace abclass
         size_t i {0};
         arma::mat beta0 { beta };
         arma::umat is_active_stored { is_active };
-
         // use active-set if p > n ("helps when p >> n")
         if (varying_active_set) {
-            arma::umat is_active_new { is_active };
             while (i < max_iter) {
-                size_t ii {0};
+                arma::umat is_active_new { is_active };
                 // cycles over the active set
+                size_t ii {0};
                 while (ii < max_iter) {
-                    run_one_active_cycle(beta, inner, is_active_stored,
+                    run_one_active_cycle(beta, inner, is_active_new,
                                          l1_lambda, l2_lambda, true, verbose);
-                    if (rel_diff(beta, beta0) < rel_tol) {
+                    if (rel_diff(beta0, beta) < rel_tol) {
+                        num_iter_ = ii + 1;
                         break;
                     }
                     beta0 = beta;
                     ii++;
                 }
                 // run a full cycle over the converged beta
-                run_one_active_cycle(beta, inner, is_active_new,
+                run_one_active_cycle(beta, inner, is_active_stored,
                                      l1_lambda, l2_lambda, true, verbose);
                 // check two active sets coincide
                 if (is_gt(l1_norm(is_active_new - is_active_stored), 0)) {
                     // if different, repeat this process
+                    if (verbose > 1) {
+                        Rcpp::Rcout << "Enlarged the active set after "
+                                    << num_iter_ + 1
+                                    << " iteration(s)\n";
+                    }
+                    is_active_stored = is_active;
                     i++;
                 } else {
+                    if (verbose > 1) {
+                        Rcpp::Rcout << "Converged over the active set after "
+                                    << num_iter_ + 1
+                                    << " iteration(s)\n";
+                    }
+                    num_iter_ = i + 1;
                     break;
                 }
             }
@@ -255,11 +280,21 @@ namespace abclass
             while (i < max_iter) {
                 run_one_active_cycle(beta, inner, is_active_stored,
                                      l1_lambda, l2_lambda, false, verbose);
-                if (rel_diff(beta, beta0) < rel_tol) {
+                if (rel_diff(beta0, beta) < rel_tol) {
+                    num_iter_ = i + 1;
                     break;
                 }
                 beta0 = beta;
                 i++;
+            }
+        }
+        if (verbose > 0) {
+            if (num_iter_ < max_iter) {
+                Rcpp::Rcout << "Converged after "
+                            << num_iter_
+                            << " iteration(s)\n";
+            } else {
+                msg("Reached the maximum number of iteratons.");
             }
         }
     }
@@ -269,9 +304,16 @@ namespace abclass
         arma::mat& beta,
         arma::vec& inner,
         const double l1_lambda,
-        const double l2_lambda
+        const double l2_lambda,
+        const unsigned int verbose
         )
     {
+        double ell_verbose { 0.0 };
+        if (verbose > 1) {
+            Rcpp::Rcout << "\nStarting values of beta:\n";
+            Rcpp::Rcout << beta << "\n";
+            ell_verbose = objective(inner, beta, l1_lambda, l2_lambda);
+        };
         for (size_t j {0}; j < km1_; ++j) {
             arma::vec v_j { get_vertex_y(j) };
             for (size_t l {0}; l < p1_; ++l) {
@@ -298,6 +340,17 @@ namespace abclass
                 inner += (beta(l, j) - tmp) * vj_xl;
             }
         }
+        if (verbose > 1) {
+            double ell_old { ell_verbose };
+            Rcpp::Rcout << "The objective function changed\n";
+            Rprintf("  from %15.15f\n", ell_verbose);
+            ell_verbose = objective(inner, beta, l1_lambda, l2_lambda);
+            Rprintf("    to %15.15f\n", ell_verbose);
+            if (ell_verbose > ell_old) {
+                Rcpp::Rcout << "Warning: "
+                            << "the objective function somehow increased\n";
+            }
+        }
     }
 
     // run full cycles till convergence or reach max number of iterations
@@ -307,16 +360,27 @@ namespace abclass
         const double l1_lambda,
         const double l2_lambda,
         const unsigned int max_iter,
-        const double rel_tol
+        const double rel_tol,
+        const unsigned int verbose
         )
     {
         arma::mat beta0 { beta };
         for (size_t i {0}; i < max_iter; ++i) {
-            run_one_full_cycle(beta, inner, l1_lambda, l2_lambda);
-            if (rel_diff(beta, beta0) < rel_tol) {
+            run_one_full_cycle(beta, inner, l1_lambda, l2_lambda, verbose);
+            if (rel_diff(beta0, beta) < rel_tol) {
+                num_iter_ = i + 1;
                 break;
             }
             beta0 = beta;
+        }
+        if (verbose > 0) {
+            if (num_iter_ < max_iter) {
+                Rcpp::Rcout << "Converged after "
+                            << num_iter_
+                            << " iteration(s)\n";
+            } else {
+                msg("Reached the maximum number of iteratons.");
+            }
         }
     }
 
@@ -338,6 +402,10 @@ namespace abclass
             throw std::range_error("The 'alpha' must be between 0 and 1.");
         }
         alpha_ = alpha;
+        // record control
+        rel_tol_ = rel_tol;
+        max_iter_ = max_iter;
+        varying_active_set_ = varying_active_set;
         // initialize
         arma::vec one_inner { arma::zeros(n_obs_) };
         arma::mat one_beta { arma::zeros(p1_, km1_) },
@@ -374,7 +442,7 @@ namespace abclass
             for (size_t li { 0 }; li < lambda_.n_elem; ++li) {
                 run_cmd_full_cycle(one_beta, one_inner,
                                    0.0, 0.5 * lambda_(li),
-                                   max_iter, rel_tol);
+                                   max_iter, rel_tol, verbose);
                 coef_.slice(li) = rescale_coef(one_beta);
             }
             return;             // early exit
@@ -426,6 +494,9 @@ namespace abclass
                 run_cmd_active_cycle(one_beta, one_inner, is_active_strong,
                                      l1_lambda, l2_lambda, varying_active_set,
                                      max_iter, rel_tol, verbose);
+                if (verbose > 0) {
+                    msg("\nChecking the KKT condition for the null set.");
+                }
                 // check kkt condition
                 for (size_t j { 0 }; j < km1_; ++j) {
                     arma::vec v_j { get_vertex_y(j) };
@@ -446,9 +517,9 @@ namespace abclass
                     if (verbose > 0) {
                         Rcpp::Rcout << "\nThe strong rule failed."
                                     << "\nOld active set:\n";
-                        Rcpp::Rcout << is_active_strong << std::endl;
+                        Rcpp::Rcout << is_active_strong << "\n";
                         Rcpp::Rcout << "\nNew active set:\n";
-                        Rcpp::Rcout << is_active_strong_new << std::endl;
+                        Rcpp::Rcout << is_active_strong_new << "\n";
                     }
                     is_active_strong = is_active_strong_new;
                 } else {

@@ -99,10 +99,8 @@ namespace abclass {
     template <typename T>
     inline double rel_diff(const T& x_old, const T& x_new)
     {
-        T tmp_mat { arma::abs(x_new - x_old) };
-        double numer { tmp_mat.max() };
-        double denom { 1.0 + l1_norm(x_new) };
-        return numer / denom;
+        T tmp_mat { arma::abs(x_new - x_old) / (1.0 + arma::abs(x_old)) };
+        return tmp_mat.max();
     }
 
     // set difference for vector a and vector b
@@ -122,7 +120,7 @@ namespace abclass {
     template <typename T>
     inline void msg(const T& m)
     {
-        Rcpp::Rcout << m << std::endl;
+        Rcpp::Rcout << m << "\n";
     }
 
 }

@@ -14,9 +14,14 @@ namespace abclass
         // set CMD lowerbound
         inline void set_cmd_lowerbound() override
         {
-            arma::mat sqx { arma::square(x_) };
-            sqx.each_col() %= obs_weight_;
-            cmd_lowerbound_ = arma::sum(sqx, 0) / (4.0 * dn_obs_);
+            if (standardize_) {
+                cmd_lowerbound_ = arma::ones<arma::rowvec>(p1_);
+                cmd_lowerbound_ *= arma::mean(obs_weight_) / 4.0;
+            } else {
+                arma::mat sqx { arma::square(x_) };
+                sqx.each_col() %= obs_weight_;
+                cmd_lowerbound_ = arma::sum(sqx, 0) / (4.0 * dn_obs_);
+            }
         }
 
         // objective function without regularization
@@ -32,6 +37,8 @@ namespace abclass
         }
 
     public:
+        // inherit constructors
+        using AbclassNet::AbclassNet;
 
         //! @param x The design matrix without an intercept term.
         //! @param y The category index vector.
