@@ -5,16 +5,18 @@
 #include <RcppArmadillo.h>
 #include "utils.h"
 
-namespace abclass {
+namespace abclass
+{
 
-    class CrossValidation {
-    private:
+    typedef std::vector<arma::uvec> cv_index;
+    typedef std::vector<cv_index> cv_indices;
 
-        typedef std::vector<arma::uvec> cv_index;
-        typedef std::vector<cv_index> cv_indices;
+    class CrossValidation
+    {
+    protected:
 
         unsigned long n_obs_;
-        unsigned long n_folds_ = 10;
+        unsigned long n_folds_ = 5;
 
         // generate cross-validation indices
         // for given number of folds and number of observations
@@ -112,7 +114,7 @@ namespace abclass {
         explicit CrossValidation(const unsigned long n_obs) :
             n_obs_ { n_obs }
         {
-            CrossValidation(n_obs_, 10);
+            CrossValidation(n_obs_, 5);
         }
 
         // major constructor
@@ -131,7 +133,6 @@ namespace abclass {
             }
             train_index_ = res.at(0);
             test_index_ = res.at(1);
-
         }
 
         // helper function

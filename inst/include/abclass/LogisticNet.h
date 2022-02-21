@@ -37,6 +37,7 @@ namespace abclass
         }
 
     public:
+
         // inherit constructors
         using AbclassNet::AbclassNet;
 

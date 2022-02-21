@@ -12,6 +12,8 @@ Rcpp::List rcpp_logistic_net(
     const arma::vec& weight,
     const bool intercept = true,
     const bool standardize = true,
+    const unsigned int nfolds = 0,
+    const bool stratified_cv = true,
     const unsigned int max_iter = 1e4,
     const double rel_tol = 1e-4,
     const bool varying_active_set = true,
@@ -23,11 +25,28 @@ Rcpp::List rcpp_logistic_net(
     };
     object.fit(lambda, alpha, nlambda, lambda_min_ratio,
                max_iter, rel_tol, varying_active_set, verbose);
+    Rcpp::NumericVector lambda_vec { abclass::arma2rvec(object.lambda_) };
+    if (nfolds > 0) {
+        arma::uvec strata;
+        if (stratified_cv) {
+            strata = y;
+        }
+        abclass::abclass_net_cv(object, nfolds, strata);
+    }
     return Rcpp::List::create(
         Rcpp::Named("coefficients") = object.coef_,
-        Rcpp::Named("weight") = abclass::arma2rvec(object.get_weight()),
+        Rcpp::Named("weight") = abclass::arma2rvec(object.obs_weight_),
+        Rcpp::Named("cross_validation") = Rcpp::List::create(
+            Rcpp::Named("nfolds") = nfolds,
+            Rcpp::Named("stratified") = stratified_cv,
+            Rcpp::Named("cv_accuracy") = object.cv_accuracy_,
+            Rcpp::Named("cv_accuracy_mean") =
+            abclass::arma2rvec(object.cv_accuracy_mean_),
+            Rcpp::Named("cv_accuracy_sd") =
+            abclass::arma2rvec(object.cv_accuracy_sd_)
+            ),
         Rcpp::Named("regularization") = Rcpp::List::create(
-            Rcpp::Named("lambda") = lambda,
+            Rcpp::Named("lambda") = abclass::arma2rvec(lambda_vec),
             Rcpp::Named("alpha") = alpha,
             Rcpp::Named("l1_lambda_max") = object.l1_lambda_max_
             )

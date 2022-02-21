@@ -16,6 +16,10 @@ namespace abclass {
     inline arma::vec rvec2arma(const T& x) {
         return arma::vec(x.begin(), x.size(), false);
     }
+    inline arma::vec mat2vec(const arma::mat& x)
+    {
+        return arma::conv_to<arma::vec>::from(x);
+    }
 
     // function template for crossprod of two matrix-like objects
     template <typename T_matrix_like>

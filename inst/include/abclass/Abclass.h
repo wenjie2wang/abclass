@@ -10,17 +10,6 @@ namespace abclass
     class Abclass
     {
     protected:
-        unsigned int n_obs_;    // number of observations
-        unsigned int k_;        // number of categories
-        unsigned int p0_;       // number of predictors without intercept
-        arma::mat x_;           // (standardized) x_: n by p (with intercept)
-        arma::uvec y_;          // y vector ranging in {0, ..., k - 1}
-        arma::vec obs_weight_;  // optional observation weights: of length n
-        arma::mat vertex_;      // unique vertex: k by (k - 1)
-        bool intercept_;        // if to contrains intercepts
-        bool standardize_;      // is x_ standardized (column-wise)
-        arma::rowvec x_center_; // the column center of x_
-        arma::rowvec x_scale_;  // the column scale of x_
 
         // cache variables
         double dn_obs_;              // double version of n_obs_
@@ -95,6 +84,18 @@ namespace abclass
 
     public:
 
+        unsigned int n_obs_;    // number of observations
+        unsigned int k_;        // number of categories
+        unsigned int p0_;       // number of predictors without intercept
+        arma::mat x_;           // (standardized) x_: n by p (with intercept)
+        arma::uvec y_;          // y vector ranging in {0, ..., k - 1}
+        arma::vec obs_weight_;  // optional observation weights: of length n
+        arma::mat vertex_;      // unique vertex: k by (k - 1)
+        bool intercept_;        // if to contrains intercepts
+        bool standardize_;      // is x_ standardized (column-wise)
+        arma::rowvec x_center_; // the column center of x_
+        arma::rowvec x_scale_;  // the column scale of x_
+
         // default constructor
         Abclass() {}
 
@@ -111,11 +112,19 @@ namespace abclass
                 const bool intercept = true,
                 const bool standardize = true,
                 const arma::vec& weight = arma::vec()) :
-            x_ (x),
-            y_ (y),
             intercept_ (intercept),
             standardize_ (standardize)
         {
+            set_data(x, y);
+            set_weight(weight);
+        }
+
+        // setter
+        inline Abclass* set_data(const arma::mat& x,
+                                 const arma::uvec& y)
+        {
+            x_ = x;
+            y_ = y;
             int_intercept_ = static_cast<unsigned int>(intercept_);
             km1_ = arma::max(y_); // assume y in {0, ..., k-1}
             k_ = km1_ + 1;
@@ -123,11 +132,6 @@ namespace abclass
             dn_obs_ = static_cast<double>(n_obs_);
             p0_ = x_.n_cols;
             p1_ = p0_ + int_intercept_;
-            if (weight.n_elem != n_obs_) {
-                obs_weight_ = arma::ones(n_obs_);
-            } else {
-                obs_weight_ = weight / arma::sum(weight) * dn_obs_;
-            }
             if (standardize_) {
                 if (intercept_) {
                     x_center_ = arma::mean(x_);
@@ -148,8 +152,30 @@ namespace abclass
             if (intercept_) {
                 x_ = arma::join_horiz(arma::ones(n_obs_), x_);
             }
-            // set vertex matrix
             set_vertex_matrix(k_);
+            return this;
+        }
+
+        inline Abclass* set_intercept(const bool intercept)
+        {
+            intercept_ = intercept;
+            return this;
+        }
+
+        inline Abclass* set_standardize(const bool standardize)
+        {
+            standardize_ = standardize;
+            return this;
+        }
+
+        inline Abclass* set_weight(const arma::vec& weight)
+        {
+            if (weight.n_elem != n_obs_) {
+                obs_weight_ = arma::ones(n_obs_);
+            } else {
+                obs_weight_ = weight / arma::sum(weight) * dn_obs_;
+            }
+            return this;
         }
 
         // class conditional probability
@@ -180,13 +206,6 @@ namespace abclass
             arma::uvec max_idx { predict_y(prob_mat) };
             return arma::mean(max_idx == y);
         }
-
-        // weights may be adjusted internally
-        inline arma::vec get_weight() const
-        {
-            return obs_weight_;
-        }
-
 
     };
 

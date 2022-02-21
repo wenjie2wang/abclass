@@ -1,8 +1,10 @@
-#ifndef ABCLASS_ABCLASSNET_H
-#define ABCLASS_ABCLASSNET_H
+#ifndef ABCLASS_ABCLASS_NET_H
+#define ABCLASS_ABCLASS_NET_H
 
+#include <utility>
 #include <RcppArmadillo.h>
 #include "Abclass.h"
+#include "CrossValidation.h"
 #include "utils.h"
 
 namespace abclass
@@ -13,6 +15,7 @@ namespace abclass
     class AbclassNet : public Abclass
     {
     protected:
+
         // for regularized coordinate majorization descent
         arma::rowvec cmd_lowerbound_; // 1 by p1_
 
@@ -104,6 +107,7 @@ namespace abclass
                                        const unsigned int verbose);
 
     public:
+
         // inherit constructors
         using Abclass::Abclass;
 
@@ -116,6 +120,11 @@ namespace abclass
 
         // estimates
         arma::cube coef_;         // p1_ by km1_
+
+        // tuning by cross-validation
+        arma::mat cv_accuracy_;
+        arma::vec cv_accuracy_mean_;
+        arma::vec cv_accuracy_sd_;
 
         // control
         double rel_tol_;          // relative tolerance for convergence check
@@ -533,9 +542,7 @@ namespace abclass
         }
     }
 
-
-
 }  // abclass
 
 
-#endif /* ABCLASS_ABCLASSNET_H */
+#endif
