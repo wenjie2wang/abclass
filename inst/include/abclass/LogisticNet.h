@@ -27,7 +27,8 @@ namespace abclass
         // objective function without regularization
         inline double objective0(const arma::vec& inner) const override
         {
-            return arma::sum(arma::log(1.0 + arma::exp(- inner))) / dn_obs_;
+            return arma::mean(obs_weight_ %
+                              arma::log(1.0 + arma::exp(- inner)));
         }
 
         // the first derivative of the loss function

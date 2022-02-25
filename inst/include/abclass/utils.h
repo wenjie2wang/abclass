@@ -49,6 +49,7 @@ namespace abclass {
         }
         return 0.0;
     }
+
     // soft-thresholding operator
     inline double soft_threshold(const double beta, const double lambda)
     {
@@ -57,6 +58,25 @@ namespace abclass {
             return 0;
         }
         return tmp * sign(beta);
+    }
+
+    // positive part
+    inline double positive_part(const double x)
+    {
+        if (x > 0) {
+            return x;
+        }
+        return 0.0;
+    }
+    inline arma::vec positive_part(const arma::vec& x)
+    {
+        arma::vec out = x;
+        arma::vec::iterator it = out.begin();
+        arma::vec::iterator it_end = out.end();
+        for (; it != it_end; ++it) {
+            *it = positive_part(*it);
+        }
+        return out;
     }
 
     // compare double-precision numbers for almost equality
@@ -120,6 +140,29 @@ namespace abclass {
                             std::inserter(res, res.begin()));
         return arma::sort(arma::conv_to<ARMA_VEC_TYPE<T>>::from(res));
     }
+
+    // capped exponential
+    inline arma::vec cap_exp(arma::vec x,
+                             const double positive_cap = 10,
+                             const double negative_cap = - 10)
+    {
+        x.elem(arma::find(x > positive_cap)).fill(positive_cap);
+        x.elem(arma::find(x < negative_cap)).fill(negative_cap);
+        return arma::exp(x);
+    }
+    inline double cap_exp(double x,
+                          const double positive_cap = 10,
+                          const double negative_cap = - 10)
+    {
+        return std::exp(std::min(std::max(x, negative_cap), positive_cap));
+    }
+
+    template<typename T>
+    T* ptr(T& obj) { return &obj; } //turn reference into pointer
+
+    template<typename T>
+    T* ptr(T* obj) { return obj; } //obj is already pointer, return it
+
 
     template <typename T>
     inline void msg(const T& m)
