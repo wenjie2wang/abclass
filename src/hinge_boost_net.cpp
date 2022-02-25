@@ -3,7 +3,7 @@
 #include "export-helpers.h"
 
 // [[Rcpp::export]]
-Rcpp::List rcpp_logistic_net(
+Rcpp::List rcpp_hinge_boost_net(
     const arma::mat& x,
     const arma::uvec& y,
     const arma::vec& lambda,
@@ -18,11 +18,12 @@ Rcpp::List rcpp_logistic_net(
     const unsigned int max_iter = 1e4,
     const double rel_tol = 1e-4,
     const bool varying_active_set = true,
+    const double lum_c = 0.0,
     const unsigned int verbose = 0
     )
 {
-    abclass::LogisticNet object {
-        x, y, intercept, standardize, weight
+    abclass::HingeBoostNet object {
+        x, y, intercept, standardize, weight, lum_c
     };
     return abclass_net_fit(object, y,
                            lambda, alpha, nlambda, lambda_min_ratio,
