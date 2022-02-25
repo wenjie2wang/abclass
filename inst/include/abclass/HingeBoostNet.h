@@ -17,7 +17,7 @@ namespace abclass
 
     protected:
 
-        double lum_c_ = - 3.0;
+        double lum_c_ = 0.0;
 
         // set CMD lowerbound
         inline void set_cmd_lowerbound() override
@@ -72,9 +72,11 @@ namespace abclass
                       const bool standardize = true,
                       const arma::vec& weight = arma::vec(),
                       const double lum_c = 0.0) :
-            AbclassNet(x, y, intercept, standardize, weight),
-            lum_c_ (lum_c)
+            AbclassNet(x, y, intercept, standardize, weight)
         {
+            if (is_lt(lum_c, 0.0)) {
+                throw std::range_error("The LUM 'C' cannot be negative.");
+            }
             lum_cp1_ = lum_c + 1.0;
             lum_c_cp1_ = lum_c_ / lum_cp1_;
             // set the CMD lowerbound (which needs to be done only once)
