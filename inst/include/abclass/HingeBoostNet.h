@@ -80,7 +80,7 @@ namespace abclass
             lum_cp1_ = lum_c + 1.0;
             lum_c_cp1_ = lum_c_ / lum_cp1_;
             // set the CMD lowerbound (which needs to be done only once)
-            set_cmd_lowerbound();
+            // set_cmd_lowerbound();
         }
 
 

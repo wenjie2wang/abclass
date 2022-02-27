@@ -31,6 +31,7 @@ namespace abclass {
             arma::uvec test_y { obj.y_.rows(cv_obj.test_index_.at(i)) };
             // create a new object
             T new_obj { obj };
+            new_obj.set_standardize(false);
             new_obj.set_data(std::move(train_x),
                              std::move(train_y));
             new_obj.set_weight(std::move(train_weight));

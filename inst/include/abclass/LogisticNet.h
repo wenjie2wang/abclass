@@ -52,7 +52,7 @@ namespace abclass
             AbclassNet(x, y, intercept, standardize, weight)
         {
             // set the CMD lowerbound (which needs to be done only once)
-            set_cmd_lowerbound();
+            // set_cmd_lowerbound();
         }
 
 

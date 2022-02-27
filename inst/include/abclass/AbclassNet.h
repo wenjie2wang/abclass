@@ -406,6 +406,8 @@ namespace abclass
         const unsigned int verbose
         )
     {
+        // set the CMD lowerbound
+        set_cmd_lowerbound();
         // check alpha
         if ((alpha < 0) || (alpha > 1)) {
             throw std::range_error("The 'alpha' must be between 0 and 1.");

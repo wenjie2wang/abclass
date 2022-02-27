@@ -15,7 +15,7 @@ Rcpp::List rcpp_logistic_net(
     const bool standardize = true,
     const unsigned int nfolds = 0,
     const bool stratified_cv = true,
-    const unsigned int max_iter = 1e4,
+    const unsigned int max_iter = 1e5,
     const double rel_tol = 1e-4,
     const bool varying_active_set = true,
     const unsigned int verbose = 0

@@ -82,7 +82,7 @@ namespace abclass
             inner_min_ = inner_min;
             exp_inner_max_ = std::exp(- inner_min_);
             // set the CMD lowerbound (which needs to be done only once)
-            set_cmd_lowerbound();
+            // set_cmd_lowerbound();
         }
 
 
