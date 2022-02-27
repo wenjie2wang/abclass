@@ -52,7 +52,7 @@ namespace abclass
         {
             arma::vec out { arma::ones(u.n_elem) };
             for (size_t i {0}; i < u.n_elem; ++i) {
-                if (u[i] > lum_c_) {
+                if (u[i] > lum_c_cp1_) {
                     out[i] = std::exp(- (lum_cp1_ * u[i] - lum_c_));
                 }
             }
@@ -68,10 +68,10 @@ namespace abclass
         //! @param y The category index vector.
         HingeBoostNet(const arma::mat& x,
                       const arma::uvec& y,
+                      const double lum_c = 0.0,
                       const bool intercept = true,
                       const bool standardize = true,
-                      const arma::vec& weight = arma::vec(),
-                      const double lum_c = 0.0) :
+                      const arma::vec& weight = arma::vec()) :
             AbclassNet(x, y, intercept, standardize, weight)
         {
             if (is_lt(lum_c, 0.0)) {

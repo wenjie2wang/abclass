@@ -23,7 +23,7 @@ Rcpp::List rcpp_boost_net(
     )
 {
     abclass::BoostNet object {
-        x, y, intercept, standardize, weight, inner_min
+        x, y, inner_min, intercept, standardize, weight
     };
     return abclass_net_fit(object, y,
                            lambda, alpha, nlambda, lambda_min_ratio,

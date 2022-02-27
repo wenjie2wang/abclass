@@ -30,13 +30,10 @@ namespace abclass {
             arma::mat test_x { obj.x_.rows(cv_obj.test_index_.at(i)) };
             arma::uvec test_y { obj.y_.rows(cv_obj.test_index_.at(i)) };
             // create a new object
-            T new_obj {
-                std::move(train_x),
-                std::move(train_y),
-                obj.intercept_,
-                false, // obj.standardize_,
-                std::move(train_weight)
-            };
+            T new_obj { obj };
+            new_obj.set_data(std::move(train_x),
+                             std::move(train_y));
+            new_obj.set_weight(std::move(train_weight));
             new_obj.fit(obj.lambda_, obj.alpha_, 0, 1,
                         obj.max_iter_, obj.rel_tol_,
                         obj.varying_active_set_, 0);

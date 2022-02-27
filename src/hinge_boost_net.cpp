@@ -23,7 +23,7 @@ Rcpp::List rcpp_hinge_boost_net(
     )
 {
     abclass::HingeBoostNet object {
-        x, y, intercept, standardize, weight, lum_c
+        x, y, lum_c, intercept, standardize, weight
     };
     return abclass_net_fit(object, y,
                            lambda, alpha, nlambda, lambda_min_ratio,

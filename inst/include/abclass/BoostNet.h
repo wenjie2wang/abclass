@@ -70,10 +70,10 @@ namespace abclass
         //! @param y The category index vector.
         BoostNet(const arma::mat& x,
                  const arma::uvec& y,
+                 const double inner_min = - 3.0,
                  const bool intercept = true,
                  const bool standardize = true,
-                 const arma::vec& weight = arma::vec(),
-                 const double inner_min = - 3.0) :
+                 const arma::vec& weight = arma::vec()) :
             AbclassNet(x, y, intercept, standardize, weight)
         {
             if (is_gt(inner_min, 0.0)) {

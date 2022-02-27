@@ -7,6 +7,7 @@
 #include "abclass/LogisticNet.h"
 #include "abclass/BoostNet.h"
 #include "abclass/HingeBoostNet.h"
+#include "abclass/LumNet.h"
 
 #include "abclass/CrossValidation.h"
 #include "abclass/Simplex.h"
