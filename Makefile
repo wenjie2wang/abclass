@@ -23,10 +23,15 @@ $(tar): $(objects)
 	@Rscript -e "library(methods);" \
 	-e "Rcpp::compileAttributes()" \
 	-e "devtools::document();";
+	@$(MAKE) updateTimestamp
 	R CMD build .
 
 $(checkLog): $(tar)
 	R CMD check $(tar)
+
+.PHONY: updateTimestamp
+updateTimestamp:
+	@bash misc/update_timestamp.sh
 
 ## make tags
 .PHONY: tags
