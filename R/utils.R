@@ -31,3 +31,14 @@ null2mat0 <- function(x) {
     }
     x
 }
+
+## select lambda's from the solution path
+select_lambda <- function(cv_mean, cv_sd) {
+    ## the cv_mean and cv_sd correspond to the decreasing lambda sequence
+    cv_min_idx <- which.max(cv_mean)
+    cv_min <- cv_mean[cv_min_idx]
+    cv_min_sd <- cv_sd[cv_min_idx]
+    cv_1se_idx <- min(which(cv_mean >= cv_min - cv_min_sd))
+    list(cv_min = cv_min_idx,
+         cv_1se = cv_1se_idx)
+}
