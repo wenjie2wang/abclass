@@ -26,11 +26,23 @@
 ##'     The available options are \code{"class"} for predicted labels and
 ##'     \code{"probability"} for class conditional probability estimates.
 ##' @param selection A character value specifying how to select a particular set
-##'     of coefficient estimates from the solution path for the predictions.
-##'     All the
+##'     of coefficient estimates from the entire solution path for the
+##'     predictions.  If the spcified \code{abclass} object contains the
+##'     cross-validation results, one may set \code{selection} to
+##'     \code{"cv_min"} (or \code{"cv_1se"}) for predictions from the set of
+##'     estimates having the smallest cross-validation error (or the set of
+##'     estimates resulted from the largest \emph{lambda} within one standard
+##'     error of the smallest cross-validation error).  The predictions for the
+##'     entire solution path will be returned if \code{selection = "all"} or no
+##'     cross-validation results are available in the input \code{abclass}
+##'     object.
 ##' @param ... Other arguments not used now.
 ##'
-##' @return A list containing the predictions.
+##' @return A vector representing the predictions or a list containing the
+##'     predictions for each set of estimates along the solution path.
+##'
+##' @examples
+##' ## see examples of `abclass()`.
 ##'
 ##' @importFrom stats predict
 ##' @export
