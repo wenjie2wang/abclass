@@ -19,6 +19,8 @@ Imports:
 LinkingTo:
     Rcpp,
     RcppArmadillo
+Suggests:
+    tinytest
 License: GPL (>= 3) + file LICENSE
 URL: https://github.com/wenjie2wang/abclass
 BugReports: https://github.com/wenjie2wang/abclass/issues
