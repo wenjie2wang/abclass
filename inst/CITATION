@@ -1,0 +1,13 @@
+citHeader("To cite abclass in publications use:")
+
+bibentry(
+    key = "abclass-package",
+    bibtype = "Manual",
+    title = "{abclass}: {A}ngle-Based Large-Margin Classifiers",
+    author = c(
+        as.person("Wenjie Wang")
+        ),
+    year = "2022",
+    url = "https://CRAN.R-project.org/package=abclass",
+    note = "{R} package version 0.1.0"
+)
