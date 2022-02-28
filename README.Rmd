@@ -34,6 +34,7 @@ A toy example is as follows:
 
 ```{r example-abclass}
 library(abclass)
+set.seed(123)
 
 ## follow example 1 in Zhang and Liu (2014)
 ntrain <- 100 # size of training set
@@ -43,7 +44,6 @@ k <- 5        # number of categories
 
 n <- ntrain + ntest
 train_idx <- seq_len(ntrain)
-set.seed(123)
 y <- sample(k, size = n, replace = TRUE)       # response
 mu <- matrix(rnorm(p * k), nrow = k, ncol = p) # mean vector
 ## normalize the mean vector so that they are distributed on the unit circle
@@ -55,30 +55,44 @@ y <- factor(paste0("label_", y))
 train_y <- y[train_idx]
 test_y <- y[- train_idx]
 
-## logistic deviance loss (by default)
-model1 <- abclass(train_x, train_y, nlambda = 10, nfolds = 3,
-                  lambda_min_ratio = 1e-3, rel_tol = 1e-3)
+## model 1 with logistic deviance loss
+model1 <- abclass(train_x, train_y, nfolds = 3)
 pred1 <- predict(model1, test_x)
 table(test_y, pred1)
 mean(test_y == pred1) # accuracy
 
-## exponential loss approximating AdaBoost
-model2 <- abclass(train_x, train_y, nlambda = 10, nfolds = 3,
-                  loss = "boost", rel_tol = 1e-3)
+## model 2 with exponential loss approximating AdaBoost
+model2 <- abclass(train_x, train_y, nlambda = 100, nfolds = 3, loss = "boost")
 pred2 <- predict(model2, test_x)
 table(test_y, pred2)
 mean(test_y == pred2) # accuracy
+
+## model 3 with hybrid hinge-boost loss
+model3 <- abclass(train_x, train_y, nfolds = 3, loss = "hinge-boost",
+                  lambda_min_ratio = 1e-3)
+pred3 <- predict(model3, test_x)
+table(test_y, pred3)
+mean(test_y == pred3) # accuracy
+
+## model 4 with the large-margin unified machines
+model4 <- abclass(train_x, train_y, nfolds = 3, loss = "lum",
+                  alpha = 0.1, lambda_min_ratio = 1e-3)
+pred4 <- predict(model4, test_x)
+table(test_y, pred4)
+mean(test_y == pred4) # accuracy
 ```
 
 ## References
 
-- Zhang, C., & Liu, Y. (2014). Multicategory Angle-Based Large-Margin
-  Classification. \emph{Biometrika}, 101(3), 625--640.
-- Liu, Y., Zhang, H. H., & Wu, Y. (2011). Hard or soft classification?
-  large-margin unified machines. \emph{Journal of the American Statistical
-  Association}, 106(493), 166--177.
+Zhang, C., & Liu, Y. (2014). Multicategory Angle-Based Large-Margin
+Classification. \emph{Biometrika}, 101(3), 625--640.
+
+Liu, Y., Zhang, H. H., & Wu, Y. (2011). Hard or soft classification?
+large-margin unified machines. \emph{Journal of the American Statistical
+Association}, 106(493), 166--177.
 
 ## License
 
 [GNU General Public License](https://www.gnu.org/licenses/) (≥ 3)
+
 Copyright holder: Eli Lilly and Company
