@@ -81,6 +81,14 @@ namespace abclass
                const arma::vec& weight = arma::vec()) :
             AbclassNet(x, y, intercept, standardize, weight)
         {
+            set_lum_parameters(lum_a, lum_c);
+            // set the CMD lowerbound (which needs to be done only once)
+            // set_cmd_lowerbound();
+        }
+
+        LumNet* set_lum_parameters(const double lum_a,
+                                   const double lum_c)
+        {
             if (is_le(lum_a, 0.0)) {
                 throw std::range_error("The LUM 'a' must be positive.");
             }
@@ -93,10 +101,8 @@ namespace abclass
             lum_cp1_ = lum_c + 1.0;
             lum_c_cp1_ = lum_c_ / lum_cp1_;
             lum_cma_ = lum_c_ - lum_a_;
-            // set the CMD lowerbound (which needs to be done only once)
-            // set_cmd_lowerbound();
+            return this;
         }
-
 
     };                          // end of class
 

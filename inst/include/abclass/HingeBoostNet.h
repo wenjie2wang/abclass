@@ -74,15 +74,20 @@ namespace abclass
                       const arma::vec& weight = arma::vec()) :
             AbclassNet(x, y, intercept, standardize, weight)
         {
+            set_lum_c(lum_c);
+            // set the CMD lowerbound (which needs to be done only once)
+            // set_cmd_lowerbound();
+        }
+
+        HingeBoostNet* set_lum_c(const double lum_c)
+        {
             if (is_lt(lum_c, 0.0)) {
                 throw std::range_error("The LUM 'C' cannot be negative.");
             }
             lum_cp1_ = lum_c + 1.0;
             lum_c_cp1_ = lum_c_ / lum_cp1_;
-            // set the CMD lowerbound (which needs to be done only once)
-            // set_cmd_lowerbound();
+            return this;
         }
-
 
     };                          // end of class
 

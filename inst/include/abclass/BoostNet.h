@@ -76,13 +76,19 @@ namespace abclass
                  const arma::vec& weight = arma::vec()) :
             AbclassNet(x, y, intercept, standardize, weight)
         {
+            set_inner_min(inner_min);
+            exp_inner_max_ = std::exp(- inner_min_);
+            // set the CMD lowerbound (which needs to be done only once)
+            // set_cmd_lowerbound();
+        }
+
+        BoostNet* set_inner_min(const double inner_min)
+        {
             if (is_gt(inner_min, 0.0)) {
                 throw std::range_error("The 'inner_min' cannot be positive.");
             }
             inner_min_ = inner_min;
-            exp_inner_max_ = std::exp(- inner_min_);
-            // set the CMD lowerbound (which needs to be done only once)
-            // set_cmd_lowerbound();
+            return this;
         }
 
 
