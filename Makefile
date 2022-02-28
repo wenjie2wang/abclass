@@ -29,6 +29,11 @@ $(tar): $(objects)
 $(checkLog): $(tar)
 	R CMD check $(tar)
 
+.PHONY: readme
+readme: README.md
+README.md: README.Rmd
+	@Rscript -e "rmarkdown::render('$<')"
+
 .PHONY: updateTimestamp
 updateTimestamp:
 	@bash misc/update_timestamp.sh
