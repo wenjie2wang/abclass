@@ -21,8 +21,8 @@ LinkingTo:
     RcppArmadillo
 Suggests:
     tinytest
-License: GPL (>= 3) + file LICENSE
-URL: https://github.com/wenjie2wang/abclass
+Copyright: Eli Lilly and Company
+License: GPL (>= 3)
 BugReports: https://github.com/wenjie2wang/abclass/issues
 Encoding: UTF-8
 RoxygenNote: 7.1.2
