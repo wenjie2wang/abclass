@@ -61,9 +61,6 @@ else
     # restrict the search and only update the year of package
     regexp4="/abclass-package/,/^\)$/ s/20[0-9]{2}/$yr/"
     sed -i -E "$regexp4" $citation
-    # update copyright year in
-    regexp5="s/YEAR: 2021-[0-9]+/YEAR: 2021-$yr/"
-    sed -i -E "$regexp5" LICENSE
 
     # done
     printf "All updated.\n"

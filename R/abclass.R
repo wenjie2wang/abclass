@@ -235,7 +235,7 @@ abclass <- function(x, y,
         verbose = verbose
     )
     res_cls <- paste0(gsub("-", "_", loss, fixed = TRUE), "_net")
-    class(res) <- c("abclass", res_cls)
+    class(res) <- c(res_cls, "abclass")
     ## return
     res
 }
