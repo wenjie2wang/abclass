@@ -4,7 +4,7 @@ abclass
 [![CRAN_Status_Badge](https://www.r-pkg.org/badges/version/abclass)](https://CRAN.R-project.org/package=abclass)
 [![Build
 Status](https://github.com/wenjie2wang/abclass/workflows/R-CMD-check/badge.svg)](https://github.com/wenjie2wang/abclass/actions)
-[![codecov](https://codecov.io/gh/wenjie2wang/abclass/branch/main/graph/badge.svg)](https://codecov.io/gh/wenjie2wang/abclass)
+[![codecov](https://codecov.io/gh/wenjie2wang/abclass/branch/main/graph/badge.svg)](https://app.codecov.io/gh/wenjie2wang/abclass)
 
 The package **abclass** provides implementations of the multi-category
 angle-based classifiers (Zhang & Liu, 2014) with the large-margin

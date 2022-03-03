@@ -23,6 +23,7 @@ Suggests:
     tinytest
 Copyright: Eli Lilly and Company
 License: GPL (>= 3)
+URL: https://wwenjie.org/abclass, https://github.com/wenjie2wang/abclass
 BugReports: https://github.com/wenjie2wang/abclass/issues
 Encoding: UTF-8
 RoxygenNote: 7.1.2
