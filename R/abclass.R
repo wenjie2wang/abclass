@@ -121,7 +121,7 @@ abclass <- function(x, y,
                     verbose = 0,
                     ...)
 {
-    Call <- match.call()
+    ## Call <- match.call()
     loss <- match.arg(
         loss, choices = c("logistic", "boost", "hinge-boost", "lum")
     )
@@ -219,7 +219,7 @@ abclass <- function(x, y,
     )
     ## post-process
     res$category <- cat_y
-    res$call <- Call
+    ## res$call <- Call
     res$loss <- list(
         loss = loss,
         lum_a = lum_a,
