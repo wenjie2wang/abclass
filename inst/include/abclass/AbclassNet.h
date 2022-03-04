@@ -21,7 +21,6 @@
 #include <utility>
 #include <RcppArmadillo.h>
 #include "Abclass.h"
-#include "CrossValidation.h"
 #include "utils.h"
 
 namespace abclass
@@ -47,11 +46,11 @@ namespace abclass
         {
             if (intercept_) {
                 arma::mat beta0int { beta.tail_rows(p0_) };
-                return l1_lambda * arma::accu(beta0int) +
-                    l2_lambda * arma::accu(arma::square(beta0int));
+                return l1_lambda * l1_norm(beta0int) +
+                    l2_lambda * l2_norm_square(beta0int);
             }
-            return l1_lambda * arma::accu(arma::abs(beta)) +
-                l2_lambda * arma::accu(arma::square(beta));
+            return l1_lambda * l1_norm(beta) +
+                l2_lambda * l2_norm_square(beta);
         }
 
         // objective function with regularization
@@ -282,13 +281,14 @@ namespace abclass
                 run_one_active_cycle(beta, inner, is_active_stored,
                                      l1_lambda, l2_lambda, true, verbose);
                 // check two active sets coincide
-                if (is_gt(l1_norm(is_active_new - is_active_stored), 0)) {
+                if (l1_norm(is_active_new - is_active_stored) > 0) {
                     // if different, repeat this process
                     if (verbose > 1) {
                         Rcpp::Rcout << "Enlarged the active set after "
                                     << num_iter_ + 1
                                     << " iteration(s)\n";
                     }
+                    // recover the active set
                     is_active_stored = is_active;
                     i++;
                 } else {
@@ -509,6 +509,7 @@ namespace abclass
                     if (one_grad_beta(l, j) >= one_strong_rhs) {
                         is_active_strong(l, j) = 1;
                     } else {
+                        is_active_strong(l, j) = 0;
                         one_beta(l, j) = 0;
                     }
                 }
@@ -540,8 +541,7 @@ namespace abclass
                         }
                     }
                 }
-                if (is_gt(l1_norm(is_active_strong -
-                                  is_active_strong_new), 0)) {
+                if (l1_norm(is_active_strong_new - is_active_strong) > 0) {
                     if (verbose > 0) {
                         Rcpp::Rcout << "\nThe strong rule failed."
                                     << "\nOld active set:\n";

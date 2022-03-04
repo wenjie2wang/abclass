@@ -18,6 +18,7 @@
 #ifndef ABCLASS_UTILS_H
 #define ABCLASS_UTILS_H
 
+#include <cmath>
 #include <vector>
 #include <RcppArmadillo.h>
 
@@ -134,6 +135,16 @@ namespace abclass {
     inline double l1_norm(const T& x)
     {
         return arma::accu(arma::abs(x));
+    }
+    template <typename T>
+    inline double l2_norm_square(const T& x)
+    {
+        return arma::accu(arma::square(x));
+    }
+    template <typename T>
+    inline double l2_norm(const T& x)
+    {
+        return std::sqrt(l2_norm_square(x));
     }
 
     // function check convergence
