@@ -65,12 +65,12 @@ namespace abclass
         }
 
         // the first derivative of the loss function
-        inline arma::vec neg_loss_derivative(const arma::vec& u) const override
+        inline arma::vec loss_derivative(const arma::vec& u) const override
         {
             arma::vec out { arma::ones(u.n_elem) };
             for (size_t i {0}; i < u.n_elem; ++i) {
                 if (u[i] > lum_c_cp1_) {
-                    out[i] = std::exp(- (lum_cp1_ * u[i] - lum_c_));
+                    out[i] = - std::exp(- (lum_cp1_ * u[i] - lum_c_));
                 }
             }
             return out;

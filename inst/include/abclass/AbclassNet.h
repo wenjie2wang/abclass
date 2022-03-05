@@ -67,20 +67,20 @@ namespace abclass
         inline double cmd_gradient(const arma::vec& inner,
                                    const arma::vec& vj_xl) const
         {
-            arma::vec neg_inner_grad { neg_loss_derivative(inner) };
-            return - arma::mean(obs_weight_ % vj_xl % neg_inner_grad);
+            arma::vec inner_grad { loss_derivative(inner) };
+            return arma::mean(obs_weight_ % vj_xl % inner_grad);
         }
 
         // gradient matrix
         inline arma::mat gradient(const arma::vec& inner) const
         {
             arma::mat out { arma::zeros(p1_, km1_) };
-            arma::vec neg_inner_grad { neg_loss_derivative(inner) };
+            arma::vec inner_grad { loss_derivative(inner) };
             for (size_t j {0}; j < km1_; ++j) {
                 const arma::vec w_v_j { obs_weight_ % get_vertex_y(j) };
                 for (size_t l {0}; l < p1_; ++l) {
                     const arma::vec w_vj_xl { w_v_j % x_.col(l) };
-                    out(l, j) = - arma::mean(w_vj_xl % neg_inner_grad);
+                    out(l, j) = arma::mean(w_vj_xl % inner_grad);
                 }
             }
             return out;

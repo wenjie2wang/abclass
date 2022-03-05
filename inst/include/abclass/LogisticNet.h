@@ -49,9 +49,9 @@ namespace abclass
         }
 
         // the first derivative of the loss function
-        inline arma::vec neg_loss_derivative(const arma::vec& u) const override
+        inline arma::vec loss_derivative(const arma::vec& u) const override
         {
-            return 1.0 / (1.0 + arma::exp(u));
+            return - 1.0 / (1.0 + arma::exp(u));
         }
 
     public:

@@ -88,15 +88,9 @@ namespace abclass
             return beta0;
         }
 
-        // the negative first derivative of the loss function
-        inline virtual arma::vec
-        neg_loss_derivative(const arma::vec& inner) const = 0;
-
         // the first derivative of the loss function
-        inline arma::vec loss_derivative(const arma::vec& inner) const
-        {
-            return - neg_loss_derivative(inner);
-        }
+        inline virtual arma::vec loss_derivative(
+            const arma::vec& inner) const = 0;
 
 
     public:
