@@ -55,6 +55,9 @@
 ##'     smallest lambda parameter to the largest lambda parameter.  The default
 ##'     value is set to \code{1e-4} if the sample size is larger than the number
 ##'     of predictors, and \code{1e-2} otherwise.
+##' @param grouped A logicial value.  Experimental flag to apply group Lasso.
+##' @param group_weight A numerical vector. Experimental penalty factor for
+##'     grouped lasso.
 ##' @param nfolds A nonnegative integer specifying the number of folds for
 ##'     cross-validation.  The default value is \code{0} and no cross-validation
 ##'     will be performed if \code{nfolds < 2}.
@@ -109,6 +112,8 @@ abclass <- function(x, y,
                     alpha = 0.5,
                     nlambda = 50,
                     lambda_min_ratio = NULL,
+                    grouped = FALSE,
+                    group_weight = NULL,
                     nfolds = 0,
                     stratified_cv = TRUE,
                     lum_a = 1.0,
@@ -134,89 +139,177 @@ abclass <- function(x, y,
         lambda_min_ratio <- if (nrow(x) < ncol(x)) 1e-4 else 1e-2
     }
     ## model fitting
-    res <- switch(
-        loss,
-        "logistic" = {
-            rcpp_logistic_net(
-                x = x,
-                y = cat_y$y,
-                lambda = null2num0(lambda),
-                alpha = alpha,
-                nlambda = nlambda,
-                lambda_min_ratio = lambda_min_ratio,
-                weight = null2num0(weight),
-                intercept = intercept,
-                standardize = standardize,
-                nfolds = nfolds,
-                stratified_cv = stratified_cv,
-                max_iter = max_iter,
-                rel_tol = rel_tol,
-                varying_active_set = varying_active_set,
-                verbose = verbose
+    res <-
+        if (grouped) {
+            switch(
+                loss,
+                "logistic" = {
+                    rcpp_logistic_glasso(
+                        x = x,
+                        y = cat_y$y,
+                        lambda = null2num0(lambda),
+                        nlambda = nlambda,
+                        lambda_min_ratio = lambda_min_ratio,
+                        group_weight = null2num0(group_weight),
+                        weight = null2num0(weight),
+                        intercept = intercept,
+                        standardize = standardize,
+                        nfolds = nfolds,
+                        stratified_cv = stratified_cv,
+                        max_iter = max_iter,
+                        rel_tol = rel_tol,
+                        varying_active_set = varying_active_set,
+                        verbose = verbose
+                    )
+                },
+                "boost" = {
+                    rcpp_boost_glasso(
+                        x = x,
+                        y = cat_y$y,
+                        lambda = null2num0(lambda),
+                        nlambda = nlambda,
+                        lambda_min_ratio = lambda_min_ratio,
+                        group_weight = null2num0(group_weight),
+                        weight = null2num0(weight),
+                        intercept = intercept,
+                        standardize = standardize,
+                        nfolds = nfolds,
+                        stratified_cv = stratified_cv,
+                        max_iter = max_iter,
+                        rel_tol = rel_tol,
+                        varying_active_set = varying_active_set,
+                        inner_min = boost_umin,
+                        verbose = verbose
+                    )
+                },
+                "hinge-boost" = {
+                    rcpp_hinge_boost_glasso(
+                        x = x,
+                        y = cat_y$y,
+                        lambda = null2num0(lambda),
+                        nlambda = nlambda,
+                        lambda_min_ratio = lambda_min_ratio,
+                        group_weight = null2num0(group_weight),
+                        weight = null2num0(weight),
+                        intercept = intercept,
+                        standardize = standardize,
+                        nfolds = nfolds,
+                        stratified_cv = stratified_cv,
+                        max_iter = max_iter,
+                        rel_tol = rel_tol,
+                        varying_active_set = varying_active_set,
+                        lum_c = lum_c,
+                        verbose = verbose
+                    )
+                },
+                "lum" = {
+                    rcpp_lum_glasso(
+                        x = x,
+                        y = cat_y$y,
+                        lambda = null2num0(lambda),
+                        nlambda = nlambda,
+                        lambda_min_ratio = lambda_min_ratio,
+                        group_weight = null2num0(group_weight),
+                        weight = null2num0(weight),
+                        intercept = intercept,
+                        standardize = standardize,
+                        nfolds = nfolds,
+                        stratified_cv = stratified_cv,
+                        max_iter = max_iter,
+                        rel_tol = rel_tol,
+                        varying_active_set = varying_active_set,
+                        lum_a = lum_a,
+                        lum_c = lum_c,
+                        verbose = verbose
+                    )
+                }
             )
-        },
-        "boost" = {
-            rcpp_boost_net(
-                x = x,
-                y = cat_y$y,
-                lambda = null2num0(lambda),
-                alpha = alpha,
-                nlambda = nlambda,
-                lambda_min_ratio = lambda_min_ratio,
-                weight = null2num0(weight),
-                intercept = intercept,
-                standardize = standardize,
-                nfolds = nfolds,
-                stratified_cv = stratified_cv,
-                max_iter = max_iter,
-                rel_tol = rel_tol,
-                varying_active_set = varying_active_set,
-                inner_min = boost_umin,
-                verbose = verbose
+        } else {
+            switch(
+                loss,
+                "logistic" = {
+                    rcpp_logistic_net(
+                        x = x,
+                        y = cat_y$y,
+                        lambda = null2num0(lambda),
+                        alpha = alpha,
+                        nlambda = nlambda,
+                        lambda_min_ratio = lambda_min_ratio,
+                        weight = null2num0(weight),
+                        intercept = intercept,
+                        standardize = standardize,
+                        nfolds = nfolds,
+                        stratified_cv = stratified_cv,
+                        max_iter = max_iter,
+                        rel_tol = rel_tol,
+                        varying_active_set = varying_active_set,
+                        verbose = verbose
+                    )
+                },
+                "boost" = {
+                    rcpp_boost_net(
+                        x = x,
+                        y = cat_y$y,
+                        lambda = null2num0(lambda),
+                        alpha = alpha,
+                        nlambda = nlambda,
+                        lambda_min_ratio = lambda_min_ratio,
+                        weight = null2num0(weight),
+                        intercept = intercept,
+                        standardize = standardize,
+                        nfolds = nfolds,
+                        stratified_cv = stratified_cv,
+                        max_iter = max_iter,
+                        rel_tol = rel_tol,
+                        varying_active_set = varying_active_set,
+                        inner_min = boost_umin,
+                        verbose = verbose
+                    )
+                },
+                "hinge-boost" = {
+                    rcpp_hinge_boost_net(
+                        x = x,
+                        y = cat_y$y,
+                        lambda = null2num0(lambda),
+                        alpha = alpha,
+                        nlambda = nlambda,
+                        lambda_min_ratio = lambda_min_ratio,
+                        weight = null2num0(weight),
+                        intercept = intercept,
+                        standardize = standardize,
+                        nfolds = nfolds,
+                        stratified_cv = stratified_cv,
+                        max_iter = max_iter,
+                        rel_tol = rel_tol,
+                        varying_active_set = varying_active_set,
+                        lum_c = lum_c,
+                        verbose = verbose
+                    )
+                },
+                "lum" = {
+                    rcpp_lum_net(
+                        x = x,
+                        y = cat_y$y,
+                        lambda = null2num0(lambda),
+                        alpha = alpha,
+                        nlambda = nlambda,
+                        lambda_min_ratio = lambda_min_ratio,
+                        weight = null2num0(weight),
+                        intercept = intercept,
+                        standardize = standardize,
+                        nfolds = nfolds,
+                        stratified_cv = stratified_cv,
+                        max_iter = max_iter,
+                        rel_tol = rel_tol,
+                        varying_active_set = varying_active_set,
+                        lum_a = lum_a,
+                        lum_c = lum_c,
+                        verbose = verbose
+                    )
+                }
             )
-        },
-        "hinge-boost" = {
-            rcpp_hinge_boost_net(
-                x = x,
-                y = cat_y$y,
-                lambda = null2num0(lambda),
-                alpha = alpha,
-                nlambda = nlambda,
-                lambda_min_ratio = lambda_min_ratio,
-                weight = null2num0(weight),
-                intercept = intercept,
-                standardize = standardize,
-                nfolds = nfolds,
-                stratified_cv = stratified_cv,
-                max_iter = max_iter,
-                rel_tol = rel_tol,
-                varying_active_set = varying_active_set,
-                lum_c = lum_c,
-                verbose = verbose
-            )
-        },
-        "lum" = {
-            rcpp_lum_net(
-                x = x,
-                y = cat_y$y,
-                lambda = null2num0(lambda),
-                alpha = alpha,
-                nlambda = nlambda,
-                lambda_min_ratio = lambda_min_ratio,
-                weight = null2num0(weight),
-                intercept = intercept,
-                standardize = standardize,
-                nfolds = nfolds,
-                stratified_cv = stratified_cv,
-                max_iter = max_iter,
-                rel_tol = rel_tol,
-                varying_active_set = varying_active_set,
-                lum_a = lum_a,
-                lum_c = lum_c,
-                verbose = verbose
-            )
+
         }
-    )
     ## post-process
     res$category <- cat_y
     ## res$call <- Call
@@ -234,7 +327,8 @@ abclass <- function(x, y,
         varying_active_set = varying_active_set,
         verbose = verbose
     )
-    res_cls <- paste0(gsub("-", "_", loss, fixed = TRUE), "_net")
+    class_suffix <- if (grouped) "_glasso" else "_net"
+    res_cls <- paste0(gsub("-", "_", loss, fixed = TRUE), class_suffix)
     class(res) <- c(res_cls, "abclass")
     ## return
     res
