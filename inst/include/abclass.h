@@ -18,17 +18,25 @@
 #ifndef ABCLASS_H
 #define ABCLASS_H
 
+// base class
 #include "abclass/Abclass.h"
 
+// with elastic-net
 #include "abclass/AbclassNet.h"
 #include "abclass/LogisticNet.h"
 #include "abclass/BoostNet.h"
 #include "abclass/HingeBoostNet.h"
 #include "abclass/LumNet.h"
 
+// with group lasso
+#include "abclass/AbclassGroupLasso.h"
+#include "abclass/LogisticGLasso.h"
+
+// other classes
 #include "abclass/CrossValidation.h"
 #include "abclass/Simplex.h"
 
+// utils and template functions
 #include "abclass/utils.h"
 #include "abclass/abclass_net_cv.h"
 

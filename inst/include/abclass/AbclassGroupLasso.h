@@ -46,9 +46,9 @@ namespace abclass
             arma::uvec::iterator it { idx.begin() };
             arma::uvec::iterator it_end { idx.end() };
             for (; it != it_end; ++it) {
-                out += lambda * group_weight(*it) * l2_norm(beta.row(*it));
+                out += group_weight(*it) * l2_norm(beta.row(*it));
             }
-            return out;
+            return lambda * out;
         }
 
         // objective function with regularization
@@ -67,29 +67,29 @@ namespace abclass
         inline arma::rowvec gmd_gradient(const arma::vec& inner,
                                          const unsigned int j) const
         {
-            arma::vec neg_inner_grad { neg_loss_derivative(inner) };
+            arma::vec inner_grad { loss_derivative(inner) };
             arma::rowvec out { arma::zeros<arma::rowvec>(km1_) };
             for (size_t i {0}; i < n_obs_; ++i) {
-                out += obs_weight_[i] * neg_inner_grad[i] * x_(i, j) *
+                out += obs_weight_[i] * inner_grad[i] * x_(i, j) *
                     vertex_.row(y_[i]);
             }
-            return - out / dn_obs_;
+            return out / dn_obs_;
         }
 
         // gradient matrix for beta
         inline arma::mat gradient(const arma::vec& inner) const
         {
             arma::mat out { arma::zeros(p1_, km1_) };
-            arma::vec neg_inner_grad { neg_loss_derivative(inner) };
+            arma::vec inner_grad { loss_derivative(inner) };
             for (size_t j {0}; j < p1_; ++j) {
                 arma::rowvec tmp { arma::zeros<arma::rowvec>(km1_) };
                 for (size_t i {0}; i < n_obs_; ++i) {
-                    tmp += obs_weight_[i] * neg_inner_grad[i] * x_(i, j) *
+                    tmp += obs_weight_[i] * inner_grad[i] * x_(i, j) *
                         vertex_.row(y_[i]);
                 }
                 out.row(j) = tmp;
             }
-            return - out / dn_obs_;
+            return out / dn_obs_;
         }
 
         // run one cycle of coordinate descent over a given active set
@@ -120,7 +120,6 @@ namespace abclass
         double lambda_max_;
         arma::vec lambda_;        // lambda sequence
         arma::vec group_weight_;  // adaptive weights for each group
-        arma::uvec penalty_group_; // index vector where group_weight_ > 0
 
         // estimates
         arma::cube coef_;         // p1_ by km1_
@@ -214,7 +213,7 @@ namespace abclass
             Rcpp::Rcout << "\nStarting values of beta:\n";
             Rcpp::Rcout << beta << "\n";
             Rcpp::Rcout << "The active set of beta:\n";
-            Rcpp::Rcout << is_active << "\n";
+            Rcpp::Rcout << arma2rvec(is_active) << "\n";
             ell_verbose = objective(inner, beta, lambda, group_weight_);
         };
         for (size_t j {0}; j < p1_; ++j) {
@@ -223,22 +222,24 @@ namespace abclass
             }
             arma::rowvec old_beta_j { beta.row(j) };
             double gamma_j { gmd_lowerbound_(j) };
-            arma::rowvec dj { gmd_gradient(inner, j) + gamma_j * beta.row(j) };
-            double wl { group_weight_(j) } ;
-            double pos_part { 1 - lambda * wl / l2_norm(dj) };
+            arma::rowvec uj {
+                - gmd_gradient(inner, j) + gamma_j * beta.row(j)
+            };
+            double wj { group_weight_(j) } ;
+            double pos_part { 1 - lambda * wj / l2_norm(uj) };
             // update beta
-            if (isAlmostEqual(pos_part, 0.0)) {
+            if (is_le(pos_part, 0.0)) {
                 beta.row(j) = arma::zeros<arma::rowvec>(km1_);
             } else {
-                beta.row(j) = dj * pos_part / gamma_j;
+                beta.row(j) = uj * pos_part / gamma_j;
             }
-            for (size_t i {0}; i > n_obs_; ++i) {
-                inner(i) += x_(i, j) * arma::accu(
-                    (beta.row(j) - old_beta_j) * vertex_(y_(i)));
+            for (size_t i {0}; i < n_obs_; ++i) {
+                inner(i) += x_(i, j) *
+                    arma::accu((beta.row(j) - old_beta_j) % vertex_.row(y_(i)));
             }
             if (update_active) {
                 // check if it has been shrinkaged to zero
-                if (arma::any(beta.row(j) > 0.0)) {
+                if (arma::any(beta.row(j) != 0.0)) {
                     is_active(j) = 1;
                 } else {
                     is_active(j) = 0;
@@ -354,7 +355,8 @@ namespace abclass
         set_gmd_lowerbound();
         // set group weight
         group_weight_ = gen_group_weight(group_weight);
-        penalty_group_ = arma::find(group_weight_ > 0.0);
+        arma::uvec penalty_group { arma::find(group_weight_ > 0.0) };
+        arma::uvec penalty_free { arma::find(group_weight_ <= 0.0) };
         // record control
         rel_tol_ = rel_tol;
         max_iter_ = max_iter;
@@ -365,12 +367,12 @@ namespace abclass
             one_grad_beta { one_beta };
         // need to determine lambda_max
         one_grad_beta = gradient(one_inner);
-        // get large enough lambda for zero coefs in penalty_group_
+        // get large enough lambda for zero coefs in penalty_group
         lambda_max_ = 0.0;
-        for (arma::uvec::iterator it { penalty_group_.begin() };
-             it != penalty_group_.end(); ++it) {
+        for (arma::uvec::iterator it { penalty_group.begin() };
+             it != penalty_group.end(); ++it) {
             double tmp { l2_norm(one_grad_beta.row(*it)) };
-            tmp /= group_weight(*it);
+            tmp /= group_weight_(*it);
             if (lambda_max_ < tmp) {
                 lambda_max_ = tmp;
             }
@@ -393,8 +395,8 @@ namespace abclass
         // get the solution (intercepts) of l1_lambda_max for a warm start
         arma::uvec is_active_strong { arma::zeros<arma::uvec>(p1_) };
         // only need to estimate beta not in the penalty group
-        for (arma::uvec::iterator it { penalty_group_.begin() };
-             it != penalty_group_.end(); ++it) {
+        for (arma::uvec::iterator it { penalty_free.begin() };
+             it != penalty_free.end(); ++it) {
             is_active_strong(*it) = 1;
         }
         run_gmd_active_cycle(one_beta, one_inner, is_active_strong,
@@ -413,8 +415,8 @@ namespace abclass
             }
             // update active set by strong rule
             one_grad_beta = gradient(one_inner);
-            for (arma::uvec::iterator it { penalty_group_.begin() };
-                 it != penalty_group_.end(); ++it) {
+            for (arma::uvec::iterator it { penalty_group.begin() };
+                 it != penalty_group.end(); ++it) {
                 double one_strong_lhs { l2_norm(one_grad_beta.row(*it)) };
                 one_strong_rhs = group_weight_(*it) *
                     (2 * lambda_li - old_lambda);
@@ -439,8 +441,8 @@ namespace abclass
                     msg("\nChecking the KKT condition for the null set.");
                 }
                 // check kkt condition
-                for (arma::uvec::iterator it { penalty_group_.begin() };
-                     it != penalty_group_.end(); ++it) {
+                for (arma::uvec::iterator it { penalty_group.begin() };
+                     it != penalty_group.end(); ++it) {
                     if (is_active_strong(*it) > 0) {
                         continue;
                     }
