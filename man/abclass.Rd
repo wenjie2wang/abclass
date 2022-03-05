@@ -14,6 +14,8 @@ abclass(
   alpha = 0.5,
   nlambda = 50,
   lambda_min_ratio = NULL,
+  grouped = FALSE,
+  group_weight = NULL,
   nfolds = 0,
   stratified_cv = TRUE,
   lum_a = 1,
@@ -69,6 +71,11 @@ valid \code{lambda} is specified.  The default value is \code{50}.}
 smallest lambda parameter to the largest lambda parameter.  The default
 value is set to \code{1e-4} if the sample size is larger than the number
 of predictors, and \code{1e-2} otherwise.}
+
+\item{grouped}{A logicial value.  Experimental flag to apply group Lasso.}
+
+\item{group_weight}{A numerical vector. Experimental penalty factor for
+grouped lasso.}
 
 \item{nfolds}{A nonnegative integer specifying the number of folds for
 cross-validation.  The default value is \code{0} and no cross-validation
