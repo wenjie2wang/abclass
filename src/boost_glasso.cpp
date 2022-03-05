@@ -39,7 +39,7 @@ Rcpp::List rcpp_boost_glasso(
     const unsigned int verbose = 0
     )
 {
-    abclass::BoostNet object {
+    abclass::BoostGLasso object {
         x, y, inner_min, intercept, standardize, weight
     };
     return abclass_glasso_fit(object, y,

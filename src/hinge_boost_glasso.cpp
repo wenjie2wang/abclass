@@ -39,7 +39,7 @@ Rcpp::List rcpp_hinge_boost_glasso(
     const unsigned int verbose = 0
     )
 {
-    abclass::HingeBoostNet object {
+    abclass::HingeBoostGLasso object {
         x, y, lum_c, intercept, standardize, weight
     };
     return abclass_glasso_fit(object, y,

@@ -40,7 +40,7 @@ Rcpp::List rcpp_lum_glasso(
     const unsigned int verbose = 0
     )
 {
-    abclass::LumNet object {
+    abclass::LumGLasso object {
         x, y, lum_a, lum_c, intercept, standardize, weight
     };
     return abclass_glasso_fit(object, y,
