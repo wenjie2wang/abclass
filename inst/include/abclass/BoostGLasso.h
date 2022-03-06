@@ -34,7 +34,7 @@ namespace abclass
 
     protected:
 
-        double inner_min_ = - 3.0;
+        double inner_min_ = - 10.0;
 
         // set CMD lowerbound
         inline void set_gmd_lowerbound() override
@@ -87,7 +87,7 @@ namespace abclass
         //! @param y The category index vector.
         BoostGLasso(const arma::mat& x,
                     const arma::uvec& y,
-                    const double inner_min = - 3.0,
+                    const double inner_min = - 10.0,
                     const bool intercept = true,
                     const bool standardize = true,
                     const arma::vec& weight = arma::vec()) :

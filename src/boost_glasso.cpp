@@ -35,7 +35,7 @@ Rcpp::List rcpp_boost_glasso(
     const unsigned int max_iter = 1e5,
     const double rel_tol = 1e-4,
     const bool varying_active_set = true,
-    const double inner_min = -3.0,
+    const double inner_min = -10.0,
     const unsigned int verbose = 0
     )
 {
