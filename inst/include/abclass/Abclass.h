@@ -89,8 +89,7 @@ namespace abclass
         }
 
         // the first derivative of the loss function
-        inline virtual arma::vec loss_derivative(
-            const arma::vec& inner) const = 0;
+        virtual arma::vec loss_derivative(const arma::vec& inner) const = 0;
 
 
     public:

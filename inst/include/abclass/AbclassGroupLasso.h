@@ -31,8 +31,8 @@ namespace abclass
         arma::rowvec gmd_lowerbound_; // 1 by p1_
 
         // pure virtual functions
-        inline virtual void set_gmd_lowerbound() = 0;
-        inline virtual double objective0(const arma::vec& inner) const = 0;
+        virtual void set_gmd_lowerbound() = 0;
+        virtual double objective0(const arma::vec& inner) const = 0;
 
         // common methods
         inline double regularization(
