@@ -35,13 +35,14 @@ Rcpp::List rcpp_boost_net(
     const unsigned int max_iter = 1e5,
     const double rel_tol = 1e-4,
     const bool varying_active_set = true,
-    const double inner_min = -10.0,
+    const double inner_min = -6.9,
     const unsigned int verbose = 0
     )
 {
     abclass::BoostNet object {
-        x, y, inner_min, intercept, standardize, weight
+        x, y, intercept, standardize, weight
     };
+    object.set_inner_min(inner_min);
     return abclass_net_fit(object, y,
                            lambda, alpha, nlambda, lambda_min_ratio,
                            nfolds, stratified_cv, max_iter, rel_tol,

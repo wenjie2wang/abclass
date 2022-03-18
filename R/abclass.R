@@ -64,14 +64,14 @@
 ##' @param stratified_cv A logical value indicating if the cross-validation
 ##'     procedure should be stratified by the response label. The default value
 ##'     is \code{TRUE}.
-##' @param lum_a A positive number specifying the parameter \emph{a} in LUM,
-##'     which will be used only if \code{loss = "lum"}.  The default value is
-##'     \code{1.0}.
+##' @param lum_a A positive number greater than one representing the parameter
+##'     \emph{a} in LUM, which will be used only if \code{loss = "lum"}.  The
+##'     default value is \code{1.0}.
 ##' @param lum_c A nonnegative number specifying the parameter \emph{c} in LUM,
 ##'     which will be used only if \code{loss = "hinge-boost"} or \code{loss =
-##'     "lum"}.  The default value is \code{0.0}.
+##'     "lum"}.  The default value is \code{10000}.
 ##' @param boost_umin A negative number for adjusting the boosting loss for the
-##'     internal majorization procedure.  The default value is \code{-3.0}.
+##'     internal majorization procedure.
 ##' @param max_iter A positive integer specifying the maximum number of
 ##'     iteration.  The default value is \code{10^5}.
 ##' @param rel_tol A positive number specifying the relative tolerance that
@@ -117,8 +117,8 @@ abclass <- function(x, y,
                     nfolds = 0,
                     stratified_cv = TRUE,
                     lum_a = 1.0,
-                    lum_c = 0.0,
-                    boost_umin = -10,
+                    lum_c = 1e4,
+                    boost_umin = -6.9,
                     max_iter = 1e5,
                     rel_tol = 1e-4,
                     standardize = TRUE,

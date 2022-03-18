@@ -34,7 +34,7 @@ namespace abclass
 
     protected:
 
-        double inner_min_ = - 10.0;
+        double inner_min_ = - 6.9;
 
         // set CMD lowerbound
         inline void set_cmd_lowerbound() override
@@ -87,13 +87,12 @@ namespace abclass
         //! @param y The category index vector.
         BoostNet(const arma::mat& x,
                  const arma::uvec& y,
-                 const double inner_min = - 10.0,
                  const bool intercept = true,
                  const bool standardize = true,
                  const arma::vec& weight = arma::vec()) :
             AbclassNet(x, y, intercept, standardize, weight)
         {
-            set_inner_min(inner_min);
+            set_inner_min(- 6.9);
             exp_inner_max_ = std::exp(- inner_min_);
             // set the CMD lowerbound (which needs to be done only once)
             // set_cmd_lowerbound();
