@@ -92,6 +92,24 @@ namespace abclass
             return out / dn_obs_;
         }
 
+        inline double max_diff(const arma::mat& beta_new,
+                               const arma::mat& beta_old) const
+        {
+            double out { 0.0 };
+            for (size_t j {0}; j < km1_; ++j) {
+                for (size_t i {0}; i < p1_; ++i) {
+                    double tmp {
+                        gmd_lowerbound_(i) *
+                        std::pow(beta_new(i, j) - beta_old(i, j), 2)
+                    };
+                    if (out < tmp) {
+                        out = tmp;
+                    }
+                }
+            }
+            return out;
+        }
+
         // run one cycle of coordinate descent over a given active set
         inline void run_one_active_cycle(arma::mat& beta,
                                          arma::vec& inner,
@@ -209,13 +227,15 @@ namespace abclass
         )
     {
         double ell_verbose { 0.0 };
-        if (verbose > 1) {
+        if (verbose > 2) {
             Rcpp::Rcout << "\nStarting values of beta:\n";
             Rcpp::Rcout << beta << "\n";
             Rcpp::Rcout << "The active set of beta:\n";
             Rcpp::Rcout << arma2rvec(is_active) << "\n";
-            ell_verbose = objective(inner, beta, lambda, group_weight_);
         };
+        if (verbose > 1) {
+            ell_verbose = objective(inner, beta, lambda, group_weight_);
+        }
         for (size_t j {0}; j < p1_; ++j) {
             if (is_active(j) == 0) {
                 continue;
@@ -283,7 +303,7 @@ namespace abclass
                 while (ii < max_iter) {
                     run_one_active_cycle(beta, inner, is_active_new,
                                          lambda, true, verbose);
-                    if (rel_diff(beta0, beta) < rel_tol) {
+                    if (max_diff(beta0, beta) < rel_tol) {
                         num_iter_ = ii + 1;
                         break;
                     }
@@ -319,7 +339,7 @@ namespace abclass
             while (i < max_iter) {
                 run_one_active_cycle(beta, inner, is_active_stored,
                                      lambda, false, verbose);
-                if (rel_diff(beta0, beta) < rel_tol) {
+                if (max_diff(beta0, beta) < rel_tol) {
                     num_iter_ = i + 1;
                     break;
                 }
@@ -464,7 +484,7 @@ namespace abclass
                     is_active_strong = is_active_strong_new;
                 } else {
                     if (verbose > 0) {
-                        Rcpp::Rcout << "\nThe strong rule worked.\n";
+                        msg("The strong rule worked.");
                     }
                     kkt_failed = false;
                 }

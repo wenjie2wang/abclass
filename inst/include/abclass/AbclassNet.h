@@ -86,6 +86,24 @@ namespace abclass
             return out;
         }
 
+        inline double max_diff(const arma::mat& beta_new,
+                               const arma::mat& beta_old) const
+        {
+            double out { 0.0 };
+            for (size_t j {0}; j < km1_; ++j) {
+                for (size_t i {0}; i < p1_; ++i) {
+                    double tmp {
+                        cmd_lowerbound_(i) *
+                        std::pow(beta_new(i, j) - beta_old(i, j), 2)
+                    };
+                    if (out < tmp) {
+                        out = tmp;
+                    }
+                }
+            }
+            return out;
+        }
+
         // run one cycle of coordinate descent over a given active set
         inline void run_one_active_cycle(arma::mat& beta,
                                          arma::vec& inner,
@@ -189,13 +207,15 @@ namespace abclass
         )
     {
         double ell_verbose { 0.0 };
-        if (verbose > 1) {
+        if (verbose > 2) {
             Rcpp::Rcout << "\nStarting values of beta:\n";
             Rcpp::Rcout << beta << "\n";
             Rcpp::Rcout << "The active set of beta:\n";
             Rcpp::Rcout << is_active << "\n";
-            ell_verbose = objective(inner, beta, l1_lambda, l2_lambda);
         };
+        if (verbose > 1) {
+            ell_verbose = objective(inner, beta, l1_lambda, l2_lambda);
+        }
         for (size_t j {0}; j < km1_; ++j) {
             arma::vec v_j { get_vertex_y(j) };
             for (size_t l {0}; l < p1_; ++l) {
@@ -270,7 +290,7 @@ namespace abclass
                 while (ii < max_iter) {
                     run_one_active_cycle(beta, inner, is_active_new,
                                          l1_lambda, l2_lambda, true, verbose);
-                    if (rel_diff(beta0, beta) < rel_tol) {
+                    if (max_diff(beta0, beta) < rel_tol) {
                         num_iter_ = ii + 1;
                         break;
                     }
@@ -306,7 +326,7 @@ namespace abclass
             while (i < max_iter) {
                 run_one_active_cycle(beta, inner, is_active_stored,
                                      l1_lambda, l2_lambda, false, verbose);
-                if (rel_diff(beta0, beta) < rel_tol) {
+                if (max_diff(beta0, beta) < rel_tol) {
                     num_iter_ = i + 1;
                     break;
                 }
@@ -335,11 +355,13 @@ namespace abclass
         )
     {
         double ell_verbose { 0.0 };
-        if (verbose > 1) {
+        if (verbose > 2) {
             Rcpp::Rcout << "\nStarting values of beta:\n";
             Rcpp::Rcout << beta << "\n";
-            ell_verbose = objective(inner, beta, l1_lambda, l2_lambda);
         };
+        if (verbose > 1) {
+            ell_verbose = objective(inner, beta, l1_lambda, l2_lambda);
+        }
         for (size_t j {0}; j < km1_; ++j) {
             arma::vec v_j { get_vertex_y(j) };
             for (size_t l {0}; l < p1_; ++l) {
@@ -393,7 +415,7 @@ namespace abclass
         arma::mat beta0 { beta };
         for (size_t i {0}; i < max_iter; ++i) {
             run_one_full_cycle(beta, inner, l1_lambda, l2_lambda, verbose);
-            if (rel_diff(beta0, beta) < rel_tol) {
+            if (max_diff(beta0, beta) < rel_tol) {
                 num_iter_ = i + 1;
                 break;
             }
@@ -524,7 +546,7 @@ namespace abclass
                                      l1_lambda, l2_lambda, varying_active_set,
                                      max_iter, rel_tol, verbose);
                 if (verbose > 0) {
-                    msg("\nChecking the KKT condition for the null set.");
+                    msg("Checking the KKT condition for the null set.");
                 }
                 // check kkt condition
                 for (size_t j { 0 }; j < km1_; ++j) {
@@ -543,7 +565,7 @@ namespace abclass
                 }
                 if (l1_norm(is_active_strong_new - is_active_strong) > 0) {
                     if (verbose > 0) {
-                        Rcpp::Rcout << "\nThe strong rule failed."
+                        Rcpp::Rcout << "The strong rule failed."
                                     << "\nOld active set:\n";
                         Rcpp::Rcout << is_active_strong << "\n";
                         Rcpp::Rcout << "\nNew active set:\n";
@@ -552,7 +574,7 @@ namespace abclass
                     is_active_strong = is_active_strong_new;
                 } else {
                     if (verbose > 0) {
-                        Rcpp::Rcout << "\nThe strong rule worked.\n";
+                        msg("The strong rule worked.");
                     }
                     kkt_failed = false;
                 }

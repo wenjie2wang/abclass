@@ -166,6 +166,13 @@ namespace abclass
             return this;
         }
 
+        inline Abclass* set_k(const unsigned int k)
+        {
+            k_ = k;
+            km1_ = k_ - 1;
+            return this;
+        }
+
         inline Abclass* set_intercept(const bool intercept)
         {
             intercept_ = intercept;
