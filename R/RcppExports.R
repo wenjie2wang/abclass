@@ -5,7 +5,7 @@ rcpp_boost_glasso <- function(x, y, lambda, nlambda, lambda_min_ratio, group_wei
     .Call('_abclass_rcpp_boost_glasso', PACKAGE = 'abclass', x, y, lambda, nlambda, lambda_min_ratio, group_weight, weight, intercept, standardize, nfolds, stratified_cv, max_iter, rel_tol, varying_active_set, inner_min, verbose)
 }
 
-rcpp_boost_net <- function(x, y, lambda, alpha, nlambda, lambda_min_ratio, weight, intercept = TRUE, standardize = TRUE, nfolds = 0L, stratified_cv = TRUE, max_iter = 1e5L, rel_tol = 1e-4, varying_active_set = TRUE, inner_min = -10.0, verbose = 0L) {
+rcpp_boost_net <- function(x, y, lambda, alpha, nlambda, lambda_min_ratio, weight, intercept = TRUE, standardize = TRUE, nfolds = 0L, stratified_cv = TRUE, max_iter = 1e5L, rel_tol = 1e-4, varying_active_set = TRUE, inner_min = -6.9, verbose = 0L) {
     .Call('_abclass_rcpp_boost_net', PACKAGE = 'abclass', x, y, lambda, alpha, nlambda, lambda_min_ratio, weight, intercept, standardize, nfolds, stratified_cv, max_iter, rel_tol, varying_active_set, inner_min, verbose)
 }
 
