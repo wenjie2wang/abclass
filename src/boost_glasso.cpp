@@ -40,8 +40,9 @@ Rcpp::List rcpp_boost_glasso(
     )
 {
     abclass::BoostGLasso object {
-        x, y, inner_min, intercept, standardize, weight
+        x, y, intercept, standardize, weight
     };
+    object.set_inner_min(inner_min);
     return abclass_glasso_fit(object, y,
                               lambda, nlambda, lambda_min_ratio, group_weight,
                               nfolds, stratified_cv, max_iter, rel_tol,

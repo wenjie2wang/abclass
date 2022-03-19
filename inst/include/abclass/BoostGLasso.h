@@ -34,7 +34,7 @@ namespace abclass
 
     protected:
 
-        double inner_min_ = - 10.0;
+        double inner_min_ = - 5.0;
 
         // set CMD lowerbound
         inline void set_gmd_lowerbound() override
@@ -53,7 +53,7 @@ namespace abclass
         inline double objective0(const arma::vec& inner) const override
         {
             arma::vec tmp { arma::zeros(inner.n_elem) };
-            double tmp1 { 1 - inner_min_ };
+            double tmp1 { 1 + inner_min_ };
             for (size_t i {0}; i < inner.n_elem; ++i) {
                 if (inner[i] < inner_min_) {
                     tmp[i] = (tmp1 - inner[i]) * exp_inner_max_;
@@ -87,13 +87,12 @@ namespace abclass
         //! @param y The category index vector.
         BoostGLasso(const arma::mat& x,
                     const arma::uvec& y,
-                    const double inner_min = - 10.0,
                     const bool intercept = true,
                     const bool standardize = true,
                     const arma::vec& weight = arma::vec()) :
             AbclassGroupLasso(x, y, intercept, standardize, weight)
         {
-            set_inner_min(inner_min);
+            set_inner_min(- 5.0);
             exp_inner_max_ = std::exp(- inner_min_);
         }
 

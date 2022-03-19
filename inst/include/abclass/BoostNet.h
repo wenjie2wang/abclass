@@ -34,7 +34,7 @@ namespace abclass
 
     protected:
 
-        double inner_min_ = - 6.9;
+        double inner_min_ = - 5.0;
 
         // set CMD lowerbound
         inline void set_cmd_lowerbound() override
@@ -53,7 +53,7 @@ namespace abclass
         inline double objective0(const arma::vec& inner) const override
         {
             arma::vec tmp { arma::zeros(inner.n_elem) };
-            double tmp1 { 1 - inner_min_ };
+            double tmp1 { 1 + inner_min_ };
             for (size_t i {0}; i < inner.n_elem; ++i) {
                 if (inner[i] < inner_min_) {
                     tmp[i] = (tmp1 - inner[i]) * exp_inner_max_;
@@ -92,7 +92,7 @@ namespace abclass
                  const arma::vec& weight = arma::vec()) :
             AbclassNet(x, y, intercept, standardize, weight)
         {
-            set_inner_min(- 6.9);
+            set_inner_min(- 5.0);
             exp_inner_max_ = std::exp(- inner_min_);
             // set the CMD lowerbound (which needs to be done only once)
             // set_cmd_lowerbound();
