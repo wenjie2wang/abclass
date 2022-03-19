@@ -121,7 +121,7 @@ namespace abclass
                                          const double l2_lambda,
                                          const bool varying_active_set,
                                          const unsigned int max_iter,
-                                         const double rel_tol,
+                                         const double epsilon,
                                          const unsigned int verbose);
 
         // one full cycle for coordinate-descent
@@ -137,7 +137,7 @@ namespace abclass
                                        const double l1_lambda,
                                        const double l2_lambda,
                                        const unsigned int max_iter,
-                                       const double rel_tol,
+                                       const double epsilon,
                                        const unsigned int verbose);
 
     public:
@@ -161,7 +161,7 @@ namespace abclass
         arma::vec cv_accuracy_sd_;
 
         // control
-        double rel_tol_;          // relative tolerance for convergence check
+        double epsilon_;          // relative tolerance for convergence check
         unsigned int max_iter_;   // maximum number of iterations
         bool varying_active_set_; // if active set should be adaptive
 
@@ -174,7 +174,7 @@ namespace abclass
                         const unsigned int nlambda,
                         const double lambda_min_ratio,
                         const unsigned int max_iter,
-                        const double rel_tol,
+                        const double epsilon,
                         const bool varying_active_set,
                         const unsigned int verbose);
 
@@ -274,7 +274,7 @@ namespace abclass
         const double l2_lambda,
         const bool varying_active_set,
         const unsigned int max_iter,
-        const double rel_tol,
+        const double epsilon,
         const unsigned int verbose
         )
     {
@@ -290,7 +290,7 @@ namespace abclass
                 while (ii < max_iter) {
                     run_one_active_cycle(beta, inner, is_active_new,
                                          l1_lambda, l2_lambda, true, verbose);
-                    if (max_diff(beta0, beta) < rel_tol) {
+                    if (max_diff(beta0, beta) < epsilon) {
                         num_iter_ = ii + 1;
                         break;
                     }
@@ -326,7 +326,7 @@ namespace abclass
             while (i < max_iter) {
                 run_one_active_cycle(beta, inner, is_active_stored,
                                      l1_lambda, l2_lambda, false, verbose);
-                if (max_diff(beta0, beta) < rel_tol) {
+                if (max_diff(beta0, beta) < epsilon) {
                     num_iter_ = i + 1;
                     break;
                 }
@@ -408,14 +408,14 @@ namespace abclass
         const double l1_lambda,
         const double l2_lambda,
         const unsigned int max_iter,
-        const double rel_tol,
+        const double epsilon,
         const unsigned int verbose
         )
     {
         arma::mat beta0 { beta };
         for (size_t i {0}; i < max_iter; ++i) {
             run_one_full_cycle(beta, inner, l1_lambda, l2_lambda, verbose);
-            if (max_diff(beta0, beta) < rel_tol) {
+            if (max_diff(beta0, beta) < epsilon) {
                 num_iter_ = i + 1;
                 break;
             }
@@ -440,7 +440,7 @@ namespace abclass
         const unsigned int nlambda,
         const double lambda_min_ratio,
         const unsigned int max_iter,
-        const double rel_tol,
+        const double epsilon,
         const bool varying_active_set,
         const unsigned int verbose
         )
@@ -453,7 +453,7 @@ namespace abclass
         }
         alpha_ = alpha;
         // record control
-        rel_tol_ = rel_tol;
+        epsilon_ = epsilon;
         max_iter_ = max_iter;
         varying_active_set_ = varying_active_set;
         // initialize
@@ -492,7 +492,7 @@ namespace abclass
             for (size_t li { 0 }; li < lambda_.n_elem; ++li) {
                 run_cmd_full_cycle(one_beta, one_inner,
                                    0.0, 0.5 * lambda_(li),
-                                   max_iter, rel_tol, verbose);
+                                   max_iter, epsilon, verbose);
                 coef_.slice(li) = rescale_coef(one_beta);
             }
             return;             // early exit
@@ -507,7 +507,7 @@ namespace abclass
             is_active_strong.row(0) = arma::ones<arma::umat>(1, km1_);
             run_cmd_active_cycle(one_beta, one_inner, is_active_strong,
                                  l1_lambda_max_, l2_lambda,
-                                 false, max_iter, rel_tol, verbose);
+                                 false, max_iter, epsilon, verbose);
         }
         // optim with varying active set when p > n
         double old_l1_lambda { l1_lambda_max_ }; // for strong rule
@@ -544,7 +544,7 @@ namespace abclass
                 // update beta
                 run_cmd_active_cycle(one_beta, one_inner, is_active_strong,
                                      l1_lambda, l2_lambda, varying_active_set,
-                                     max_iter, rel_tol, verbose);
+                                     max_iter, epsilon, verbose);
                 if (verbose > 0) {
                     msg("Checking the KKT condition for the null set.");
                 }

@@ -125,7 +125,7 @@ namespace abclass
                                          const double lambda,
                                          const bool varying_active_set,
                                          const unsigned int max_iter,
-                                         const double rel_tol,
+                                         const double epsilon,
                                          const unsigned int verbose);
 
     public:
@@ -148,7 +148,7 @@ namespace abclass
         arma::vec cv_accuracy_sd_;
 
         // control
-        double rel_tol_;          // relative tolerance for convergence check
+        double epsilon_;          // relative tolerance for convergence check
         unsigned int max_iter_;   // maximum number of iterations
         bool varying_active_set_; // if active set should be adaptive
 
@@ -161,7 +161,7 @@ namespace abclass
                         const double lambda_min_ratio,
                         const arma::vec& group_weight,
                         const unsigned int max_iter,
-                        const double rel_tol,
+                        const double epsilon,
                         const bool varying_active_set,
                         const unsigned int verbose);
 
@@ -287,7 +287,7 @@ namespace abclass
         const double lambda,
         const bool varying_active_set,
         const unsigned int max_iter,
-        const double rel_tol,
+        const double epsilon,
         const unsigned int verbose
         )
     {
@@ -303,7 +303,7 @@ namespace abclass
                 while (ii < max_iter) {
                     run_one_active_cycle(beta, inner, is_active_new,
                                          lambda, true, verbose);
-                    if (max_diff(beta0, beta) < rel_tol) {
+                    if (max_diff(beta0, beta) < epsilon) {
                         num_iter_ = ii + 1;
                         break;
                     }
@@ -339,7 +339,7 @@ namespace abclass
             while (i < max_iter) {
                 run_one_active_cycle(beta, inner, is_active_stored,
                                      lambda, false, verbose);
-                if (max_diff(beta0, beta) < rel_tol) {
+                if (max_diff(beta0, beta) < epsilon) {
                     num_iter_ = i + 1;
                     break;
                 }
@@ -366,7 +366,7 @@ namespace abclass
         const double lambda_min_ratio,
         const arma::vec& group_weight,
         const unsigned int max_iter,
-        const double rel_tol,
+        const double epsilon,
         const bool varying_active_set,
         const unsigned int verbose
         )
@@ -378,7 +378,7 @@ namespace abclass
         arma::uvec penalty_group { arma::find(group_weight_ > 0.0) };
         arma::uvec penalty_free { arma::find(group_weight_ <= 0.0) };
         // record control
-        rel_tol_ = rel_tol;
+        epsilon_ = epsilon;
         max_iter_ = max_iter;
         varying_active_set_ = varying_active_set;
         // initialize
@@ -421,7 +421,7 @@ namespace abclass
         }
         run_gmd_active_cycle(one_beta, one_inner, is_active_strong,
                              lambda_max_, false,
-                             max_iter, rel_tol, verbose);
+                             max_iter, epsilon, verbose);
         // optim with varying active set when p > n
         double old_lambda { lambda_max_ }; // for strong rule
         // main loop: for each lambda
@@ -456,7 +456,7 @@ namespace abclass
                 // update beta
                 run_gmd_active_cycle(one_beta, one_inner, is_active_strong,
                                      lambda_li, varying_active_set,
-                                     max_iter, rel_tol, verbose);
+                                     max_iter, epsilon, verbose);
                 if (verbose > 0) {
                     msg("\nChecking the KKT condition for the null set.");
                 }

@@ -53,7 +53,7 @@ namespace abclass {
                              std::move(train_y));
             new_obj.set_weight(std::move(train_weight));
             new_obj.fit(obj.lambda_, obj.alpha_, 0, 1,
-                        obj.max_iter_, obj.rel_tol_,
+                        obj.max_iter_, obj.epsilon_,
                         obj.varying_active_set_, 0);
             for (size_t l { 0 }; l < obj.lambda_.n_elem; ++l) {
                 obj.cv_accuracy_(l, i) = new_obj.accuracy(
