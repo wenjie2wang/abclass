@@ -17,28 +17,28 @@ test_y <- y[- train_idx]
 
 ## logistic deviance loss
 model1 <- abclass(train_x, train_y, nlambda = 10, nfolds = 3,
-                  lambda_min_ratio = 1e-3, rel_tol = 1e-3)
+                  lambda_min_ratio = 1e-3, epsilon = 1e-3)
 pred1 <- predict(model1, test_x)
 expect_true(mean(test_y == pred1) > 0.5)
 expect_equivalent(dim(coef(model1)), c(p + 1, k - 1))
 
 ## exponential loss approximating AdaBoost
 model2 <- abclass(train_x, train_y, nlambda = 10, nfolds = 3,
-                  loss = "boost", rel_tol = 1e-3)
+                  loss = "boost", epsilon = 1e-3)
 pred2 <- predict(model2, test_x)
 expect_true(mean(test_y == pred2) > 0.5)
 expect_equivalent(dim(coef(model2)), c(p + 1, k - 1))
 
 ## hinge-boost loss
 model3 <- abclass(train_x, train_y, nlambda = 10, nfolds = 3,
-                  loss = "hinge-boost", rel_tol = 1e-3)
+                  loss = "hinge-boost", epsilon = 1e-3)
 pred3 <- predict(model3, test_x)
 expect_true(mean(test_y == pred3) > 0.5)
 expect_equivalent(dim(coef(model3)), c(p + 1, k - 1))
 
 ## LUM loss
 model4 <- abclass(train_x, train_y, nlambda = 5, nfolds = 3,
-                  loss = "lum", rel_tol = 1e-2)
+                  loss = "lum", epsilon = 1e-2)
 pred4 <- predict(model4, test_x)
 expect_true(mean(test_y == pred4) > 0.5)
 expect_equivalent(dim(coef(model4)), c(p + 1, k - 1))

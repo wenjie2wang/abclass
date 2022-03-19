@@ -74,8 +74,8 @@
 ##'     internal majorization procedure.
 ##' @param max_iter A positive integer specifying the maximum number of
 ##'     iteration.  The default value is \code{10^5}.
-##' @param rel_tol A positive number specifying the relative tolerance that
-##'     determines convergence.  The default value is \code{1e-4}.
+##' @param epsilon A positive number specifying the relative tolerance that
+##'     determines convergence.  The default value is \code{1e-5}.
 ##' @param standardize A logical value indicating if each column of the design
 ##'     matrix should be standardized internally to have mean zero and standard
 ##'     deviation equal to the sample size.  The default value is \code{TRUE}.
@@ -118,9 +118,9 @@ abclass <- function(x, y,
                     stratified_cv = TRUE,
                     lum_a = 1.0,
                     lum_c = 1e4,
-                    boost_umin = -6.9,
+                    boost_umin = -5.0,
                     max_iter = 1e5,
-                    rel_tol = 1e-4,
+                    epsilon = 1e-5,
                     standardize = TRUE,
                     varying_active_set = TRUE,
                     verbose = 0,
@@ -157,7 +157,7 @@ abclass <- function(x, y,
                         nfolds = nfolds,
                         stratified_cv = stratified_cv,
                         max_iter = max_iter,
-                        rel_tol = rel_tol,
+                        epsilon = epsilon,
                         varying_active_set = varying_active_set,
                         verbose = verbose
                     )
@@ -176,7 +176,7 @@ abclass <- function(x, y,
                         nfolds = nfolds,
                         stratified_cv = stratified_cv,
                         max_iter = max_iter,
-                        rel_tol = rel_tol,
+                        epsilon = epsilon,
                         varying_active_set = varying_active_set,
                         inner_min = boost_umin,
                         verbose = verbose
@@ -196,7 +196,7 @@ abclass <- function(x, y,
                         nfolds = nfolds,
                         stratified_cv = stratified_cv,
                         max_iter = max_iter,
-                        rel_tol = rel_tol,
+                        epsilon = epsilon,
                         varying_active_set = varying_active_set,
                         lum_c = lum_c,
                         verbose = verbose
@@ -216,7 +216,7 @@ abclass <- function(x, y,
                         nfolds = nfolds,
                         stratified_cv = stratified_cv,
                         max_iter = max_iter,
-                        rel_tol = rel_tol,
+                        epsilon = epsilon,
                         varying_active_set = varying_active_set,
                         lum_a = lum_a,
                         lum_c = lum_c,
@@ -241,7 +241,7 @@ abclass <- function(x, y,
                         nfolds = nfolds,
                         stratified_cv = stratified_cv,
                         max_iter = max_iter,
-                        rel_tol = rel_tol,
+                        epsilon = epsilon,
                         varying_active_set = varying_active_set,
                         verbose = verbose
                     )
@@ -260,7 +260,7 @@ abclass <- function(x, y,
                         nfolds = nfolds,
                         stratified_cv = stratified_cv,
                         max_iter = max_iter,
-                        rel_tol = rel_tol,
+                        epsilon = epsilon,
                         varying_active_set = varying_active_set,
                         inner_min = boost_umin,
                         verbose = verbose
@@ -280,7 +280,7 @@ abclass <- function(x, y,
                         nfolds = nfolds,
                         stratified_cv = stratified_cv,
                         max_iter = max_iter,
-                        rel_tol = rel_tol,
+                        epsilon = epsilon,
                         varying_active_set = varying_active_set,
                         lum_c = lum_c,
                         verbose = verbose
@@ -300,7 +300,7 @@ abclass <- function(x, y,
                         nfolds = nfolds,
                         stratified_cv = stratified_cv,
                         max_iter = max_iter,
-                        rel_tol = rel_tol,
+                        epsilon = epsilon,
                         varying_active_set = varying_active_set,
                         lum_a = lum_a,
                         lum_c = lum_c,
@@ -323,7 +323,7 @@ abclass <- function(x, y,
     res$control <- list(
         standardize = standardize,
         max_iter = max_iter,
-        rel_tol = rel_tol,
+        epsilon = epsilon,
         varying_active_set = varying_active_set,
         verbose = verbose
     )
