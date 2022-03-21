@@ -169,8 +169,8 @@ namespace abclass
         inline Abclass* set_k(const unsigned int k)
         {
             k_ = k;
-            km1_ = k_ - 1;
-            set_vertex_matrix(k_);
+            km1_ = k - 1;
+            set_vertex_matrix(k);
             return this;
         }
 

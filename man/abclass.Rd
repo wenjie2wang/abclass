@@ -22,7 +22,7 @@ abclass(
   lum_c = 10000,
   boost_umin = -5,
   max_iter = 1e+05,
-  epsilon = 1e-05,
+  epsilon = 1e-04,
   standardize = TRUE,
   varying_active_set = TRUE,
   verbose = 0,
