@@ -138,6 +138,7 @@ namespace abclass
             int_intercept_ = static_cast<unsigned int>(intercept_);
             km1_ = arma::max(y_); // assume y in {0, ..., k-1}
             k_ = km1_ + 1;
+            set_vertex_matrix(k_);
             n_obs_ = x_.n_rows;
             dn_obs_ = static_cast<double>(n_obs_);
             p0_ = x_.n_cols;
@@ -162,7 +163,6 @@ namespace abclass
             if (intercept_) {
                 x_ = arma::join_horiz(arma::ones(n_obs_), x_);
             }
-            set_vertex_matrix(k_);
             return this;
         }
 
@@ -170,6 +170,7 @@ namespace abclass
         {
             k_ = k;
             km1_ = k_ - 1;
+            set_vertex_matrix(k_);
             return this;
         }
 
