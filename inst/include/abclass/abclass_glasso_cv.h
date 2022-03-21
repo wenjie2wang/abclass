@@ -50,8 +50,9 @@ namespace abclass {
             T new_obj { obj };
             new_obj.set_standardize(false);
             new_obj.set_data(std::move(train_x),
-                             std::move(train_y));
+                             std::move(train_y))->set_k(obj.k_);
             new_obj.set_weight(std::move(train_weight));
+            // TODO: let cv jobs have their own lambda sequences
             new_obj.fit(obj.lambda_, 0, 1, obj.group_weight_,
                         obj.max_iter_, obj.epsilon_,
                         obj.varying_active_set_, 0);

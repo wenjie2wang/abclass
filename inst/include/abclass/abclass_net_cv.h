@@ -50,7 +50,7 @@ namespace abclass {
             T new_obj { obj };
             new_obj.set_standardize(false);
             new_obj.set_data(std::move(train_x),
-                             std::move(train_y));
+                             std::move(train_y))->set_k(obj.k_);
             new_obj.set_weight(std::move(train_weight));
             new_obj.fit(obj.lambda_, obj.alpha_, 0, 1,
                         obj.max_iter_, obj.epsilon_,
