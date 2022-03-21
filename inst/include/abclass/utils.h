@@ -151,8 +151,14 @@ namespace abclass {
     template <typename T>
     inline double rel_diff(const T& x_old, const T& x_new)
     {
-        T tmp_mat { arma::abs(x_new - x_old) / (1.0 + arma::abs(x_old)) };
-        return tmp_mat.max();
+        T tmp { arma::abs(x_new - x_old) / (1.0 + arma::abs(x_new)) };
+        return tmp.max();
+    }
+    template <typename T>
+    inline double l1_sum_diff(const T& x_old, const T& x_new)
+    {
+        T tmp { arma::abs(x_new - x_old) };
+        return arma::accu(tmp);
     }
 
     // set difference for vector a and vector b

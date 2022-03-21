@@ -290,7 +290,7 @@ namespace abclass
                 while (ii < max_iter) {
                     run_one_active_cycle(beta, inner, is_active_new,
                                          l1_lambda, l2_lambda, true, verbose);
-                    if (max_diff(beta0, beta) < epsilon) {
+                    if (rel_diff(beta0, beta) < epsilon) {
                         num_iter_ = ii + 1;
                         break;
                     }
@@ -326,7 +326,7 @@ namespace abclass
             while (i < max_iter) {
                 run_one_active_cycle(beta, inner, is_active_stored,
                                      l1_lambda, l2_lambda, false, verbose);
-                if (max_diff(beta0, beta) < epsilon) {
+                if (rel_diff(beta0, beta) < epsilon) {
                     num_iter_ = i + 1;
                     break;
                 }
@@ -415,7 +415,7 @@ namespace abclass
         arma::mat beta0 { beta };
         for (size_t i {0}; i < max_iter; ++i) {
             run_one_full_cycle(beta, inner, l1_lambda, l2_lambda, verbose);
-            if (max_diff(beta0, beta) < epsilon) {
+            if (rel_diff(beta0, beta) < epsilon) {
                 num_iter_ = i + 1;
                 break;
             }

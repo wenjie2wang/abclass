@@ -303,7 +303,7 @@ namespace abclass
                 while (ii < max_iter) {
                     run_one_active_cycle(beta, inner, is_active_new,
                                          lambda, true, verbose);
-                    if (max_diff(beta0, beta) < epsilon) {
+                    if (rel_diff(beta0, beta) < epsilon) {
                         num_iter_ = ii + 1;
                         break;
                     }
@@ -339,7 +339,7 @@ namespace abclass
             while (i < max_iter) {
                 run_one_active_cycle(beta, inner, is_active_stored,
                                      lambda, false, verbose);
-                if (max_diff(beta0, beta) < epsilon) {
+                if (rel_diff(beta0, beta) < epsilon) {
                     num_iter_ = i + 1;
                     break;
                 }
