@@ -191,8 +191,7 @@ namespace abclass
             if (weight.n_elem != n_obs_) {
                 obs_weight_ = arma::ones(n_obs_);
             } else {
-                // obs_weight_ = weight / arma::sum(weight) * dn_obs_;
-                obs_weight_ =  weight;
+                obs_weight_ = weight / arma::sum(weight) * dn_obs_;
             }
             return this;
         }
