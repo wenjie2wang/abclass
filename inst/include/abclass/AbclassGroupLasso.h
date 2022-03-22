@@ -293,15 +293,15 @@ namespace abclass
     {
         size_t i {0};
         arma::mat beta0 { beta };
-        arma::uvec is_active_stored { is_active };
         // use active-set if p > n ("helps when p >> n")
         if (varying_active_set) {
+            arma::uvec is_active_strong { is_active },
+                is_active_varying { is_active };
             while (i < max_iter) {
-                arma::uvec is_active_new { is_active };
                 // cycles over the active set
                 size_t ii {0};
                 while (ii < max_iter) {
-                    run_one_active_cycle(beta, inner, is_active_new,
+                    run_one_active_cycle(beta, inner, is_active_varying,
                                          lambda, true, verbose);
                     if (rel_diff(beta0, beta) < epsilon) {
                         num_iter_ = ii + 1;
@@ -310,19 +310,29 @@ namespace abclass
                     beta0 = beta;
                     ii++;
                 }
+                if (verbose > 1) {
+                    Rcpp::Rcout << "The size of active set from strong rule: "
+                                << l1_norm(is_active_strong)
+                                << "\n";
+                }
                 // run a full cycle over the converged beta
-                run_one_active_cycle(beta, inner, is_active_stored,
+                run_one_active_cycle(beta, inner, is_active,
                                      lambda, true, verbose);
                 // check two active sets coincide
-                if (is_gt(l1_norm(is_active_new - is_active_stored), 0)) {
+                if (is_gt(l1_norm(is_active_varying - is_active), 0)) {
                     // if different, repeat this process
                     if (verbose > 1) {
-                        Rcpp::Rcout << "Enlarged the active set after "
+                        Rcpp::Rcout << "Changed the active set from "
+                                    << l1_norm(is_active_varying)
+                                    << " to "
+                                    << l1_norm(is_active)
+                                    << " after "
                                     << num_iter_ + 1
                                     << " iteration(s)\n";
                     }
+                    is_active_varying = is_active;
                     // recover the active set
-                    is_active_stored = is_active;
+                    is_active = is_active_strong;
                     i++;
                 } else {
                     if (verbose > 1) {
@@ -337,7 +347,7 @@ namespace abclass
         } else {
             // regular coordinate descent
             while (i < max_iter) {
-                run_one_active_cycle(beta, inner, is_active_stored,
+                run_one_active_cycle(beta, inner, is_active,
                                      lambda, false, verbose);
                 if (rel_diff(beta0, beta) < epsilon) {
                     num_iter_ = i + 1;
@@ -448,11 +458,14 @@ namespace abclass
                 }
             }
             old_lambda = lambda_li;
-            arma::uvec is_active_strong_new { is_active_strong };
             bool kkt_failed { true };
             one_strong_rhs = lambda_li;
             // eventually, strong rule will guess correctly
             while (kkt_failed) {
+                arma::uvec is_active_strong_old { is_active_strong };
+                arma::uvec is_strong_rule_failed {
+                    arma::zeros<arma::uvec>(is_active_strong.n_elem)
+                };
                 // update beta
                 run_gmd_active_cycle(one_beta, one_inner, is_active_strong,
                                      lambda_li, varying_active_set,
@@ -466,22 +479,22 @@ namespace abclass
                     if (is_active_strong(*it) > 0) {
                         continue;
                     }
-
                     if (l2_norm(gmd_gradient(one_inner, *it)) >
                         one_strong_rhs * group_weight_(*it)) {
                         // update active set
-                        is_active_strong_new(*it) = 1;
+                        is_strong_rule_failed(*it) = 1;
                     }
                 }
-                if (l1_norm(is_active_strong_new - is_active_strong) > 0) {
+                if (arma::accu(is_strong_rule_failed) > 0) {
+                    is_active_strong = is_active_strong_old +
+                        is_strong_rule_failed;
                     if (verbose > 0) {
-                        Rcpp::Rcout << "\nThe strong rule failed."
-                                    << "\nOld active set:\n";
-                        Rcpp::Rcout << is_active_strong << "\n";
-                        Rcpp::Rcout << "\nNew active set:\n";
-                        Rcpp::Rcout << is_active_strong_new << "\n";
+                        Rcpp::Rcout << "The strong rule failed.\n"
+                                    << "The size of old active set: ";
+                        Rcpp::Rcout << l1_norm(is_active_strong_old) << "\n";
+                        Rcpp::Rcout << "The size of new active set: ";
+                        Rcpp::Rcout << l1_norm(is_active_strong) << "\n";
                     }
-                    is_active_strong = is_active_strong_new;
                 } else {
                     if (verbose > 0) {
                         msg("The strong rule worked.");
