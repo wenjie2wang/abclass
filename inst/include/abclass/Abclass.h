@@ -222,7 +222,8 @@ namespace abclass
         {
             arma::mat prob_mat { predict_prob(pred_f) };
             arma::uvec max_idx { predict_y(prob_mat) };
-            return arma::sum(max_idx == y) / dn_obs_;
+            return arma::sum(max_idx == y) /
+                static_cast<double>(y.n_elem);
         }
 
     };
