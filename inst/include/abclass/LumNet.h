@@ -115,6 +115,7 @@ namespace abclass
             if (is_lt(lum_c, 0.0)) {
                 throw std::range_error("The LUM 'c' cannot be negative.");
             }
+            lum_c_ = lum_c;
             lum_cp1_ = lum_c + 1.0;
             lum_c_cp1_ = lum_c_ / lum_cp1_;
             lum_cma_ = lum_c_ - lum_a_;
