@@ -588,7 +588,7 @@ namespace abclass
                     }
                 } else {
                     if (verbose > 0) {
-                        msg("The strong rule worked.");
+                        msg("The strong rule worked.\n");
                     }
                     kkt_failed = false;
                 }

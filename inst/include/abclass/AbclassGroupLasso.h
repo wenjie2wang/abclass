@@ -226,7 +226,7 @@ namespace abclass
         const unsigned int verbose
         )
     {
-        double ell_verbose { 0.0 };
+        double ell_verbose { 0.0 }, obj_verbose { 0.0 }, reg_verbose { 0.0 };
         if (verbose > 2) {
             Rcpp::Rcout << "\nStarting values of beta:\n";
             Rcpp::Rcout << beta << "\n";
@@ -234,7 +234,9 @@ namespace abclass
             Rcpp::Rcout << arma2rvec(is_active) << "\n";
         };
         if (verbose > 1) {
-            ell_verbose = objective(inner, beta, lambda, group_weight_);
+            obj_verbose = objective0(inner);
+            reg_verbose = regularization(beta, lambda, group_weight_);
+            ell_verbose = obj_verbose + reg_verbose;
         }
         for (size_t j {0}; j < p1_; ++j) {
             if (is_active(j) == 0) {
@@ -269,9 +271,13 @@ namespace abclass
         if (verbose > 1) {
             double ell_old { ell_verbose };
             Rcpp::Rcout << "The objective function changed\n";
-            Rprintf("  from %15.15f\n", ell_verbose);
-            ell_verbose = objective(inner, beta, lambda, group_weight_);
-            Rprintf("    to %15.15f\n", ell_verbose);
+            Rprintf("  from %7.7f (obj. %7.7f + reg. %7.7f)\n",
+                    ell_verbose, obj_verbose, reg_verbose);
+            obj_verbose = objective0(inner);
+            reg_verbose = regularization(beta, lambda, group_weight_);
+            ell_verbose = obj_verbose + reg_verbose;
+            Rprintf("    to %7.7f (obj. %7.7f + reg. %7.7f)\n",
+                    ell_verbose, obj_verbose, reg_verbose);
             if (ell_verbose > ell_old) {
                 Rcpp::Rcout << "Warning: "
                             << "the objective function somehow increased\n";
@@ -297,6 +303,11 @@ namespace abclass
         if (varying_active_set) {
             arma::uvec is_active_strong { is_active },
                 is_active_varying { is_active };
+            if (verbose > 1) {
+                Rcpp::Rcout << "The size of active set from strong rule: "
+                            << l1_norm(is_active_strong)
+                            << "\n";
+            }
             while (i < max_iter) {
                 // cycles over the active set
                 size_t ii {0};
@@ -309,11 +320,6 @@ namespace abclass
                     }
                     beta0 = beta;
                     ii++;
-                }
-                if (verbose > 1) {
-                    Rcpp::Rcout << "The size of active set from strong rule: "
-                                << l1_norm(is_active_strong)
-                                << "\n";
                 }
                 // run a full cycle over the converged beta
                 run_one_active_cycle(beta, inner, is_active,
@@ -471,7 +477,7 @@ namespace abclass
                                      lambda_li, varying_active_set,
                                      max_iter, epsilon, verbose);
                 if (verbose > 0) {
-                    msg("\nChecking the KKT condition for the null set.");
+                    msg("Checking the KKT condition for the null set.");
                 }
                 // check kkt condition
                 for (arma::uvec::iterator it { penalty_group.begin() };
@@ -497,7 +503,7 @@ namespace abclass
                     }
                 } else {
                     if (verbose > 0) {
-                        msg("The strong rule worked.");
+                        msg("The strong rule worked.\n");
                     }
                     kkt_failed = false;
                 }
