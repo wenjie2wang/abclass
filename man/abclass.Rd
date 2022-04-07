@@ -19,7 +19,7 @@ abclass(
   nfolds = 0,
   stratified_cv = TRUE,
   lum_a = 1,
-  lum_c = 10000,
+  lum_c = 1,
   boost_umin = -5,
   max_iter = 1e+05,
   epsilon = 1e-04,
@@ -74,8 +74,8 @@ of predictors, and \code{1e-2} otherwise.}
 
 \item{grouped}{A logicial value.  Experimental flag to apply group Lasso.}
 
-\item{group_weight}{A numerical vector. Experimental penalty factor for
-grouped lasso.}
+\item{group_weight}{A numerical vector with nonnegative values representing
+the adaptive penalty factors for grouped lasso.}
 
 \item{nfolds}{A nonnegative integer specifying the number of folds for
 cross-validation.  The default value is \code{0} and no cross-validation
@@ -91,7 +91,7 @@ default value is \code{1.0}.}
 
 \item{lum_c}{A nonnegative number specifying the parameter \emph{c} in LUM,
 which will be used only if \code{loss = "hinge-boost"} or \code{loss =
-"lum"}.  The default value is \code{10000}.}
+"lum"}.  The default value is \code{1.0}.}
 
 \item{boost_umin}{A negative number for adjusting the boosting loss for the
 internal majorization procedure.}

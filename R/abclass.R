@@ -56,8 +56,8 @@
 ##'     value is set to \code{1e-4} if the sample size is larger than the number
 ##'     of predictors, and \code{1e-2} otherwise.
 ##' @param grouped A logicial value.  Experimental flag to apply group Lasso.
-##' @param group_weight A numerical vector. Experimental penalty factor for
-##'     grouped lasso.
+##' @param group_weight A numerical vector with nonnegative values representing
+##'     the adaptive penalty factors for grouped lasso.
 ##' @param nfolds A nonnegative integer specifying the number of folds for
 ##'     cross-validation.  The default value is \code{0} and no cross-validation
 ##'     will be performed if \code{nfolds < 2}.
@@ -69,7 +69,7 @@
 ##'     default value is \code{1.0}.
 ##' @param lum_c A nonnegative number specifying the parameter \emph{c} in LUM,
 ##'     which will be used only if \code{loss = "hinge-boost"} or \code{loss =
-##'     "lum"}.  The default value is \code{10000}.
+##'     "lum"}.  The default value is \code{1.0}.
 ##' @param boost_umin A negative number for adjusting the boosting loss for the
 ##'     internal majorization procedure.
 ##' @param max_iter A positive integer specifying the maximum number of
@@ -117,7 +117,7 @@ abclass <- function(x, y,
                     nfolds = 0,
                     stratified_cv = TRUE,
                     lum_a = 1.0,
-                    lum_c = 1e4,
+                    lum_c = 1.0,
                     boost_umin = -5.0,
                     max_iter = 1e5,
                     epsilon = 1e-4,
