@@ -114,15 +114,15 @@ table(test_y, pred3)
     ## test_y    label_1 label_2 label_3 label_4 label_5
     ##   label_1     136       1      69       0       0
     ##   label_2       4     194       4       1       0
-    ##   label_3      10       0     187       2       0
-    ##   label_4       2       7       1     180       2
-    ##   label_5       5       3       0       7     185
+    ##   label_3       8       0     188       3       0
+    ##   label_4       1       8       1     180       2
+    ##   label_5       3       3       0       8     186
 
 ``` r
 mean(test_y == pred3) # accuracy
 ```
 
-    ## [1] 0.882
+    ## [1] 0.884
 
 ``` r
 ## large-margin unified loss
