@@ -210,18 +210,21 @@ namespace abclass
             return out;
         }
 
-        // predict categories for given probability matrix
-        inline arma::uvec predict_y(const arma::mat& prob_mat) const
+        // predict categories for predicted classification functions
+        inline arma::uvec predict_y(const arma::mat& pred_f) const
         {
-            return arma::index_max(prob_mat, 1);
+            // pred_f: n x (k - 1) matrix
+            // vertex_: k x (k - 1) matrix
+            arma::mat out { pred_f * vertex_.t() }; // n x k
+            return arma::index_max(out, 1);
         }
 
         // accuracy for tuning by cross-validation
         inline double accuracy(const arma::mat& pred_f,
                                const arma::uvec& y) const
         {
-            arma::mat prob_mat { predict_prob(pred_f) };
-            arma::uvec max_idx { predict_y(prob_mat) };
+            arma::uvec max_idx { predict_y(pred_f) };
+            // note that y can be of length different than dn_obs_
             return arma::sum(max_idx == y) /
                 static_cast<double>(y.n_elem);
         }

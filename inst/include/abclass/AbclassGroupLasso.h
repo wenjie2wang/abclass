@@ -171,7 +171,12 @@ namespace abclass
         {
             return Abclass::predict_prob(x * beta);
         }
-
+        // prediction based on the inner products
+        inline arma::uvec predict_y(const arma::mat& beta,
+                                    const arma::mat& x) const
+        {
+            return Abclass::predict_y(x * beta);
+        }
         // accuracy for tuning
         inline double accuracy(const arma::mat& beta,
                                const arma::mat& x,
