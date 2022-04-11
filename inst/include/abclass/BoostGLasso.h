@@ -39,14 +39,9 @@ namespace abclass
         // set CMD lowerbound
         inline void set_gmd_lowerbound() override
         {
-            if (standardize_) {
-                gmd_lowerbound_ = arma::ones<arma::rowvec>(p1_);
-                gmd_lowerbound_ *= exp_inner_max_ * arma::mean(obs_weight_);
-            } else {
-                arma::mat sqx { arma::square(x_) };
-                sqx.each_col() %= obs_weight_;
-                gmd_lowerbound_ = exp_inner_max_ * arma::sum(sqx, 0) / dn_obs_;
-            }
+            arma::mat sqx { arma::square(x_) };
+            sqx.each_col() %= obs_weight_;
+            gmd_lowerbound_ = exp_inner_max_ * arma::sum(sqx, 0) / dn_obs_;
         }
 
         // objective function without regularization
