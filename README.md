@@ -10,6 +10,9 @@ The package **abclass** provides implementations of the multi-category
 angle-based classifiers (Zhang & Liu, 2014) with the large-margin
 unified machines (Liu, et al., 2011) for high-dimensional data.
 
+Notice that the package is still experimental and under active
+development.
+
 ## Installation
 
 One can install the released version from
@@ -58,7 +61,7 @@ y <- factor(paste0("label_", y))
 train_y <- y[train_idx]
 test_y <- y[- train_idx]
 
-### Regularization through elastic-net penalty
+### regularization through elastic-net penalty
 ## logistic deviance loss
 model1 <- abclass(train_x, train_y, nlambda = 100,
                   nfolds = 3, loss = "logistic")
@@ -147,7 +150,7 @@ mean(test_y == pred4) # accuracy
     ## [1] 0.901
 
 ``` r
-### groupwise regularization via group lasso
+### variable selection via group lasso
 ## logistic deviance loss
 model1 <- abclass(train_x, train_y, nlambda = 100, nfolds = 3,
                   grouped = TRUE, loss = "logistic")
