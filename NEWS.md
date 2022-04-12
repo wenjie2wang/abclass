@@ -16,7 +16,7 @@
 * Fixed the first derivatives of the boosting loss
 * Fixed the label prediction by using the fitted inner products instead of the
   probability estimates
-* Fixed the computation of regularization term for verbose outputs in
+* Fixed the computation of regularization terms for verbose outputs in
   `AbclassNet`
 * Fixed the computation of validation accuracy in cross-validation
 * Fixed the assignment of `lum_c` in the associated header files.
