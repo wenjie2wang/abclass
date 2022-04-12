@@ -237,11 +237,11 @@ mean(test_y == pred4) # accuracy
 
 ## References
 
-Zhang, C., & Liu, Y. (2014). Multicategory Angle-Based Large-Margin
-Classification. , 101(3), 625–640.
-
-Liu, Y., Zhang, H. H., & Wu, Y. (2011). Hard or soft classification?
-large-margin unified machines. , 106(493), 166–177.
+-   Zhang, C., & Liu, Y. (2014). Multicategory Angle-Based Large-Margin
+    Classification. *Biometrika*, 101(3), 625–640.
+-   Liu, Y., Zhang, H. H., & Wu, Y. (2011). Hard or soft classification?
+    large-margin unified machines. *Journal of the American Statistical
+    Association*, 106(493), 166–177.
 
 ## License
 
