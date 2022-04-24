@@ -50,7 +50,7 @@ Rcpp::List abclass_net_fit(
 
 // for AbclassGroupLasso objects
 template <typename T>
-Rcpp::List abclass_glasso_fit(
+Rcpp::List abclass_group_lasso_fit(
     T& object,
     const arma::uvec& y,
     const arma::vec& lambda,
@@ -73,7 +73,7 @@ Rcpp::List abclass_glasso_fit(
         if (stratified_cv) {
             strata = y;
         }
-        abclass::abclass_glasso_cv(object, nfolds, strata);
+        abclass::abclass_group_lasso_cv(object, nfolds, strata);
     }
     return Rcpp::List::create(
         Rcpp::Named("coefficients") = object.coef_,

@@ -15,8 +15,8 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //
 
-#ifndef ABCLASS_LUM_GLASSO_H
-#define ABCLASS_LUM_GLASSO_H
+#ifndef ABCLASS_LUM_GROUP_LASSO_H
+#define ABCLASS_LUM_GROUP_LASSO_H
 
 #include <RcppArmadillo.h>
 #include "AbclassGroupLasso.h"
@@ -25,7 +25,7 @@
 namespace abclass
 {
     // define class for inputs and outputs
-    class LumGLasso : public AbclassGroupLasso
+    class LumGroupLasso : public AbclassGroupLasso
     {
     private:
         // cache
@@ -84,20 +84,20 @@ namespace abclass
 
         //! @param x The design matrix without an intercept term.
         //! @param y The category index vector.
-        LumGLasso(const arma::mat& x,
-                  const arma::uvec& y,
-                  const double lum_a = 1.0,
-                  const double lum_c = 0.0,
-                  const bool intercept = true,
-                  const bool standardize = true,
-                  const arma::vec& weight = arma::vec()) :
+        LumGroupLasso(const arma::mat& x,
+                      const arma::uvec& y,
+                      const double lum_a = 1.0,
+                      const double lum_c = 0.0,
+                      const bool intercept = true,
+                      const bool standardize = true,
+                      const arma::vec& weight = arma::vec()) :
             AbclassGroupLasso(x, y, intercept, standardize, weight)
         {
             set_lum_parameters(lum_a, lum_c);
         }
 
-        LumGLasso* set_lum_parameters(const double lum_a,
-                                      const double lum_c)
+        LumGroupLasso* set_lum_parameters(const double lum_a,
+                                          const double lum_c)
         {
             if (is_le(lum_a, 0.0)) {
                 throw std::range_error("The LUM 'a' must be positive.");

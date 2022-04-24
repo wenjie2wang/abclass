@@ -15,8 +15,8 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //
 
-#ifndef ABCLASS_LOGISTIC_GLASSO_H
-#define ABCLASS_LOGISTIC_GLASSO_H
+#ifndef ABCLASS_LOGISTIC_GROUP_LASSO_H
+#define ABCLASS_LOGISTIC_GROUP_LASSO_H
 
 #include <RcppArmadillo.h>
 #include "AbclassGroupLasso.h"
@@ -24,7 +24,7 @@
 namespace abclass
 {
     // define class for inputs and outputs
-    class LogisticGLasso : public AbclassGroupLasso
+    class LogisticGroupLasso : public AbclassGroupLasso
     {
     protected:
 
@@ -61,11 +61,11 @@ namespace abclass
 
         //! @param x The design matrix without an intercept term.
         //! @param y The category index vector.
-        LogisticGLasso(const arma::mat& x,
-                       const arma::uvec& y,
-                       const bool intercept = true,
-                       const bool standardize = true,
-                       const arma::vec& weight = arma::vec()) :
+        LogisticGroupLasso(const arma::mat& x,
+                           const arma::uvec& y,
+                           const bool intercept = true,
+                           const bool standardize = true,
+                           const arma::vec& weight = arma::vec()) :
             AbclassGroupLasso(x, y, intercept, standardize, weight)
         {
         }

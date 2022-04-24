@@ -15,45 +15,45 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //
 
-#ifndef ABCLASS_HINGE_BOOST_GLASSO_H
-#define ABCLASS_HINGE_BOOST_GLASSO_H
+#ifndef ABCLASS_BOOST_GROUP_LASSO_H
+#define ABCLASS_BOOST_GROUP_LASSO_H
 
 #include <RcppArmadillo.h>
+#include <stdexcept>
 #include "AbclassGroupLasso.h"
 #include "utils.h"
 
 namespace abclass
 {
     // define class for inputs and outputs
-    class HingeBoostGLasso : public AbclassGroupLasso
+    class BoostGroupLasso : public AbclassGroupLasso
     {
     private:
         // cache
-        double lum_cp1_;
-        double lum_c_cp1_;
+        double exp_inner_max_;
 
     protected:
 
-        double lum_c_ = 0.0;
+        double inner_min_ = - 5.0;
 
         // set CMD lowerbound
         inline void set_gmd_lowerbound() override
         {
             arma::mat sqx { arma::square(x_) };
             sqx.each_col() %= obs_weight_;
-            gmd_lowerbound_ = lum_cp1_ * arma::sum(sqx, 0) / dn_obs_;
+            gmd_lowerbound_ = exp_inner_max_ * arma::sum(sqx, 0) / dn_obs_;
         }
 
         // objective function without regularization
         inline double objective0(const arma::vec& inner) const override
         {
             arma::vec tmp { arma::zeros(inner.n_elem) };
+            double tmp1 { 1 + inner_min_ };
             for (size_t i {0}; i < inner.n_elem; ++i) {
-                if (inner[i] < lum_c_cp1_) {
-                    tmp[i] = 1.0 - inner[i];
+                if (inner[i] < inner_min_) {
+                    tmp[i] = (tmp1 - inner[i]) * exp_inner_max_;
                 } else {
-                    tmp[i] = std::exp(- (lum_cp1_ * inner[i] - lum_c_)) /
-                        lum_cp1_;
+                    tmp[i] = std::exp(- inner[i]);
                 }
             }
             return arma::mean(obs_weight_ % tmp);
@@ -62,10 +62,12 @@ namespace abclass
         // the first derivative of the loss function
         inline arma::vec loss_derivative(const arma::vec& u) const override
         {
-            arma::vec out { - arma::ones(u.n_elem) };
+            arma::vec out { arma::zeros(u.n_elem) };
             for (size_t i {0}; i < u.n_elem; ++i) {
-                if (u[i] > lum_c_cp1_) {
-                    out[i] = - std::exp(- (lum_cp1_ * u[i] - lum_c_));
+                if (u[i] < inner_min_) {
+                    out[i] = - exp_inner_max_;
+                } else {
+                    out[i] = - std::exp(- u[i]);
                 }
             }
             return out;
@@ -78,29 +80,26 @@ namespace abclass
 
         //! @param x The design matrix without an intercept term.
         //! @param y The category index vector.
-        HingeBoostGLasso(const arma::mat& x,
-                         const arma::uvec& y,
-                         const double lum_c = 0.0,
-                         const bool intercept = true,
-                         const bool standardize = true,
-                         const arma::vec& weight = arma::vec()) :
+        BoostGroupLasso(const arma::mat& x,
+                        const arma::uvec& y,
+                        const bool intercept = true,
+                        const bool standardize = true,
+                        const arma::vec& weight = arma::vec()) :
             AbclassGroupLasso(x, y, intercept, standardize, weight)
         {
-            set_lum_c(lum_c);
-            // set the CMD lowerbound (which needs to be done only once)
-            // set_cmd_lowerbound();
+            set_inner_min(- 5.0);
+            exp_inner_max_ = std::exp(- inner_min_);
         }
 
-        HingeBoostGLasso* set_lum_c(const double lum_c)
+        BoostGroupLasso* set_inner_min(const double inner_min)
         {
-            if (is_lt(lum_c, 0.0)) {
-                throw std::range_error("The LUM 'C' cannot be negative.");
+            if (is_gt(inner_min, 0.0)) {
+                throw std::range_error("The 'inner_min' cannot be positive.");
             }
-            lum_c_ = lum_c;
-            lum_cp1_ = lum_c + 1.0;
-            lum_c_cp1_ = lum_c_ / lum_cp1_;
+            inner_min_ = inner_min;
             return this;
         }
+
 
     };                          // end of class
 

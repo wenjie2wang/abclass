@@ -20,7 +20,7 @@
 #include "export-helpers.h"
 
 // [[Rcpp::export]]
-Rcpp::List rcpp_lum_glasso(
+Rcpp::List rcpp_lum_group_lasso(
     const arma::mat& x,
     const arma::uvec& y,
     const arma::vec& lambda,
@@ -40,11 +40,13 @@ Rcpp::List rcpp_lum_glasso(
     const unsigned int verbose = 0
     )
 {
-    abclass::LumGLasso object {
+    abclass::LumGroupLasso object {
         x, y, lum_a, lum_c, intercept, standardize, weight
     };
-    return abclass_glasso_fit(object, y,
-                              lambda, nlambda, lambda_min_ratio, group_weight,
-                              nfolds, stratified_cv, max_iter, epsilon,
-                              varying_active_set, verbose);
+    return abclass_group_lasso_fit(object, y,
+                                   lambda, nlambda,
+                                   lambda_min_ratio, group_weight,
+                                   nfolds, stratified_cv,
+                                   max_iter, epsilon,
+                                   varying_active_set, verbose);
 }

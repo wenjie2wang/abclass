@@ -144,7 +144,7 @@ abclass <- function(x, y,
             switch(
                 loss,
                 "logistic" = {
-                    rcpp_logistic_glasso(
+                    rcpp_logistic_group_lasso(
                         x = x,
                         y = cat_y$y,
                         lambda = null2num0(lambda),
@@ -163,7 +163,7 @@ abclass <- function(x, y,
                     )
                 },
                 "boost" = {
-                    rcpp_boost_glasso(
+                    rcpp_boost_group_lasso(
                         x = x,
                         y = cat_y$y,
                         lambda = null2num0(lambda),
@@ -183,7 +183,7 @@ abclass <- function(x, y,
                     )
                 },
                 "hinge-boost" = {
-                    rcpp_hinge_boost_glasso(
+                    rcpp_hinge_boost_group_lasso(
                         x = x,
                         y = cat_y$y,
                         lambda = null2num0(lambda),
@@ -203,7 +203,7 @@ abclass <- function(x, y,
                     )
                 },
                 "lum" = {
-                    rcpp_lum_glasso(
+                    rcpp_lum_group_lasso(
                         x = x,
                         y = cat_y$y,
                         lambda = null2num0(lambda),
@@ -327,7 +327,7 @@ abclass <- function(x, y,
         varying_active_set = varying_active_set,
         verbose = verbose
     )
-    class_suffix <- if (grouped) "_glasso" else "_net"
+    class_suffix <- if (grouped) "_group_lasso" else "_net"
     res_cls <- paste0(gsub("-", "_", loss, fixed = TRUE), class_suffix)
     class(res) <- c(res_cls, "abclass")
     ## return

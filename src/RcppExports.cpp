@@ -12,9 +12,9 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// rcpp_boost_glasso
-Rcpp::List rcpp_boost_glasso(const arma::mat& x, const arma::uvec& y, const arma::vec& lambda, const unsigned int nlambda, const double lambda_min_ratio, const arma::vec& group_weight, const arma::vec& weight, const bool intercept, const bool standardize, const unsigned int nfolds, const bool stratified_cv, const unsigned int max_iter, const double epsilon, const bool varying_active_set, const double inner_min, const unsigned int verbose);
-RcppExport SEXP _abclass_rcpp_boost_glasso(SEXP xSEXP, SEXP ySEXP, SEXP lambdaSEXP, SEXP nlambdaSEXP, SEXP lambda_min_ratioSEXP, SEXP group_weightSEXP, SEXP weightSEXP, SEXP interceptSEXP, SEXP standardizeSEXP, SEXP nfoldsSEXP, SEXP stratified_cvSEXP, SEXP max_iterSEXP, SEXP epsilonSEXP, SEXP varying_active_setSEXP, SEXP inner_minSEXP, SEXP verboseSEXP) {
+// rcpp_boost_group_lasso
+Rcpp::List rcpp_boost_group_lasso(const arma::mat& x, const arma::uvec& y, const arma::vec& lambda, const unsigned int nlambda, const double lambda_min_ratio, const arma::vec& group_weight, const arma::vec& weight, const bool intercept, const bool standardize, const unsigned int nfolds, const bool stratified_cv, const unsigned int max_iter, const double epsilon, const bool varying_active_set, const double inner_min, const unsigned int verbose);
+RcppExport SEXP _abclass_rcpp_boost_group_lasso(SEXP xSEXP, SEXP ySEXP, SEXP lambdaSEXP, SEXP nlambdaSEXP, SEXP lambda_min_ratioSEXP, SEXP group_weightSEXP, SEXP weightSEXP, SEXP interceptSEXP, SEXP standardizeSEXP, SEXP nfoldsSEXP, SEXP stratified_cvSEXP, SEXP max_iterSEXP, SEXP epsilonSEXP, SEXP varying_active_setSEXP, SEXP inner_minSEXP, SEXP verboseSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -34,7 +34,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const bool >::type varying_active_set(varying_active_setSEXP);
     Rcpp::traits::input_parameter< const double >::type inner_min(inner_minSEXP);
     Rcpp::traits::input_parameter< const unsigned int >::type verbose(verboseSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpp_boost_glasso(x, y, lambda, nlambda, lambda_min_ratio, group_weight, weight, intercept, standardize, nfolds, stratified_cv, max_iter, epsilon, varying_active_set, inner_min, verbose));
+    rcpp_result_gen = Rcpp::wrap(rcpp_boost_group_lasso(x, y, lambda, nlambda, lambda_min_ratio, group_weight, weight, intercept, standardize, nfolds, stratified_cv, max_iter, epsilon, varying_active_set, inner_min, verbose));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -64,9 +64,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// rcpp_hinge_boost_glasso
-Rcpp::List rcpp_hinge_boost_glasso(const arma::mat& x, const arma::uvec& y, const arma::vec& lambda, const unsigned int nlambda, const double lambda_min_ratio, const arma::vec& group_weight, const arma::vec& weight, const bool intercept, const bool standardize, const unsigned int nfolds, const bool stratified_cv, const unsigned int max_iter, const double epsilon, const bool varying_active_set, const double lum_c, const unsigned int verbose);
-RcppExport SEXP _abclass_rcpp_hinge_boost_glasso(SEXP xSEXP, SEXP ySEXP, SEXP lambdaSEXP, SEXP nlambdaSEXP, SEXP lambda_min_ratioSEXP, SEXP group_weightSEXP, SEXP weightSEXP, SEXP interceptSEXP, SEXP standardizeSEXP, SEXP nfoldsSEXP, SEXP stratified_cvSEXP, SEXP max_iterSEXP, SEXP epsilonSEXP, SEXP varying_active_setSEXP, SEXP lum_cSEXP, SEXP verboseSEXP) {
+// rcpp_hinge_boost_group_lasso
+Rcpp::List rcpp_hinge_boost_group_lasso(const arma::mat& x, const arma::uvec& y, const arma::vec& lambda, const unsigned int nlambda, const double lambda_min_ratio, const arma::vec& group_weight, const arma::vec& weight, const bool intercept, const bool standardize, const unsigned int nfolds, const bool stratified_cv, const unsigned int max_iter, const double epsilon, const bool varying_active_set, const double lum_c, const unsigned int verbose);
+RcppExport SEXP _abclass_rcpp_hinge_boost_group_lasso(SEXP xSEXP, SEXP ySEXP, SEXP lambdaSEXP, SEXP nlambdaSEXP, SEXP lambda_min_ratioSEXP, SEXP group_weightSEXP, SEXP weightSEXP, SEXP interceptSEXP, SEXP standardizeSEXP, SEXP nfoldsSEXP, SEXP stratified_cvSEXP, SEXP max_iterSEXP, SEXP epsilonSEXP, SEXP varying_active_setSEXP, SEXP lum_cSEXP, SEXP verboseSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -86,7 +86,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const bool >::type varying_active_set(varying_active_setSEXP);
     Rcpp::traits::input_parameter< const double >::type lum_c(lum_cSEXP);
     Rcpp::traits::input_parameter< const unsigned int >::type verbose(verboseSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpp_hinge_boost_glasso(x, y, lambda, nlambda, lambda_min_ratio, group_weight, weight, intercept, standardize, nfolds, stratified_cv, max_iter, epsilon, varying_active_set, lum_c, verbose));
+    rcpp_result_gen = Rcpp::wrap(rcpp_hinge_boost_group_lasso(x, y, lambda, nlambda, lambda_min_ratio, group_weight, weight, intercept, standardize, nfolds, stratified_cv, max_iter, epsilon, varying_active_set, lum_c, verbose));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -116,9 +116,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// rcpp_logistic_glasso
-Rcpp::List rcpp_logistic_glasso(const arma::mat& x, const arma::uvec& y, const arma::vec& lambda, const unsigned int nlambda, const double lambda_min_ratio, const arma::vec& group_weight, const arma::vec& weight, const bool intercept, const bool standardize, const unsigned int nfolds, const bool stratified_cv, const unsigned int max_iter, const double epsilon, const bool varying_active_set, const unsigned int verbose);
-RcppExport SEXP _abclass_rcpp_logistic_glasso(SEXP xSEXP, SEXP ySEXP, SEXP lambdaSEXP, SEXP nlambdaSEXP, SEXP lambda_min_ratioSEXP, SEXP group_weightSEXP, SEXP weightSEXP, SEXP interceptSEXP, SEXP standardizeSEXP, SEXP nfoldsSEXP, SEXP stratified_cvSEXP, SEXP max_iterSEXP, SEXP epsilonSEXP, SEXP varying_active_setSEXP, SEXP verboseSEXP) {
+// rcpp_logistic_group_lasso
+Rcpp::List rcpp_logistic_group_lasso(const arma::mat& x, const arma::uvec& y, const arma::vec& lambda, const unsigned int nlambda, const double lambda_min_ratio, const arma::vec& group_weight, const arma::vec& weight, const bool intercept, const bool standardize, const unsigned int nfolds, const bool stratified_cv, const unsigned int max_iter, const double epsilon, const bool varying_active_set, const unsigned int verbose);
+RcppExport SEXP _abclass_rcpp_logistic_group_lasso(SEXP xSEXP, SEXP ySEXP, SEXP lambdaSEXP, SEXP nlambdaSEXP, SEXP lambda_min_ratioSEXP, SEXP group_weightSEXP, SEXP weightSEXP, SEXP interceptSEXP, SEXP standardizeSEXP, SEXP nfoldsSEXP, SEXP stratified_cvSEXP, SEXP max_iterSEXP, SEXP epsilonSEXP, SEXP varying_active_setSEXP, SEXP verboseSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -137,7 +137,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const double >::type epsilon(epsilonSEXP);
     Rcpp::traits::input_parameter< const bool >::type varying_active_set(varying_active_setSEXP);
     Rcpp::traits::input_parameter< const unsigned int >::type verbose(verboseSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpp_logistic_glasso(x, y, lambda, nlambda, lambda_min_ratio, group_weight, weight, intercept, standardize, nfolds, stratified_cv, max_iter, epsilon, varying_active_set, verbose));
+    rcpp_result_gen = Rcpp::wrap(rcpp_logistic_group_lasso(x, y, lambda, nlambda, lambda_min_ratio, group_weight, weight, intercept, standardize, nfolds, stratified_cv, max_iter, epsilon, varying_active_set, verbose));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -166,9 +166,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// rcpp_lum_glasso
-Rcpp::List rcpp_lum_glasso(const arma::mat& x, const arma::uvec& y, const arma::vec& lambda, const unsigned int nlambda, const double lambda_min_ratio, const arma::vec& group_weight, const arma::vec& weight, const bool intercept, const bool standardize, const unsigned int nfolds, const bool stratified_cv, const unsigned int max_iter, const double epsilon, const bool varying_active_set, const double lum_a, const double lum_c, const unsigned int verbose);
-RcppExport SEXP _abclass_rcpp_lum_glasso(SEXP xSEXP, SEXP ySEXP, SEXP lambdaSEXP, SEXP nlambdaSEXP, SEXP lambda_min_ratioSEXP, SEXP group_weightSEXP, SEXP weightSEXP, SEXP interceptSEXP, SEXP standardizeSEXP, SEXP nfoldsSEXP, SEXP stratified_cvSEXP, SEXP max_iterSEXP, SEXP epsilonSEXP, SEXP varying_active_setSEXP, SEXP lum_aSEXP, SEXP lum_cSEXP, SEXP verboseSEXP) {
+// rcpp_lum_group_lasso
+Rcpp::List rcpp_lum_group_lasso(const arma::mat& x, const arma::uvec& y, const arma::vec& lambda, const unsigned int nlambda, const double lambda_min_ratio, const arma::vec& group_weight, const arma::vec& weight, const bool intercept, const bool standardize, const unsigned int nfolds, const bool stratified_cv, const unsigned int max_iter, const double epsilon, const bool varying_active_set, const double lum_a, const double lum_c, const unsigned int verbose);
+RcppExport SEXP _abclass_rcpp_lum_group_lasso(SEXP xSEXP, SEXP ySEXP, SEXP lambdaSEXP, SEXP nlambdaSEXP, SEXP lambda_min_ratioSEXP, SEXP group_weightSEXP, SEXP weightSEXP, SEXP interceptSEXP, SEXP standardizeSEXP, SEXP nfoldsSEXP, SEXP stratified_cvSEXP, SEXP max_iterSEXP, SEXP epsilonSEXP, SEXP varying_active_setSEXP, SEXP lum_aSEXP, SEXP lum_cSEXP, SEXP verboseSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -189,7 +189,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const double >::type lum_a(lum_aSEXP);
     Rcpp::traits::input_parameter< const double >::type lum_c(lum_cSEXP);
     Rcpp::traits::input_parameter< const unsigned int >::type verbose(verboseSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpp_lum_glasso(x, y, lambda, nlambda, lambda_min_ratio, group_weight, weight, intercept, standardize, nfolds, stratified_cv, max_iter, epsilon, varying_active_set, lum_a, lum_c, verbose));
+    rcpp_result_gen = Rcpp::wrap(rcpp_lum_group_lasso(x, y, lambda, nlambda, lambda_min_ratio, group_weight, weight, intercept, standardize, nfolds, stratified_cv, max_iter, epsilon, varying_active_set, lum_a, lum_c, verbose));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -326,13 +326,13 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_abclass_rcpp_boost_glasso", (DL_FUNC) &_abclass_rcpp_boost_glasso, 16},
+    {"_abclass_rcpp_boost_group_lasso", (DL_FUNC) &_abclass_rcpp_boost_group_lasso, 16},
     {"_abclass_rcpp_boost_net", (DL_FUNC) &_abclass_rcpp_boost_net, 16},
-    {"_abclass_rcpp_hinge_boost_glasso", (DL_FUNC) &_abclass_rcpp_hinge_boost_glasso, 16},
+    {"_abclass_rcpp_hinge_boost_group_lasso", (DL_FUNC) &_abclass_rcpp_hinge_boost_group_lasso, 16},
     {"_abclass_rcpp_hinge_boost_net", (DL_FUNC) &_abclass_rcpp_hinge_boost_net, 16},
-    {"_abclass_rcpp_logistic_glasso", (DL_FUNC) &_abclass_rcpp_logistic_glasso, 15},
+    {"_abclass_rcpp_logistic_group_lasso", (DL_FUNC) &_abclass_rcpp_logistic_group_lasso, 15},
     {"_abclass_rcpp_logistic_net", (DL_FUNC) &_abclass_rcpp_logistic_net, 15},
-    {"_abclass_rcpp_lum_glasso", (DL_FUNC) &_abclass_rcpp_lum_glasso, 17},
+    {"_abclass_rcpp_lum_group_lasso", (DL_FUNC) &_abclass_rcpp_lum_group_lasso, 17},
     {"_abclass_rcpp_lum_net", (DL_FUNC) &_abclass_rcpp_lum_net, 17},
     {"_abclass_rcpp_logistic_predict_prob", (DL_FUNC) &_abclass_rcpp_logistic_predict_prob, 2},
     {"_abclass_rcpp_logistic_predict_y", (DL_FUNC) &_abclass_rcpp_logistic_predict_y, 2},

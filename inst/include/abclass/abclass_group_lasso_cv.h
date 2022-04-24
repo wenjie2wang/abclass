@@ -15,8 +15,8 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //
 
-#ifndef ABCLASS_ABCLASS_GLASSO_CV_H
-#define ABCLASS_ABCLASS_GLASSO_CV_H
+#ifndef ABCLASS_ABCLASS_GROUP_LASSO_CV_H
+#define ABCLASS_ABCLASS_GROUP_LASSO_CV_H
 
 #include <utility>
 #include <RcppArmadillo.h>
@@ -28,9 +28,9 @@ namespace abclass {
 
     // cross-validation method for AbclassNet objects
     template <typename T>
-    inline void abclass_glasso_cv(T& obj,
-                                  const unsigned int nfolds = 5,
-                                  const arma::uvec strata = arma::uvec())
+    inline void abclass_group_lasso_cv(T& obj,
+                                       const unsigned int nfolds = 5,
+                                       const arma::uvec strata = arma::uvec())
     {
         CrossValidation cv_obj { obj.n_obs_, nfolds, strata };
         obj.cv_accuracy_ = arma::zeros(obj.lambda_.n_elem, nfolds);
