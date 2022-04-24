@@ -59,3 +59,8 @@ select_lambda <- function(cv_mean, cv_sd) {
     list(cv_min = cv_min_idx,
          cv_1se = cv_1se_idx)
 }
+
+## function formal names (formalArgs() from the methods package)
+formal_names <- function(def) {
+    names(formals(def, envir = parent.frame()))
+}

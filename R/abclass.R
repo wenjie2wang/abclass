@@ -178,7 +178,7 @@ abclass <- function(x, y,
             sprintf("rcpp_%s_net", loss2)
         }
     args_to_call <- default_args_to_call[
-        names(default_args_to_call) %in% formalArgs(fun_to_call)
+        names(default_args_to_call) %in% formal_names(fun_to_call)
     ]
     res <- do.call(fun_to_call, args_to_call)
     ## post-process
