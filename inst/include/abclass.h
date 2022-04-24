@@ -35,6 +35,13 @@
 #include "abclass/HingeBoostGroupLasso.h"
 #include "abclass/LumGroupLasso.h"
 
+// with group mcp
+#include "abclass/AbclassGroupMCP.h"
+#include "abclass/LogisticGroupMCP.h"
+#include "abclass/BoostGroupMCP.h"
+#include "abclass/HingeBoostGroupMCP.h"
+#include "abclass/LumGroupMCP.h"
+
 // simplex class
 #include "abclass/Simplex.h"
 
@@ -45,5 +52,6 @@
 #include "abclass/CrossValidation.h"
 #include "abclass/abclass_net_cv.h"
 #include "abclass/abclass_group_lasso_cv.h"
+#include "abclass/abclass_group_mcp_cv.h"
 
 #endif
