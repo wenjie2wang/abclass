@@ -35,6 +35,13 @@
 #include "abclass/HingeBoostGroupLasso.h"
 #include "abclass/LumGroupLasso.h"
 
+// with group scad
+#include "abclass/AbclassGroupSCAD.h"
+#include "abclass/LogisticGroupSCAD.h"
+#include "abclass/BoostGroupSCAD.h"
+#include "abclass/HingeBoostGroupSCAD.h"
+#include "abclass/LumGroupSCAD.h"
+
 // with group mcp
 #include "abclass/AbclassGroupMCP.h"
 #include "abclass/LogisticGroupMCP.h"
@@ -52,6 +59,7 @@
 #include "abclass/CrossValidation.h"
 #include "abclass/abclass_net_cv.h"
 #include "abclass/abclass_group_lasso_cv.h"
+#include "abclass/abclass_group_scad_cv.h"
 #include "abclass/abclass_group_mcp_cv.h"
 
 #endif
