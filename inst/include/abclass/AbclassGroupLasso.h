@@ -248,17 +248,17 @@ namespace abclass
                 continue;
             }
             arma::rowvec old_beta_j { beta.row(j) };
-            double gamma_j { gmd_lowerbound_(j) };
+            double mj { gmd_lowerbound_(j) };
             arma::rowvec uj {
-                - gmd_gradient(inner, j) + gamma_j * beta.row(j)
+                - gmd_gradient(inner, j) + mj * beta.row(j)
             };
-            double wj { group_weight_(j) } ;
-            double pos_part { 1 - lambda * wj / l2_norm(uj) };
+            double lambda_j { lambda * group_weight_(j) };
+            double pos_part { 1 - lambda_j / l2_norm(uj) };
             // update beta
-            if (is_le(pos_part, 0.0)) {
+            if (pos_part <= 0.0) {
                 beta.row(j) = arma::zeros<arma::rowvec>(km1_);
             } else {
-                beta.row(j) = uj * pos_part / gamma_j;
+                beta.row(j) = uj * pos_part / mj;
             }
             for (size_t i {0}; i < n_obs_; ++i) {
                 inner(i) += x_(i, j) *

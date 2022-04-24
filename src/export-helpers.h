@@ -96,6 +96,56 @@ Rcpp::List abclass_group_lasso_fit(
         );
 }
 
+// for AbclassGroupSCAD objects
+template <typename T>
+Rcpp::List abclass_group_scad_fit(
+    T& object,
+    const arma::uvec& y,
+    const arma::vec& lambda,
+    const unsigned int nlambda,
+    const double lambda_min_ratio,
+    const arma::vec& group_weight,
+    const double gamma,
+    const unsigned int nfolds = 0,
+    const bool stratified_cv = true,
+    const unsigned int max_iter = 1e4,
+    const double epsilon = 1e-4,
+    const bool varying_active_set = true,
+    const unsigned int verbose = 0
+    )
+{
+    object.fit(lambda, nlambda, lambda_min_ratio, group_weight, gamma,
+               max_iter, epsilon, varying_active_set, verbose);
+    Rcpp::NumericVector lambda_vec { abclass::arma2rvec(object.lambda_) };
+    if (nfolds > 0) {
+        arma::uvec strata;
+        if (stratified_cv) {
+            strata = y;
+        }
+        abclass::abclass_group_scad_cv(object, nfolds, strata);
+    }
+    return Rcpp::List::create(
+        Rcpp::Named("coefficients") = object.coef_,
+        Rcpp::Named("weight") = abclass::arma2rvec(object.obs_weight_),
+        Rcpp::Named("cross_validation") = Rcpp::List::create(
+            Rcpp::Named("nfolds") = nfolds,
+            Rcpp::Named("stratified") = stratified_cv,
+            Rcpp::Named("cv_accuracy") = object.cv_accuracy_,
+            Rcpp::Named("cv_accuracy_mean") =
+            abclass::arma2rvec(object.cv_accuracy_mean_),
+            Rcpp::Named("cv_accuracy_sd") =
+            abclass::arma2rvec(object.cv_accuracy_sd_)
+            ),
+        Rcpp::Named("regularization") = Rcpp::List::create(
+            Rcpp::Named("lambda") = abclass::arma2rvec(lambda_vec),
+            Rcpp::Named("group_weight") =
+            abclass::arma2rvec(object.group_weight_),
+            Rcpp::Named("gamma") = object.gamma_,
+            Rcpp::Named("lambda_max") = object.lambda_max_
+            )
+        );
+}
+
 // for AbclassGroupMCP objects
 template <typename T>
 Rcpp::List abclass_group_mcp_fit(

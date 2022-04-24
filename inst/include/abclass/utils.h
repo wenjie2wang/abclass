@@ -56,28 +56,6 @@ namespace abclass {
         return arma::as_scalar(crossprod(x, y));
     }
 
-    // sign function
-    inline double sign(const double x)
-    {
-        if (x < 0) {
-            return - 1.0;
-        }
-        if (x > 0) {
-            return 1.0;
-        }
-        return 0.0;
-    }
-
-    // soft-thresholding operator
-    inline double soft_threshold(const double beta, const double lambda)
-    {
-        double tmp { std::abs(beta) - lambda };
-        if (tmp < 0) {
-            return 0;
-        }
-        return tmp * sign(beta);
-    }
-
     // positive part
     inline double positive_part(const double x)
     {
@@ -146,6 +124,38 @@ namespace abclass {
     {
         return std::sqrt(l2_norm_square(x));
     }
+
+    // sign function
+    inline double sign(const double x)
+    {
+        if (x < 0) {
+            return - 1.0;
+        }
+        if (x > 0) {
+            return 1.0;
+        }
+        return 0.0;
+    }
+
+    // soft-thresholding operator
+    inline double soft_threshold(const double beta, const double lambda)
+    {
+        double tmp { std::abs(beta) - lambda };
+        if (tmp < 0) {
+            return 0;
+        }
+        return tmp * sign(beta);
+    }
+    // inline arma::rowvec soft_threshold(const arma::rowvec& beta,
+    //                                    const double l2_beta,
+    //                                    const double lambda)
+    // {
+    //     double tmp { 1 - lambda  / l2_beta };
+    //     if (tmp <= 0) {
+    //         return arma::zeros<arma::rowvec>(beta.n_elem);
+    //     }
+    //     return tmp * beta;
+    // }
 
     // function check convergence
     template <typename T>

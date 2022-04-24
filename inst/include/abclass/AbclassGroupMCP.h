@@ -270,20 +270,18 @@ namespace abclass
             arma::rowvec zj {
                 - gmd_gradient(inner, j) / mj + beta.row(j)
             };
-            double wj { group_weight_(j) };
-            double lambda_j { lambda * wj };
-            // double gamma_j { gamma / mj };
-            double gamma_j { gamma };
+            double lambda_j { lambda * group_weight_(j) };
             double zj2 { l2_norm(zj) };
-            double pos_part { 1 - lambda_j / mj / zj2 };
             // update beta
-            if (is_le(pos_part, 0.0)) {
-                beta.row(j) = arma::zeros<arma::rowvec>(km1_);
-            } else if (zj2 < gamma_j * lambda_j) {
-                beta.row(j) = gamma_j * mj / (gamma_j * mj - 1) *
-                    pos_part * zj;
-            } else {
+            if (zj2 > gamma * lambda_j) {
                 beta.row(j) = zj;
+            } else {
+                double tmp { 1 - lambda_j / mj / zj2 };
+                if (tmp <= 0.0) {
+                    beta.row(j) = arma::zeros<arma::rowvec>(km1_);
+                } else {
+                    beta.row(j) = gamma * mj / (gamma * mj - 1) * tmp * zj;
+                }
             }
             for (size_t i {0}; i < n_obs_; ++i) {
                 inner(i) += x_(i, j) *
