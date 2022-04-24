@@ -58,6 +58,10 @@
 ##' @param grouped A logicial value.  Experimental flag to apply group Lasso.
 ##' @param group_weight A numerical vector with nonnegative values representing
 ##'     the adaptive penalty factors for grouped lasso.
+##' @param group_penalty A character vector specifying the name of the group
+##'     penalty.
+##' @param gamma A positive number specifying the value of the gamma parameter
+##'     for group SCAD or group MCP.
 ##' @param nfolds A nonnegative integer specifying the number of folds for
 ##'     cross-validation.  The default value is \code{0} and no cross-validation
 ##'     will be performed if \code{nfolds < 2}.
@@ -114,6 +118,8 @@ abclass <- function(x, y,
                     lambda_min_ratio = NULL,
                     grouped = FALSE,
                     group_weight = NULL,
+                    group_penalty = c("lasso", "scad", "mcp"),
+                    gamma = 10,
                     nfolds = 0,
                     stratified_cv = TRUE,
                     lum_a = 1.0,
@@ -130,6 +136,7 @@ abclass <- function(x, y,
     loss <- match.arg(
         loss, choices = c("logistic", "boost", "hinge-boost", "lum")
     )
+    loss2 <- gsub("-", "_", loss, fixed = TRUE)
     ## pre-process
     if (! is.matrix(x)) {
         x <- as.matrix(x)
@@ -139,177 +146,41 @@ abclass <- function(x, y,
         lambda_min_ratio <- if (nrow(x) < ncol(x)) 1e-4 else 1e-2
     }
     ## model fitting
-    res <-
+    default_args_to_call <- list(
+        x = x,
+        y = cat_y$y,
+        alpha = alpha,
+        lambda = null2num0(lambda),
+        nlambda = nlambda,
+        lambda_min_ratio = lambda_min_ratio,
+        group_weight = null2num0(group_weight),
+        weight = null2num0(weight),
+        intercept = intercept,
+        standardize = standardize,
+        nfolds = nfolds,
+        stratified_cv = stratified_cv,
+        max_iter = max_iter,
+        epsilon = epsilon,
+        varying_active_set = varying_active_set,
+        verbose = verbose,
+        inner_min = boost_umin,
+        lum_a = lum_a,
+        lum_c = lum_c,
+        gamma = gamma
+    )
+    fun_to_call <-
         if (grouped) {
-            switch(
-                loss,
-                "logistic" = {
-                    rcpp_logistic_group_lasso(
-                        x = x,
-                        y = cat_y$y,
-                        lambda = null2num0(lambda),
-                        nlambda = nlambda,
-                        lambda_min_ratio = lambda_min_ratio,
-                        group_weight = null2num0(group_weight),
-                        weight = null2num0(weight),
-                        intercept = intercept,
-                        standardize = standardize,
-                        nfolds = nfolds,
-                        stratified_cv = stratified_cv,
-                        max_iter = max_iter,
-                        epsilon = epsilon,
-                        varying_active_set = varying_active_set,
-                        verbose = verbose
-                    )
-                },
-                "boost" = {
-                    rcpp_boost_group_lasso(
-                        x = x,
-                        y = cat_y$y,
-                        lambda = null2num0(lambda),
-                        nlambda = nlambda,
-                        lambda_min_ratio = lambda_min_ratio,
-                        group_weight = null2num0(group_weight),
-                        weight = null2num0(weight),
-                        intercept = intercept,
-                        standardize = standardize,
-                        nfolds = nfolds,
-                        stratified_cv = stratified_cv,
-                        max_iter = max_iter,
-                        epsilon = epsilon,
-                        varying_active_set = varying_active_set,
-                        inner_min = boost_umin,
-                        verbose = verbose
-                    )
-                },
-                "hinge-boost" = {
-                    rcpp_hinge_boost_group_lasso(
-                        x = x,
-                        y = cat_y$y,
-                        lambda = null2num0(lambda),
-                        nlambda = nlambda,
-                        lambda_min_ratio = lambda_min_ratio,
-                        group_weight = null2num0(group_weight),
-                        weight = null2num0(weight),
-                        intercept = intercept,
-                        standardize = standardize,
-                        nfolds = nfolds,
-                        stratified_cv = stratified_cv,
-                        max_iter = max_iter,
-                        epsilon = epsilon,
-                        varying_active_set = varying_active_set,
-                        lum_c = lum_c,
-                        verbose = verbose
-                    )
-                },
-                "lum" = {
-                    rcpp_lum_group_lasso(
-                        x = x,
-                        y = cat_y$y,
-                        lambda = null2num0(lambda),
-                        nlambda = nlambda,
-                        lambda_min_ratio = lambda_min_ratio,
-                        group_weight = null2num0(group_weight),
-                        weight = null2num0(weight),
-                        intercept = intercept,
-                        standardize = standardize,
-                        nfolds = nfolds,
-                        stratified_cv = stratified_cv,
-                        max_iter = max_iter,
-                        epsilon = epsilon,
-                        varying_active_set = varying_active_set,
-                        lum_a = lum_a,
-                        lum_c = lum_c,
-                        verbose = verbose
-                    )
-                }
+            group_penalty <- match.arg(
+                group_penalty, choices = c("lasso", "scad", "mcp")
             )
+            sprintf("rcpp_%s_group_%s", loss2, group_penalty)
         } else {
-            switch(
-                loss,
-                "logistic" = {
-                    rcpp_logistic_net(
-                        x = x,
-                        y = cat_y$y,
-                        lambda = null2num0(lambda),
-                        alpha = alpha,
-                        nlambda = nlambda,
-                        lambda_min_ratio = lambda_min_ratio,
-                        weight = null2num0(weight),
-                        intercept = intercept,
-                        standardize = standardize,
-                        nfolds = nfolds,
-                        stratified_cv = stratified_cv,
-                        max_iter = max_iter,
-                        epsilon = epsilon,
-                        varying_active_set = varying_active_set,
-                        verbose = verbose
-                    )
-                },
-                "boost" = {
-                    rcpp_boost_net(
-                        x = x,
-                        y = cat_y$y,
-                        lambda = null2num0(lambda),
-                        alpha = alpha,
-                        nlambda = nlambda,
-                        lambda_min_ratio = lambda_min_ratio,
-                        weight = null2num0(weight),
-                        intercept = intercept,
-                        standardize = standardize,
-                        nfolds = nfolds,
-                        stratified_cv = stratified_cv,
-                        max_iter = max_iter,
-                        epsilon = epsilon,
-                        varying_active_set = varying_active_set,
-                        inner_min = boost_umin,
-                        verbose = verbose
-                    )
-                },
-                "hinge-boost" = {
-                    rcpp_hinge_boost_net(
-                        x = x,
-                        y = cat_y$y,
-                        lambda = null2num0(lambda),
-                        alpha = alpha,
-                        nlambda = nlambda,
-                        lambda_min_ratio = lambda_min_ratio,
-                        weight = null2num0(weight),
-                        intercept = intercept,
-                        standardize = standardize,
-                        nfolds = nfolds,
-                        stratified_cv = stratified_cv,
-                        max_iter = max_iter,
-                        epsilon = epsilon,
-                        varying_active_set = varying_active_set,
-                        lum_c = lum_c,
-                        verbose = verbose
-                    )
-                },
-                "lum" = {
-                    rcpp_lum_net(
-                        x = x,
-                        y = cat_y$y,
-                        lambda = null2num0(lambda),
-                        alpha = alpha,
-                        nlambda = nlambda,
-                        lambda_min_ratio = lambda_min_ratio,
-                        weight = null2num0(weight),
-                        intercept = intercept,
-                        standardize = standardize,
-                        nfolds = nfolds,
-                        stratified_cv = stratified_cv,
-                        max_iter = max_iter,
-                        epsilon = epsilon,
-                        varying_active_set = varying_active_set,
-                        lum_a = lum_a,
-                        lum_c = lum_c,
-                        verbose = verbose
-                    )
-                }
-            )
-
+            sprintf("rcpp_%s_net", loss2)
         }
+    args_to_call <- default_args_to_call[
+        names(default_args_to_call) %in% formalArgs(fun_to_call)
+    ]
+    res <- do.call(fun_to_call, args_to_call)
     ## post-process
     res$category <- cat_y
     ## res$call <- Call
@@ -327,8 +198,8 @@ abclass <- function(x, y,
         varying_active_set = varying_active_set,
         verbose = verbose
     )
-    class_suffix <- if (grouped) "_group_lasso" else "_net"
-    res_cls <- paste0(gsub("-", "_", loss, fixed = TRUE), class_suffix)
+    class_suffix <- if (grouped) paste0("_group_", group_penalty) else "_net"
+    res_cls <- paste0(loss2, class_suffix)
     class(res) <- c(res_cls, "abclass")
     ## return
     res
