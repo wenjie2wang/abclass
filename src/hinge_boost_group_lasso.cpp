@@ -42,10 +42,16 @@ Rcpp::List rcpp_hinge_boost_group_lasso(
     abclass::HingeBoostGroupLasso object {
         x, y, lum_c, intercept, standardize, weight
     };
-    return abclass_group_lasso_fit(object, y,
-                                   lambda, nlambda,
-                                   lambda_min_ratio, group_weight,
-                                   nfolds, stratified_cv,
-                                   max_iter, epsilon,
-                                   varying_active_set, verbose);
+    return abclass_group_lasso_fit(object,
+                                   y,
+                                   lambda,
+                                   nlambda,
+                                   lambda_min_ratio,
+                                   group_weight,
+                                   nfolds,
+                                   stratified_cv,
+                                   max_iter,
+                                   epsilon,
+                                   varying_active_set,
+                                   verbose);
 }
