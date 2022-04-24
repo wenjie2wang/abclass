@@ -16,6 +16,8 @@ abclass(
   lambda_min_ratio = NULL,
   grouped = FALSE,
   group_weight = NULL,
+  group_penalty = c("lasso", "scad", "mcp"),
+  gamma = 10,
   nfolds = 0,
   stratified_cv = TRUE,
   lum_a = 1,
@@ -76,6 +78,12 @@ of predictors, and \code{1e-2} otherwise.}
 
 \item{group_weight}{A numerical vector with nonnegative values representing
 the adaptive penalty factors for grouped lasso.}
+
+\item{group_penalty}{A character vector specifying the name of the group
+penalty.}
+
+\item{gamma}{A positive number specifying the value of the gamma parameter
+for group SCAD or group MCP.}
 
 \item{nfolds}{A nonnegative integer specifying the number of folds for
 cross-validation.  The default value is \code{0} and no cross-validation
