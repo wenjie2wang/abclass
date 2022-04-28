@@ -458,14 +458,14 @@ namespace abclass
             one_grad_beta = gradient(one_inner);
             for (arma::uvec::iterator it { penalty_group.begin() };
                  it != penalty_group.end(); ++it) {
+                if (is_active_strong(*it) > 0) {
+                    continue;
+                }
                 double one_strong_lhs { l2_norm(one_grad_beta.row(*it)) };
                 one_strong_rhs = group_weight_(*it) *
                     (2 * lambda_li - old_lambda);
                 if (one_strong_lhs >= one_strong_rhs) {
                     is_active_strong(*it) = 1;
-                } else {
-                    is_active_strong(*it) = 0;
-                    one_beta.row(*it) = arma::zeros<arma::rowvec>(km1_);
                 }
             }
             old_lambda = lambda_li;

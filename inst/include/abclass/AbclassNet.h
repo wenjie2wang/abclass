@@ -289,6 +289,11 @@ namespace abclass
         if (varying_active_set) {
             arma::umat is_active_strong { is_active },
                 is_active_varying { is_active };
+            if (verbose > 1) {
+                Rcpp::Rcout << "The size of active set from strong rule: "
+                            << l1_norm(is_active_strong)
+                            << "\n";
+            }
             while (i < max_iter) {
                 // cycles over the active set
                 size_t ii {0};
@@ -301,11 +306,6 @@ namespace abclass
                     }
                     beta0 = beta;
                     ii++;
-                }
-                if (verbose > 1) {
-                    Rcpp::Rcout << "The size of active set from strong rule: "
-                                << l1_norm(is_active_strong)
-                                << "\n";
                 }
                 // run a full cycle over the converged beta
                 run_one_active_cycle(beta, inner, is_active,
@@ -543,11 +543,11 @@ namespace abclass
             old_l1_lambda = l1_lambda;
             for (size_t j { 0 }; j < km1_; ++j) {
                 for (size_t l { int_intercept_ }; l < p1_; ++l) {
+                    if (is_active_strong(l, j) > 0) {
+                        continue;
+                    }
                     if (one_grad_beta(l, j) >= one_strong_rhs) {
                         is_active_strong(l, j) = 1;
-                    } else {
-                        is_active_strong(l, j) = 0;
-                        one_beta(l, j) = 0;
                     }
                 }
             }
