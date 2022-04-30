@@ -68,8 +68,9 @@ predict.abclass <- function(object,
     if (! length(object$cross_validation$cv_accuracy) || selection == "all") {
         selection_idx <- seq_len(n_slice)
     } else {
-        cv_idx_list <- with(object$cross_validation,
-                            select_lambda(cv_accuracy_mean, cv_accuracy_sd))
+        ## cv_idx_list <- with(object$cross_validation,
+        ##                     select_lambda(cv_accuracy_mean, cv_accuracy_sd))
+        cv_idx_list <- object$cross_validation
         selection_idx <- cv_idx_list[[selection]]
     }
     ## determine the internal function to call

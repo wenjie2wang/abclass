@@ -46,8 +46,9 @@ coef.abclass <- function(object,
     if (! length(object$cross_validation$cv_accuracy) || selection == "all") {
         return(object$coefficients)
     }
-    cv_idx_list <- with(object$cross_validation,
-                        select_lambda(cv_accuracy_mean, cv_accuracy_sd))
+    ## cv_idx_list <- with(object$cross_validation,
+    ##                     select_lambda(cv_accuracy_mean, cv_accuracy_sd))
+    cv_idx_list <- object$cross_validation
     selection_idx <- cv_idx_list[[selection]]
     object$coefficients[, , selection_idx]
 }

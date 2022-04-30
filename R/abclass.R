@@ -209,6 +209,12 @@ abclass <- function(x, y,
         varying_active_set = varying_active_set,
         verbose = verbose
     )
+    ## add cv idx if available
+    if (length(res$cross_validation$cv_accuracy)) {
+        cv_idx_list <- with(res$cross_validation,
+                            select_lambda(cv_accuracy_mean, cv_accuracy_sd))
+        res$cross_validation <- c(res$cross_validation, cv_idx_list)
+    }
     class_suffix <- if (grouped) paste0("_group_", group_penalty) else "_net"
     res_cls <- paste0(loss2, class_suffix)
     class(res) <- c(res_cls, "abclass")
