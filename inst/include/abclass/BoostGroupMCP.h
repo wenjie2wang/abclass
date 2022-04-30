@@ -88,7 +88,6 @@ namespace abclass
             AbclassGroupMCP(x, y, intercept, standardize, weight)
         {
             set_inner_min(- 5.0);
-            exp_inner_max_ = std::exp(- inner_min_);
         }
 
         BoostGroupMCP* set_inner_min(const double inner_min)
@@ -97,6 +96,7 @@ namespace abclass
                 throw std::range_error("The 'inner_min' cannot be positive.");
             }
             inner_min_ = inner_min;
+            exp_inner_max_ = std::exp(- inner_min_);
             return this;
         }
 

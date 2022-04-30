@@ -151,6 +151,9 @@ namespace abclass
         double lambda_max_;
         double alpha_;            // [0, 1]
         arma::vec lambda_;        // lambda sequence
+        // did user specified a customized lambda sequence?
+        bool custom_lambda_ = false;
+        double lambda_min_ratio_ = 0.01;
 
         // estimates
         arma::cube coef_;         // p1_ by km1_
@@ -480,6 +483,7 @@ namespace abclass
         // if alpha = 0 and lambda is specified
         if (is_ridge_only && ! lambda.empty()) {
             lambda_ = arma::reverse(arma::unique(lambda));
+            custom_lambda_ = true;
             l1_lambda_max_ = - 1.0; // not well defined
             lambda_max_ = - 1.0;    // not well defined
         } else {
@@ -496,8 +500,10 @@ namespace abclass
                                    log_lambda_max + std::log(lambda_min_ratio),
                                    nlambda)
                     );
+                lambda_min_ratio_ = lambda_min_ratio;
             } else {
                 lambda_ = arma::reverse(arma::unique(lambda));
+                custom_lambda_ = true;
             }
         }
         // initialize the estimate cube

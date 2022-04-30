@@ -33,8 +33,9 @@ Rcpp::List rcpp_logistic_group_mcp(
     const bool standardize = true,
     const unsigned int nfolds = 0,
     const bool stratified_cv = true,
+    const unsigned int alignment = 0,
     const unsigned int max_iter = 1e5,
-    const double epsilon = 1e-4,
+    const double epsilon = 1e-3,
     const bool varying_active_set = true,
     const unsigned int verbose = 0
     )
@@ -42,7 +43,7 @@ Rcpp::List rcpp_logistic_group_mcp(
     abclass::LogisticGroupMCP object {
         x, y, intercept, standardize, weight
     };
-    return abclass_group_mcp_fit(object,
+    return abclass_group_ncv_fit(object,
                                  y,
                                  lambda,
                                  nlambda,
@@ -51,6 +52,7 @@ Rcpp::List rcpp_logistic_group_mcp(
                                  gamma,
                                  nfolds,
                                  stratified_cv,
+                                 alignment,
                                  max_iter,
                                  epsilon,
                                  varying_active_set,

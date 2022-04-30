@@ -80,15 +80,12 @@ namespace abclass
         //! @param y The category index vector.
         HingeBoostGroupSCAD(const arma::mat& x,
                             const arma::uvec& y,
-                            const double lum_c = 0.0,
                             const bool intercept = true,
                             const bool standardize = true,
                             const arma::vec& weight = arma::vec()) :
             AbclassGroupSCAD(x, y, intercept, standardize, weight)
         {
-            set_lum_c(lum_c);
-            // set the CMD lowerbound (which needs to be done only once)
-            // set_cmd_lowerbound();
+            set_lum_c(0.0);
         }
 
         HingeBoostGroupSCAD* set_lum_c(const double lum_c)

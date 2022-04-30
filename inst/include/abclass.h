@@ -57,9 +57,6 @@
 
 // for cross-validation
 #include "abclass/CrossValidation.h"
-#include "abclass/abclass_net_cv.h"
-#include "abclass/abclass_group_lasso_cv.h"
-#include "abclass/abclass_group_scad_cv.h"
-#include "abclass/abclass_group_mcp_cv.h"
+#include "abclass/template_cv.h"
 
 #endif

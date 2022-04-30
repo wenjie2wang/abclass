@@ -32,8 +32,9 @@ Rcpp::List rcpp_lum_group_lasso(
     const bool standardize = true,
     const unsigned int nfolds = 0,
     const bool stratified_cv = true,
+    const unsigned int alignment = 0,
     const unsigned int max_iter = 1e5,
-    const double epsilon = 1e-4,
+    const double epsilon = 1e-3,
     const bool varying_active_set = true,
     const double lum_a = 1.0,
     const double lum_c = 0.0,
@@ -41,8 +42,9 @@ Rcpp::List rcpp_lum_group_lasso(
     )
 {
     abclass::LumGroupLasso object {
-        x, y, lum_a, lum_c, intercept, standardize, weight
+        x, y, intercept, standardize, weight
     };
+    object.set_lum_parameters(lum_a, lum_c);
     return abclass_group_lasso_fit(object,
                                    y,
                                    lambda,
@@ -51,6 +53,7 @@ Rcpp::List rcpp_lum_group_lasso(
                                    group_weight,
                                    nfolds,
                                    stratified_cv,
+                                   alignment,
                                    max_iter,
                                    epsilon,
                                    varying_active_set,

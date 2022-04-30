@@ -33,10 +33,11 @@ Rcpp::List rcpp_boost_group_mcp(
     const bool standardize = true,
     const unsigned int nfolds = 0,
     const bool stratified_cv = true,
+    const unsigned int alignment = 0,
     const unsigned int max_iter = 1e5,
-    const double epsilon = 1e-4,
+    const double epsilon = 1e-3,
     const bool varying_active_set = true,
-    const double inner_min = -10.0,
+    const double inner_min = -5.0,
     const unsigned int verbose = 0
     )
 {
@@ -44,7 +45,7 @@ Rcpp::List rcpp_boost_group_mcp(
         x, y, intercept, standardize, weight
     };
     object.set_inner_min(inner_min);
-    return abclass_group_mcp_fit(object,
+    return abclass_group_ncv_fit(object,
                                  y,
                                  lambda,
                                  nlambda,
@@ -53,6 +54,7 @@ Rcpp::List rcpp_boost_group_mcp(
                                  gamma,
                                  nfolds,
                                  stratified_cv,
+                                 alignment,
                                  max_iter,
                                  epsilon,
                                  varying_active_set,

@@ -138,6 +138,9 @@ namespace abclass
         double lambda_max_;
         arma::vec lambda_;        // lambda sequence
         arma::vec group_weight_;  // adaptive weights for each group
+        // did user specified a customized lambda sequence?
+        bool custom_lambda_ = false;
+        double lambda_min_ratio_ = 0.01;
 
         // estimates
         arma::cube coef_;         // p1_ by km1_
@@ -426,8 +429,10 @@ namespace abclass
                                log_lambda_max + std::log(lambda_min_ratio),
                                nlambda)
                 );
+            lambda_min_ratio_ = lambda_min_ratio;
         } else {
             lambda_ = arma::reverse(arma::unique(lambda));
+            custom_lambda_ = true;
         }
         // initialize the estimate cube
         coef_ = arma::cube(p1_, km1_, lambda_.n_elem, arma::fill::zeros);

@@ -68,8 +68,6 @@ namespace abclass
                     const arma::vec& weight = arma::vec()) :
             AbclassNet(x, y, intercept, standardize, weight)
         {
-            // set the CMD lowerbound (which needs to be done only once)
-            // set_cmd_lowerbound();
         }
 
 

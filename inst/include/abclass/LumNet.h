@@ -86,14 +86,12 @@ namespace abclass
         //! @param y The category index vector.
         LumNet(const arma::mat& x,
                const arma::uvec& y,
-               const double lum_a = 1.0,
-               const double lum_c = 0.0,
                const bool intercept = true,
                const bool standardize = true,
                const arma::vec& weight = arma::vec()) :
             AbclassNet(x, y, intercept, standardize, weight)
         {
-            set_lum_parameters(lum_a, lum_c);
+            set_lum_parameters(1.0, 0.0);
             // set the CMD lowerbound (which needs to be done only once)
             // set_cmd_lowerbound();
         }

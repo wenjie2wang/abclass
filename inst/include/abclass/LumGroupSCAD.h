@@ -86,14 +86,12 @@ namespace abclass
         //! @param y The category index vector.
         LumGroupSCAD(const arma::mat& x,
                      const arma::uvec& y,
-                     const double lum_a = 1.0,
-                     const double lum_c = 0.0,
                      const bool intercept = true,
                      const bool standardize = true,
                      const arma::vec& weight = arma::vec()) :
             AbclassGroupSCAD(x, y, intercept, standardize, weight)
         {
-            set_lum_parameters(lum_a, lum_c);
+            set_lum_parameters(1.0, 0.0);
         }
 
         LumGroupSCAD* set_lum_parameters(const double lum_a,

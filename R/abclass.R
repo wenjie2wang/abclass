@@ -68,6 +68,13 @@
 ##' @param stratified_cv A logical value indicating if the cross-validation
 ##'     procedure should be stratified by the response label. The default value
 ##'     is \code{TRUE}.
+##' @param alignment A character vector specifying how to align the lambda
+##'     sequence used in the main fit with the cross-validation fits.  The
+##'     available options are \code{"fraction"} for allowing cross-validation
+##'     fits to have their own lambda sequences and \code{"lambda"} for using
+##'     the same lambda sequence of the main fit.  The option \code{"lambda"}
+##'     will be applied if a meaningful \code{lambda} is specified.  The default
+##'     value is \code{"fraction"}.
 ##' @param lum_a A positive number greater than one representing the parameter
 ##'     \emph{a} in LUM, which will be used only if \code{loss = "lum"}.  The
 ##'     default value is \code{1.0}.
@@ -116,12 +123,13 @@ abclass <- function(x, y,
                     alpha = 0.5,
                     nlambda = 50,
                     lambda_min_ratio = NULL,
-                    grouped = FALSE,
+                    grouped = TRUE,
                     group_weight = NULL,
                     group_penalty = c("lasso", "scad", "mcp"),
                     gamma = 10,
                     nfolds = 0,
                     stratified_cv = TRUE,
+                    alignment = c("fraction", "lambda"),
                     lum_a = 1.0,
                     lum_c = 1.0,
                     boost_umin = -5.0,
@@ -133,10 +141,12 @@ abclass <- function(x, y,
                     ...)
 {
     ## Call <- match.call()
-    loss <- match.arg(
-        loss, choices = c("logistic", "boost", "hinge-boost", "lum")
-    )
+    all_loss <- c("logistic", "boost", "hinge-boost", "lum")
+    loss <- match.arg(loss, choices = all_loss)
     loss2 <- gsub("-", "_", loss, fixed = TRUE)
+    all_alignment <- c("fraction", "lambda")
+    alignment <- match.arg(alignment, all_alignment)
+    alignment <- match(alignment, all_alignment) - 1L
     ## pre-process
     if (! is.matrix(x)) {
         x <- as.matrix(x)
@@ -159,6 +169,7 @@ abclass <- function(x, y,
         standardize = standardize,
         nfolds = nfolds,
         stratified_cv = stratified_cv,
+        alignment = alignment,
         max_iter = max_iter,
         epsilon = epsilon,
         varying_active_set = varying_active_set,

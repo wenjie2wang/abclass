@@ -33,8 +33,9 @@ Rcpp::List rcpp_logistic_group_scad(
     const bool standardize = true,
     const unsigned int nfolds = 0,
     const bool stratified_cv = true,
+    const unsigned int alignment = 0,
     const unsigned int max_iter = 1e5,
-    const double epsilon = 1e-4,
+    const double epsilon = 1e-3,
     const bool varying_active_set = true,
     const unsigned int verbose = 0
     )
@@ -42,17 +43,18 @@ Rcpp::List rcpp_logistic_group_scad(
     abclass::LogisticGroupSCAD object {
         x, y, intercept, standardize, weight
     };
-    return abclass_group_scad_fit(object,
-                                  y,
-                                  lambda,
-                                  nlambda,
-                                  lambda_min_ratio,
-                                  group_weight,
-                                  gamma,
-                                  nfolds,
-                                  stratified_cv,
-                                  max_iter,
-                                  epsilon,
-                                  varying_active_set,
-                                  verbose);
+    return abclass_group_ncv_fit(object,
+                                 y,
+                                 lambda,
+                                 nlambda,
+                                 lambda_min_ratio,
+                                 group_weight,
+                                 gamma,
+                                 nfolds,
+                                 stratified_cv,
+                                 alignment,
+                                 max_iter,
+                                 epsilon,
+                                 varying_active_set,
+                                 verbose);
 }
