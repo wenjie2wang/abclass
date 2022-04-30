@@ -14,12 +14,13 @@ abclass(
   alpha = 0.5,
   nlambda = 50,
   lambda_min_ratio = NULL,
-  grouped = FALSE,
+  grouped = TRUE,
   group_weight = NULL,
   group_penalty = c("lasso", "scad", "mcp"),
   gamma = 10,
   nfolds = 0,
   stratified_cv = TRUE,
+  alignment = c("fraction", "lambda"),
   lum_a = 1,
   lum_c = 1,
   boost_umin = -5,
@@ -92,6 +93,14 @@ will be performed if \code{nfolds < 2}.}
 \item{stratified_cv}{A logical value indicating if the cross-validation
 procedure should be stratified by the response label. The default value
 is \code{TRUE}.}
+
+\item{alignment}{A character vector specifying how to align the lambda
+sequence used in the main fit with the cross-validation fits.  The
+available options are \code{"fraction"} for allowing cross-validation
+fits to have their own lambda sequences and \code{"lambda"} for using
+the same lambda sequence of the main fit.  The option \code{"lambda"}
+will be applied if a meaningful \code{lambda} is specified.  The default
+value is \code{"fraction"}.}
 
 \item{lum_a}{A positive number greater than one representing the parameter
 \emph{a} in LUM, which will be used only if \code{loss = "lum"}.  The
