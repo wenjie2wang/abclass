@@ -588,14 +588,15 @@ namespace abclass
                     }
                 }
                 if (arma::accu(is_strong_rule_failed) > 0) {
-                    is_active_strong = is_active_strong_old +
+                    is_active_strong = is_active_strong_old ||
                         is_strong_rule_failed;
                     if (verbose > 0) {
                         Rcpp::Rcout << "The strong rule failed.\n"
-                                    << "The size of old active set: ";
-                        Rcpp::Rcout << l1_norm(is_active_strong_old) << "\n";
-                        Rcpp::Rcout << "The size of new active set: ";
-                        Rcpp::Rcout << l1_norm(is_active_strong) << "\n";
+                                    << "The size of old active set: "
+                                    << l1_norm(is_active_strong_old)
+                                    << "\nThe size of new active set: "
+                                    << l1_norm(is_active_strong)
+                                    << "\n";
                     }
                 } else {
                     if (verbose > 0) {

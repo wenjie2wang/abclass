@@ -377,6 +377,8 @@ namespace abclass
                         Rcpp::Rcout << "Converged over the active set after "
                                     << num_iter_ + 1
                                     << " iteration(s)\n";
+                        Rcpp::Rcout << "The size of active set is "
+                                    << l1_norm(is_active) << "\n";
                     }
                     num_iter_ = i + 1;
                     break;
@@ -427,7 +429,7 @@ namespace abclass
         // set gamma
         set_gamma(gamma);
         arma::uvec penalty_group { arma::find(group_weight_ > 0.0) };
-        arma::uvec penalty_free { arma::find(group_weight_ <= 0.0) };
+        arma::uvec penalty_free { arma::find(group_weight_ == 0.0) };
         // record control
         epsilon_ = epsilon;
         max_iter_ = max_iter;
@@ -520,7 +522,7 @@ namespace abclass
                 // check kkt condition
                 for (arma::uvec::iterator it { penalty_group.begin() };
                      it != penalty_group.end(); ++it) {
-                    if (is_active_strong(*it) > 0) {
+                    if (is_active_strong_old(*it) > 0) {
                         continue;
                     }
                     if (l2_norm(gmd_gradient(one_inner, *it)) >
@@ -530,14 +532,16 @@ namespace abclass
                     }
                 }
                 if (arma::accu(is_strong_rule_failed) > 0) {
-                    is_active_strong = is_active_strong_old +
+                    is_active_strong = is_active_strong_old ||
                         is_strong_rule_failed;
                     if (verbose > 0) {
-                        Rcpp::Rcout << "The strong rule failed.\n"
-                                    << "The size of old active set: ";
-                        Rcpp::Rcout << l1_norm(is_active_strong_old) << "\n";
-                        Rcpp::Rcout << "The size of new active set: ";
-                        Rcpp::Rcout << l1_norm(is_active_strong) << "\n";
+                        Rcpp::Rcout << "The strong rule failed for "
+                                    << arma::accu(is_strong_rule_failed)
+                                    << " group(s)\nThe size of old active set: "
+                                    << l1_norm(is_active_strong_old)
+                                    << "\nThe size of new active set: "
+                                    << l1_norm(is_active_strong)
+                                    << "\n";
                     }
                 } else {
                     if (verbose > 0) {
