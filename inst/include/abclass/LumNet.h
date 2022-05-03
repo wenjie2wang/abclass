@@ -29,11 +29,13 @@ namespace abclass
     {
     private:
         // cache
-        double lum_cp1_;        // c + 1
-        double lum_c_cp1_;      // c / (c + 1)
-        double lum_cma_;        // c - a
         double lum_ap1_;        // a + 1
-        double lum_a_ap1_;       // a ^ (a + 1)
+        double lum_log_a_;      // log(a)
+        double lum_a_log_a_;    // a log(a)
+        double lum_cp1_;        // c + 1
+        double lum_log_cp1_;    // log(c + 1)
+        double lum_c_cp1_;      // c / (c + 1)
+        double lum_amc_;        // a - c
 
     protected:
 
@@ -57,8 +59,10 @@ namespace abclass
                 if (inner[i] < lum_c_cp1_) {
                     tmp[i] = 1.0 - inner[i];
                 } else {
-                    tmp[i] = std::pow(lum_a_ / (lum_cp1_ * inner[i] - lum_cma_),
-                                      lum_a_) / lum_cp1_;
+                    tmp[i] = std::exp(
+                        - lum_log_cp1_ + lum_a_log_a_ -
+                        lum_a_ * std::log(lum_cp1_ * inner[i] + lum_amc_)
+                        );
                 }
             }
             return arma::mean(obs_weight_ % tmp);
@@ -70,8 +74,10 @@ namespace abclass
             arma::vec out { - arma::ones(u.n_elem) };
             for (size_t i {0}; i < u.n_elem; ++i) {
                 if (u[i] > lum_c_cp1_) {
-                    out[i] = - lum_a_ap1_ /
-                        std::pow(lum_cp1_ * u[i] - lum_cma_, lum_ap1_);
+                    out[i] = - std::exp(
+                        lum_a_log_a_ + lum_log_a_ -
+                        lum_ap1_ * std::log(lum_cp1_ * u[i] + lum_amc_)
+                        );
                 }
             }
             return out;
@@ -104,14 +110,16 @@ namespace abclass
             }
             lum_a_ = lum_a;
             lum_ap1_ = lum_a_ + 1.0;
-            lum_a_ap1_ = std::pow(lum_a_, lum_ap1_);
+            lum_log_a_ = std::log(lum_a_);
+            lum_a_log_a_ = lum_a_ * lum_log_a_;
             if (is_lt(lum_c, 0.0)) {
                 throw std::range_error("The LUM 'c' cannot be negative.");
             }
             lum_c_ = lum_c;
             lum_cp1_ = lum_c + 1.0;
+            lum_log_cp1_ = std::log(lum_cp1_);
             lum_c_cp1_ = lum_c_ / lum_cp1_;
-            lum_cma_ = lum_c_ - lum_a_;
+            lum_amc_ = lum_a_ - lum_c_;
             return this;
         }
 
