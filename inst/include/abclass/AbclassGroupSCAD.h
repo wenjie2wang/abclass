@@ -237,7 +237,7 @@ namespace abclass
         inline void set_gamma(const double gamma = 0.01)
         {
             if (gamma > 0.0) {
-                gamma_ = gamma + max_mg_;
+                gamma_ = gamma + 1.0 + 1.0 / max_mg_;
                 return;
             }
             throw std::range_error("The 'gamma' for SCAD must be positive.");
