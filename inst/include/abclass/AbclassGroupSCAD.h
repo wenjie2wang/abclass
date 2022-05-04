@@ -29,6 +29,7 @@ namespace abclass
     protected:
         // for groupwise majorization descent
         arma::rowvec gmd_lowerbound_; // 1 by p1_
+        double max_mg_;               // arma::max(gmd_lowerbound_)
 
         // pure virtual functions
         virtual void set_gmd_lowerbound() = 0;
@@ -147,7 +148,6 @@ namespace abclass
         double lambda_max_;
         arma::vec lambda_;        // lambda sequence
         double gamma_;            // the gamma parameter > 1
-        // arma::vec gamma_g_;       // gamma_ * (1 / m_g)
         arma::vec group_weight_;  // adaptive weights for each group
         // did user specified a customized lambda sequence?
         bool custom_lambda_ = false;
@@ -234,13 +234,13 @@ namespace abclass
             group_weight_ = gen_group_weight(group_weight);
         }
 
-        inline void set_gamma(const double gamma = 2.7)
+        inline void set_gamma(const double gamma = 0.01)
         {
-            if (gamma > 1.0) {
-                gamma_ = gamma;
+            if (gamma > 0.0) {
+                gamma_ = gamma + max_mg_;
                 return;
             }
-            throw std::range_error("The 'gamma' for SCAD must be > 1.");
+            throw std::range_error("The 'gamma' for SCAD must be positive.");
         }
 
     };
@@ -484,7 +484,7 @@ namespace abclass
             is_active_strong(*it) = 1;
         }
         run_gmd_active_cycle(one_beta, one_inner, is_active_strong,
-                             lambda_max_, gamma, false,
+                             lambda_max_, gamma_, false,
                              max_iter, epsilon, verbose);
         // optim with varying active set when p > n
         double old_lambda { lambda_max_ }; // for strong rule
@@ -506,7 +506,7 @@ namespace abclass
                 }
                 double one_strong_lhs { l2_norm(one_grad_beta.row(*it)) };
                 one_strong_rhs = group_weight_(*it) *
-                    (gamma / (gamma - 2) * (lambda_li - old_lambda) +
+                    (gamma_ / (gamma_ - 2) * (lambda_li - old_lambda) +
                         lambda_li);
                 if (one_strong_lhs >= one_strong_rhs) {
                     is_active_strong(*it) = 1;
@@ -523,7 +523,7 @@ namespace abclass
                 };
                 // update beta
                 run_gmd_active_cycle(one_beta, one_inner, is_active_strong,
-                                     lambda_li, gamma, varying_active_set,
+                                     lambda_li, gamma_, varying_active_set,
                                      max_iter, epsilon, verbose);
                 if (verbose > 0) {
                     msg("Checking the KKT condition for the null set.");

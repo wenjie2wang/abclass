@@ -49,6 +49,7 @@ namespace abclass
             arma::mat sqx { arma::square(x_) };
             sqx.each_col() %= obs_weight_;
             gmd_lowerbound_ = tmp * arma::sum(sqx, 0) / dn_obs_;
+            max_mg_ = arma::max(gmd_lowerbound_);
         }
 
         // objective function without regularization
