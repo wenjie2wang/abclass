@@ -5,12 +5,12 @@ rcpp_boost_group_lasso <- function(x, y, lambda, nlambda, lambda_min_ratio, grou
     .Call('_abclass_rcpp_boost_group_lasso', PACKAGE = 'abclass', x, y, lambda, nlambda, lambda_min_ratio, group_weight, weight, intercept, standardize, nfolds, stratified_cv, alignment, max_iter, epsilon, varying_active_set, inner_min, verbose)
 }
 
-rcpp_boost_group_mcp <- function(x, y, lambda, nlambda, lambda_min_ratio, group_weight, gamma, weight, intercept = TRUE, standardize = TRUE, nfolds = 0L, stratified_cv = TRUE, alignment = 0L, max_iter = 1e5L, epsilon = 1e-3, varying_active_set = TRUE, inner_min = -5.0, verbose = 0L) {
-    .Call('_abclass_rcpp_boost_group_mcp', PACKAGE = 'abclass', x, y, lambda, nlambda, lambda_min_ratio, group_weight, gamma, weight, intercept, standardize, nfolds, stratified_cv, alignment, max_iter, epsilon, varying_active_set, inner_min, verbose)
+rcpp_boost_group_mcp <- function(x, y, lambda, nlambda, lambda_min_ratio, group_weight, dgamma, weight, intercept = TRUE, standardize = TRUE, nfolds = 0L, stratified_cv = TRUE, alignment = 0L, max_iter = 1e5L, epsilon = 1e-3, varying_active_set = TRUE, inner_min = -5.0, verbose = 0L) {
+    .Call('_abclass_rcpp_boost_group_mcp', PACKAGE = 'abclass', x, y, lambda, nlambda, lambda_min_ratio, group_weight, dgamma, weight, intercept, standardize, nfolds, stratified_cv, alignment, max_iter, epsilon, varying_active_set, inner_min, verbose)
 }
 
-rcpp_boost_group_scad <- function(x, y, lambda, nlambda, lambda_min_ratio, group_weight, gamma, weight, intercept = TRUE, standardize = TRUE, nfolds = 0L, stratified_cv = TRUE, alignment = 0L, max_iter = 1e5L, epsilon = 1e-3, varying_active_set = TRUE, inner_min = -5.0, verbose = 0L) {
-    .Call('_abclass_rcpp_boost_group_scad', PACKAGE = 'abclass', x, y, lambda, nlambda, lambda_min_ratio, group_weight, gamma, weight, intercept, standardize, nfolds, stratified_cv, alignment, max_iter, epsilon, varying_active_set, inner_min, verbose)
+rcpp_boost_group_scad <- function(x, y, lambda, nlambda, lambda_min_ratio, group_weight, dgamma, weight, intercept = TRUE, standardize = TRUE, nfolds = 0L, stratified_cv = TRUE, alignment = 0L, max_iter = 1e5L, epsilon = 1e-3, varying_active_set = TRUE, inner_min = -5.0, verbose = 0L) {
+    .Call('_abclass_rcpp_boost_group_scad', PACKAGE = 'abclass', x, y, lambda, nlambda, lambda_min_ratio, group_weight, dgamma, weight, intercept, standardize, nfolds, stratified_cv, alignment, max_iter, epsilon, varying_active_set, inner_min, verbose)
 }
 
 rcpp_boost_net <- function(x, y, lambda, alpha, nlambda, lambda_min_ratio, weight, intercept = TRUE, standardize = TRUE, nfolds = 0L, stratified_cv = TRUE, alignment = 0L, max_iter = 1e5L, epsilon = 1e-3, varying_active_set = TRUE, inner_min = -5.0, verbose = 0L) {
@@ -21,12 +21,12 @@ rcpp_hinge_boost_group_lasso <- function(x, y, lambda, nlambda, lambda_min_ratio
     .Call('_abclass_rcpp_hinge_boost_group_lasso', PACKAGE = 'abclass', x, y, lambda, nlambda, lambda_min_ratio, group_weight, weight, intercept, standardize, nfolds, stratified_cv, alignment, max_iter, epsilon, varying_active_set, lum_c, verbose)
 }
 
-rcpp_hinge_boost_group_mcp <- function(x, y, lambda, nlambda, lambda_min_ratio, group_weight, gamma, weight, intercept = TRUE, standardize = TRUE, nfolds = 0L, stratified_cv = TRUE, alignment = 0L, max_iter = 1e5L, epsilon = 1e-3, varying_active_set = TRUE, lum_c = 0.0, verbose = 0L) {
-    .Call('_abclass_rcpp_hinge_boost_group_mcp', PACKAGE = 'abclass', x, y, lambda, nlambda, lambda_min_ratio, group_weight, gamma, weight, intercept, standardize, nfolds, stratified_cv, alignment, max_iter, epsilon, varying_active_set, lum_c, verbose)
+rcpp_hinge_boost_group_mcp <- function(x, y, lambda, nlambda, lambda_min_ratio, group_weight, dgamma, weight, intercept = TRUE, standardize = TRUE, nfolds = 0L, stratified_cv = TRUE, alignment = 0L, max_iter = 1e5L, epsilon = 1e-3, varying_active_set = TRUE, lum_c = 0.0, verbose = 0L) {
+    .Call('_abclass_rcpp_hinge_boost_group_mcp', PACKAGE = 'abclass', x, y, lambda, nlambda, lambda_min_ratio, group_weight, dgamma, weight, intercept, standardize, nfolds, stratified_cv, alignment, max_iter, epsilon, varying_active_set, lum_c, verbose)
 }
 
-rcpp_hinge_boost_group_scad <- function(x, y, lambda, nlambda, lambda_min_ratio, group_weight, gamma, weight, intercept = TRUE, standardize = TRUE, nfolds = 0L, stratified_cv = TRUE, alignment = 0L, max_iter = 1e5L, epsilon = 1e-3, varying_active_set = TRUE, lum_c = 0.0, verbose = 0L) {
-    .Call('_abclass_rcpp_hinge_boost_group_scad', PACKAGE = 'abclass', x, y, lambda, nlambda, lambda_min_ratio, group_weight, gamma, weight, intercept, standardize, nfolds, stratified_cv, alignment, max_iter, epsilon, varying_active_set, lum_c, verbose)
+rcpp_hinge_boost_group_scad <- function(x, y, lambda, nlambda, lambda_min_ratio, group_weight, dgamma, weight, intercept = TRUE, standardize = TRUE, nfolds = 0L, stratified_cv = TRUE, alignment = 0L, max_iter = 1e5L, epsilon = 1e-3, varying_active_set = TRUE, lum_c = 0.0, verbose = 0L) {
+    .Call('_abclass_rcpp_hinge_boost_group_scad', PACKAGE = 'abclass', x, y, lambda, nlambda, lambda_min_ratio, group_weight, dgamma, weight, intercept, standardize, nfolds, stratified_cv, alignment, max_iter, epsilon, varying_active_set, lum_c, verbose)
 }
 
 rcpp_hinge_boost_net <- function(x, y, lambda, alpha, nlambda, lambda_min_ratio, weight, intercept = TRUE, standardize = TRUE, nfolds = 0L, stratified_cv = TRUE, alignment = 0L, max_iter = 1e5L, epsilon = 1e-3, varying_active_set = TRUE, lum_c = 0.0, verbose = 0L) {
@@ -37,12 +37,12 @@ rcpp_logistic_group_lasso <- function(x, y, lambda, nlambda, lambda_min_ratio, g
     .Call('_abclass_rcpp_logistic_group_lasso', PACKAGE = 'abclass', x, y, lambda, nlambda, lambda_min_ratio, group_weight, weight, intercept, standardize, nfolds, stratified_cv, alignment, max_iter, epsilon, varying_active_set, verbose)
 }
 
-rcpp_logistic_group_mcp <- function(x, y, lambda, nlambda, lambda_min_ratio, group_weight, gamma, weight, intercept = TRUE, standardize = TRUE, nfolds = 0L, stratified_cv = TRUE, alignment = 0L, max_iter = 1e5L, epsilon = 1e-3, varying_active_set = TRUE, verbose = 0L) {
-    .Call('_abclass_rcpp_logistic_group_mcp', PACKAGE = 'abclass', x, y, lambda, nlambda, lambda_min_ratio, group_weight, gamma, weight, intercept, standardize, nfolds, stratified_cv, alignment, max_iter, epsilon, varying_active_set, verbose)
+rcpp_logistic_group_mcp <- function(x, y, lambda, nlambda, lambda_min_ratio, group_weight, dgamma, weight, intercept = TRUE, standardize = TRUE, nfolds = 0L, stratified_cv = TRUE, alignment = 0L, max_iter = 1e5L, epsilon = 1e-3, varying_active_set = TRUE, verbose = 0L) {
+    .Call('_abclass_rcpp_logistic_group_mcp', PACKAGE = 'abclass', x, y, lambda, nlambda, lambda_min_ratio, group_weight, dgamma, weight, intercept, standardize, nfolds, stratified_cv, alignment, max_iter, epsilon, varying_active_set, verbose)
 }
 
-rcpp_logistic_group_scad <- function(x, y, lambda, nlambda, lambda_min_ratio, group_weight, gamma, weight, intercept = TRUE, standardize = TRUE, nfolds = 0L, stratified_cv = TRUE, alignment = 0L, max_iter = 1e5L, epsilon = 1e-3, varying_active_set = TRUE, verbose = 0L) {
-    .Call('_abclass_rcpp_logistic_group_scad', PACKAGE = 'abclass', x, y, lambda, nlambda, lambda_min_ratio, group_weight, gamma, weight, intercept, standardize, nfolds, stratified_cv, alignment, max_iter, epsilon, varying_active_set, verbose)
+rcpp_logistic_group_scad <- function(x, y, lambda, nlambda, lambda_min_ratio, group_weight, dgamma, weight, intercept = TRUE, standardize = TRUE, nfolds = 0L, stratified_cv = TRUE, alignment = 0L, max_iter = 1e5L, epsilon = 1e-3, varying_active_set = TRUE, verbose = 0L) {
+    .Call('_abclass_rcpp_logistic_group_scad', PACKAGE = 'abclass', x, y, lambda, nlambda, lambda_min_ratio, group_weight, dgamma, weight, intercept, standardize, nfolds, stratified_cv, alignment, max_iter, epsilon, varying_active_set, verbose)
 }
 
 rcpp_logistic_net <- function(x, y, lambda, alpha, nlambda, lambda_min_ratio, weight, intercept = TRUE, standardize = TRUE, nfolds = 0L, stratified_cv = TRUE, alignment = 0L, max_iter = 1e5L, epsilon = 1e-3, varying_active_set = TRUE, verbose = 0L) {
@@ -53,12 +53,12 @@ rcpp_lum_group_lasso <- function(x, y, lambda, nlambda, lambda_min_ratio, group_
     .Call('_abclass_rcpp_lum_group_lasso', PACKAGE = 'abclass', x, y, lambda, nlambda, lambda_min_ratio, group_weight, weight, intercept, standardize, nfolds, stratified_cv, alignment, max_iter, epsilon, varying_active_set, lum_a, lum_c, verbose)
 }
 
-rcpp_lum_group_mcp <- function(x, y, lambda, nlambda, lambda_min_ratio, group_weight, gamma, weight, intercept = TRUE, standardize = TRUE, nfolds = 0L, stratified_cv = TRUE, alignment = 0L, max_iter = 1e5L, epsilon = 1e-3, varying_active_set = TRUE, lum_a = 1.0, lum_c = 0.0, verbose = 0L) {
-    .Call('_abclass_rcpp_lum_group_mcp', PACKAGE = 'abclass', x, y, lambda, nlambda, lambda_min_ratio, group_weight, gamma, weight, intercept, standardize, nfolds, stratified_cv, alignment, max_iter, epsilon, varying_active_set, lum_a, lum_c, verbose)
+rcpp_lum_group_mcp <- function(x, y, lambda, nlambda, lambda_min_ratio, group_weight, dgamma, weight, intercept = TRUE, standardize = TRUE, nfolds = 0L, stratified_cv = TRUE, alignment = 0L, max_iter = 1e5L, epsilon = 1e-3, varying_active_set = TRUE, lum_a = 1.0, lum_c = 0.0, verbose = 0L) {
+    .Call('_abclass_rcpp_lum_group_mcp', PACKAGE = 'abclass', x, y, lambda, nlambda, lambda_min_ratio, group_weight, dgamma, weight, intercept, standardize, nfolds, stratified_cv, alignment, max_iter, epsilon, varying_active_set, lum_a, lum_c, verbose)
 }
 
-rcpp_lum_group_scad <- function(x, y, lambda, nlambda, lambda_min_ratio, group_weight, gamma, weight, intercept = TRUE, standardize = TRUE, nfolds = 0L, stratified_cv = TRUE, alignment = 0L, max_iter = 1e5L, epsilon = 1e-3, varying_active_set = TRUE, lum_a = 1.0, lum_c = 0.0, verbose = 0L) {
-    .Call('_abclass_rcpp_lum_group_scad', PACKAGE = 'abclass', x, y, lambda, nlambda, lambda_min_ratio, group_weight, gamma, weight, intercept, standardize, nfolds, stratified_cv, alignment, max_iter, epsilon, varying_active_set, lum_a, lum_c, verbose)
+rcpp_lum_group_scad <- function(x, y, lambda, nlambda, lambda_min_ratio, group_weight, dgamma, weight, intercept = TRUE, standardize = TRUE, nfolds = 0L, stratified_cv = TRUE, alignment = 0L, max_iter = 1e5L, epsilon = 1e-3, varying_active_set = TRUE, lum_a = 1.0, lum_c = 0.0, verbose = 0L) {
+    .Call('_abclass_rcpp_lum_group_scad', PACKAGE = 'abclass', x, y, lambda, nlambda, lambda_min_ratio, group_weight, dgamma, weight, intercept, standardize, nfolds, stratified_cv, alignment, max_iter, epsilon, varying_active_set, lum_a, lum_c, verbose)
 }
 
 rcpp_lum_net <- function(x, y, lambda, alpha, nlambda, lambda_min_ratio, weight, intercept = TRUE, standardize = TRUE, nfolds = 0L, stratified_cv = TRUE, alignment = 0L, max_iter = 1e5L, epsilon = 1e-3, varying_active_set = TRUE, lum_a = 1.0, lum_c = 0.0, verbose = 0L) {

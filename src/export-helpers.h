@@ -109,7 +109,7 @@ Rcpp::List abclass_group_ncv_fit(
     const unsigned int nlambda,
     const double lambda_min_ratio,
     const arma::vec& group_weight,
-    const double gamma,
+    const double dgamma,
     const unsigned int nfolds,
     const bool stratified_cv,
     const unsigned int alignment,
@@ -119,7 +119,7 @@ Rcpp::List abclass_group_ncv_fit(
     const unsigned int verbose
     )
 {
-    object.fit(lambda, nlambda, lambda_min_ratio, group_weight, gamma,
+    object.fit(lambda, nlambda, lambda_min_ratio, group_weight, dgamma,
                max_iter, epsilon, varying_active_set, verbose);
     Rcpp::NumericVector lambda_vec { abclass::arma2rvec(object.lambda_) };
     if (nfolds > 0) {
@@ -146,6 +146,7 @@ Rcpp::List abclass_group_ncv_fit(
             Rcpp::Named("lambda") = abclass::arma2rvec(lambda_vec),
             Rcpp::Named("group_weight") =
             abclass::arma2rvec(object.group_weight_),
+            Rcpp::Named("dgamma") = dgamma,
             Rcpp::Named("gamma") = object.gamma_,
             Rcpp::Named("lambda_max") = object.lambda_max_
             )

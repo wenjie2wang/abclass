@@ -170,7 +170,7 @@ namespace abclass
                         const unsigned int nlambda,
                         const double lambda_min_ratio,
                         const arma::vec& group_weight,
-                        const double gamma,
+                        const double dgamma,
                         const unsigned int max_iter,
                         const double epsilon,
                         const bool varying_active_set,
@@ -230,13 +230,13 @@ namespace abclass
             group_weight_ = gen_group_weight(group_weight);
         }
 
-        inline void set_gamma(const double gamma = 0.01)
+        inline void set_gamma(const double dgamma = 0.01)
         {
-            if (gamma > 0.0) {
-                gamma_ = gamma + 1.0 / max_mg_;
+            if (dgamma > 0.0) {
+                gamma_ = dgamma + 1.0 / max_mg_;
                 return;
             }
-            throw std::range_error("The 'gamma' for MCP must be positive.");
+            throw std::range_error("The 'dgamma' must be positive.");
         }
 
     };
@@ -415,7 +415,7 @@ namespace abclass
         const unsigned int nlambda,
         const double lambda_min_ratio,
         const arma::vec& group_weight,
-        const double gamma,
+        const double dgamma,
         const unsigned int max_iter,
         const double epsilon,
         const bool varying_active_set,
@@ -427,7 +427,7 @@ namespace abclass
         // set group weight
         set_group_weight(group_weight);
         // set gamma
-        set_gamma(gamma);
+        set_gamma(dgamma);
         arma::uvec penalty_group { arma::find(group_weight_ > 0.0) };
         arma::uvec penalty_free { arma::find(group_weight_ == 0.0) };
         // record control
