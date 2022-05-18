@@ -71,17 +71,17 @@ table(test_y, pred1)
 
     ##          pred1
     ## test_y    label_1 label_2 label_3 label_4 label_5
-    ##   label_1     146       2      58       0       0
-    ##   label_2       1     199       2       1       0
-    ##   label_3      15       2     177       5       0
-    ##   label_4       0      10       5     174       3
-    ##   label_5       1       4       1       9     185
+    ##   label_1     179       1      26       0       0
+    ##   label_2       1     200       1       1       0
+    ##   label_3       4       0     195       0       0
+    ##   label_4       0       2       4     183       3
+    ##   label_5       1       0       3       2     194
 
 ``` r
 mean(test_y == pred1) # accuracy
 ```
 
-    ## [1] 0.881
+    ## [1] 0.951
 
 ``` r
 ## exponential loss approximating AdaBoost
@@ -93,17 +93,17 @@ table(test_y, pred2)
 
     ##          pred2
     ## test_y    label_1 label_2 label_3 label_4 label_5
-    ##   label_1     150       0      56       0       0
-    ##   label_2       5     194       3       1       0
-    ##   label_3       7       0     188       2       2
-    ##   label_4       1       9       1     174       7
-    ##   label_5       1       0       0       4     195
+    ##   label_1     184       0      22       0       0
+    ##   label_2       0     202       0       1       0
+    ##   label_3      18       1     176       3       1
+    ##   label_4       1       5       3     177       6
+    ##   label_5       1       0       0       1     198
 
 ``` r
 mean(test_y == pred2) # accuracy
 ```
 
-    ## [1] 0.901
+    ## [1] 0.937
 
 ``` r
 ## hybrid hinge-boost loss
@@ -115,17 +115,17 @@ table(test_y, pred3)
 
     ##          pred3
     ## test_y    label_1 label_2 label_3 label_4 label_5
-    ##   label_1     136       1      69       0       0
-    ##   label_2       4     194       4       1       0
-    ##   label_3       8       0     188       3       0
-    ##   label_4       1       8       1     180       2
-    ##   label_5       3       3       0       8     186
+    ##   label_1     179       1      26       0       0
+    ##   label_2       1     201       0       1       0
+    ##   label_3       5       0     194       0       0
+    ##   label_4       0       2       3     185       2
+    ##   label_5       1       0       2       2     195
 
 ``` r
 mean(test_y == pred3) # accuracy
 ```
 
-    ## [1] 0.884
+    ## [1] 0.954
 
 ``` r
 ## large-margin unified loss
@@ -137,17 +137,17 @@ table(test_y, pred4)
 
     ##          pred4
     ## test_y    label_1 label_2 label_3 label_4 label_5
-    ##   label_1     154       1      51       0       0
-    ##   label_2       1     199       2       1       0
-    ##   label_3      15       1     180       3       0
-    ##   label_4       1       8       4     175       4
-    ##   label_5       1       0       0       6     193
+    ##   label_1     179       1      26       0       0
+    ##   label_2       1     201       0       1       0
+    ##   label_3       4       0     194       0       1
+    ##   label_4       0       2       3     185       2
+    ##   label_5       1       0       1       0     198
 
 ``` r
 mean(test_y == pred4) # accuracy
 ```
 
-    ## [1] 0.901
+    ## [1] 0.957
 
 ``` r
 ### variable selection via group lasso
@@ -161,16 +161,16 @@ table(test_y, pred1)
     ##          pred1
     ## test_y    label_1 label_2 label_3 label_4 label_5
     ##   label_1     173       1      32       0       0
-    ##   label_2       1     194       7       1       0
-    ##   label_3       1       0     198       0       0
-    ##   label_4       0       2      12     175       3
-    ##   label_5       3       0       5       3     189
+    ##   label_2       2     197       3       1       0
+    ##   label_3       1       1     197       0       0
+    ##   label_4       0       2       8     180       2
+    ##   label_5       2       0       5       3     190
 
 ``` r
 mean(test_y == pred1) # accuracy
 ```
 
-    ## [1] 0.929
+    ## [1] 0.937
 
 ``` r
 ## exponential loss approximating AdaBoost
@@ -182,17 +182,17 @@ table(test_y, pred2)
 
     ##          pred2
     ## test_y    label_1 label_2 label_3 label_4 label_5
-    ##   label_1     182       1      23       0       0
-    ##   label_2       0     202       0       1       0
-    ##   label_3       8       0     190       0       1
-    ##   label_4       0       2       5     183       2
-    ##   label_5       1       0       1       2     196
+    ##   label_1     189       0      17       0       0
+    ##   label_2       1     202       0       0       0
+    ##   label_3      11       0     187       0       1
+    ##   label_4       0       1       2     181       8
+    ##   label_5       1       0       0       0     199
 
 ``` r
 mean(test_y == pred2) # accuracy
 ```
 
-    ## [1] 0.953
+    ## [1] 0.958
 
 ``` r
 ## hybrid hinge-boost loss
@@ -204,17 +204,17 @@ table(test_y, pred3)
 
     ##          pred3
     ## test_y    label_1 label_2 label_3 label_4 label_5
-    ##   label_1     176       1      29       0       0
-    ##   label_2       1     202       0       0       0
-    ##   label_3       7       0     192       0       0
-    ##   label_4       0       3       3     185       1
-    ##   label_5       1       0       2       6     191
+    ##   label_1     174       1      31       0       0
+    ##   label_2       0     202       0       1       0
+    ##   label_3      10       0     188       0       1
+    ##   label_4       0       3       7     181       1
+    ##   label_5       1       0       1       3     195
 
 ``` r
 mean(test_y == pred3) # accuracy
 ```
 
-    ## [1] 0.946
+    ## [1] 0.94
 
 ``` r
 ## large-margin unified loss
@@ -226,17 +226,17 @@ table(test_y, pred4)
 
     ##          pred4
     ## test_y    label_1 label_2 label_3 label_4 label_5
-    ##   label_1     180       1      25       0       0
+    ##   label_1     181       1      24       0       0
     ##   label_2       0     202       0       1       0
-    ##   label_3       8       0     190       0       1
-    ##   label_4       0       3       5     182       2
-    ##   label_5       1       0       1       3     195
+    ##   label_3       5       0     193       0       1
+    ##   label_4       0       2       5     183       2
+    ##   label_5       1       0       1       0     198
 
 ``` r
 mean(test_y == pred4) # accuracy
 ```
 
-    ## [1] 0.949
+    ## [1] 0.957
 
 ## References
 
