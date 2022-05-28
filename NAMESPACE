@@ -3,6 +3,7 @@
 S3method(coef,abclass)
 S3method(predict,abclass)
 export(abclass)
+export(abclass.control)
 importFrom(Rcpp,sourceCpp)
 importFrom(stats,coef)
 importFrom(stats,predict)

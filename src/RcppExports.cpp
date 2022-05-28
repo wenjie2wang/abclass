@@ -13,8 +13,8 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // rcpp_boost_group_lasso
-Rcpp::List rcpp_boost_group_lasso(const arma::mat& x, const arma::uvec& y, const arma::vec& lambda, const unsigned int nlambda, const double lambda_min_ratio, const arma::vec& group_weight, const arma::vec& weight, const bool intercept, const bool standardize, const unsigned int nfolds, const bool stratified_cv, const unsigned int alignment, const unsigned int maxit, const double epsilon, const bool varying_active_set, const double inner_min, const unsigned int verbose);
-RcppExport SEXP _abclass_rcpp_boost_group_lasso(SEXP xSEXP, SEXP ySEXP, SEXP lambdaSEXP, SEXP nlambdaSEXP, SEXP lambda_min_ratioSEXP, SEXP group_weightSEXP, SEXP weightSEXP, SEXP interceptSEXP, SEXP standardizeSEXP, SEXP nfoldsSEXP, SEXP stratified_cvSEXP, SEXP alignmentSEXP, SEXP maxitSEXP, SEXP epsilonSEXP, SEXP varying_active_setSEXP, SEXP inner_minSEXP, SEXP verboseSEXP) {
+Rcpp::List rcpp_boost_group_lasso(const arma::mat& x, const arma::uvec& y, const arma::vec& lambda, const unsigned int nlambda, const double lambda_min_ratio, const arma::vec& group_weight, const arma::vec& weight, const bool intercept, const bool standardize, const unsigned int nfolds, const bool stratified_cv, const unsigned int alignment, const unsigned int maxit, const double epsilon, const bool varying_active_set, const double boost_umin, const unsigned int verbose);
+RcppExport SEXP _abclass_rcpp_boost_group_lasso(SEXP xSEXP, SEXP ySEXP, SEXP lambdaSEXP, SEXP nlambdaSEXP, SEXP lambda_min_ratioSEXP, SEXP group_weightSEXP, SEXP weightSEXP, SEXP interceptSEXP, SEXP standardizeSEXP, SEXP nfoldsSEXP, SEXP stratified_cvSEXP, SEXP alignmentSEXP, SEXP maxitSEXP, SEXP epsilonSEXP, SEXP varying_active_setSEXP, SEXP boost_uminSEXP, SEXP verboseSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -33,15 +33,15 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const unsigned int >::type maxit(maxitSEXP);
     Rcpp::traits::input_parameter< const double >::type epsilon(epsilonSEXP);
     Rcpp::traits::input_parameter< const bool >::type varying_active_set(varying_active_setSEXP);
-    Rcpp::traits::input_parameter< const double >::type inner_min(inner_minSEXP);
+    Rcpp::traits::input_parameter< const double >::type boost_umin(boost_uminSEXP);
     Rcpp::traits::input_parameter< const unsigned int >::type verbose(verboseSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpp_boost_group_lasso(x, y, lambda, nlambda, lambda_min_ratio, group_weight, weight, intercept, standardize, nfolds, stratified_cv, alignment, maxit, epsilon, varying_active_set, inner_min, verbose));
+    rcpp_result_gen = Rcpp::wrap(rcpp_boost_group_lasso(x, y, lambda, nlambda, lambda_min_ratio, group_weight, weight, intercept, standardize, nfolds, stratified_cv, alignment, maxit, epsilon, varying_active_set, boost_umin, verbose));
     return rcpp_result_gen;
 END_RCPP
 }
 // rcpp_boost_group_mcp
-Rcpp::List rcpp_boost_group_mcp(const arma::mat& x, const arma::uvec& y, const arma::vec& lambda, const unsigned int nlambda, const double lambda_min_ratio, const arma::vec& group_weight, const double dgamma, const arma::vec& weight, const bool intercept, const bool standardize, const unsigned int nfolds, const bool stratified_cv, const unsigned int alignment, const unsigned int maxit, const double epsilon, const bool varying_active_set, const double inner_min, const unsigned int verbose);
-RcppExport SEXP _abclass_rcpp_boost_group_mcp(SEXP xSEXP, SEXP ySEXP, SEXP lambdaSEXP, SEXP nlambdaSEXP, SEXP lambda_min_ratioSEXP, SEXP group_weightSEXP, SEXP dgammaSEXP, SEXP weightSEXP, SEXP interceptSEXP, SEXP standardizeSEXP, SEXP nfoldsSEXP, SEXP stratified_cvSEXP, SEXP alignmentSEXP, SEXP maxitSEXP, SEXP epsilonSEXP, SEXP varying_active_setSEXP, SEXP inner_minSEXP, SEXP verboseSEXP) {
+Rcpp::List rcpp_boost_group_mcp(const arma::mat& x, const arma::uvec& y, const arma::vec& lambda, const unsigned int nlambda, const double lambda_min_ratio, const arma::vec& group_weight, const double dgamma, const arma::vec& weight, const bool intercept, const bool standardize, const unsigned int nfolds, const bool stratified_cv, const unsigned int alignment, const unsigned int maxit, const double epsilon, const bool varying_active_set, const double boost_umin, const unsigned int verbose);
+RcppExport SEXP _abclass_rcpp_boost_group_mcp(SEXP xSEXP, SEXP ySEXP, SEXP lambdaSEXP, SEXP nlambdaSEXP, SEXP lambda_min_ratioSEXP, SEXP group_weightSEXP, SEXP dgammaSEXP, SEXP weightSEXP, SEXP interceptSEXP, SEXP standardizeSEXP, SEXP nfoldsSEXP, SEXP stratified_cvSEXP, SEXP alignmentSEXP, SEXP maxitSEXP, SEXP epsilonSEXP, SEXP varying_active_setSEXP, SEXP boost_uminSEXP, SEXP verboseSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -61,15 +61,15 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const unsigned int >::type maxit(maxitSEXP);
     Rcpp::traits::input_parameter< const double >::type epsilon(epsilonSEXP);
     Rcpp::traits::input_parameter< const bool >::type varying_active_set(varying_active_setSEXP);
-    Rcpp::traits::input_parameter< const double >::type inner_min(inner_minSEXP);
+    Rcpp::traits::input_parameter< const double >::type boost_umin(boost_uminSEXP);
     Rcpp::traits::input_parameter< const unsigned int >::type verbose(verboseSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpp_boost_group_mcp(x, y, lambda, nlambda, lambda_min_ratio, group_weight, dgamma, weight, intercept, standardize, nfolds, stratified_cv, alignment, maxit, epsilon, varying_active_set, inner_min, verbose));
+    rcpp_result_gen = Rcpp::wrap(rcpp_boost_group_mcp(x, y, lambda, nlambda, lambda_min_ratio, group_weight, dgamma, weight, intercept, standardize, nfolds, stratified_cv, alignment, maxit, epsilon, varying_active_set, boost_umin, verbose));
     return rcpp_result_gen;
 END_RCPP
 }
 // rcpp_boost_group_scad
-Rcpp::List rcpp_boost_group_scad(const arma::mat& x, const arma::uvec& y, const arma::vec& lambda, const unsigned int nlambda, const double lambda_min_ratio, const arma::vec& group_weight, const double dgamma, const arma::vec& weight, const bool intercept, const bool standardize, const unsigned int nfolds, const bool stratified_cv, const unsigned int alignment, const unsigned int maxit, const double epsilon, const bool varying_active_set, const double inner_min, const unsigned int verbose);
-RcppExport SEXP _abclass_rcpp_boost_group_scad(SEXP xSEXP, SEXP ySEXP, SEXP lambdaSEXP, SEXP nlambdaSEXP, SEXP lambda_min_ratioSEXP, SEXP group_weightSEXP, SEXP dgammaSEXP, SEXP weightSEXP, SEXP interceptSEXP, SEXP standardizeSEXP, SEXP nfoldsSEXP, SEXP stratified_cvSEXP, SEXP alignmentSEXP, SEXP maxitSEXP, SEXP epsilonSEXP, SEXP varying_active_setSEXP, SEXP inner_minSEXP, SEXP verboseSEXP) {
+Rcpp::List rcpp_boost_group_scad(const arma::mat& x, const arma::uvec& y, const arma::vec& lambda, const unsigned int nlambda, const double lambda_min_ratio, const arma::vec& group_weight, const double dgamma, const arma::vec& weight, const bool intercept, const bool standardize, const unsigned int nfolds, const bool stratified_cv, const unsigned int alignment, const unsigned int maxit, const double epsilon, const bool varying_active_set, const double boost_umin, const unsigned int verbose);
+RcppExport SEXP _abclass_rcpp_boost_group_scad(SEXP xSEXP, SEXP ySEXP, SEXP lambdaSEXP, SEXP nlambdaSEXP, SEXP lambda_min_ratioSEXP, SEXP group_weightSEXP, SEXP dgammaSEXP, SEXP weightSEXP, SEXP interceptSEXP, SEXP standardizeSEXP, SEXP nfoldsSEXP, SEXP stratified_cvSEXP, SEXP alignmentSEXP, SEXP maxitSEXP, SEXP epsilonSEXP, SEXP varying_active_setSEXP, SEXP boost_uminSEXP, SEXP verboseSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -89,15 +89,15 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const unsigned int >::type maxit(maxitSEXP);
     Rcpp::traits::input_parameter< const double >::type epsilon(epsilonSEXP);
     Rcpp::traits::input_parameter< const bool >::type varying_active_set(varying_active_setSEXP);
-    Rcpp::traits::input_parameter< const double >::type inner_min(inner_minSEXP);
+    Rcpp::traits::input_parameter< const double >::type boost_umin(boost_uminSEXP);
     Rcpp::traits::input_parameter< const unsigned int >::type verbose(verboseSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpp_boost_group_scad(x, y, lambda, nlambda, lambda_min_ratio, group_weight, dgamma, weight, intercept, standardize, nfolds, stratified_cv, alignment, maxit, epsilon, varying_active_set, inner_min, verbose));
+    rcpp_result_gen = Rcpp::wrap(rcpp_boost_group_scad(x, y, lambda, nlambda, lambda_min_ratio, group_weight, dgamma, weight, intercept, standardize, nfolds, stratified_cv, alignment, maxit, epsilon, varying_active_set, boost_umin, verbose));
     return rcpp_result_gen;
 END_RCPP
 }
 // rcpp_boost_net
-Rcpp::List rcpp_boost_net(const arma::mat& x, const arma::uvec& y, const arma::vec& lambda, const double alpha, const unsigned int nlambda, const double lambda_min_ratio, const arma::vec& weight, const bool intercept, const bool standardize, const unsigned int nfolds, const bool stratified_cv, const unsigned int alignment, const unsigned int maxit, const double epsilon, const bool varying_active_set, const double inner_min, const unsigned int verbose);
-RcppExport SEXP _abclass_rcpp_boost_net(SEXP xSEXP, SEXP ySEXP, SEXP lambdaSEXP, SEXP alphaSEXP, SEXP nlambdaSEXP, SEXP lambda_min_ratioSEXP, SEXP weightSEXP, SEXP interceptSEXP, SEXP standardizeSEXP, SEXP nfoldsSEXP, SEXP stratified_cvSEXP, SEXP alignmentSEXP, SEXP maxitSEXP, SEXP epsilonSEXP, SEXP varying_active_setSEXP, SEXP inner_minSEXP, SEXP verboseSEXP) {
+Rcpp::List rcpp_boost_net(const arma::mat& x, const arma::uvec& y, const arma::vec& lambda, const double alpha, const unsigned int nlambda, const double lambda_min_ratio, const arma::vec& weight, const bool intercept, const bool standardize, const unsigned int nfolds, const bool stratified_cv, const unsigned int alignment, const unsigned int maxit, const double epsilon, const bool varying_active_set, const double boost_umin, const unsigned int verbose);
+RcppExport SEXP _abclass_rcpp_boost_net(SEXP xSEXP, SEXP ySEXP, SEXP lambdaSEXP, SEXP alphaSEXP, SEXP nlambdaSEXP, SEXP lambda_min_ratioSEXP, SEXP weightSEXP, SEXP interceptSEXP, SEXP standardizeSEXP, SEXP nfoldsSEXP, SEXP stratified_cvSEXP, SEXP alignmentSEXP, SEXP maxitSEXP, SEXP epsilonSEXP, SEXP varying_active_setSEXP, SEXP boost_uminSEXP, SEXP verboseSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -116,9 +116,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const unsigned int >::type maxit(maxitSEXP);
     Rcpp::traits::input_parameter< const double >::type epsilon(epsilonSEXP);
     Rcpp::traits::input_parameter< const bool >::type varying_active_set(varying_active_setSEXP);
-    Rcpp::traits::input_parameter< const double >::type inner_min(inner_minSEXP);
+    Rcpp::traits::input_parameter< const double >::type boost_umin(boost_uminSEXP);
     Rcpp::traits::input_parameter< const unsigned int >::type verbose(verboseSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpp_boost_net(x, y, lambda, alpha, nlambda, lambda_min_ratio, weight, intercept, standardize, nfolds, stratified_cv, alignment, maxit, epsilon, varying_active_set, inner_min, verbose));
+    rcpp_result_gen = Rcpp::wrap(rcpp_boost_net(x, y, lambda, alpha, nlambda, lambda_min_ratio, weight, intercept, standardize, nfolds, stratified_cv, alignment, maxit, epsilon, varying_active_set, boost_umin, verbose));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -477,28 +477,28 @@ BEGIN_RCPP
 END_RCPP
 }
 // rcpp_boost_predict_prob
-arma::mat rcpp_boost_predict_prob(const arma::mat& beta, const arma::mat& x, const double inner_min);
-RcppExport SEXP _abclass_rcpp_boost_predict_prob(SEXP betaSEXP, SEXP xSEXP, SEXP inner_minSEXP) {
+arma::mat rcpp_boost_predict_prob(const arma::mat& beta, const arma::mat& x, const double boost_umin);
+RcppExport SEXP _abclass_rcpp_boost_predict_prob(SEXP betaSEXP, SEXP xSEXP, SEXP boost_uminSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::mat& >::type beta(betaSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const double >::type inner_min(inner_minSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpp_boost_predict_prob(beta, x, inner_min));
+    Rcpp::traits::input_parameter< const double >::type boost_umin(boost_uminSEXP);
+    rcpp_result_gen = Rcpp::wrap(rcpp_boost_predict_prob(beta, x, boost_umin));
     return rcpp_result_gen;
 END_RCPP
 }
 // rcpp_boost_predict_y
-arma::uvec rcpp_boost_predict_y(const arma::mat& beta, const arma::mat& x, const double inner_min);
-RcppExport SEXP _abclass_rcpp_boost_predict_y(SEXP betaSEXP, SEXP xSEXP, SEXP inner_minSEXP) {
+arma::uvec rcpp_boost_predict_y(const arma::mat& beta, const arma::mat& x, const double boost_umin);
+RcppExport SEXP _abclass_rcpp_boost_predict_y(SEXP betaSEXP, SEXP xSEXP, SEXP boost_uminSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::mat& >::type beta(betaSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const double >::type inner_min(inner_minSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpp_boost_predict_y(beta, x, inner_min));
+    Rcpp::traits::input_parameter< const double >::type boost_umin(boost_uminSEXP);
+    rcpp_result_gen = Rcpp::wrap(rcpp_boost_predict_y(beta, x, boost_umin));
     return rcpp_result_gen;
 END_RCPP
 }
