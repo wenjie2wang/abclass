@@ -13,7 +13,7 @@
 
 ## Bug fixes
 
-* Fixed the validation indices in cross-validation procedure
+* Fixed the validation indices in the cross-validation procedure
 
 
 # abclass 0.2.0
