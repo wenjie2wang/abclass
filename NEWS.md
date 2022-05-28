@@ -1,3 +1,21 @@
+# abclass 0.3.0
+
+## New features
+
+* Added experimental group-wise regularization by group SCAD and group MCP
+  penalty.
+* Added a new function named `abclass.control()` to specify the control
+  parameters and simplify the main function interface.
+
+## Minor changes
+
+* Renamed the argument `max_iter` to `maxit` for `abclass()`.
+
+## Bug fixes
+
+* Fixed the validation indices in cross-validation procedure
+
+
 # abclass 0.2.0
 
 ## New features
