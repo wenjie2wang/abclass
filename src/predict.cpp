@@ -39,22 +39,22 @@ arma::uvec rcpp_logistic_predict_y(const arma::mat& beta,
 // [[Rcpp::export]]
 arma::mat rcpp_boost_predict_prob(const arma::mat& beta,
                                   const arma::mat& x,
-                                  const double inner_min)
+                                  const double boost_umin)
 {
     const unsigned int k { beta.n_cols + 1 };
     abclass::BoostNet object { k };
-    object.set_inner_min(inner_min);
+    object.set_inner_min(boost_umin);
     return object.predict_prob(beta, x);
 }
 
 // [[Rcpp::export]]
 arma::uvec rcpp_boost_predict_y(const arma::mat& beta,
                                 const arma::mat& x,
-                                const double inner_min)
+                                const double boost_umin)
 {
     const unsigned int k { beta.n_cols + 1 };
     abclass::BoostNet object { k };
-    object.set_inner_min(inner_min);
+    object.set_inner_min(boost_umin);
     return object.predict_y(beta, x);
 }
 

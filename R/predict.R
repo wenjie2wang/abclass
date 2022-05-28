@@ -80,9 +80,9 @@ predict.abclass <- function(object,
     arg_list <- switch(
         loss_fun,
         "logistic" = list(),
-        "boost" = with(object$loss, list(inner_min = boost_umin)),
-        "hinge_boost" = with(object$loss, list(lum_c = lum_c)),
-        "lum" = with(object$loss, list(lum_a = lum_a, lum_c = lum_c))
+        "boost" = object$loss["boost_umin"],
+        "hinge_boost" = object$loss["lum_c"],
+        "lum" = object$loss[c("lum_a", "lum_c")]
     )
     arg_list$x <- newx
     pred_list <- switch(

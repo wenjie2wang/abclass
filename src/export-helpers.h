@@ -13,14 +13,14 @@ Rcpp::List abclass_net_fit(
     const unsigned int nfolds,
     const bool stratified_cv,
     const unsigned int alignment,
-    const unsigned int max_iter,
+    const unsigned int maxit,
     const double epsilon,
     const bool varying_active_set,
     const unsigned int verbose
     )
 {
     object.fit(lambda, alpha, nlambda, lambda_min_ratio,
-               max_iter, epsilon, varying_active_set, verbose);
+               maxit, epsilon, varying_active_set, verbose);
     Rcpp::NumericVector lambda_vec { abclass::arma2rvec(object.lambda_) };
     if (nfolds > 0) {
         arma::uvec strata;
@@ -62,14 +62,14 @@ Rcpp::List abclass_group_lasso_fit(
     const unsigned int nfolds,
     const bool stratified_cv,
     const unsigned int alignment,
-    const unsigned int max_iter,
+    const unsigned int maxit,
     const double epsilon,
     const bool varying_active_set,
     const unsigned int verbose
     )
 {
     object.fit(lambda, nlambda, lambda_min_ratio, group_weight,
-               max_iter, epsilon, varying_active_set, verbose);
+               maxit, epsilon, varying_active_set, verbose);
     Rcpp::NumericVector lambda_vec { abclass::arma2rvec(object.lambda_) };
     if (nfolds > 0) {
         arma::uvec strata;
@@ -113,14 +113,14 @@ Rcpp::List abclass_group_ncv_fit(
     const unsigned int nfolds,
     const bool stratified_cv,
     const unsigned int alignment,
-    const unsigned int max_iter,
+    const unsigned int maxit,
     const double epsilon,
     const bool varying_active_set,
     const unsigned int verbose
     )
 {
     object.fit(lambda, nlambda, lambda_min_ratio, group_weight, dgamma,
-               max_iter, epsilon, varying_active_set, verbose);
+               maxit, epsilon, varying_active_set, verbose);
     Rcpp::NumericVector lambda_vec { abclass::arma2rvec(object.lambda_) };
     if (nfolds > 0) {
         arma::uvec strata;

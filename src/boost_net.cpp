@@ -33,19 +33,19 @@ Rcpp::List rcpp_boost_net(
     const unsigned int nfolds = 0,
     const bool stratified_cv = true,
     const unsigned int alignment = 0,
-    const unsigned int max_iter = 1e5,
+    const unsigned int maxit = 1e5,
     const double epsilon = 1e-3,
     const bool varying_active_set = true,
-    const double inner_min = -5.0,
+    const double boost_umin = -5.0,
     const unsigned int verbose = 0
     )
 {
     abclass::BoostNet object {
         x, y, intercept, standardize, weight
     };
-    object.set_inner_min(inner_min);
+    object.set_inner_min(boost_umin);
     return abclass_net_fit(object, y,
                            lambda, alpha, nlambda, lambda_min_ratio,
                            nfolds, stratified_cv, alignment,
-                           max_iter, epsilon, varying_active_set, verbose);
+                           maxit, epsilon, varying_active_set, verbose);
 }
