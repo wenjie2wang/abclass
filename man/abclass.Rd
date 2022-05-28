@@ -2,6 +2,7 @@
 % Please edit documentation in R/abclass.R
 \name{abclass}
 \alias{abclass}
+\alias{abclass.control}
 \title{Angle-Based Classification}
 \usage{
 abclass(
@@ -10,6 +11,11 @@ abclass(
   intercept = TRUE,
   weight = NULL,
   loss = c("logistic", "boost", "hinge-boost", "lum"),
+  control = list(),
+  ...
+)
+
+abclass.control(
   lambda = NULL,
   alpha = 0.5,
   nlambda = 50,
@@ -24,7 +30,7 @@ abclass(
   lum_a = 1,
   lum_c = 1,
   boost_umin = -5,
-  max_iter = 1e+05,
+  maxit = 1e+05,
   epsilon = 0.001,
   standardize = TRUE,
   varying_active_set = TRUE,
@@ -55,6 +61,11 @@ options are \code{"logistic"} for the logistic deviance loss,
 \code{"hinge-boost"} for hybrid of SVM and AdaBoost machine, and
 \code{"lum"} for largin-margin unified machines (LUM).  See Liu, et
 al. (2011) for details.}
+
+\item{control}{A list of control parameters. See \code{abclass.control()}
+for details.}
+
+\item{...}{Other control parameters passed to \code{abclass.control}.}
 
 \item{lambda}{A numeric vector specifying the tuning parameter \emph{lambda}
 of elastic-net penalty.  A data-driven \emph{lambda} sequence will be
@@ -113,7 +124,7 @@ which will be used only if \code{loss = "hinge-boost"} or \code{loss =
 \item{boost_umin}{A negative number for adjusting the boosting loss for the
 internal majorization procedure.}
 
-\item{max_iter}{A positive integer specifying the maximum number of
+\item{maxit}{A positive integer specifying the maximum number of
 iteration.  The default value is \code{10^5}.}
 
 \item{epsilon}{A positive number specifying the relative tolerance that
@@ -133,11 +144,12 @@ estimation procedure.}
 \item{verbose}{A nonnegative integer specifying if the estimation procedure
 should print out intermediate steps/results.  The default value is
 \code{0} for silent estimation procedure.}
-
-\item{...}{Other arguments not used now.}
 }
 \value{
-An object of class {abclass}.
+The function \code{abclass()} returns an object of class
+    \code{abclass} representing a trained classifier; The function
+    \code{abclass.control()} returns an object of class {abclass.control}
+    representing a list of control parameters.
 }
 \description{
 Multi-category angle-based large-margin classifiers with regularization by
