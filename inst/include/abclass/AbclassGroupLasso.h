@@ -236,10 +236,11 @@ namespace abclass
     {
         double ell_verbose { 0.0 }, obj_verbose { 0.0 }, reg_verbose { 0.0 };
         if (verbose > 2) {
-            Rcpp::Rcout << "\nStarting values of beta:\n";
-            Rcpp::Rcout << beta << "\n";
-            Rcpp::Rcout << "The active set of beta:\n";
-            Rcpp::Rcout << arma2rvec(is_active) << "\n";
+            Rcpp::Rcout << "\nStarting values of beta:\n"
+                        << beta << "\n"
+                        << "\nThe active set of beta:\n"
+                        << arma2rvec(is_active)
+                        << "\n";
         };
         if (verbose > 1) {
             obj_verbose = objective0(inner);
@@ -333,7 +334,7 @@ namespace abclass
                 run_one_active_cycle(beta, inner, is_active,
                                      lambda, true, verbose);
                 // check two active sets coincide
-                if (is_gt(l1_norm(is_active_varying - is_active), 0)) {
+                if (l1_norm(is_active_varying - is_active) > 0) {
                     // if different, repeat this process
                     if (verbose > 1) {
                         Rcpp::Rcout << "Changed the active set from "
