@@ -9,23 +9,28 @@
 \arguments{
 \item{object}{An object of class \code{abclass}.}
 
-\item{selection}{A character value specifying how to select a particular set
-of coefficient estimates from the entire solution path.  If the spcified
+\item{selection}{An integer vector for the indices of solution path or a
+character value specifying how to select a particular set of coefficient
+estimates from the entire solution path.  If the specified
 \code{abclass} object contains the cross-validation results, one may set
 \code{selection} to \code{"cv_min"} (or \code{"cv_1se"}) for the
 estimates giving the smallest cross-validation error (or the set of
 estimates resulted from the largest \emph{lambda} within one standard
 error of the smallest cross-validation error).  The entire solution path
 will be returned in an array if \code{selection = "all"} or no
-cross-validation results are available in the input \code{abclass}
+cross-validation results are available in the specified \code{abclass}
 object.}
 
 \item{...}{Other arguments not used now.}
 }
 \value{
-A vector representing the predictions or an array representing the
-    entire solution path.
+A matrix representing the coefficient estimates or an array
+    representing all the selected solutions.
 }
 \description{
 Extract coefficient estimates from an \code{abclass} object.
+}
+\examples{
+## see examples of `abclass()`.
+
 }
