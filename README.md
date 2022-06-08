@@ -63,91 +63,91 @@ test_y <- y[- train_idx]
 
 ### regularization through elastic-net penalty
 ## logistic deviance loss
-model1 <- abclass(train_x, train_y, nlambda = 100,
-                  nfolds = 3, loss = "logistic")
+model1 <- abclass(train_x, train_y, nlambda = 100, nfolds = 3,
+                  grouped = FALSE, loss = "logistic")
 pred1 <- predict(model1, test_x)
 table(test_y, pred1)
 ```
 
     ##          pred1
     ## test_y    label_1 label_2 label_3 label_4 label_5
-    ##   label_1     179       1      26       0       0
+    ##   label_1     150       1      55       0       0
     ##   label_2       1     200       1       1       0
-    ##   label_3       4       0     195       0       0
-    ##   label_4       0       2       4     183       3
-    ##   label_5       1       0       3       2     194
+    ##   label_3      12       1     181       5       0
+    ##   label_4       1      10       3     176       2
+    ##   label_5       1       3       1       9     186
 
 ``` r
 mean(test_y == pred1) # accuracy
 ```
 
-    ## [1] 0.951
+    ## [1] 0.893
 
 ``` r
 ## exponential loss approximating AdaBoost
-model2 <- abclass(train_x, train_y, nlambda = 100,
-                  nfolds = 3, loss = "boost")
+model2 <- abclass(train_x, train_y, nlambda = 100, nfolds = 3,
+                  grouped = FALSE, loss = "boost")
 pred2 <- predict(model2, test_x, s = "cv_1se")
 table(test_y, pred2)
 ```
 
     ##          pred2
     ## test_y    label_1 label_2 label_3 label_4 label_5
-    ##   label_1     184       0      22       0       0
-    ##   label_2       0     202       0       1       0
-    ##   label_3      18       1     176       3       1
-    ##   label_4       1       5       3     177       6
-    ##   label_5       1       0       0       1     198
+    ##   label_1     146       0      59       0       1
+    ##   label_2       3     197       3       0       0
+    ##   label_3       5       0     189       2       3
+    ##   label_4       1      16       6     144      25
+    ##   label_5       1       0       0       0     199
 
 ``` r
 mean(test_y == pred2) # accuracy
 ```
 
-    ## [1] 0.937
+    ## [1] 0.875
 
 ``` r
 ## hybrid hinge-boost loss
-model3 <- abclass(train_x, train_y, nlambda = 100,
-                  nfolds = 3, loss = "hinge-boost")
+model3 <- abclass(train_x, train_y, nlambda = 100, nfolds = 3,
+                  grouped = FALSE, loss = "hinge-boost")
 pred3 <- predict(model3, test_x)
 table(test_y, pred3)
 ```
 
     ##          pred3
     ## test_y    label_1 label_2 label_3 label_4 label_5
-    ##   label_1     179       1      26       0       0
-    ##   label_2       1     201       0       1       0
-    ##   label_3       5       0     194       0       0
-    ##   label_4       0       2       3     185       2
-    ##   label_5       1       0       2       2     195
+    ##   label_1     149       1      56       0       0
+    ##   label_2       2     198       2       1       0
+    ##   label_3      12       1     182       4       0
+    ##   label_4       1       7       2     181       1
+    ##   label_5       1       2       0       9     188
 
 ``` r
 mean(test_y == pred3) # accuracy
 ```
 
-    ## [1] 0.954
+    ## [1] 0.898
 
 ``` r
 ## large-margin unified loss
-model4 <- abclass(train_x, train_y, nlambda = 100,
-                  nfolds = 3, loss = "lum")
+model4 <- abclass(train_x, train_y, nlambda = 100, nfolds = 3,
+                  grouped = FALSE, loss = "lum")
 pred4 <- predict(model4, test_x)
 table(test_y, pred4)
 ```
 
     ##          pred4
     ## test_y    label_1 label_2 label_3 label_4 label_5
-    ##   label_1     179       1      26       0       0
-    ##   label_2       1     201       0       1       0
-    ##   label_3       4       0     194       0       1
-    ##   label_4       0       2       3     185       2
-    ##   label_5       1       0       1       0     198
+    ##   label_1     148       0      58       0       0
+    ##   label_2       1     198       3       1       0
+    ##   label_3       7       0     189       3       0
+    ##   label_4       1       6       2     181       2
+    ##   label_5       1       1       0       7     191
 
 ``` r
 mean(test_y == pred4) # accuracy
 ```
 
-    ## [1] 0.957
+    ## [1] 0.907
 
 ``` r
 ### variable selection via group lasso

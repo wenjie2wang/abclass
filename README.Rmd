@@ -63,29 +63,29 @@ test_y <- y[- train_idx]
 
 ### regularization through elastic-net penalty
 ## logistic deviance loss
-model1 <- abclass(train_x, train_y, nlambda = 100,
-                  nfolds = 3, loss = "logistic")
+model1 <- abclass(train_x, train_y, nlambda = 100, nfolds = 3,
+                  grouped = FALSE, loss = "logistic")
 pred1 <- predict(model1, test_x)
 table(test_y, pred1)
 mean(test_y == pred1) # accuracy
 
 ## exponential loss approximating AdaBoost
-model2 <- abclass(train_x, train_y, nlambda = 100,
-                  nfolds = 3, loss = "boost")
+model2 <- abclass(train_x, train_y, nlambda = 100, nfolds = 3,
+                  grouped = FALSE, loss = "boost")
 pred2 <- predict(model2, test_x, s = "cv_1se")
 table(test_y, pred2)
 mean(test_y == pred2) # accuracy
 
 ## hybrid hinge-boost loss
-model3 <- abclass(train_x, train_y, nlambda = 100,
-                  nfolds = 3, loss = "hinge-boost")
+model3 <- abclass(train_x, train_y, nlambda = 100, nfolds = 3,
+                  grouped = FALSE, loss = "hinge-boost")
 pred3 <- predict(model3, test_x)
 table(test_y, pred3)
 mean(test_y == pred3) # accuracy
 
 ## large-margin unified loss
-model4 <- abclass(train_x, train_y, nlambda = 100,
-                  nfolds = 3, loss = "lum")
+model4 <- abclass(train_x, train_y, nlambda = 100, nfolds = 3,
+                  grouped = FALSE, loss = "lum")
 pred4 <- predict(model4, test_x)
 table(test_y, pred4)
 mean(test_y == pred4) # accuracy
