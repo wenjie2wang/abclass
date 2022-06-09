@@ -24,14 +24,22 @@
 namespace abclass
 {
     // define class for inputs and outputs
-    class LogisticNet : public AbclassNet
+    template <typename T>
+    class LogisticNet : public AbclassNet<T>
     {
+    private:
+        // data
+        using AbclassNet<T>::x_;
+        using AbclassNet<T>::obs_weight_;
+        using AbclassNet<T>::cmd_lowerbound_;
+        using AbclassNet<T>::dn_obs_;
+
     protected:
 
         // set CMD lowerbound
         inline void set_cmd_lowerbound() override
         {
-            arma::mat sqx { arma::square(x_) };
+            T sqx { arma::square(x_) };
             sqx.each_col() %= obs_weight_;
             cmd_lowerbound_ = arma::sum(sqx, 0) / (4.0 * dn_obs_);
         }
@@ -57,19 +65,7 @@ namespace abclass
     public:
 
         // inherit constructors
-        using AbclassNet::AbclassNet;
-
-        //! @param x The design matrix without an intercept term.
-        //! @param y The category index vector.
-        LogisticNet(const arma::mat& x,
-                    const arma::uvec& y,
-                    const bool intercept = true,
-                    const bool standardize = true,
-                    const arma::vec& weight = arma::vec()) :
-            AbclassNet(x, y, intercept, standardize, weight)
-        {
-        }
-
+        using AbclassNet<T>::AbclassNet;
 
     };                          // end of class
 

@@ -24,14 +24,23 @@
 namespace abclass
 {
     // define class for inputs and outputs
-    class LogisticGroupMCP : public AbclassGroupMCP
+    template <typename T>
+    class LogisticGroupMCP : public AbclassGroupMCP<T>
     {
+    private:
+        // data
+        using AbclassGroupMCP<T>::x_;
+        using AbclassGroupMCP<T>::obs_weight_;
+        using AbclassGroupMCP<T>::gmd_lowerbound_;
+        using AbclassGroupMCP<T>::dn_obs_;
+        using AbclassGroupMCP<T>::max_mg_;
+
     protected:
 
         // set GMD lowerbound
         inline void set_gmd_lowerbound() override
         {
-            arma::mat sqx { arma::square(x_) };
+            T sqx { arma::square(x_) };
             sqx.each_col() %= obs_weight_;
             gmd_lowerbound_ = arma::sum(sqx, 0) / (4.0 * dn_obs_);
             max_mg_ = gmd_lowerbound_.max();
@@ -58,19 +67,7 @@ namespace abclass
     public:
 
         // inherit constructors
-        using AbclassGroupMCP::AbclassGroupMCP;
-
-        //! @param x The design matrix without an intercept term.
-        //! @param y The category index vector.
-        LogisticGroupMCP(const arma::mat& x,
-                         const arma::uvec& y,
-                         const bool intercept = true,
-                         const bool standardize = true,
-                         const arma::vec& weight = arma::vec()) :
-            AbclassGroupMCP(x, y, intercept, standardize, weight)
-        {
-        }
-
+        using AbclassGroupMCP<T>::AbclassGroupMCP;
 
     };                          // end of class
 

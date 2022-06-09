@@ -24,14 +24,23 @@
 namespace abclass
 {
     // define class for inputs and outputs
-    class LogisticGroupSCAD : public AbclassGroupSCAD
+    template <typename T>
+    class LogisticGroupSCAD : public AbclassGroupSCAD<T>
     {
+    private:
+        // data
+        using AbclassGroupSCAD<T>::x_;
+        using AbclassGroupSCAD<T>::obs_weight_;
+        using AbclassGroupSCAD<T>::gmd_lowerbound_;
+        using AbclassGroupSCAD<T>::dn_obs_;
+        using AbclassGroupSCAD<T>::max_mg_;
+
     protected:
 
         // set GMD lowerbound
         inline void set_gmd_lowerbound() override
         {
-            arma::mat sqx { arma::square(x_) };
+            T sqx { arma::square(x_) };
             sqx.each_col() %= obs_weight_;
             gmd_lowerbound_ = arma::sum(sqx, 0) / (4.0 * dn_obs_);
             max_mg_ = gmd_lowerbound_.max();
@@ -58,19 +67,7 @@ namespace abclass
     public:
 
         // inherit constructors
-        using AbclassGroupSCAD::AbclassGroupSCAD;
-
-        //! @param x The design matrix without an intercept term.
-        //! @param y The category index vector.
-        LogisticGroupSCAD(const arma::mat& x,
-                          const arma::uvec& y,
-                          const bool intercept = true,
-                          const bool standardize = true,
-                          const arma::vec& weight = arma::vec()) :
-            AbclassGroupSCAD(x, y, intercept, standardize, weight)
-        {
-        }
-
+        using AbclassGroupSCAD<T>::AbclassGroupSCAD;
 
     };                          // end of class
 

@@ -25,9 +25,17 @@
 namespace abclass
 {
     // define class for inputs and outputs
-    class HingeBoostGroupMCP : public AbclassGroupMCP
+    template <typename T>
+    class HingeBoostGroupMCP : public AbclassGroupMCP<T>
     {
     private:
+        // data
+        using AbclassGroupMCP<T>::x_;
+        using AbclassGroupMCP<T>::obs_weight_;
+        using AbclassGroupMCP<T>::gmd_lowerbound_;
+        using AbclassGroupMCP<T>::dn_obs_;
+        using AbclassGroupMCP<T>::max_mg_;
+
         // cache
         double lum_cp1_;
         double lum_c_cp1_;
@@ -39,7 +47,7 @@ namespace abclass
         // set CMD lowerbound
         inline void set_gmd_lowerbound() override
         {
-            arma::mat sqx { arma::square(x_) };
+            T sqx { arma::square(x_) };
             sqx.each_col() %= obs_weight_;
             gmd_lowerbound_ = lum_cp1_ * arma::sum(sqx, 0) / dn_obs_;
             max_mg_ = gmd_lowerbound_.max();
@@ -75,16 +83,16 @@ namespace abclass
     public:
 
         // inherit constructors
-        using AbclassGroupMCP::AbclassGroupMCP;
+        using AbclassGroupMCP<T>::AbclassGroupMCP;
 
         //! @param x The design matrix without an intercept term.
         //! @param y The category index vector.
-        HingeBoostGroupMCP(const arma::mat& x,
+        HingeBoostGroupMCP(const T& x,
                            const arma::uvec& y,
                            const bool intercept = true,
                            const bool standardize = true,
                            const arma::vec& weight = arma::vec()) :
-            AbclassGroupMCP(x, y, intercept, standardize, weight)
+            AbclassGroupMCP<T>(x, y, intercept, standardize, weight)
         {
             set_lum_c(0.0);
         }

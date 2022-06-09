@@ -26,9 +26,16 @@
 namespace abclass
 {
     // define class for inputs and outputs
-    class BoostGroupLasso : public AbclassGroupLasso
+    template <typename T>
+    class BoostGroupLasso : public AbclassGroupLasso<T>
     {
     private:
+        // data
+        using AbclassGroupLasso<T>::x_;
+        using AbclassGroupLasso<T>::obs_weight_;
+        using AbclassGroupLasso<T>::gmd_lowerbound_;
+        using AbclassGroupLasso<T>::dn_obs_;
+
         // cache
         double exp_inner_max_;
 
@@ -39,7 +46,7 @@ namespace abclass
         // set CMD lowerbound
         inline void set_gmd_lowerbound() override
         {
-            arma::mat sqx { arma::square(x_) };
+            T sqx { arma::square(x_) };
             sqx.each_col() %= obs_weight_;
             gmd_lowerbound_ = exp_inner_max_ * arma::sum(sqx, 0) / dn_obs_;
         }
@@ -76,16 +83,16 @@ namespace abclass
     public:
 
         // inherit constructors
-        using AbclassGroupLasso::AbclassGroupLasso;
+        using AbclassGroupLasso<T>::AbclassGroupLasso;
 
         //! @param x The design matrix without an intercept term.
         //! @param y The category index vector.
-        BoostGroupLasso(const arma::mat& x,
+        BoostGroupLasso(const T& x,
                         const arma::uvec& y,
                         const bool intercept = true,
                         const bool standardize = true,
                         const arma::vec& weight = arma::vec()) :
-            AbclassGroupLasso(x, y, intercept, standardize, weight)
+            AbclassGroupLasso<T>(x, y, intercept, standardize, weight)
         {
             set_inner_min(- 5.0);
         }

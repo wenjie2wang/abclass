@@ -41,7 +41,7 @@ namespace abclass {
         obj.cv_accuracy_ = arma::zeros(obj.lambda_.n_elem, nfolds);
         // model fits
         for (size_t i { 0 }; i < nfolds; ++i) {
-            arma::mat train_x { obj.x_.rows(cv_obj.train_index_.at(i)) };
+            auto train_x { obj.x_.rows(cv_obj.train_index_.at(i)) };
             if (obj.intercept_) {
                 train_x = train_x.tail_cols(obj.p0_);
             }
@@ -49,7 +49,7 @@ namespace abclass {
             arma::vec train_weight {
                 obj.obs_weight_.rows(cv_obj.train_index_.at(i))
             };
-            arma::mat test_x { obj.x_.rows(cv_obj.test_index_.at(i)) };
+            auto test_x { obj.x_.rows(cv_obj.test_index_.at(i)) };
             arma::uvec test_y { obj.y_.rows(cv_obj.test_index_.at(i)) };
             // create a new object
             T new_obj { obj };
@@ -96,7 +96,7 @@ namespace abclass {
         obj.cv_accuracy_ = arma::zeros(obj.lambda_.n_elem, nfolds);
         // model fits
         for (size_t i { 0 }; i < nfolds; ++i) {
-            arma::mat train_x { obj.x_.rows(cv_obj.train_index_.at(i)) };
+            auto train_x { obj.x_.rows(cv_obj.train_index_.at(i)) };
             if (obj.intercept_) {
                 train_x = train_x.tail_cols(obj.p0_);
             }
@@ -104,7 +104,7 @@ namespace abclass {
             arma::vec train_weight {
                 obj.obs_weight_.rows(cv_obj.train_index_.at(i))
             };
-            arma::mat test_x { obj.x_.rows(cv_obj.test_index_.at(i)) };
+            auto test_x { obj.x_.rows(cv_obj.test_index_.at(i)) };
             arma::uvec test_y { obj.y_.rows(cv_obj.test_index_.at(i)) };
             // create a new object
             T new_obj { obj };
@@ -151,7 +151,7 @@ namespace abclass {
         obj.cv_accuracy_ = arma::zeros(obj.lambda_.n_elem, nfolds);
         // model fits
         for (size_t i { 0 }; i < nfolds; ++i) {
-            arma::mat train_x { obj.x_.rows(cv_obj.train_index_.at(i)) };
+            auto train_x { obj.x_.rows(cv_obj.train_index_.at(i)) };
             if (obj.intercept_) {
                 train_x = train_x.tail_cols(obj.p0_);
             }
@@ -159,7 +159,7 @@ namespace abclass {
             arma::vec train_weight {
                 obj.obs_weight_.rows(cv_obj.train_index_.at(i))
             };
-            arma::mat test_x { obj.x_.rows(cv_obj.test_index_.at(i)) };
+            auto test_x { obj.x_.rows(cv_obj.test_index_.at(i)) };
             arma::uvec test_y { obj.y_.rows(cv_obj.test_index_.at(i)) };
             // create a new object
             T new_obj { obj };

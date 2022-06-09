@@ -24,6 +24,8 @@
 namespace abclass
 {
     // base class for the angle-based large margin classifiers
+    // T is intended to be arma::mat or arma::sp_mat
+    template <typename T>
     class Abclass
     {
     protected:
@@ -97,7 +99,7 @@ namespace abclass
         unsigned int n_obs_;    // number of observations
         unsigned int k_;        // number of categories
         unsigned int p0_;       // number of predictors without intercept
-        arma::mat x_;           // (standardized) x_: n by p (with intercept)
+        T x_;                   // (standardized) x_: n by p (with intercept)
         arma::uvec y_;          // y vector ranging in {0, ..., k - 1}
         arma::vec obs_weight_;  // optional observation weights: of length n
         arma::mat vertex_;      // unique vertex: k by (k - 1)
@@ -117,7 +119,7 @@ namespace abclass
         }
 
         // main constructor
-        Abclass(const arma::mat& x,
+        Abclass(const T& x,
                 const arma::uvec& y,
                 const bool intercept = true,
                 const bool standardize = true,
@@ -130,7 +132,7 @@ namespace abclass
         }
 
         // setter
-        inline Abclass* set_data(const arma::mat& x,
+        inline Abclass* set_data(const T& x,
                                  const arma::uvec& y)
         {
             x_ = x;

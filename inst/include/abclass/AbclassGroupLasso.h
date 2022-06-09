@@ -24,8 +24,24 @@
 
 namespace abclass
 {
-    class AbclassGroupLasso : public Abclass
+    template <typename T>
+    class AbclassGroupLasso : public Abclass<T>
     {
+    private:
+        // data
+        using Abclass<T>::km1_;
+        using Abclass<T>::p0_;
+        using Abclass<T>::p1_;
+        using Abclass<T>::n_obs_;
+        using Abclass<T>::dn_obs_;
+        using Abclass<T>::obs_weight_;
+        using Abclass<T>::x_;
+        using Abclass<T>::y_;
+        using Abclass<T>::vertex_;
+        // functions
+        using Abclass<T>::loss_derivative;
+        using Abclass<T>::rescale_coef;
+
     protected:
         // for groupwise majorization descent
         arma::rowvec gmd_lowerbound_; // 1 by p1_
@@ -131,7 +147,7 @@ namespace abclass
     public:
 
         // inherit constructors
-        using Abclass::Abclass;
+        using Abclass<T>::Abclass;
 
         // regularization
         // the "big" enough lambda => zero coef unless alpha = 0
@@ -170,22 +186,22 @@ namespace abclass
 
         // class conditional probability
         inline arma::mat predict_prob(const arma::mat& beta,
-                                      const arma::mat& x) const
+                                      const T& x) const
         {
-            return Abclass::predict_prob(x * beta);
+            return Abclass<T>::predict_prob(x * beta);
         }
         // prediction based on the inner products
         inline arma::uvec predict_y(const arma::mat& beta,
-                                    const arma::mat& x) const
+                                    const T& x) const
         {
-            return Abclass::predict_y(x * beta);
+            return Abclass<T>::predict_y(x * beta);
         }
         // accuracy for tuning
         inline double accuracy(const arma::mat& beta,
-                               const arma::mat& x,
+                               const T& x,
                                const arma::uvec& y) const
         {
-            return Abclass::accuracy(x * beta, y);
+            return Abclass<T>::accuracy(x * beta, y);
         }
 
         inline arma::vec gen_group_weight(
@@ -225,7 +241,8 @@ namespace abclass
     };
 
     // run one GMD cycle over active sets
-    inline void AbclassGroupLasso::run_one_active_cycle(
+    template <typename T>
+    inline void AbclassGroupLasso<T>::run_one_active_cycle(
         arma::mat& beta,
         arma::vec& inner,
         arma::uvec& is_active,
@@ -295,7 +312,8 @@ namespace abclass
     }
 
     // run CMD cycles over active sets
-    inline void AbclassGroupLasso::run_gmd_active_cycle(
+    template <typename T>
+    inline void AbclassGroupLasso<T>::run_gmd_active_cycle(
         arma::mat& beta,
         arma::vec& inner,
         arma::uvec& is_active,
@@ -387,7 +405,8 @@ namespace abclass
 
     // for a sequence of lambda's
     // lambda * group_weight_j * l2_norm(beta_j)
-    inline void AbclassGroupLasso::fit(
+    template <typename T>
+    inline void AbclassGroupLasso<T>::fit(
         const arma::vec& lambda,
         const unsigned int nlambda,
         const double lambda_min_ratio,

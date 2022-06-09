@@ -25,11 +25,26 @@
 
 namespace abclass
 {
-
     // the angle-based classifier with elastic-net penalty
     // estimation by coordinate-majorization-descent algorithm
-    class AbclassNet : public Abclass
+    template <typename T>
+    class AbclassNet : public Abclass<T>
     {
+    private:
+        // data
+        using Abclass<T>::x_;
+        using Abclass<T>::intercept_;
+        using Abclass<T>::int_intercept_;
+        using Abclass<T>::km1_;
+        using Abclass<T>::n_obs_;
+        using Abclass<T>::p0_;
+        using Abclass<T>::p1_;
+        using Abclass<T>::obs_weight_;
+        // functions
+        using Abclass<T>::loss_derivative;
+        using Abclass<T>::get_vertex_y;
+        using Abclass<T>::rescale_coef;
+
     protected:
 
         // for regularized coordinate majorization descent
@@ -143,7 +158,7 @@ namespace abclass
     public:
 
         // inherit constructors
-        using Abclass::Abclass;
+        using Abclass<T>::Abclass;
 
         // regularization
         // the "big" enough lambda => zero coef unless alpha = 0
@@ -183,28 +198,29 @@ namespace abclass
 
         // class conditional probability
         inline arma::mat predict_prob(const arma::mat& beta,
-                                      const arma::mat& x) const
+                                      const T& x) const
         {
-            return Abclass::predict_prob(x * beta);
+            return Abclass<T>::predict_prob(x * beta);
         }
         // prediction based on the inner products
         inline arma::uvec predict_y(const arma::mat& beta,
-                                    const arma::mat& x) const
+                                    const T& x) const
         {
-            return Abclass::predict_y(x * beta);
+            return Abclass<T>::predict_y(x * beta);
         }
         // accuracy for tuning
         inline double accuracy(const arma::mat& beta,
-                               const arma::mat& x,
+                               const T& x,
                                const arma::uvec& y) const
         {
-            return Abclass::accuracy(x * beta, y);
+            return Abclass<T>::accuracy(x * beta, y);
         }
 
     };
 
     // run one CMD cycle over active sets
-    inline void AbclassNet::run_one_active_cycle(
+    template <typename T>
+    inline void AbclassNet<T>::run_one_active_cycle(
         arma::mat& beta,
         arma::vec& inner,
         arma::umat& is_active,
@@ -274,7 +290,8 @@ namespace abclass
     }
 
     // run CMD cycles over active sets
-    inline void AbclassNet::run_cmd_active_cycle(
+    template <typename T>
+    inline void AbclassNet<T>::run_cmd_active_cycle(
         arma::mat& beta,
         arma::vec& inner,
         arma::umat& is_active,
@@ -364,7 +381,8 @@ namespace abclass
     }
 
     // one full cycle for coordinate-descent
-    inline void AbclassNet::run_one_full_cycle(
+    template <typename T>
+    inline void AbclassNet<T>::run_one_full_cycle(
         arma::mat& beta,
         arma::vec& inner,
         const double l1_lambda,
@@ -420,7 +438,8 @@ namespace abclass
     }
 
     // run full cycles till convergence or reach max number of iterations
-    inline void AbclassNet::run_cmd_full_cycle(
+    template <typename T>
+    inline void AbclassNet<T>::run_cmd_full_cycle(
         arma::mat& beta,
         arma::vec& inner,
         const double l1_lambda,
@@ -452,7 +471,8 @@ namespace abclass
 
     // for a sequence of lambda's
     // lambda * (alpha * lasso + (1 - alpha) / 2 * ridge)
-    inline void AbclassNet::fit(
+    template <typename T>
+    inline void AbclassNet<T>::fit(
         const arma::vec& lambda,
         const double alpha,
         const unsigned int nlambda,

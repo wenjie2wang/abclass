@@ -25,9 +25,16 @@
 namespace abclass
 {
     // define class for inputs and outputs
-    class HingeBoostNet : public AbclassNet
+    template <typename T>
+    class HingeBoostNet : public AbclassNet<T>
     {
     private:
+        // data
+        using AbclassNet<T>::x_;
+        using AbclassNet<T>::obs_weight_;
+        using AbclassNet<T>::cmd_lowerbound_;
+        using AbclassNet<T>::dn_obs_;
+
         // cache
         double lum_cp1_;
         double lum_c_cp1_;
@@ -39,7 +46,7 @@ namespace abclass
         // set CMD lowerbound
         inline void set_cmd_lowerbound() override
         {
-            arma::mat sqx { arma::square(x_) };
+            T sqx { arma::square(x_) };
             sqx.each_col() %= obs_weight_;
             cmd_lowerbound_ = lum_cp1_ * arma::sum(sqx, 0) / dn_obs_;
         }
@@ -74,16 +81,16 @@ namespace abclass
     public:
 
         // inherit default constructors
-        using AbclassNet::AbclassNet;
+        using AbclassNet<T>::AbclassNet;
 
         //! @param x The design matrix without an intercept term.
         //! @param y The category index vector.
-        HingeBoostNet(const arma::mat& x,
+        HingeBoostNet(const T& x,
                       const arma::uvec& y,
                       const bool intercept = true,
                       const bool standardize = true,
                       const arma::vec& weight = arma::vec()) :
-            AbclassNet(x, y, intercept, standardize, weight)
+            AbclassNet<T>(x, y, intercept, standardize, weight)
         {
             set_lum_c(0.0);
         }

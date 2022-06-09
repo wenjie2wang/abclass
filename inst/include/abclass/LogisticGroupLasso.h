@@ -24,14 +24,22 @@
 namespace abclass
 {
     // define class for inputs and outputs
-    class LogisticGroupLasso : public AbclassGroupLasso
+    template <typename T>
+    class LogisticGroupLasso : public AbclassGroupLasso<T>
     {
+    private:
+        // data
+        using AbclassGroupLasso<T>::x_;
+        using AbclassGroupLasso<T>::obs_weight_;
+        using AbclassGroupLasso<T>::gmd_lowerbound_;
+        using AbclassGroupLasso<T>::dn_obs_;
+
     protected:
 
         // set GMD lowerbound
         inline void set_gmd_lowerbound() override
         {
-            arma::mat sqx { arma::square(x_) };
+            T sqx { arma::square(x_) };
             sqx.each_col() %= obs_weight_;
             gmd_lowerbound_ = arma::sum(sqx, 0) / (4.0 * dn_obs_);
         }
@@ -57,19 +65,7 @@ namespace abclass
     public:
 
         // inherit constructors
-        using AbclassGroupLasso::AbclassGroupLasso;
-
-        //! @param x The design matrix without an intercept term.
-        //! @param y The category index vector.
-        LogisticGroupLasso(const arma::mat& x,
-                           const arma::uvec& y,
-                           const bool intercept = true,
-                           const bool standardize = true,
-                           const arma::vec& weight = arma::vec()) :
-            AbclassGroupLasso(x, y, intercept, standardize, weight)
-        {
-        }
-
+        using AbclassGroupLasso<T>::AbclassGroupLasso;
 
     };                          // end of class
 

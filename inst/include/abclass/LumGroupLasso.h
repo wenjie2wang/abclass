@@ -25,9 +25,16 @@
 namespace abclass
 {
     // define class for inputs and outputs
-    class LumGroupLasso : public AbclassGroupLasso
+    template <typename T>
+    class LumGroupLasso : public AbclassGroupLasso<T>
     {
     private:
+        // data
+        using AbclassGroupLasso<T>::x_;
+        using AbclassGroupLasso<T>::obs_weight_;
+        using AbclassGroupLasso<T>::gmd_lowerbound_;
+        using AbclassGroupLasso<T>::dn_obs_;
+
         // cache
         double lum_ap1_;        // a + 1
         double lum_log_a_;      // log(a)
@@ -46,7 +53,7 @@ namespace abclass
         inline void set_gmd_lowerbound() override
         {
             double tmp { lum_ap1_ / lum_a_ * lum_cp1_ };
-            arma::mat sqx { arma::square(x_) };
+            T sqx { arma::square(x_) };
             sqx.each_col() %= obs_weight_;
             gmd_lowerbound_ = tmp * arma::sum(sqx, 0) / dn_obs_;
         }
@@ -86,16 +93,16 @@ namespace abclass
     public:
 
         // inherit constructors
-        using AbclassGroupLasso::AbclassGroupLasso;
+        using AbclassGroupLasso<T>::AbclassGroupLasso;
 
         //! @param x The design matrix without an intercept term.
         //! @param y The category index vector.
-        LumGroupLasso(const arma::mat& x,
+        LumGroupLasso(const T& x,
                       const arma::uvec& y,
                       const bool intercept = true,
                       const bool standardize = true,
                       const arma::vec& weight = arma::vec()) :
-            AbclassGroupLasso(x, y, intercept, standardize, weight)
+            AbclassGroupLasso<T>(x, y, intercept, standardize, weight)
         {
             set_lum_parameters(1.0, 0.0);
         }

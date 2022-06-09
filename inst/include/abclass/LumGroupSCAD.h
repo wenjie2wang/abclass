@@ -25,9 +25,17 @@
 namespace abclass
 {
     // define class for inputs and outputs
-    class LumGroupSCAD : public AbclassGroupSCAD
+    template <typename T>
+    class LumGroupSCAD : public AbclassGroupSCAD<T>
     {
     private:
+        // data
+        using AbclassGroupSCAD<T>::x_;
+        using AbclassGroupSCAD<T>::obs_weight_;
+        using AbclassGroupSCAD<T>::gmd_lowerbound_;
+        using AbclassGroupSCAD<T>::dn_obs_;
+        using AbclassGroupSCAD<T>::max_mg_;
+
         // cache
         double lum_ap1_;        // a + 1
         double lum_log_a_;      // log(a)
@@ -46,7 +54,7 @@ namespace abclass
         inline void set_gmd_lowerbound() override
         {
             double tmp { lum_ap1_ / lum_a_ * lum_cp1_ };
-            arma::mat sqx { arma::square(x_) };
+            T sqx { arma::square(x_) };
             sqx.each_col() %= obs_weight_;
             gmd_lowerbound_ = tmp * arma::sum(sqx, 0) / dn_obs_;
             max_mg_ = gmd_lowerbound_.max();
@@ -87,16 +95,16 @@ namespace abclass
     public:
 
         // inherit constructors
-        using AbclassGroupSCAD::AbclassGroupSCAD;
+        using AbclassGroupSCAD<T>::AbclassGroupSCAD;
 
         //! @param x The design matrix without an intercept term.
         //! @param y The category index vector.
-        LumGroupSCAD(const arma::mat& x,
+        LumGroupSCAD(const T& x,
                      const arma::uvec& y,
                      const bool intercept = true,
                      const bool standardize = true,
                      const arma::vec& weight = arma::vec()) :
-            AbclassGroupSCAD(x, y, intercept, standardize, weight)
+            AbclassGroupSCAD<T>(x, y, intercept, standardize, weight)
         {
             set_lum_parameters(1.0, 0.0);
         }

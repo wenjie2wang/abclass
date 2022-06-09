@@ -25,9 +25,16 @@
 namespace abclass
 {
     // define class for inputs and outputs
-    class LumNet : public AbclassNet
+    template <typename T>
+    class LumNet : public AbclassNet<T>
     {
     private:
+        // data
+        using AbclassNet<T>::x_;
+        using AbclassNet<T>::obs_weight_;
+        using AbclassNet<T>::cmd_lowerbound_;
+        using AbclassNet<T>::dn_obs_;
+
         // cache
         double lum_ap1_;        // a + 1
         double lum_log_a_;      // log(a)
@@ -46,7 +53,7 @@ namespace abclass
         inline void set_cmd_lowerbound() override
         {
             double tmp { lum_ap1_ / lum_a_ * lum_cp1_ };
-            arma::mat sqx { arma::square(x_) };
+            T sqx { arma::square(x_) };
             sqx.each_col() %= obs_weight_;
             cmd_lowerbound_ = tmp * arma::sum(sqx, 0) / dn_obs_;
         }
@@ -86,16 +93,16 @@ namespace abclass
     public:
 
         // inherit constructors
-        using AbclassNet::AbclassNet;
+        using AbclassNet<T>::AbclassNet;
 
         //! @param x The design matrix without an intercept term.
         //! @param y The category index vector.
-        LumNet(const arma::mat& x,
+        LumNet(const T& x,
                const arma::uvec& y,
                const bool intercept = true,
                const bool standardize = true,
                const arma::vec& weight = arma::vec()) :
-            AbclassNet(x, y, intercept, standardize, weight)
+            AbclassNet<T>(x, y, intercept, standardize, weight)
         {
             set_lum_parameters(1.0, 0.0);
             // set the CMD lowerbound (which needs to be done only once)
