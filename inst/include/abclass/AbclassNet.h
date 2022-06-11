@@ -21,6 +21,7 @@
 #include <utility>
 #include <RcppArmadillo.h>
 #include "Abclass.h"
+#include "Control.h"
 #include "utils.h"
 
 namespace abclass
@@ -30,25 +31,19 @@ namespace abclass
     template <typename T>
     class AbclassNet : public Abclass<T>
     {
-    private:
-        // data
-        using Abclass<T>::x_;
-        using Abclass<T>::intercept_;
-        using Abclass<T>::int_intercept_;
-        using Abclass<T>::km1_;
-        using Abclass<T>::n_obs_;
-        using Abclass<T>::p0_;
-        using Abclass<T>::p1_;
-        using Abclass<T>::obs_weight_;
-        // functions
-        using Abclass<T>::loss_derivative;
-        using Abclass<T>::get_vertex_y;
-        using Abclass<T>::rescale_coef;
-
     protected:
 
+        using Abclass<T>::inter_;
+        using Abclass<T>::km1_;
+        using Abclass<T>::p1_;
+
+        using Abclass<T>::rescale_coef;
+        using Abclass<T>::get_vertex_y;
+        using Abclass<T>::loss_derivative;
+
         // for regularized coordinate majorization descent
-        arma::rowvec cmd_lowerbound_; // 1 by p1_
+        arma::rowvec cmd_lowerbound_; // 1 by p0_
+        double cmd_lowerbound0_;      // for the intercept
 
         // pure virtual functions
         virtual void set_cmd_lowerbound() = 0;
@@ -59,7 +54,7 @@ namespace abclass
                                      const double l1_lambda,
                                      const double l2_lambda) const
         {
-            if (intercept_) {
+            if (control_.intercept_) {
                 arma::mat beta0int { beta.tail_rows(p0_) };
                 return l1_lambda * l1_norm(beta0int) +
                     l2_lambda * l2_norm_square(beta0int);
@@ -83,37 +78,22 @@ namespace abclass
                                    const arma::vec& vj_xl) const
         {
             arma::vec inner_grad { loss_derivative(inner) };
-            return arma::mean(obs_weight_ % vj_xl % inner_grad);
+            return arma::mean(control_.obs_weight_ % vj_xl % inner_grad);
         }
 
-        // gradient matrix
+        // gradient matrix regarding coef only (excluding intercept)
+        // only use it to determine the large-enough lambda
         inline arma::mat gradient(const arma::vec& inner) const
         {
-            arma::mat out { arma::zeros(p1_, km1_) };
+            arma::mat out { arma::zeros(p0_, km1_) };
             arma::vec inner_grad { loss_derivative(inner) };
             for (size_t j {0}; j < km1_; ++j) {
-                const arma::vec w_v_j { obs_weight_ % get_vertex_y(j) };
-                for (size_t l {0}; l < p1_; ++l) {
+                const arma::vec w_v_j {
+                    control_.obs_weight_ % get_vertex_y(j)
+                };
+                for (size_t l {0}; l < p0_; ++l) {
                     const arma::vec w_vj_xl { w_v_j % x_.col(l) };
                     out(l, j) = arma::mean(w_vj_xl % inner_grad);
-                }
-            }
-            return out;
-        }
-
-        inline double max_diff(const arma::mat& beta_new,
-                               const arma::mat& beta_old) const
-        {
-            double out { 0.0 };
-            for (size_t j {0}; j < km1_; ++j) {
-                for (size_t i {0}; i < p1_; ++i) {
-                    double tmp {
-                        cmd_lowerbound_(i) *
-                        std::pow(beta_new(i, j) - beta_old(i, j), 2)
-                    };
-                    if (out < tmp) {
-                        out = tmp;
-                    }
                 }
             }
             return out;
@@ -160,60 +140,59 @@ namespace abclass
         // inherit constructors
         using Abclass<T>::Abclass;
 
+        // specifics for template inheritance
+        using Abclass<T>::control_;
+        using Abclass<T>::x_;
+        using Abclass<T>::p0_;
+        using Abclass<T>::n_obs_;
+
         // regularization
         // the "big" enough lambda => zero coef unless alpha = 0
         double l1_lambda_max_;
         double lambda_max_;
-        double alpha_;            // [0, 1]
-        arma::vec lambda_;        // lambda sequence
         // did user specified a customized lambda sequence?
         bool custom_lambda_ = false;
-        double lambda_min_ratio_ = 0.01;
 
         // estimates
         arma::cube coef_;         // p1_ by km1_
-
-        // tuning by cross-validation
-        arma::mat cv_accuracy_;
-        arma::vec cv_accuracy_mean_;
-        arma::vec cv_accuracy_sd_;
-
-        // control
-        double epsilon_;          // relative tolerance for convergence check
-        unsigned int max_iter_;   // maximum number of iterations
-        bool varying_active_set_; // if active set should be adaptive
 
         // cache
         unsigned int num_iter_;   // number of CMD cycles till convergence
 
         // for a sequence of lambda's
-        inline void fit(const arma::vec& lambda,
-                        const double alpha,
-                        const unsigned int nlambda,
-                        const double lambda_min_ratio,
-                        const unsigned int max_iter,
-                        const double epsilon,
-                        const bool varying_active_set,
-                        const unsigned int verbose);
+        inline void fit();
 
+        // linear predictor
+        inline arma::mat linear_score(const arma::mat& beta,
+                                      const T& x) const
+        {
+            arma::mat pred_mat;
+            if (control_.intercept_) {
+                pred_mat = x * beta.tail_rows(p0_);
+                pred_mat.each_row() += beta.row(0);
+            } else {
+                pred_mat = x * beta;
+            }
+            return pred_mat;
+        }
         // class conditional probability
         inline arma::mat predict_prob(const arma::mat& beta,
                                       const T& x) const
         {
-            return Abclass<T>::predict_prob(x * beta);
+            return Abclass<T>::predict_prob(linear_score(beta, x));
         }
         // prediction based on the inner products
         inline arma::uvec predict_y(const arma::mat& beta,
                                     const T& x) const
         {
-            return Abclass<T>::predict_y(x * beta);
+            return Abclass<T>::predict_y(linear_score(beta, x));
         }
         // accuracy for tuning
         inline double accuracy(const arma::mat& beta,
                                const T& x,
                                const arma::uvec& y) const
         {
-            return Abclass<T>::accuracy(x * beta, y);
+            return Abclass<T>::accuracy(linear_score(beta, x), y);
         }
 
     };
@@ -242,33 +221,37 @@ namespace abclass
         }
         for (size_t j {0}; j < km1_; ++j) {
             arma::vec v_j { get_vertex_y(j) };
-            for (size_t l {0}; l < p1_; ++l) {
+            // intercept
+            if (control_.intercept_) {
+                double dlj { cmd_gradient(inner, v_j) };
+                double tmp_delta { - dlj / cmd_lowerbound0_ };
+                beta(0, j) += tmp_delta;
+                inner += tmp_delta * v_j;
+            }
+            for (size_t l { 0 }; l < p0_; ++l) {
                 if (is_active(l, j) == 0) {
                     continue;
                 }
+                size_t l1 { l + inter_ };
                 arma::vec vj_xl { x_.col(l) % v_j };
                 double dlj { cmd_gradient(inner, vj_xl) };
-                double tmp { beta(l, j) };
+                double tmp { beta(l1, j) };
                 // if cmd_lowerbound = 0 and l1_lambda > 0, numer will be 0
                 double numer {
-                    soft_threshold(
-                        cmd_lowerbound_(l) * beta(l, j) - dlj,
-                        l1_lambda * static_cast<double>(l >= int_intercept_)
-                        )
+                    soft_threshold(cmd_lowerbound_(l) * beta(l1, j) - dlj,
+                                   l1_lambda)
                 };
                 // update beta
                 if (isAlmostEqual(numer, 0)) {
-                    beta(l, j) = 0;
+                    beta(l1, j) = 0;
                 } else {
-                    double denom { cmd_lowerbound_(l) + 2 * l2_lambda *
-                        static_cast<double>(l >= int_intercept_)
-                    };
-                    beta(l, j) = numer / denom;
+                    double denom { cmd_lowerbound_(l) + 2 * l2_lambda };
+                    beta(l1, j) = numer / denom;
                 }
-                inner += (beta(l, j) - tmp) * vj_xl;
+                inner += (beta(l1, j) - tmp) * vj_xl;
                 if (update_active) {
                     // check if it has been shrinkaged to zero
-                    if (isAlmostEqual(beta(l, j), 0)) {
+                    if (isAlmostEqual(beta(l1, j), 0)) {
                         is_active(l, j) = 0;
                     } else {
                         is_active(l, j) = 1;
@@ -400,28 +383,32 @@ namespace abclass
         }
         for (size_t j {0}; j < km1_; ++j) {
             arma::vec v_j { get_vertex_y(j) };
-            for (size_t l {0}; l < p1_; ++l) {
+            // intercept
+            if (control_.intercept_) {
+                double dlj { cmd_gradient(inner, v_j) };
+                double tmp_delta { - dlj / cmd_lowerbound0_ };
+                beta(0, j) += tmp_delta;
+                inner += tmp_delta * v_j;
+            }
+            // others
+            for (size_t l { 0 }; l < p0_; ++l) {
+                size_t l1 { l + inter_ };
                 arma::vec vj_xl { v_j % x_.col(l) };
                 double dlj { cmd_gradient(inner, vj_xl) };
-                double tmp { beta(l, j) };
+                double tmp { beta(l1, j) };
                 // if cmd_lowerbound = 0 and l1_lambda > 0, numer will be 0
                 double numer {
-                    soft_threshold(
-                        cmd_lowerbound_(l) * tmp - dlj,
-                        l1_lambda * static_cast<double>(l >= int_intercept_)
-                        )
+                    soft_threshold(cmd_lowerbound_(l) * tmp - dlj,
+                                   l1_lambda)
                 };
                 // update beta
                 if (isAlmostEqual(numer, 0)) {
-                    beta(l, j) = 0;
+                    beta(l1, j) = 0;
                 } else {
-                    double denom {
-                        cmd_lowerbound_(l) + 2 * l2_lambda *
-                        static_cast<double>(l >= int_intercept_)
-                    };
-                    beta(l, j) = numer / denom;
+                    double denom { cmd_lowerbound_(l) + 2 * l2_lambda };
+                    beta(l1, j) = numer / denom;
                 }
-                inner += (beta(l, j) - tmp) * vj_xl;
+                inner += (beta(l1, j) - tmp) * vj_xl;
             }
         }
         if (verbose > 1) {
@@ -472,91 +459,81 @@ namespace abclass
     // for a sequence of lambda's
     // lambda * (alpha * lasso + (1 - alpha) / 2 * ridge)
     template <typename T>
-    inline void AbclassNet<T>::fit(
-        const arma::vec& lambda,
-        const double alpha,
-        const unsigned int nlambda,
-        const double lambda_min_ratio,
-        const unsigned int max_iter,
-        const double epsilon,
-        const bool varying_active_set,
-        const unsigned int verbose
-        )
+    inline void AbclassNet<T>::fit()
     {
         // set the CMD lowerbound
         set_cmd_lowerbound();
-        // check alpha
-        if ((alpha < 0) || (alpha > 1)) {
-            throw std::range_error("The 'alpha' must be between 0 and 1.");
-        }
-        alpha_ = alpha;
-        // record control
-        epsilon_ = epsilon;
-        max_iter_ = max_iter;
-        varying_active_set_ = varying_active_set;
         // initialize
         arma::vec one_inner { arma::zeros(n_obs_) };
         arma::mat one_beta { arma::zeros(p1_, km1_) },
             one_grad_beta { one_beta };
-        const bool is_ridge_only { isAlmostEqual(alpha, 0.0) };
+        const bool is_ridge_only { isAlmostEqual(control_.alpha_, 0.0) };
         double l1_lambda, l2_lambda;
-        // if alpha = 0 and lambda is specified
-        if (is_ridge_only && ! lambda.empty()) {
-            lambda_ = arma::reverse(arma::unique(lambda));
+        if (! control_.lambda_.empty()) {
+            control_.lambda_ = arma::reverse(arma::unique(control_.lambda_));
+            control_.nlambda_ = control_.lambda_.n_elem;
             custom_lambda_ = true;
+        }
+        // if alpha = 0 and customized lambda
+        if (is_ridge_only && ! custom_lambda_) {
             l1_lambda_max_ = - 1.0; // not well defined
             lambda_max_ = - 1.0;    // not well defined
         } else {
             // need to determine lambda_max
             one_grad_beta = arma::abs(gradient(one_inner));
-            // large enough lambda for all-zero coef (except intercept terms)
-            l1_lambda_max_ = one_grad_beta.tail_rows(p0_).max();
-            lambda_max_ =  l1_lambda_max_ / std::max(alpha, 1e-2);
+            l1_lambda_max_ = one_grad_beta.max();
+            lambda_max_ =  l1_lambda_max_ / std::max(control_.alpha_, 1e-2);
             // set up lambda sequence
-            if (lambda.empty()) {
+            if (! custom_lambda_) {
                 double log_lambda_max { std::log(lambda_max_) };
-                lambda_ = arma::exp(
+                control_.lambda_ = arma::exp(
                     arma::linspace(log_lambda_max,
-                                   log_lambda_max + std::log(lambda_min_ratio),
-                                   nlambda)
+                                   log_lambda_max +
+                                   std::log(control_.lambda_min_ratio_),
+                                   control_.nlambda_)
                     );
-                lambda_min_ratio_ = lambda_min_ratio;
-            } else {
-                lambda_ = arma::reverse(arma::unique(lambda));
-                custom_lambda_ = true;
             }
         }
         // initialize the estimate cube
-        coef_ = arma::cube(p1_, km1_, lambda_.n_elem);
+        coef_ = arma::cube(p1_, km1_, control_.lambda_.n_elem);
         // for ridge penalty
         if (is_ridge_only) {
-            for (size_t li { 0 }; li < lambda_.n_elem; ++li) {
-                run_cmd_full_cycle(one_beta, one_inner,
-                                   0.0, 0.5 * lambda_(li),
-                                   max_iter, epsilon, verbose);
+            for (size_t li { 0 }; li < control_.lambda_.n_elem; ++li) {
+                run_cmd_full_cycle(one_beta,
+                                   one_inner,
+                                   0.0,
+                                   0.5 * control_.lambda_(li),
+                                   control_.max_iter_,
+                                   control_.epsilon_,
+                                   control_.verbose_);
                 coef_.slice(li) = rescale_coef(one_beta);
             }
             return;             // early exit
         }
         // else, not just ridge penalty with l1_lambda > 0
         double one_strong_rhs { 0.0 };
-        l2_lambda = 0.5 * lambda_max_ * (1 - alpha);
+        l2_lambda = 0.5 * lambda_max_ * (1 - control_.alpha_);
         // get the solution (intercepts) of l1_lambda_max for a warm start
-        arma::umat is_active_strong { arma::zeros<arma::umat>(p1_, km1_) };
-        if (intercept_) {
+        arma::umat is_active_strong { arma::zeros<arma::umat>(p0_, km1_) };
+        if (control_.intercept_) {
             // only need to estimate intercept
-            is_active_strong.row(0) = arma::ones<arma::umat>(1, km1_);
-            run_cmd_active_cycle(one_beta, one_inner, is_active_strong,
-                                 l1_lambda_max_, l2_lambda,
-                                 false, max_iter, epsilon, verbose);
+            run_cmd_active_cycle(one_beta,
+                                 one_inner,
+                                 is_active_strong,
+                                 l1_lambda_max_,
+                                 l2_lambda,
+                                 false,
+                                 control_.max_iter_,
+                                 control_.epsilon_,
+                                 control_.verbose_);
         }
         // optim with varying active set when p > n
         double old_l1_lambda { l1_lambda_max_ }; // for strong rule
         // main loop: for each lambda
-        for (size_t li { 0 }; li < lambda_.n_elem; ++li) {
-            double lambda_li { lambda_(li) };
-            l1_lambda = lambda_li * alpha;
-            l2_lambda = 0.5 * lambda_li * (1 - alpha);
+        for (size_t li { 0 }; li < control_.lambda_.n_elem; ++li) {
+            double lambda_li { control_.lambda_(li) };
+            l1_lambda = lambda_li * control_.alpha_;
+            l2_lambda = 0.5 * lambda_li * (1 - control_.alpha_);
             // early exit for lambda greater than lambda_max_
             // note that lambda is sorted
             if (l1_lambda >= l1_lambda_max_) {
@@ -568,7 +545,7 @@ namespace abclass
             one_strong_rhs = 2 * l1_lambda - old_l1_lambda;
             old_l1_lambda = l1_lambda;
             for (size_t j { 0 }; j < km1_; ++j) {
-                for (size_t l { int_intercept_ }; l < p1_; ++l) {
+                for (size_t l { 0 }; l < p0_; ++l) {
                     if (is_active_strong(l, j) > 0) {
                         continue;
                     }
@@ -586,16 +563,22 @@ namespace abclass
                     arma::zeros<arma::umat>(arma::size(is_active_strong))
                 };
                 // update beta
-                run_cmd_active_cycle(one_beta, one_inner, is_active_strong,
-                                     l1_lambda, l2_lambda, varying_active_set,
-                                     max_iter, epsilon, verbose);
-                if (verbose > 0) {
+                run_cmd_active_cycle(one_beta,
+                                     one_inner,
+                                     is_active_strong,
+                                     l1_lambda,
+                                     l2_lambda,
+                                     control_.varying_active_set_,
+                                     control_.max_iter_,
+                                     control_.epsilon_,
+                                     control_.verbose_);
+                if (control_.verbose_ > 0) {
                     msg("Checking the KKT condition for the null set.");
                 }
                 // check kkt condition
                 for (size_t j { 0 }; j < km1_; ++j) {
                     arma::vec v_j { get_vertex_y(j) };
-                    for (size_t l { int_intercept_ }; l < p1_; ++l) {
+                    for (size_t l { 0 }; l < p0_; ++l) {
                         if (is_active_strong_old(l, j) > 0) {
                             continue;
                         }
@@ -610,7 +593,7 @@ namespace abclass
                 if (arma::accu(is_strong_rule_failed) > 0) {
                     is_active_strong = is_active_strong_old ||
                         is_strong_rule_failed;
-                    if (verbose > 0) {
+                    if (control_.verbose_ > 0) {
                         Rcpp::Rcout << "The strong rule failed.\n"
                                     << "The size of old active set: "
                                     << l1_norm(is_active_strong_old)
@@ -619,7 +602,7 @@ namespace abclass
                                     << "\n";
                     }
                 } else {
-                    if (verbose > 0) {
+                    if (control_.verbose_ > 0) {
                         msg("The strong rule worked.\n");
                     }
                     kkt_failed = false;

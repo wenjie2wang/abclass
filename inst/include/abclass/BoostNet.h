@@ -21,6 +21,7 @@
 #include <RcppArmadillo.h>
 #include <stdexcept>
 #include "AbclassNet.h"
+#include "Control.h"
 #include "utils.h"
 
 namespace abclass
@@ -30,16 +31,13 @@ namespace abclass
     class BoostNet : public AbclassNet<T>
     {
     private:
-        // data
-        using AbclassNet<T>::x_;
-        using AbclassNet<T>::obs_weight_;
-        using AbclassNet<T>::cmd_lowerbound_;
-        using AbclassNet<T>::dn_obs_;
-
         // cache
         double exp_inner_max_;
 
     protected:
+        using AbclassNet<T>::cmd_lowerbound_;
+        using AbclassNet<T>::cmd_lowerbound0_;
+        using AbclassNet<T>::dn_obs_;
 
         double inner_min_ = - 5.0;
 
@@ -47,8 +45,10 @@ namespace abclass
         inline void set_cmd_lowerbound() override
         {
             T sqx { arma::square(x_) };
-            sqx.each_col() %= obs_weight_;
-            cmd_lowerbound_ = exp_inner_max_ * arma::sum(sqx, 0) / dn_obs_;
+            cmd_lowerbound0_ = exp_inner_max_ *
+                arma::accu(control_.obs_weight_) / dn_obs_;
+            cmd_lowerbound_ = exp_inner_max_ *
+                (control_.obs_weight_.t() * sqx) / dn_obs_;
         }
 
         // objective function without regularization
@@ -63,7 +63,7 @@ namespace abclass
                     tmp[i] = std::exp(- inner[i]);
                 }
             }
-            return arma::mean(obs_weight_ % tmp);
+            return arma::mean(control_.obs_weight_ % tmp);
         }
 
         // the first derivative of the loss function
@@ -85,14 +85,15 @@ namespace abclass
         // inherit constructors
         using AbclassNet<T>::AbclassNet;
 
+        using AbclassNet<T>::x_;
+        using AbclassNet<T>::control_;
+
         //! @param x The design matrix without an intercept term.
         //! @param y The category index vector.
         BoostNet(const T& x,
                  const arma::uvec& y,
-                 const bool intercept = true,
-                 const bool standardize = true,
-                 const arma::vec& weight = arma::vec()) :
-            AbclassNet<T>(x, y, intercept, standardize, weight)
+                 const Control& control) :
+            AbclassNet<T>(x, y, control)
         {
             set_inner_min(- 5.0);
         }

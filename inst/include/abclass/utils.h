@@ -39,23 +39,6 @@ namespace abclass {
         return arma::conv_to<arma::vec>::from(x);
     }
 
-    // function template for crossprod of two matrix-like objects
-    template <typename T_matrix_like>
-    inline arma::mat crossprod(const T_matrix_like& X,
-                               const T_matrix_like& Y)
-    {
-        return X.t() * Y;
-    }
-    template <typename T_matrix_like>
-    inline arma::mat crossprod(const T_matrix_like& X)
-    {
-        return X.t() * X;
-    }
-    inline double innerprod(const arma::vec& x, const arma::vec& y)
-    {
-        return arma::as_scalar(crossprod(x, y));
-    }
-
     // positive part
     inline double positive_part(const double x)
     {
@@ -185,33 +168,31 @@ namespace abclass {
         return arma::sort(arma::conv_to<ARMA_VEC_TYPE<T>>::from(res));
     }
 
-    // capped exponential
-    inline arma::vec cap_exp(arma::vec x,
-                             const double positive_cap = 10,
-                             const double negative_cap = - 10)
-    {
-        x.elem(arma::find(x > positive_cap)).fill(positive_cap);
-        x.elem(arma::find(x < negative_cap)).fill(negative_cap);
-        return arma::exp(x);
-    }
-    inline double cap_exp(double x,
-                          const double positive_cap = 10,
-                          const double negative_cap = - 10)
-    {
-        return std::exp(std::min(std::max(x, negative_cap), positive_cap));
-    }
-
-    template<typename T>
-    T* ptr(T& obj) { return &obj; } //turn reference into pointer
-
-    template<typename T>
-    T* ptr(T* obj) { return obj; } //obj is already pointer, return it
-
-
     template <typename T>
     inline void msg(const T& m)
     {
         Rcpp::Rcout << m << "\n";
+    }
+
+    // FIXME select rows: remedy for sparse matrices
+    inline arma::mat subset_rows(const arma::mat& mat,
+                                 const arma::uvec& row_index)
+    {
+        return mat.rows(row_index);
+    }
+    inline arma::sp_mat subset_rows(const arma::sp_mat& mat,
+                                    const arma::uvec& row_index)
+    {
+        arma::sp_mat out { mat.t() };
+        return out.cols(row_index).t();
+    }
+
+    // column-wise standard deviations
+    template <typename T>
+    inline arma::rowvec col_sd(const T& mat)
+    {
+        arma::rowvec out { arma::var(mat, 1) };
+        return arma::sqrt(out);
     }
 
 }

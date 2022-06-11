@@ -19,6 +19,7 @@
 #define ABCLASS_ABCLASS_H
 
 #include <RcppArmadillo.h>
+#include "Control.h"
 #include "Simplex.h"
 
 namespace abclass
@@ -34,7 +35,7 @@ namespace abclass
         double dn_obs_;              // double version of n_obs_
         unsigned int km1_;           // k - 1
         unsigned int p1_;            // number of predictors (with intercept)
-        unsigned int int_intercept_; // integer version of intercept_
+        unsigned int inter_;         // integer version of intercept_
 
         // prepare the vertex matrix
         inline void set_vertex_matrix(const unsigned int k)
@@ -54,8 +55,8 @@ namespace abclass
         inline arma::mat rescale_coef(const arma::mat& beta) const
         {
             arma::mat out { beta };
-            if (standardize_) {
-                if (intercept_) {
+            if (control_.standardize_) {
+                if (control_.intercept_) {
                     // for each columns
                     for (size_t k { 0 }; k < km1_; ++k) {
                         arma::vec coef_k { beta.col(k) };
@@ -77,19 +78,6 @@ namespace abclass
             return out;
         }
 
-        // transfer coef for non-standardized data to coef for standardized data
-        inline arma::vec rev_rescale_coef(const arma::vec& beta) const
-        {
-            arma::vec beta0 { beta };
-            double tmp {0};
-            for (size_t j {1}; j < beta.n_elem; ++j) {
-                beta0(j) *= x_scale_(j - 1);
-                tmp += beta(j) * x_center_(j - 1);
-            }
-            beta0(0) += tmp;
-            return beta0;
-        }
-
         // the first derivative of the loss function
         virtual arma::vec loss_derivative(const arma::vec& inner) const = 0;
 
@@ -101,12 +89,16 @@ namespace abclass
         unsigned int p0_;       // number of predictors without intercept
         T x_;                   // (standardized) x_: n by p (with intercept)
         arma::uvec y_;          // y vector ranging in {0, ..., k - 1}
-        arma::vec obs_weight_;  // optional observation weights: of length n
         arma::mat vertex_;      // unique vertex: k by (k - 1)
-        bool intercept_;        // if to contrains intercepts
-        bool standardize_;      // is x_ standardized (column-wise)
         arma::rowvec x_center_; // the column center of x_
         arma::rowvec x_scale_;  // the column scale of x_
+
+        Control control_;       // control parameters
+
+        // tuning by cross-validation
+        arma::mat cv_accuracy_;
+        arma::vec cv_accuracy_mean_;
+        arma::vec cv_accuracy_sd_;
 
         // default constructor
         Abclass() {}
@@ -121,14 +113,11 @@ namespace abclass
         // main constructor
         Abclass(const T& x,
                 const arma::uvec& y,
-                const bool intercept = true,
-                const bool standardize = true,
-                const arma::vec& weight = arma::vec()) :
-            intercept_ (intercept),
-            standardize_ (standardize)
+                const Control& control = Control()) :
+            control_ (control)
         {
             set_data(x, y);
-            set_weight(weight);
+            set_weight(control_.obs_weight_);
         }
 
         // setter
@@ -137,21 +126,21 @@ namespace abclass
         {
             x_ = x;
             y_ = y;
-            int_intercept_ = static_cast<unsigned int>(intercept_);
+            inter_ = static_cast<unsigned int>(control_.intercept_);
             km1_ = arma::max(y_); // assume y in {0, ..., k-1}
             k_ = km1_ + 1;
             set_vertex_matrix(k_);
             n_obs_ = x_.n_rows;
             dn_obs_ = static_cast<double>(n_obs_);
             p0_ = x_.n_cols;
-            p1_ = p0_ + int_intercept_;
-            if (standardize_) {
-                if (intercept_) {
+            p1_ = p0_ + inter_;
+            if (control_.standardize_) {
+                if (control_.intercept_) {
                     x_center_ = arma::mean(x_);
                 } else {
                     x_center_ = arma::zeros<arma::rowvec>(x_.n_cols);
                 }
-                x_scale_ = arma::stddev(x_, 1);
+                x_scale_ = col_sd(x_);
                 for (size_t j {0}; j < p0_; ++j) {
                     if (x_scale_(j) > 0) {
                         x_.col(j) = (x_.col(j) - x_center_(j)) / x_scale_(j);
@@ -161,9 +150,6 @@ namespace abclass
                         x_scale_(j) = - 1.0;
                     }
                 }
-            }
-            if (intercept_) {
-                x_ = arma::join_horiz(arma::ones(n_obs_), x_);
             }
             return this;
         }
@@ -178,22 +164,22 @@ namespace abclass
 
         inline Abclass* set_intercept(const bool intercept)
         {
-            intercept_ = intercept;
+            control_.intercept_ = intercept;
             return this;
         }
 
         inline Abclass* set_standardize(const bool standardize)
         {
-            standardize_ = standardize;
+            control_.standardize_ = standardize;
             return this;
         }
 
         inline Abclass* set_weight(const arma::vec& weight)
         {
             if (weight.n_elem != n_obs_) {
-                obs_weight_ = arma::ones(n_obs_);
+                control_.obs_weight_ = arma::ones(n_obs_);
             } else {
-                obs_weight_ = weight / arma::sum(weight) * dn_obs_;
+                control_.obs_weight_ = weight / arma::sum(weight) * dn_obs_;
             }
             return this;
         }

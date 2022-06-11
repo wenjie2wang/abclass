@@ -29,27 +29,24 @@
 
 namespace abclass {
 
-    // cross-validation method for AbclassNet objects
+    // cross-validation method for Abclass objects
     //! @param alignment 0 for alignment by fraction, 1 for alignment by lambda
     template <typename T>
-    inline void abclass_net_cv(T& obj,
-                               const unsigned int nfolds = 5,
-                               const arma::uvec strata = arma::uvec(),
-                               const unsigned int alignment = 0)
+    inline void cv_lambda(T& obj,
+                          const unsigned int nfolds = 5,
+                          const arma::uvec strata = arma::uvec(),
+                          const unsigned int alignment = 0)
     {
         CrossValidation cv_obj { obj.n_obs_, nfolds, strata };
-        obj.cv_accuracy_ = arma::zeros(obj.lambda_.n_elem, nfolds);
+        obj.cv_accuracy_ = arma::zeros(obj.control_.lambda_.n_elem, nfolds);
         // model fits
         for (size_t i { 0 }; i < nfolds; ++i) {
-            auto train_x { obj.x_.rows(cv_obj.train_index_.at(i)) };
-            if (obj.intercept_) {
-                train_x = train_x.tail_cols(obj.p0_);
-            }
+            auto train_x { subset_rows(obj.x_, cv_obj.train_index_.at(i)) };
             arma::uvec train_y { obj.y_.rows(cv_obj.train_index_.at(i)) };
             arma::vec train_weight {
-                obj.obs_weight_.rows(cv_obj.train_index_.at(i))
+                obj.control_.obs_weight_.elem(cv_obj.train_index_.at(i))
             };
-            auto test_x { obj.x_.rows(cv_obj.test_index_.at(i)) };
+            auto test_x { subset_rows(obj.x_, cv_obj.test_index_.at(i)) };
             arma::uvec test_y { obj.y_.rows(cv_obj.test_index_.at(i)) };
             // create a new object
             T new_obj { obj };
@@ -57,138 +54,13 @@ namespace abclass {
             new_obj.set_data(std::move(train_x),
                              std::move(train_y))->set_k(obj.k_);
             new_obj.set_weight(std::move(train_weight));
-            if (obj.custom_lambda_ || alignment == 1) {
-                new_obj.fit(obj.lambda_,
-                            obj.alpha_,
-                            0,
-                            1,
-                            obj.max_iter_,
-                            obj.epsilon_,
-                            obj.varying_active_set_,
-                            0);
-            } else {
-                new_obj.fit(arma::vec(),
-                            obj.alpha_,
-                            obj.lambda_.n_elem,
-                            obj.lambda_min_ratio_,
-                            obj.max_iter_,
-                            obj.epsilon_,
-                            obj.varying_active_set_,
-                            0);
+            if (! obj.custom_lambda_ && alignment == 0) {
+                // reset lambda
+                new_obj.control_.reg_path(arma::vec());
             }
-            for (size_t l { 0 }; l < obj.lambda_.n_elem; ++l) {
-                obj.cv_accuracy_(l, i) = new_obj.accuracy(
-                    new_obj.coef_.slice(l), test_x, test_y);
-            }
-        }
-        obj.cv_accuracy_mean_ = mat2vec(arma::mean(obj.cv_accuracy_, 1));
-        obj.cv_accuracy_sd_ = mat2vec(arma::stddev(obj.cv_accuracy_, 0, 1));
-    }
-
-    // group lasso
-    template <typename T>
-    inline void abclass_group_lasso_cv(T& obj,
-                                       const unsigned int nfolds = 5,
-                                       const arma::uvec strata = arma::uvec(),
-                                       const unsigned int alignment = 0)
-    {
-        CrossValidation cv_obj { obj.n_obs_, nfolds, strata };
-        obj.cv_accuracy_ = arma::zeros(obj.lambda_.n_elem, nfolds);
-        // model fits
-        for (size_t i { 0 }; i < nfolds; ++i) {
-            auto train_x { obj.x_.rows(cv_obj.train_index_.at(i)) };
-            if (obj.intercept_) {
-                train_x = train_x.tail_cols(obj.p0_);
-            }
-            arma::uvec train_y { obj.y_.rows(cv_obj.train_index_.at(i)) };
-            arma::vec train_weight {
-                obj.obs_weight_.rows(cv_obj.train_index_.at(i))
-            };
-            auto test_x { obj.x_.rows(cv_obj.test_index_.at(i)) };
-            arma::uvec test_y { obj.y_.rows(cv_obj.test_index_.at(i)) };
-            // create a new object
-            T new_obj { obj };
-            new_obj.set_standardize(false);
-            new_obj.set_data(std::move(train_x),
-                             std::move(train_y))->set_k(obj.k_);
-            new_obj.set_weight(std::move(train_weight));
-            if (obj.custom_lambda_ || alignment == 1) {
-                new_obj.fit(obj.lambda_,
-                            0,
-                            1,
-                            obj.group_weight_,
-                            obj.max_iter_,
-                            obj.epsilon_,
-                            obj.varying_active_set_,
-                            0);
-            } else {
-                new_obj.fit(arma::vec(),
-                            obj.lambda_.n_elem,
-                            obj.lambda_min_ratio_,
-                            obj.group_weight_,
-                            obj.max_iter_,
-                            obj.epsilon_,
-                            obj.varying_active_set_,
-                            0);
-            }
-            for (size_t l { 0 }; l < obj.lambda_.n_elem; ++l) {
-                obj.cv_accuracy_(l, i) = new_obj.accuracy(
-                    new_obj.coef_.slice(l), test_x, test_y);
-            }
-        }
-        obj.cv_accuracy_mean_ = mat2vec(arma::mean(obj.cv_accuracy_, 1));
-        obj.cv_accuracy_sd_ = mat2vec(arma::stddev(obj.cv_accuracy_, 0, 1));
-    }
-
-    // AbclassGroupSCAD/AbclassGroupMCP
-    template <typename T>
-    inline void abclass_group_ncv_cv(T& obj,
-                                     const unsigned int nfolds = 5,
-                                     const arma::uvec strata = arma::uvec(),
-                                     const unsigned int alignment = 0)
-    {
-        CrossValidation cv_obj { obj.n_obs_, nfolds, strata };
-        obj.cv_accuracy_ = arma::zeros(obj.lambda_.n_elem, nfolds);
-        // model fits
-        for (size_t i { 0 }; i < nfolds; ++i) {
-            auto train_x { obj.x_.rows(cv_obj.train_index_.at(i)) };
-            if (obj.intercept_) {
-                train_x = train_x.tail_cols(obj.p0_);
-            }
-            arma::uvec train_y { obj.y_.rows(cv_obj.train_index_.at(i)) };
-            arma::vec train_weight {
-                obj.obs_weight_.rows(cv_obj.train_index_.at(i))
-            };
-            auto test_x { obj.x_.rows(cv_obj.test_index_.at(i)) };
-            arma::uvec test_y { obj.y_.rows(cv_obj.test_index_.at(i)) };
-            // create a new object
-            T new_obj { obj };
-            new_obj.set_standardize(false);
-            new_obj.set_data(std::move(train_x),
-                             std::move(train_y))->set_k(obj.k_);
-            new_obj.set_weight(std::move(train_weight));
-            if (obj.custom_lambda_ || alignment == 1) {
-                new_obj.fit(obj.lambda_,
-                            0,
-                            1,
-                            obj.group_weight_,
-                            obj.gamma_,
-                            obj.max_iter_,
-                            obj.epsilon_,
-                            obj.varying_active_set_,
-                            0);
-            } else {
-                new_obj.fit(arma::vec(),
-                            obj.lambda_.n_elem,
-                            obj.lambda_min_ratio_,
-                            obj.group_weight_,
-                            obj.gamma_,
-                            obj.max_iter_,
-                            obj.epsilon_,
-                            obj.varying_active_set_,
-                            0);
-            }
-            for (size_t l { 0 }; l < obj.lambda_.n_elem; ++l) {
+            new_obj.control_.set_verbose(0);
+            new_obj.fit();
+            for (size_t l { 0 }; l < obj.control_.lambda_.n_elem; ++l) {
                 obj.cv_accuracy_(l, i) = new_obj.accuracy(
                     new_obj.coef_.slice(l), test_x, test_y);
             }
