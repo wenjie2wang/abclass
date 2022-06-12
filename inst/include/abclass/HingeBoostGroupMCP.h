@@ -20,92 +20,26 @@
 
 #include <RcppArmadillo.h>
 #include "AbclassGroupMCP.h"
+#include "HingeBoost.h"
+#include "Control.h"
 #include "utils.h"
 
 namespace abclass
 {
     // define class for inputs and outputs
-    template <typename T>
-    class HingeBoostGroupMCP : public AbclassGroupMCP<T>
+    template <typename T_x>
+    class HingeBoostGroupMCP : public AbclassGroupMCP<HingeBoost, T_x>
     {
-    private:
-        // data
-        using AbclassGroupMCP<T>::x_;
-        using AbclassGroupMCP<T>::obs_weight_;
-        using AbclassGroupMCP<T>::gmd_lowerbound_;
-        using AbclassGroupMCP<T>::dn_obs_;
-        using AbclassGroupMCP<T>::max_mg_;
-
-        // cache
-        double lum_cp1_;
-        double lum_c_cp1_;
-
-    protected:
-
-        double lum_c_ = 0.0;
-
-        // set CMD lowerbound
-        inline void set_gmd_lowerbound() override
-        {
-            T sqx { arma::square(x_) };
-            sqx.each_col() %= obs_weight_;
-            gmd_lowerbound_ = lum_cp1_ * arma::sum(sqx, 0) / dn_obs_;
-            max_mg_ = gmd_lowerbound_.max();
-        }
-
-        // objective function without regularization
-        inline double objective0(const arma::vec& inner) const override
-        {
-            arma::vec tmp { arma::zeros(inner.n_elem) };
-            for (size_t i {0}; i < inner.n_elem; ++i) {
-                if (inner[i] < lum_c_cp1_) {
-                    tmp[i] = 1.0 - inner[i];
-                } else {
-                    tmp[i] = std::exp(- (lum_cp1_ * inner[i] - lum_c_)) /
-                        lum_cp1_;
-                }
-            }
-            return arma::mean(obs_weight_ % tmp);
-        }
-
-        // the first derivative of the loss function
-        inline arma::vec loss_derivative(const arma::vec& u) const override
-        {
-            arma::vec out { - arma::ones(u.n_elem) };
-            for (size_t i {0}; i < u.n_elem; ++i) {
-                if (u[i] > lum_c_cp1_) {
-                    out[i] = - std::exp(- (lum_cp1_ * u[i] - lum_c_));
-                }
-            }
-            return out;
-        }
-
     public:
+        // inherit
+        using AbclassGroupMCP<HingeBoost, T_x>::AbclassGroupMCP;
 
-        // inherit constructors
-        using AbclassGroupMCP<T>::AbclassGroupMCP;
-
-        //! @param x The design matrix without an intercept term.
-        //! @param y The category index vector.
-        HingeBoostGroupMCP(const T& x,
+        HingeBoostGroupMCP(const T_x& x,
                            const arma::uvec& y,
-                           const bool intercept = true,
-                           const bool standardize = true,
-                           const arma::vec& weight = arma::vec()) :
-            AbclassGroupMCP<T>(x, y, intercept, standardize, weight)
+                           const Control& control) :
+            AbclassGroupMCP<HingeBoost, T_x>(x, y, control)
         {
-            set_lum_c(0.0);
-        }
-
-        HingeBoostGroupMCP* set_lum_c(const double lum_c)
-        {
-            if (is_lt(lum_c, 0.0)) {
-                throw std::range_error("The LUM 'C' cannot be negative.");
-            }
-            lum_c_ = lum_c;
-            lum_cp1_ = lum_c + 1.0;
-            lum_c_cp1_ = lum_c_ / lum_cp1_;
-            return this;
+            this->loss_.set_lum_c(0.0);
         }
 
     };                          // end of class

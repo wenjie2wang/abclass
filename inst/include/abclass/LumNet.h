@@ -26,51 +26,19 @@
 namespace abclass
 {
     // define class for inputs and outputs
-    template <typename T>
-    class LumNet : public AbclassNet<T>, public Lum
+    template <typename T_x>
+    class LumNet : public AbclassNet<Lum, T_x>
     {
-    protected:
-        using AbclassNet<T>::cmd_lowerbound_;
-        using AbclassNet<T>::cmd_lowerbound0_;
-        using AbclassNet<T>::dn_obs_;
-
-        // set CMD lowerbound
-        inline void set_cmd_lowerbound() override
-        {
-            if (control_.intercept_) {
-                cmd_lowerbound0_ = Lum::mm_lowerbound(
-                    dn_obs_, control_.obs_weight_);
-            }
-            cmd_lowerbound_ = Lum::mm_lowerbound(x_, control_.obs_weight_);
-        }
-
-        // objective function without regularization
-        inline double objective0(const arma::vec& inner) const override
-        {
-            return Lum::loss(inner, control_.obs_weight_);
-        }
-
-        // the first derivative of the loss function
-        inline arma::vec loss_derivative(const arma::vec& u) const override
-        {
-            return Lum::dloss(u);
-        }
-
     public:
         // inherit constructors
-        using AbclassNet<T>::AbclassNet;
+        using AbclassNet<Lum, T_x>::AbclassNet;
 
-        using AbclassNet<T>::x_;
-        using AbclassNet<T>::control_;
-
-        //! @param x The design matrix without an intercept term.
-        //! @param y The category index vector.
-        LumNet(const T& x,
+        LumNet(const T_x& x,
                const arma::uvec& y,
                const Control& control) :
-            AbclassNet<T>(x, y, control)
+            AbclassNet<Lum, T_x>(x, y, control)
         {
-            set_ac(1.0, 0.0);
+            this->loss_.set_ac(1.0, 0.0);
         }
 
     };                          // end of class

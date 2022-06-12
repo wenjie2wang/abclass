@@ -20,54 +20,18 @@
 
 #include <RcppArmadillo.h>
 #include "AbclassGroupMCP.h"
+#include "Logistic.h"
+#include "Control.h"
 
 namespace abclass
 {
     // define class for inputs and outputs
-    template <typename T>
-    class LogisticGroupMCP : public AbclassGroupMCP<T>
+    template <typename T_x>
+    class LogisticGroupMCP : public AbclassGroupMCP<Logistic, T_x>
     {
-    private:
-        // data
-        using AbclassGroupMCP<T>::x_;
-        using AbclassGroupMCP<T>::obs_weight_;
-        using AbclassGroupMCP<T>::gmd_lowerbound_;
-        using AbclassGroupMCP<T>::dn_obs_;
-        using AbclassGroupMCP<T>::max_mg_;
-
-    protected:
-
-        // set GMD lowerbound
-        inline void set_gmd_lowerbound() override
-        {
-            T sqx { arma::square(x_) };
-            sqx.each_col() %= obs_weight_;
-            gmd_lowerbound_ = arma::sum(sqx, 0) / (4.0 * dn_obs_);
-            max_mg_ = gmd_lowerbound_.max();
-        }
-
-        // objective function without regularization
-        inline double objective0(const arma::vec& inner) const override
-        {
-            return arma::mean(obs_weight_ %
-                              arma::log(1.0 + arma::exp(- inner)));
-        }
-
-        // the first derivative of the loss function
-        inline arma::vec loss_derivative(const arma::vec& u) const override
-        {
-            arma::vec out { arma::zeros(u.n_elem) };
-            for (size_t i {0}; i < out.n_elem; ++i) {
-                out[i] = - 1.0 / (1.0 + std::exp(u[i]));
-            }
-            return out;
-            // return - 1.0 / (1.0 + arma::exp(u));
-        }
-
     public:
-
-        // inherit constructors
-        using AbclassGroupMCP<T>::AbclassGroupMCP;
+        // inherit
+        using AbclassGroupMCP<Logistic, T_x>::AbclassGroupMCP;
 
     };                          // end of class
 

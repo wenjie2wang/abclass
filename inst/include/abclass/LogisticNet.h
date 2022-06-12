@@ -26,41 +26,12 @@
 namespace abclass
 {
     // define class for inputs and outputs
-    template <typename T>
-    class LogisticNet : public AbclassNet<T>, public Logistic
+    template <typename T_x>
+    class LogisticNet : public AbclassNet<Logistic, T_x>
     {
-    protected:
-        using AbclassNet<T>::cmd_lowerbound_;
-        using AbclassNet<T>::cmd_lowerbound0_;
-        using AbclassNet<T>::dn_obs_;
-
-        // set CMD lowerbound
-        inline void set_cmd_lowerbound() override
-        {
-            if (control_.intercept_) {
-                cmd_lowerbound0_ = Logistic::mm_lowerbound(
-                    dn_obs_, control_.obs_weight_);
-            }
-            cmd_lowerbound_ = Logistic::mm_lowerbound(x_, control_.obs_weight_);
-        }
-
-        // objective function without regularization
-        inline double objective0(const arma::vec& inner) const override
-        {
-            return Logistic::loss(inner, control_.obs_weight_);
-        }
-
-        // the first derivative of the loss function
-        inline arma::vec loss_derivative(const arma::vec& u) const override
-        {
-            return Logistic::dloss(u);
-        }
-
     public:
         // inherit
-        using AbclassNet<T>::AbclassNet;
-        using AbclassNet<T>::x_;
-        using AbclassNet<T>::control_;
+        using AbclassNet<Logistic, T_x>::AbclassNet;
 
     };                          // end of class
 

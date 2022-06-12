@@ -20,52 +20,18 @@
 
 #include <RcppArmadillo.h>
 #include "AbclassGroupLasso.h"
+#include "Logistic.h"
+#include "Control.h"
 
 namespace abclass
 {
     // define class for inputs and outputs
-    template <typename T>
-    class LogisticGroupLasso : public AbclassGroupLasso<T>
+    template <typename T_x>
+    class LogisticGroupLasso : public AbclassGroupLasso<Logistic, T_x>
     {
-    private:
-        // data
-        using AbclassGroupLasso<T>::x_;
-        using AbclassGroupLasso<T>::obs_weight_;
-        using AbclassGroupLasso<T>::gmd_lowerbound_;
-        using AbclassGroupLasso<T>::dn_obs_;
-
-    protected:
-
-        // set GMD lowerbound
-        inline void set_gmd_lowerbound() override
-        {
-            T sqx { arma::square(x_) };
-            sqx.each_col() %= obs_weight_;
-            gmd_lowerbound_ = arma::sum(sqx, 0) / (4.0 * dn_obs_);
-        }
-
-        // objective function without regularization
-        inline double objective0(const arma::vec& inner) const override
-        {
-            return arma::mean(obs_weight_ %
-                              arma::log(1.0 + arma::exp(- inner)));
-        }
-
-        // the first derivative of the loss function
-        inline arma::vec loss_derivative(const arma::vec& u) const override
-        {
-            arma::vec out { arma::zeros(u.n_elem) };
-            for (size_t i {0}; i < out.n_elem; ++i) {
-                out[i] = - 1.0 / (1.0 + std::exp(u[i]));
-            }
-            return out;
-            // return - 1.0 / (1.0 + arma::exp(u));
-        }
-
     public:
-
-        // inherit constructors
-        using AbclassGroupLasso<T>::AbclassGroupLasso;
+        // inherit
+        using AbclassGroupLasso<Logistic, T_x>::AbclassGroupLasso;
 
     };                          // end of class
 

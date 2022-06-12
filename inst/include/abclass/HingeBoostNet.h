@@ -26,52 +26,19 @@
 namespace abclass
 {
     // define class for inputs and outputs
-    template <typename T>
-    class HingeBoostNet : public AbclassNet<T>, public HingeBoost
+    template <typename T_x>
+    class HingeBoostNet : public AbclassNet<HingeBoost, T_x>
     {
-    protected:
-        using AbclassNet<T>::cmd_lowerbound_;
-        using AbclassNet<T>::cmd_lowerbound0_;
-        using AbclassNet<T>::dn_obs_;
-
-        // set CMD lowerbound
-        inline void set_cmd_lowerbound() override
-        {
-            if (control_.intercept_) {
-                cmd_lowerbound0_ = HingeBoost::mm_lowerbound(
-                    dn_obs_, control_.obs_weight_);
-            }
-            cmd_lowerbound_ = HingeBoost::mm_lowerbound(x_,
-                                                        control_.obs_weight_);
-        }
-
-        // objective function without regularization
-        inline double objective0(const arma::vec& inner) const override
-        {
-            return HingeBoost::loss(inner, control_.obs_weight_);
-        }
-
-        // the first derivative of the loss function
-        inline arma::vec loss_derivative(const arma::vec& u) const override
-        {
-            return HingeBoost::dloss(u);
-        }
-
     public:
-
         // inherit
-        using AbclassNet<T>::AbclassNet;
-        using AbclassNet<T>::x_;
-        using AbclassNet<T>::control_;
+        using AbclassNet<HingeBoost, T_x>::AbclassNet;
 
-        //! @param x The design matrix without an intercept term.
-        //! @param y The category index vector.
-        HingeBoostNet(const T& x,
+        HingeBoostNet(const T_x& x,
                       const arma::uvec& y,
                       const Control& control) :
-            AbclassNet<T>(x, y, control)
+            AbclassNet<HingeBoost, T_x>(x, y, control)
         {
-            set_c(0.0);
+            this->loss_.set_c(0.0);
         }
 
     };                          // end of class

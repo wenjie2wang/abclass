@@ -28,26 +28,20 @@ namespace abclass
 {
     // the angle-based classifier with elastic-net penalty
     // estimation by coordinate-majorization-descent algorithm
-    template <typename T>
-    class AbclassNet : public Abclass<T>
+    template <typename T_loss, typename T_x>
+    class AbclassNet : public Abclass<T_loss, T_x>
     {
     protected:
+        using Abclass<T_loss, T_x>::inter_;
+        using Abclass<T_loss, T_x>::km1_;
+        using Abclass<T_loss, T_x>::p1_;
+        using Abclass<T_loss, T_x>::mm_lowerbound_;
+        using Abclass<T_loss, T_x>::mm_lowerbound0_;
 
-        using Abclass<T>::inter_;
-        using Abclass<T>::km1_;
-        using Abclass<T>::p1_;
-
-        using Abclass<T>::rescale_coef;
-        using Abclass<T>::get_vertex_y;
-        using Abclass<T>::loss_derivative;
-
-        // for regularized coordinate majorization descent
-        arma::rowvec cmd_lowerbound_; // 1 by p0_
-        double cmd_lowerbound0_;      // for the intercept
-
-        // pure virtual functions
-        virtual void set_cmd_lowerbound() = 0;
-        virtual double objective0(const arma::vec& inner) const = 0;
+        using Abclass<T_loss, T_x>::rescale_coef;
+        using Abclass<T_loss, T_x>::get_vertex_y;
+        using Abclass<T_loss, T_x>::objective0;
+        using Abclass<T_loss, T_x>::loss_derivative;
 
         // common methods
         inline double regularization(const arma::mat& beta,
@@ -74,8 +68,8 @@ namespace abclass
         }
 
         // define gradient function at (l, j) for the given inner product
-        inline double cmd_gradient(const arma::vec& inner,
-                                   const arma::vec& vj_xl) const
+        inline double mm_gradient(const arma::vec& inner,
+                                  const arma::vec& vj_xl) const
         {
             arma::vec inner_grad { loss_derivative(inner) };
             return arma::mean(control_.obs_weight_ % vj_xl % inner_grad);
@@ -138,13 +132,13 @@ namespace abclass
     public:
 
         // inherit constructors
-        using Abclass<T>::Abclass;
-
+        using Abclass<T_loss, T_x>::Abclass;
         // specifics for template inheritance
-        using Abclass<T>::control_;
-        using Abclass<T>::x_;
-        using Abclass<T>::p0_;
-        using Abclass<T>::n_obs_;
+        using Abclass<T_loss, T_x>::control_;
+        using Abclass<T_loss, T_x>::x_;
+        using Abclass<T_loss, T_x>::p0_;
+        using Abclass<T_loss, T_x>::n_obs_;
+        using Abclass<T_loss, T_x>::set_mm_lowerbound;
 
         // regularization
         // the "big" enough lambda => zero coef unless alpha = 0
@@ -166,8 +160,8 @@ namespace abclass
     };
 
     // run one CMD cycle over active sets
-    template <typename T>
-    inline void AbclassNet<T>::run_one_active_cycle(
+    template <typename T_loss, typename T_x>
+    inline void AbclassNet<T_loss, T_x>::run_one_active_cycle(
         arma::mat& beta,
         arma::vec& inner,
         arma::umat& is_active,
@@ -191,8 +185,8 @@ namespace abclass
             arma::vec v_j { get_vertex_y(j) };
             // intercept
             if (control_.intercept_) {
-                double dlj { cmd_gradient(inner, v_j) };
-                double tmp_delta { - dlj / cmd_lowerbound0_ };
+                double dlj { mm_gradient(inner, v_j) };
+                double tmp_delta { - dlj / mm_lowerbound0_ };
                 beta(0, j) += tmp_delta;
                 inner += tmp_delta * v_j;
             }
@@ -202,18 +196,18 @@ namespace abclass
                 }
                 size_t l1 { l + inter_ };
                 arma::vec vj_xl { x_.col(l) % v_j };
-                double dlj { cmd_gradient(inner, vj_xl) };
+                double dlj { mm_gradient(inner, vj_xl) };
                 double tmp { beta(l1, j) };
                 // if cmd_lowerbound = 0 and l1_lambda > 0, numer will be 0
                 double numer {
-                    soft_threshold(cmd_lowerbound_(l) * beta(l1, j) - dlj,
+                    soft_threshold(mm_lowerbound_(l) * beta(l1, j) - dlj,
                                    l1_lambda)
                 };
                 // update beta
                 if (isAlmostEqual(numer, 0)) {
                     beta(l1, j) = 0;
                 } else {
-                    double denom { cmd_lowerbound_(l) + 2 * l2_lambda };
+                    double denom { mm_lowerbound_(l) + 2 * l2_lambda };
                     beta(l1, j) = numer / denom;
                 }
                 inner += (beta(l1, j) - tmp) * vj_xl;
@@ -241,8 +235,8 @@ namespace abclass
     }
 
     // run CMD cycles over active sets
-    template <typename T>
-    inline void AbclassNet<T>::run_cmd_active_cycle(
+    template <typename T_loss, typename T_x>
+    inline void AbclassNet<T_loss, T_x>::run_cmd_active_cycle(
         arma::mat& beta,
         arma::vec& inner,
         arma::umat& is_active,
@@ -332,8 +326,8 @@ namespace abclass
     }
 
     // one full cycle for coordinate-descent
-    template <typename T>
-    inline void AbclassNet<T>::run_one_full_cycle(
+    template <typename T_loss, typename T_x>
+    inline void AbclassNet<T_loss, T_x>::run_one_full_cycle(
         arma::mat& beta,
         arma::vec& inner,
         const double l1_lambda,
@@ -353,8 +347,8 @@ namespace abclass
             arma::vec v_j { get_vertex_y(j) };
             // intercept
             if (control_.intercept_) {
-                double dlj { cmd_gradient(inner, v_j) };
-                double tmp_delta { - dlj / cmd_lowerbound0_ };
+                double dlj { mm_gradient(inner, v_j) };
+                double tmp_delta { - dlj / mm_lowerbound0_ };
                 beta(0, j) += tmp_delta;
                 inner += tmp_delta * v_j;
             }
@@ -362,18 +356,18 @@ namespace abclass
             for (size_t l { 0 }; l < p0_; ++l) {
                 size_t l1 { l + inter_ };
                 arma::vec vj_xl { v_j % x_.col(l) };
-                double dlj { cmd_gradient(inner, vj_xl) };
+                double dlj { mm_gradient(inner, vj_xl) };
                 double tmp { beta(l1, j) };
                 // if cmd_lowerbound = 0 and l1_lambda > 0, numer will be 0
                 double numer {
-                    soft_threshold(cmd_lowerbound_(l) * tmp - dlj,
+                    soft_threshold(mm_lowerbound_(l) * tmp - dlj,
                                    l1_lambda)
                 };
                 // update beta
                 if (isAlmostEqual(numer, 0)) {
                     beta(l1, j) = 0;
                 } else {
-                    double denom { cmd_lowerbound_(l) + 2 * l2_lambda };
+                    double denom { mm_lowerbound_(l) + 2 * l2_lambda };
                     beta(l1, j) = numer / denom;
                 }
                 inner += (beta(l1, j) - tmp) * vj_xl;
@@ -393,8 +387,8 @@ namespace abclass
     }
 
     // run full cycles till convergence or reach max number of iterations
-    template <typename T>
-    inline void AbclassNet<T>::run_cmd_full_cycle(
+    template <typename T_loss, typename T_x>
+    inline void AbclassNet<T_loss, T_x>::run_cmd_full_cycle(
         arma::mat& beta,
         arma::vec& inner,
         const double l1_lambda,
@@ -426,11 +420,11 @@ namespace abclass
 
     // for a sequence of lambda's
     // lambda * (alpha * lasso + (1 - alpha) / 2 * ridge)
-    template <typename T>
-    inline void AbclassNet<T>::fit()
+    template <typename T_loss, typename T_x>
+    inline void AbclassNet<T_loss, T_x>::fit()
     {
         // set the CMD lowerbound
-        set_cmd_lowerbound();
+        set_mm_lowerbound();
         // initialize
         arma::vec one_inner { arma::zeros(n_obs_) };
         arma::mat one_beta { arma::zeros(p1_, km1_) },
@@ -551,7 +545,7 @@ namespace abclass
                             continue;
                         }
                         arma::vec vj_xl { v_j % x_.col(l) };
-                        if (std::abs(cmd_gradient(one_inner, vj_xl)) >
+                        if (std::abs(mm_gradient(one_inner, vj_xl)) >
                             one_strong_rhs) {
                             // update active set
                             is_strong_rule_failed(l, j) = 1;

@@ -20,114 +20,26 @@
 
 #include <RcppArmadillo.h>
 #include "AbclassGroupMCP.h"
+#include "Lum.h"
+#include "Control.h"
 #include "utils.h"
 
 namespace abclass
 {
     // define class for inputs and outputs
-    template <typename T>
-    class LumGroupMCP : public AbclassGroupMCP<T>
+    template <typename T_x>
+    class LumGroupMCP : public AbclassGroupMCP<Lum, T_x>
     {
-    private:
-        // data
-        using AbclassGroupMCP<T>::x_;
-        using AbclassGroupMCP<T>::obs_weight_;
-        using AbclassGroupMCP<T>::gmd_lowerbound_;
-        using AbclassGroupMCP<T>::dn_obs_;
-        using AbclassGroupMCP<T>::max_mg_;
-
-        // cache
-        double lum_ap1_;        // a + 1
-        double lum_log_a_;      // log(a)
-        double lum_a_log_a_;    // a log(a)
-        double lum_cp1_;        // c + 1
-        double lum_log_cp1_;    // log(c + 1)
-        double lum_c_cp1_;      // c / (c + 1)
-        double lum_amc_;        // a - c
-
-    protected:
-
-        double lum_c_ = 0.0;    // c
-        double lum_a_ = 1.0;    // a
-
-        // set CMD lowerbound
-        inline void set_gmd_lowerbound() override
-        {
-            double tmp { lum_ap1_ / lum_a_ * lum_cp1_ };
-            T sqx { arma::square(x_) };
-            sqx.each_col() %= obs_weight_;
-            gmd_lowerbound_ = tmp * arma::sum(sqx, 0) / dn_obs_;
-            max_mg_ = gmd_lowerbound_.max();
-        }
-
-        // objective function without regularization
-        inline double objective0(const arma::vec& inner) const override
-        {
-            arma::vec tmp { arma::zeros(inner.n_elem) };
-            for (size_t i {0}; i < inner.n_elem; ++i) {
-                if (inner[i] < lum_c_cp1_) {
-                    tmp[i] = 1.0 - inner[i];
-                } else {
-                    tmp[i] = std::exp(
-                        - lum_log_cp1_ + lum_a_log_a_ -
-                        lum_a_ * std::log(lum_cp1_ * inner[i] + lum_amc_)
-                        );
-                }
-            }
-            return arma::mean(obs_weight_ % tmp);
-        }
-
-        // the first derivative of the loss function
-        inline arma::vec loss_derivative(const arma::vec& u) const override
-        {
-            arma::vec out { - arma::ones(u.n_elem) };
-            for (size_t i {0}; i < u.n_elem; ++i) {
-                if (u[i] > lum_c_cp1_) {
-                    out[i] = - std::exp(
-                        lum_a_log_a_ + lum_log_a_ -
-                        lum_ap1_ * std::log(lum_cp1_ * u[i] + lum_amc_)
-                        );
-                }
-            }
-            return out;
-        }
-
     public:
+        // inherit
+        using AbclassGroupMCP<Lum, T_x>::AbclassGroupMCP;
 
-        // inherit constructors
-        using AbclassGroupMCP<T>::AbclassGroupMCP;
-
-        //! @param x The design matrix without an intercept term.
-        //! @param y The category index vector.
-        LumGroupMCP(const T& x,
+        LumGroupMCP(const T_x& x,
                     const arma::uvec& y,
-                    const bool intercept = true,
-                    const bool standardize = true,
-                    const arma::vec& weight = arma::vec()) :
-            AbclassGroupMCP<T>(x, y, intercept, standardize, weight)
+                    const Control& control) :
+            AbclassGroupMCP<Lum, T_x>(x, y, control)
         {
-            set_lum_parameters(1.0, 0.0);
-        }
-
-        LumGroupMCP* set_lum_parameters(const double lum_a,
-                                        const double lum_c)
-        {
-            if (is_le(lum_a, 0.0)) {
-                throw std::range_error("The LUM 'a' must be positive.");
-            }
-            lum_a_ = lum_a;
-            lum_ap1_ = lum_a_ + 1.0;
-            lum_log_a_ = std::log(lum_a_);
-            lum_a_log_a_ = lum_a_ * lum_log_a_;
-            if (is_lt(lum_c, 0.0)) {
-                throw std::range_error("The LUM 'c' cannot be negative.");
-            }
-            lum_c_ = lum_c;
-            lum_cp1_ = lum_c + 1.0;
-            lum_log_cp1_ = std::log(lum_cp1_);
-            lum_c_cp1_ = lum_c_ / lum_cp1_;
-            lum_amc_ = lum_a_ - lum_c_;
-            return this;
+            this->loss_.set_ac(1.0, 0.0);
         }
 
     };                          // end of class

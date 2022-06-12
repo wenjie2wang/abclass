@@ -26,52 +26,19 @@
 namespace abclass
 {
     // define class for inputs and outputs
-    template <typename T>
-    class BoostNet : public AbclassNet<T>, public Boost
+    template <typename T_x>
+    class BoostNet : public AbclassNet<Boost, T_x>
     {
-    protected:
-        using AbclassNet<T>::cmd_lowerbound_;
-        using AbclassNet<T>::cmd_lowerbound0_;
-        using AbclassNet<T>::dn_obs_;
-
-        // set CMD lowerbound
-        inline void set_cmd_lowerbound() override
-        {
-            if (control_.intercept_) {
-                cmd_lowerbound0_ = Boost::mm_lowerbound(
-                    dn_obs_, control_.obs_weight_);
-            }
-            cmd_lowerbound_ = Boost::mm_lowerbound(x_, control_.obs_weight_);
-        }
-
-        // objective function without regularization
-        inline double objective0(const arma::vec& inner) const override
-        {
-            return Boost::loss(inner, control_.obs_weight_);
-        }
-
-        // the first derivative of the loss function
-        inline arma::vec loss_derivative(const arma::vec& u) const override
-        {
-            return Boost::dloss(u);
-        }
-
     public:
+        // inherit
+        using AbclassNet<Boost, T_x>::AbclassNet;
 
-        // inherit constructors
-        using AbclassNet<T>::AbclassNet;
-
-        using AbclassNet<T>::x_;
-        using AbclassNet<T>::control_;
-
-        //! @param x The design matrix without an intercept term.
-        //! @param y The category index vector.
-        BoostNet(const T& x,
+        BoostNet(const T_x& x,
                  const arma::uvec& y,
                  const Control& control) :
-            AbclassNet<T>(x, y, control)
+            AbclassNet<Boost, T_x>(x, y, control)
         {
-            set_inner_min(- 5.0);
+            this->loss_.set_inner_min(- 5.0);
         }
 
     };                          // end of class

@@ -19,96 +19,27 @@
 #define ABCLASS_BOOST_GROUP_MCP_H
 
 #include <RcppArmadillo.h>
-#include <stdexcept>
 #include "AbclassGroupMCP.h"
-#include "utils.h"
+#include "Boost.h"
+#include "Control.h"
 
 namespace abclass
 {
     // define class for inputs and outputs
-    template <typename T>
-    class BoostGroupMCP : public AbclassGroupMCP<T>
+    template <typename T_x>
+    class BoostGroupMCP : public AbclassGroupMCP<Boost, T_x>
     {
-    private:
-        // data
-        using AbclassGroupMCP<T>::x_;
-        using AbclassGroupMCP<T>::obs_weight_;
-        using AbclassGroupMCP<T>::gmd_lowerbound_;
-        using AbclassGroupMCP<T>::dn_obs_;
-        using AbclassGroupMCP<T>::max_mg_;
-
-        // cache
-        double exp_inner_max_;
-
-    protected:
-
-        double inner_min_ = - 5.0;
-
-        // set CMD lowerbound
-        inline void set_gmd_lowerbound() override
-        {
-            T sqx { arma::square(x_) };
-            sqx.each_col() %= obs_weight_;
-            gmd_lowerbound_ = exp_inner_max_ * arma::sum(sqx, 0) / dn_obs_;
-            max_mg_ = gmd_lowerbound_.max();
-        }
-
-        // objective function without regularization
-        inline double objective0(const arma::vec& inner) const override
-        {
-            arma::vec tmp { arma::zeros(inner.n_elem) };
-            double tmp1 { 1 + inner_min_ };
-            for (size_t i {0}; i < inner.n_elem; ++i) {
-                if (inner[i] < inner_min_) {
-                    tmp[i] = (tmp1 - inner[i]) * exp_inner_max_;
-                } else {
-                    tmp[i] = std::exp(- inner[i]);
-                }
-            }
-            return arma::mean(obs_weight_ % tmp);
-        }
-
-        // the first derivative of the loss function
-        inline arma::vec loss_derivative(const arma::vec& u) const override
-        {
-            arma::vec out { arma::zeros(u.n_elem) };
-            for (size_t i {0}; i < u.n_elem; ++i) {
-                if (u[i] < inner_min_) {
-                    out[i] = - exp_inner_max_;
-                } else {
-                    out[i] = - std::exp(- u[i]);
-                }
-            }
-            return out;
-        }
-
     public:
+        // inherit
+        using AbclassGroupMCP<Boost, T_x>::AbclassGroupMCP;
 
-        // inherit constructors
-        using AbclassGroupMCP<T>::AbclassGroupMCP;
-
-        //! @param x The design matrix without an intercept term.
-        //! @param y The category index vector.
-        BoostGroupMCP(const T& x,
+        BoostGroupMCP(const T_x& x,
                       const arma::uvec& y,
-                      const bool intercept = true,
-                      const bool standardize = true,
-                      const arma::vec& weight = arma::vec()) :
-            AbclassGroupMCP<T>(x, y, intercept, standardize, weight)
+                      const Control& control) :
+            AbclassGroupMCP<Boost, T_x>(x, y, control)
         {
-            set_inner_min(- 5.0);
+            this->loss_.set_inner_min(- 5.0);
         }
-
-        BoostGroupMCP* set_inner_min(const double inner_min)
-        {
-            if (is_gt(inner_min, 0.0)) {
-                throw std::range_error("The 'inner_min' cannot be positive.");
-            }
-            inner_min_ = inner_min;
-            exp_inner_max_ = std::exp(- inner_min_);
-            return this;
-        }
-
 
     };                          // end of class
 

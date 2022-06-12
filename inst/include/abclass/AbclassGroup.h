@@ -10,31 +10,34 @@ namespace abclass
     // base class for the angle-based large margin classifiers
     // with group-wise regularization
 
-    // T is intended to be arma::mat or arma::sp_mat
-    template <typename T>
-    class AbclassGroup : public Abclass<T>
+    // T_x is intended to be arma::mat or arma::sp_mat
+    template <typename T_loss, typename T_x>
+    class AbclassGroup : public Abclass<T_loss, T_x>
     {
     protected:
-        using Abclass<T>::dn_obs_;
-        using Abclass<T>::km1_;
-        using Abclass<T>::loss_derivative;
-
-        // for groupwise majorization descent
-        double gmd_lowerbound0_;      // for intercept
-        arma::rowvec gmd_lowerbound_; // 1 by p0_
-
-        // pure virtual functions
-        virtual void set_gmd_lowerbound() = 0;
-        virtual double objective0(const arma::vec& inner) const = 0;
+        using Abclass<T_loss, T_x>::dn_obs_;
+        using Abclass<T_loss, T_x>::km1_;
+        using Abclass<T_loss, T_x>::loss_derivative;
 
         // define gradient function for j-th predictor
-        inline arma::rowvec gmd_gradient(const arma::vec& inner,
-                                         const unsigned int j) const
+        inline arma::rowvec mm_gradient(const arma::vec& inner,
+                                        const unsigned int j) const
         {
             arma::vec inner_grad { loss_derivative(inner) };
             arma::rowvec out { arma::zeros<arma::rowvec>(km1_) };
             for (size_t i {0}; i < n_obs_; ++i) {
                 out += control_.obs_weight_[i] * inner_grad[i] * x_(i, j) *
+                    vertex_.row(y_[i]);
+            }
+            return out / dn_obs_;
+        }
+        // for intercept
+        inline arma::rowvec mm_gradient0(const arma::vec& inner) const
+        {
+            arma::vec inner_grad { loss_derivative(inner) };
+            arma::rowvec out { arma::zeros<arma::rowvec>(km1_) };
+            for (size_t i {0}; i < n_obs_; ++i) {
+                out += control_.obs_weight_[i] * inner_grad[i] *
                     vertex_.row(y_[i]);
             }
             return out / dn_obs_;
@@ -79,13 +82,13 @@ namespace abclass
 
     public:
         // inherit constructors
-        using Abclass<T>::Abclass;
-        using Abclass<T>::control_;
-        using Abclass<T>::n_obs_;
-        using Abclass<T>::p0_;
-        using Abclass<T>::x_;
-        using Abclass<T>::y_;
-        using Abclass<T>::vertex_;
+        using Abclass<T_loss, T_x>::Abclass;
+        using Abclass<T_loss, T_x>::control_;
+        using Abclass<T_loss, T_x>::n_obs_;
+        using Abclass<T_loss, T_x>::p0_;
+        using Abclass<T_loss, T_x>::x_;
+        using Abclass<T_loss, T_x>::y_;
+        using Abclass<T_loss, T_x>::vertex_;
 
         // regularization
         // the "big" enough lambda => zero coef

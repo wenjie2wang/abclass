@@ -25,8 +25,9 @@
 namespace abclass
 {
     // base class for the angle-based large margin classifiers
-    // T is intended to be arma::mat or arma::sp_mat
-    template <typename T>
+    // T_x is intended to be arma::mat or arma::sp_mat
+    // T_loss should be one of the loss function classes
+    template <typename T_loss, typename T_x = arma::mat>
     class Abclass
     {
     protected:
@@ -36,6 +37,10 @@ namespace abclass
         unsigned int km1_;           // k - 1
         unsigned int p1_;            // number of predictors (with intercept)
         unsigned int inter_;         // integer version of intercept_
+
+        // for the CMD/GMD algorithm
+        double mm_lowerbound0_;
+        arma::rowvec mm_lowerbound_;
 
         // prepare the vertex matrix
         inline void set_vertex_matrix(const unsigned int k)
@@ -78,22 +83,40 @@ namespace abclass
             return out;
         }
 
+        // loss function
+        inline double objective0(const arma::vec& inner) const
+        {
+            return loss_.loss(inner, control_.obs_weight_);
+        }
         // the first derivative of the loss function
-        virtual arma::vec loss_derivative(const arma::vec& inner) const = 0;
+        inline arma::vec loss_derivative(const arma::vec& inner) const
+        {
+            return loss_.dloss(inner);
+        }
 
+        // MM lowerbound used in coordinate-descent algorithm
+        inline void set_mm_lowerbound()
+        {
+            if (control_.intercept_) {
+                mm_lowerbound0_ = loss_.mm_lowerbound(
+                    dn_obs_, control_.obs_weight_);
+            }
+            mm_lowerbound_ = loss_.mm_lowerbound(x_, control_.obs_weight_);
+        }
 
     public:
 
         unsigned int n_obs_;    // number of observations
         unsigned int k_;        // number of categories
         unsigned int p0_;       // number of predictors without intercept
-        T x_;                   // (standardized) x_: n by p (with intercept)
+        T_x x_;                   // (standardized) x_: n by p (with intercept)
         arma::uvec y_;          // y vector ranging in {0, ..., k - 1}
         arma::mat vertex_;      // unique vertex: k by (k - 1)
         arma::rowvec x_center_; // the column center of x_
         arma::rowvec x_scale_;  // the column scale of x_
 
         Control control_;       // control parameters
+        T_loss loss_;
 
         // tuning by cross-validation
         arma::mat cv_accuracy_;
@@ -111,7 +134,7 @@ namespace abclass
         }
 
         // main constructor
-        Abclass(const T& x,
+        Abclass(const T_x& x,
                 const arma::uvec& y,
                 const Control& control = Control()) :
             control_ (control)
@@ -121,7 +144,7 @@ namespace abclass
         }
 
         // setter
-        inline Abclass* set_data(const T& x,
+        inline Abclass* set_data(const T_x& x,
                                  const arma::uvec& y)
         {
             x_ = x;
@@ -186,7 +209,7 @@ namespace abclass
 
         // linear predictor
         inline arma::mat linear_score(const arma::mat& beta,
-                                      const T& x) const
+                                      const T_x& x) const
         {
             arma::mat pred_mat;
             if (control_.intercept_) {
@@ -230,19 +253,19 @@ namespace abclass
         }
         // class conditional probability
         inline arma::mat predict_prob(const arma::mat& beta,
-                                      const T& x) const
+                                      const T_x& x) const
         {
             return predict_prob(linear_score(beta, x));
         }
         // prediction based on the inner products
         inline arma::uvec predict_y(const arma::mat& beta,
-                                    const T& x) const
+                                    const T_x& x) const
         {
             return predict_y(linear_score(beta, x));
         }
         // accuracy for tuning
         inline double accuracy(const arma::mat& beta,
-                               const T& x,
+                               const T_x& x,
                                const arma::uvec& y) const
         {
             return accuracy(linear_score(beta, x), y);
