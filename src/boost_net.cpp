@@ -31,7 +31,7 @@ Rcpp::List boost_net(
     )
 {
     abclass::BoostNet<T> object { x, y, control };
-    object.set_inner_min(inner_min);
+    object.loss_.set_inner_min(inner_min);
     return abclass_net_fit(object);
 }
 
