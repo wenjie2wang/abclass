@@ -184,6 +184,19 @@ namespace abclass
             return this;
         }
 
+        // linear predictor
+        inline arma::mat linear_score(const arma::mat& beta,
+                                      const T& x) const
+        {
+            arma::mat pred_mat;
+            if (control_.intercept_) {
+                pred_mat = x * beta.tail_rows(p0_);
+                pred_mat.each_row() += beta.row(0);
+            } else {
+                pred_mat = x * beta;
+            }
+            return pred_mat;
+        }
         // class conditional probability
         inline arma::mat predict_prob(const arma::mat& pred_f) const
         {
@@ -197,7 +210,6 @@ namespace abclass
             out.each_col() /= row_sums;
             return out;
         }
-
         // predict categories for predicted classification functions
         inline arma::uvec predict_y(const arma::mat& pred_f) const
         {
@@ -215,6 +227,25 @@ namespace abclass
             // note that y can be of length different than dn_obs_
             return arma::sum(max_idx == y) /
                 static_cast<double>(y.n_elem);
+        }
+        // class conditional probability
+        inline arma::mat predict_prob(const arma::mat& beta,
+                                      const T& x) const
+        {
+            return predict_prob(linear_score(beta, x));
+        }
+        // prediction based on the inner products
+        inline arma::uvec predict_y(const arma::mat& beta,
+                                    const T& x) const
+        {
+            return predict_y(linear_score(beta, x));
+        }
+        // accuracy for tuning
+        inline double accuracy(const arma::mat& beta,
+                               const T& x,
+                               const arma::uvec& y) const
+        {
+            return accuracy(linear_score(beta, x), y);
         }
 
     };
