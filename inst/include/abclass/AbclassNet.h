@@ -162,38 +162,6 @@ namespace abclass
         // for a sequence of lambda's
         inline void fit();
 
-        // linear predictor
-        inline arma::mat linear_score(const arma::mat& beta,
-                                      const T& x) const
-        {
-            arma::mat pred_mat;
-            if (control_.intercept_) {
-                pred_mat = x * beta.tail_rows(p0_);
-                pred_mat.each_row() += beta.row(0);
-            } else {
-                pred_mat = x * beta;
-            }
-            return pred_mat;
-        }
-        // class conditional probability
-        inline arma::mat predict_prob(const arma::mat& beta,
-                                      const T& x) const
-        {
-            return Abclass<T>::predict_prob(linear_score(beta, x));
-        }
-        // prediction based on the inner products
-        inline arma::uvec predict_y(const arma::mat& beta,
-                                    const T& x) const
-        {
-            return Abclass<T>::predict_y(linear_score(beta, x));
-        }
-        // accuracy for tuning
-        inline double accuracy(const arma::mat& beta,
-                               const T& x,
-                               const arma::uvec& y) const
-        {
-            return Abclass<T>::accuracy(linear_score(beta, x), y);
-        }
 
     };
 

@@ -20,90 +20,58 @@
 
 #include <RcppArmadillo.h>
 #include "AbclassNet.h"
-#include "utils.h"
+#include "HingeBoost.h"
+#include "Control.h"
 
 namespace abclass
 {
     // define class for inputs and outputs
     template <typename T>
-    class HingeBoostNet : public AbclassNet<T>
+    class HingeBoostNet : public AbclassNet<T>, public HingeBoost
     {
-    private:
-        // data
-        using AbclassNet<T>::x_;
-        using AbclassNet<T>::obs_weight_;
-        using AbclassNet<T>::cmd_lowerbound_;
-        using AbclassNet<T>::dn_obs_;
-
-        // cache
-        double lum_cp1_;
-        double lum_c_cp1_;
-
     protected:
-
-        double lum_c_ = 0.0;
+        using AbclassNet<T>::cmd_lowerbound_;
+        using AbclassNet<T>::cmd_lowerbound0_;
+        using AbclassNet<T>::dn_obs_;
 
         // set CMD lowerbound
         inline void set_cmd_lowerbound() override
         {
-            T sqx { arma::square(x_) };
-            sqx.each_col() %= obs_weight_;
-            cmd_lowerbound_ = lum_cp1_ * arma::sum(sqx, 0) / dn_obs_;
+            if (control_.intercept_) {
+                cmd_lowerbound0_ = HingeBoost::mm_lowerbound(
+                    dn_obs_, control_.obs_weight_);
+            }
+            cmd_lowerbound_ = HingeBoost::mm_lowerbound(x_,
+                                                        control_.obs_weight_);
         }
 
         // objective function without regularization
         inline double objective0(const arma::vec& inner) const override
         {
-            arma::vec tmp { arma::zeros(inner.n_elem) };
-            for (size_t i {0}; i < inner.n_elem; ++i) {
-                if (inner[i] < lum_c_cp1_) {
-                    tmp[i] = 1.0 - inner[i];
-                } else {
-                    tmp[i] = std::exp(- (lum_cp1_ * inner[i] - lum_c_)) /
-                        lum_cp1_;
-                }
-            }
-            return arma::mean(obs_weight_ % tmp);
+            return HingeBoost::loss(inner, control_.obs_weight_);
         }
 
         // the first derivative of the loss function
         inline arma::vec loss_derivative(const arma::vec& u) const override
         {
-            arma::vec out { - arma::ones(u.n_elem) };
-            for (size_t i {0}; i < u.n_elem; ++i) {
-                if (u[i] > lum_c_cp1_) {
-                    out[i] = - std::exp(- (lum_cp1_ * u[i] - lum_c_));
-                }
-            }
-            return out;
+            return HingeBoost::dloss(u);
         }
 
     public:
 
-        // inherit default constructors
+        // inherit
         using AbclassNet<T>::AbclassNet;
+        using AbclassNet<T>::x_;
+        using AbclassNet<T>::control_;
 
         //! @param x The design matrix without an intercept term.
         //! @param y The category index vector.
         HingeBoostNet(const T& x,
                       const arma::uvec& y,
-                      const bool intercept = true,
-                      const bool standardize = true,
-                      const arma::vec& weight = arma::vec()) :
-            AbclassNet<T>(x, y, intercept, standardize, weight)
+                      const Control& control) :
+            AbclassNet<T>(x, y, control)
         {
-            set_lum_c(0.0);
-        }
-
-        HingeBoostNet* set_lum_c(const double lum_c)
-        {
-            if (is_lt(lum_c, 0.0)) {
-                throw std::range_error("The LUM 'C' cannot be negative.");
-            }
-            lum_c_ = lum_c;
-            lum_cp1_ = lum_c + 1.0;
-            lum_c_cp1_ = lum_c_ / lum_cp1_;
-            return this;
+            set_c(0.0);
         }
 
     };                          // end of class

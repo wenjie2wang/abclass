@@ -19,65 +19,41 @@
 #define ABCLASS_BOOST_NET_H
 
 #include <RcppArmadillo.h>
-#include <stdexcept>
 #include "AbclassNet.h"
+#include "Boost.h"
 #include "Control.h"
-#include "utils.h"
 
 namespace abclass
 {
     // define class for inputs and outputs
     template <typename T>
-    class BoostNet : public AbclassNet<T>
+    class BoostNet : public AbclassNet<T>, public Boost
     {
-    private:
-        // cache
-        double exp_inner_max_;
-
     protected:
         using AbclassNet<T>::cmd_lowerbound_;
         using AbclassNet<T>::cmd_lowerbound0_;
         using AbclassNet<T>::dn_obs_;
 
-        double inner_min_ = - 5.0;
-
         // set CMD lowerbound
         inline void set_cmd_lowerbound() override
         {
-            T sqx { arma::square(x_) };
-            cmd_lowerbound0_ = exp_inner_max_ *
-                arma::accu(control_.obs_weight_) / dn_obs_;
-            cmd_lowerbound_ = exp_inner_max_ *
-                (control_.obs_weight_.t() * sqx) / dn_obs_;
+            if (control_.intercept_) {
+                cmd_lowerbound0_ = Boost::mm_lowerbound(
+                    dn_obs_, control_.obs_weight_);
+            }
+            cmd_lowerbound_ = Boost::mm_lowerbound(x_, control_.obs_weight_);
         }
 
         // objective function without regularization
         inline double objective0(const arma::vec& inner) const override
         {
-            arma::vec tmp { arma::zeros(inner.n_elem) };
-            double tmp1 { 1 + inner_min_ };
-            for (size_t i {0}; i < inner.n_elem; ++i) {
-                if (inner[i] < inner_min_) {
-                    tmp[i] = (tmp1 - inner[i]) * exp_inner_max_;
-                } else {
-                    tmp[i] = std::exp(- inner[i]);
-                }
-            }
-            return arma::mean(control_.obs_weight_ % tmp);
+            return Boost::loss(inner, control_.obs_weight_);
         }
 
         // the first derivative of the loss function
         inline arma::vec loss_derivative(const arma::vec& u) const override
         {
-            arma::vec out { arma::zeros(u.n_elem) };
-            for (size_t i {0}; i < u.n_elem; ++i) {
-                if (u[i] < inner_min_) {
-                    out[i] = - exp_inner_max_;
-                } else {
-                    out[i] = - std::exp(- u[i]);
-                }
-            }
-            return out;
+            return Boost::dloss(u);
         }
 
     public:
@@ -97,17 +73,6 @@ namespace abclass
         {
             set_inner_min(- 5.0);
         }
-
-        BoostNet* set_inner_min(const double inner_min)
-        {
-            if (is_gt(inner_min, 0.0)) {
-                throw std::range_error("The 'inner_min' cannot be positive.");
-            }
-            inner_min_ = inner_min;
-            exp_inner_max_ = std::exp(- inner_min_);
-            return this;
-        }
-
 
     };                          // end of class
 

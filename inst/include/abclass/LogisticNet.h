@@ -20,52 +20,47 @@
 
 #include <RcppArmadillo.h>
 #include "AbclassNet.h"
+#include "Logistic.h"
+#include "Control.h"
 
 namespace abclass
 {
     // define class for inputs and outputs
     template <typename T>
-    class LogisticNet : public AbclassNet<T>
+    class LogisticNet : public AbclassNet<T>, public Logistic
     {
-    private:
-        // data
-        using AbclassNet<T>::x_;
-        using AbclassNet<T>::obs_weight_;
-        using AbclassNet<T>::cmd_lowerbound_;
-        using AbclassNet<T>::dn_obs_;
-
     protected:
+        using AbclassNet<T>::cmd_lowerbound_;
+        using AbclassNet<T>::cmd_lowerbound0_;
+        using AbclassNet<T>::dn_obs_;
 
         // set CMD lowerbound
         inline void set_cmd_lowerbound() override
         {
-            T sqx { arma::square(x_) };
-            sqx.each_col() %= obs_weight_;
-            cmd_lowerbound_ = arma::sum(sqx, 0) / (4.0 * dn_obs_);
+            if (control_.intercept_) {
+                cmd_lowerbound0_ = Logistic::mm_lowerbound(
+                    dn_obs_, control_.obs_weight_);
+            }
+            cmd_lowerbound_ = Logistic::mm_lowerbound(x_, control_.obs_weight_);
         }
 
         // objective function without regularization
         inline double objective0(const arma::vec& inner) const override
         {
-            return arma::mean(obs_weight_ %
-                              arma::log(1.0 + arma::exp(- inner)));
+            return Logistic::loss(inner, control_.obs_weight_);
         }
 
         // the first derivative of the loss function
         inline arma::vec loss_derivative(const arma::vec& u) const override
         {
-            arma::vec out { arma::zeros(u.n_elem) };
-            for (size_t i {0}; i < out.n_elem; ++i) {
-                out[i] = - 1.0 / (1.0 + std::exp(u[i]));
-            }
-            return out;
-            // return - 1.0 / (1.0 + arma::exp(u));
+            return Logistic::dloss(u);
         }
 
     public:
-
-        // inherit constructors
+        // inherit
         using AbclassNet<T>::AbclassNet;
+        using AbclassNet<T>::x_;
+        using AbclassNet<T>::control_;
 
     };                          // end of class
 
