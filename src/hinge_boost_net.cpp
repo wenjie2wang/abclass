@@ -33,7 +33,7 @@ Rcpp::List hinge_boost_net(
 }
 
 // [[Rcpp::export]]
-Rcpp::List rcpp_hinge_boost_net(
+Rcpp::List r_hinge_boost_net(
     const arma::mat& x,
     const arma::uvec& y,
     const arma::vec& lambda,
@@ -64,7 +64,7 @@ Rcpp::List rcpp_hinge_boost_net(
 }
 
 // [[Rcpp::export]]
-Rcpp::List rcpp_hinge_boost_net_sp(
+Rcpp::List r_hinge_boost_net_sp(
     const arma::sp_mat& x,
     const arma::uvec& y,
     const arma::vec& lambda,

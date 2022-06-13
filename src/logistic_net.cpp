@@ -31,7 +31,7 @@ Rcpp::List logistic_net(
 }
 
 // [[Rcpp::export]]
-Rcpp::List rcpp_logistic_net(
+Rcpp::List r_logistic_net(
     const arma::mat& x,
     const arma::uvec& y,
     const arma::vec& lambda,
@@ -61,7 +61,7 @@ Rcpp::List rcpp_logistic_net(
 }
 
 // [[Rcpp::export]]
-Rcpp::List rcpp_logistic_net_sp(
+Rcpp::List r_logistic_net_sp(
     const arma::sp_mat& x,
     const arma::uvec& y,
     const arma::vec& lambda,

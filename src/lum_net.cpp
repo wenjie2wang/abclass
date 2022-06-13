@@ -34,7 +34,7 @@ Rcpp::List lum_net(
 }
 
 // [[Rcpp::export]]
-Rcpp::List rcpp_lum_net(
+Rcpp::List r_lum_net(
     const arma::mat& x,
     const arma::uvec& y,
     const arma::vec& lambda,
@@ -66,7 +66,7 @@ Rcpp::List rcpp_lum_net(
 }
 
 // [[Rcpp::export]]
-Rcpp::List rcpp_lum_net_sp(
+Rcpp::List r_lum_net_sp(
     const arma::sp_mat& x,
     const arma::uvec& y,
     const arma::vec& lambda,

@@ -50,7 +50,7 @@ Rcpp::List abclass_group_lasso_fit(T& object)
     };
     if (object.control_.cv_nfolds_ > 0) {
         arma::uvec strata;
-        if (object.control_.cv_stratified) {
+        if (object.control_.cv_stratified_) {
             strata = object.y_;
         }
         abclass::cv_lambda(object,
@@ -74,7 +74,7 @@ Rcpp::List abclass_group_lasso_fit(T& object)
         Rcpp::Named("regularization") = Rcpp::List::create(
             Rcpp::Named("lambda") = abclass::arma2rvec(lambda_vec),
             Rcpp::Named("group_weight") =
-            abclass::arma2rvec(object.group_weight_),
+            abclass::arma2rvec(object.control_.group_weight_),
             Rcpp::Named("lambda_max") = object.lambda_max_
             )
         );
@@ -114,7 +114,7 @@ Rcpp::List abclass_group_ncv_fit(T& object)
         Rcpp::Named("regularization") = Rcpp::List::create(
             Rcpp::Named("lambda") = abclass::arma2rvec(lambda_vec),
             Rcpp::Named("group_weight") =
-            abclass::arma2rvec(object.group_weight_),
+            abclass::arma2rvec(object.control_.group_weight_),
             Rcpp::Named("dgamma") = object.control_.dgamma_,
             Rcpp::Named("gamma") = object.gamma_,
             Rcpp::Named("lambda_max") = object.lambda_max_

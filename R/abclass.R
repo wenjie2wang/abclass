@@ -92,9 +92,9 @@ abclass <- function(x, y,
     )
     fun_to_call <-
         if (control$grouped) {
-            sprintf("rcpp_%s_group_%s", loss2, control$group_penalty)
+            sprintf("r_%s_g%s", loss2, control$group_penalty)
         } else {
-            sprintf("rcpp_%s_net", loss2)
+            sprintf("r_%s_net", loss2)
         }
     args_to_call <- default_args_to_call[
         names(default_args_to_call) %in% formal_names(fun_to_call)

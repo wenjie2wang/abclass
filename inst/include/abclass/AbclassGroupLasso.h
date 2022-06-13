@@ -44,7 +44,7 @@ namespace abclass
         using AbclassGroup<T_loss, T_x>::mm_gradient0;
         using AbclassGroup<T_loss, T_x>::gradient;
         using AbclassGroup<T_loss, T_x>::objective0;
-        using AbclassGroup<T_loss, T_x>::set_gmd_lowerbound;
+        using AbclassGroup<T_loss, T_x>::set_mm_lowerbound;
 
         // common methods
         inline double regularization(
@@ -299,7 +299,7 @@ namespace abclass
     inline void AbclassGroupLasso<T_loss, T_x>::fit()
     {
         // set the CMD lowerbound
-        set_gmd_lowerbound();
+        set_mm_lowerbound();
         // set group weight
         set_group_weight(control_.group_weight_);
         arma::uvec penalty_group { arma::find(control_.group_weight_ > 0.0) };
