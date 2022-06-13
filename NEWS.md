@@ -1,3 +1,15 @@
+# abclass 0.3.1.9000
+
+## New features
+
+* Support sparse matrix `x` of class `sparseMatrix` (provided by the `{Matrix}`
+  package) for `abclass()` and `predict.abclass()`.
+
+## Bug fixes
+
+* Fixed `alignment` in `abclass.control()`.
+
+
 # abclass 0.3.0
 
 ## New features
