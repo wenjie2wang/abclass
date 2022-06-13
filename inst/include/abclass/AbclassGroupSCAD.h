@@ -46,9 +46,6 @@ namespace abclass
         using AbclassGroup<T_loss, T_x>::objective0;
         using AbclassGroup<T_loss, T_x>::set_mm_lowerbound;
 
-        // for groupwise majorization descent
-        double max_mg_;         // arma::max(mm_lowerbound_)
-
         // common methods
         inline double scad_group_penalty(const arma::rowvec& beta,
                                          const double lambda,
@@ -151,8 +148,14 @@ namespace abclass
         // setter
         inline void set_gamma(const double dgamma = 0.01)
         {
+            if (mm_lowerbound_.empty()) {
+                set_mm_lowerbound();
+            }
+            const double max_mg {
+                std::max(mm_lowerbound_.max(), mm_lowerbound0_)
+            };
             if (dgamma > 0.0) {
-                gamma_ = dgamma + 1.0 + 1.0 / max_mg_;
+                gamma_ = dgamma + 1.0 + 1.0 / max_mg;
                 return;
             }
             throw std::range_error("The 'dgamma' must be positive.");
