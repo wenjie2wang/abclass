@@ -219,8 +219,8 @@ abclass.control <- function(lambda = NULL,
                             verbose = 0,
                             ...)
 {
-    if (is.integer(alignment)) {
-        alignment <- alignment[1L]
+    if (is.numeric(alignment) || is.integer(alignment)) {
+        alignment <- as.integer(alignment[1L])
     } else {
         all_alignment <- c("fraction", "lambda")
         alignment <- match.arg(alignment, choices = all_alignment)
