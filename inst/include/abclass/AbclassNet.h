@@ -437,7 +437,7 @@ namespace abclass
             custom_lambda_ = true;
         }
         // if alpha = 0 and customized lambda
-        if (is_ridge_only && ! custom_lambda_) {
+        if (is_ridge_only && custom_lambda_) {
             l1_lambda_max_ = - 1.0; // not well defined
             lambda_max_ = - 1.0;    // not well defined
         } else {

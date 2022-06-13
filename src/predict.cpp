@@ -18,88 +18,124 @@
 #include <RcppArmadillo.h>
 #include <abclass.h>
 
-// [[Rcpp::export]]
-arma::mat rcpp_logistic_predict_prob(const arma::mat& beta,
-                                     const arma::mat& x)
+template <typename T_loss, typename T_x>
+arma::mat predict_prob(const arma::mat& beta, const T_x& x)
 {
     const unsigned int k { beta.n_cols + 1 };
-    abclass::LogisticNet object { k };
+    abclass::Abclass<T_loss, T_x> object { k };
+    object.set_intercept(beta.n_rows > x.n_cols);
     return object.predict_prob(beta, x);
 }
 
-// [[Rcpp::export]]
-arma::uvec rcpp_logistic_predict_y(const arma::mat& beta,
-                                   const arma::mat& x)
+template <typename T_loss, typename T_x>
+arma::uvec predict_y(const arma::mat& beta, const T_x& x)
 {
     const unsigned int k { beta.n_cols + 1 };
-    abclass::LogisticNet object { k };
+    abclass::Abclass<T_loss, T_x> object { k };
+    object.set_intercept(beta.n_rows > x.n_cols);
     return object.predict_y(beta, x);
 }
 
+// logistic ==================================================================
 // [[Rcpp::export]]
-arma::mat rcpp_boost_predict_prob(const arma::mat& beta,
-                                  const arma::mat& x,
-                                  const double boost_umin)
+arma::mat r_logistic_pred_prob(const arma::mat& beta,
+                                  const arma::mat& x)
 {
-    const unsigned int k { beta.n_cols + 1 };
-    abclass::BoostNet object { k };
-    object.set_inner_min(boost_umin);
-    return object.predict_prob(beta, x);
+    return predict_prob<abclass::Logistic, arma::mat>(beta, x);
+}
+// [[Rcpp::export]]
+arma::mat r_logistic_pred_prob_sp(const arma::mat& beta,
+                                  const arma::sp_mat& x)
+{
+    return predict_prob<abclass::Logistic, arma::sp_mat>(beta, x);
+}
+// [[Rcpp::export]]
+arma::uvec r_logistic_pred_y(const arma::mat& beta,
+                             const arma::mat& x)
+{
+    return predict_y<abclass::Logistic, arma::mat>(beta, x);
+}
+// [[Rcpp::export]]
+arma::uvec r_logistic_pred_y_sp(const arma::mat& beta,
+                                const arma::sp_mat& x)
+{
+    return predict_y<abclass::Logistic, arma::sp_mat>(beta, x);
 }
 
+// boost =====================================================================
 // [[Rcpp::export]]
-arma::uvec rcpp_boost_predict_y(const arma::mat& beta,
-                                const arma::mat& x,
-                                const double boost_umin)
+arma::mat r_boost_pred_prob(const arma::mat& beta,
+                            const arma::mat& x)
 {
-    const unsigned int k { beta.n_cols + 1 };
-    abclass::BoostNet object { k };
-    object.set_inner_min(boost_umin);
-    return object.predict_y(beta, x);
+    return predict_prob<abclass::Boost, arma::mat>(beta, x);
+}
+// [[Rcpp::export]]
+arma::mat r_boost_pred_prob_sp(const arma::mat& beta,
+                               const arma::sp_mat& x)
+{
+    return predict_prob<abclass::Boost, arma::sp_mat>(beta, x);
+}
+// [[Rcpp::export]]
+arma::uvec r_boost_pred_y(const arma::mat& beta,
+                          const arma::mat& x)
+{
+    return predict_y<abclass::Boost, arma::mat>(beta, x);
+}
+// [[Rcpp::export]]
+arma::uvec r_boost_pred_y_sp(const arma::mat& beta,
+                             const arma::sp_mat& x)
+{
+    return predict_y<abclass::Boost, arma::sp_mat>(beta, x);
 }
 
+// hinge-boost ===============================================================
 // [[Rcpp::export]]
-arma::mat rcpp_hinge_boost_predict_prob(const arma::mat& beta,
-                                        const arma::mat& x,
-                                        const double lum_c)
+arma::mat r_hinge_boost_pred_prob(const arma::mat& beta,
+                                  const arma::mat& x)
 {
-    const unsigned int k { beta.n_cols + 1 };
-    abclass::HingeBoostNet object { k };
-    object.set_lum_c(lum_c);
-    return object.predict_prob(beta, x);
+    return predict_prob<abclass::HingeBoost, arma::mat>(beta, x);
+}
+// [[Rcpp::export]]
+arma::mat r_hinge_boost_pred_prob_sp(const arma::mat& beta,
+                                     const arma::sp_mat& x)
+{
+    return predict_prob<abclass::HingeBoost, arma::sp_mat>(beta, x);
+}
+// [[Rcpp::export]]
+arma::uvec r_hinge_boost_pred_y(const arma::mat& beta,
+                                const arma::mat& x)
+{
+    return predict_y<abclass::HingeBoost, arma::mat>(beta, x);
+}
+// [[Rcpp::export]]
+arma::uvec r_hinge_boost_pred_y_sp(const arma::mat& beta,
+                                   const arma::sp_mat& x)
+{
+    return predict_y<abclass::HingeBoost, arma::sp_mat>(beta, x);
 }
 
+// lum =======================================================================
 // [[Rcpp::export]]
-arma::uvec rcpp_hinge_boost_predict_y(const arma::mat& beta,
-                                      const arma::mat& x,
-                                      const double lum_c)
+arma::mat r_lum_pred_prob(const arma::mat& beta,
+                          const arma::mat& x)
 {
-    const unsigned int k { beta.n_cols + 1 };
-    abclass::HingeBoostNet object { k };
-    object.set_lum_c(lum_c);
-    return object.predict_y(beta, x);
+    return predict_prob<abclass::Lum, arma::mat>(beta, x);
 }
-
 // [[Rcpp::export]]
-arma::mat rcpp_lum_predict_prob(const arma::mat& beta,
-                                const arma::mat& x,
-                                const double lum_a,
-                                const double lum_c)
+arma::mat r_lum_pred_prob_sp(const arma::mat& beta,
+                             const arma::sp_mat& x)
 {
-    const unsigned int k { beta.n_cols + 1 };
-    abclass::LumNet object { k };
-    object.set_lum_parameters(lum_a, lum_c);
-    return object.predict_prob(beta, x);
+    return predict_prob<abclass::Lum, arma::sp_mat>(beta, x);
 }
-
 // [[Rcpp::export]]
-arma::uvec rcpp_lum_predict_y(const arma::mat& beta,
-                              const arma::mat& x,
-                              const double lum_a,
-                              const double lum_c)
+arma::uvec r_lum_pred_y(const arma::mat& beta,
+                        const arma::mat& x)
 {
-    const unsigned int k { beta.n_cols + 1 };
-    abclass::LumNet object { k };
-    object.set_lum_parameters(lum_a, lum_c);
-    return object.predict_y(beta, x);
+    return predict_y<abclass::Lum, arma::mat>(beta, x);
+}
+// [[Rcpp::export]]
+arma::uvec r_lum_pred_y_sp(const arma::mat& beta,
+                           const arma::sp_mat& x)
+{
+    return predict_y<abclass::Lum, arma::sp_mat>(beta, x);
 }

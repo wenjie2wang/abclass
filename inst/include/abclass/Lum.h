@@ -27,7 +27,7 @@ namespace abclass
     public:
         Lum()
         {
-            set_ac(0.1, 1.0);
+            set_ac(1.0, 0.0);
         }
 
         Lum(const double a, const double c)

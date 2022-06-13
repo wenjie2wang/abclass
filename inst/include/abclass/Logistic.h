@@ -10,7 +10,7 @@ namespace abclass
     class Logistic
     {
     public:
-        Logistic();
+        Logistic() {};
 
         // loss function
         inline double loss(const arma::vec& u,

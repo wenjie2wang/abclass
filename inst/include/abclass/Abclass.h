@@ -213,7 +213,7 @@ namespace abclass
         {
             arma::mat pred_mat;
             if (control_.intercept_) {
-                pred_mat = x * beta.tail_rows(p0_);
+                pred_mat = x * beta.tail_rows(x.n_cols);
                 pred_mat.each_row() += beta.row(0);
             } else {
                 pred_mat = x * beta;

@@ -39,7 +39,7 @@ namespace abclass
                             const Control& control) :
             AbclassGroupSCAD<HingeBoost, T_x>(x, y, control)
         {
-            this->loss_.set_lum_c(0.0);
+            this->loss_.set_c(0.0);
         }
 
     };                          // end of class

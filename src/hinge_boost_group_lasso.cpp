@@ -64,7 +64,7 @@ Rcpp::List r_hinge_boost_glasso(
 }
 
 // [[Rcpp::export]]
-Rcpp::List rcpp_hinge_boost_group_lasso_sp(
+Rcpp::List r_hinge_boost_glasso_sp(
     const arma::sp_mat& x,
     const arma::uvec& y,
     const arma::vec& lambda,
