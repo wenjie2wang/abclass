@@ -276,6 +276,7 @@ namespace abclass
                 // cycles over the active set
                 size_t ii {0};
                 while (ii < max_iter) {
+                    Rcpp::checkUserInterrupt();
                     run_one_active_cycle(beta, inner, is_active_varying,
                                          lambda, gamma, true, verbose);
                     if (rel_diff(beta0, beta) < epsilon) {
@@ -319,6 +320,7 @@ namespace abclass
         } else {
             // regular coordinate descent
             while (i < max_iter) {
+                Rcpp::checkUserInterrupt();
                 run_one_active_cycle(beta, inner, is_active,
                                      lambda, gamma, false, verbose);
                 if (rel_diff(beta0, beta) < epsilon) {
