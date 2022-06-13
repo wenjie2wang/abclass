@@ -58,9 +58,6 @@ predict.abclass <- function(object,
     if (! is.matrix(newx)) {
         newx <- as.matrix(newx)
     }
-    if (object$intercept) {
-        newx <- cbind(1, newx)
-    }
     type <- match.arg(type, c("class", "probability"))
     n_slice <- dim(object$coefficients)[3L]
     ## set the selection index
@@ -86,16 +83,9 @@ predict.abclass <- function(object,
     }
     ## determine the internal function to call
     loss_fun <- gsub("-", "_", object$loss$loss, fixed = TRUE)
-    predict_prob_fun <- sprintf("rcpp_%s_predict_prob", loss_fun)
-    predict_class_fun <- sprintf("rcpp_%s_predict_y", loss_fun)
-    arg_list <- switch(
-        loss_fun,
-        "logistic" = list(),
-        "boost" = object$loss["boost_umin"],
-        "hinge_boost" = object$loss["lum_c"],
-        "lum" = object$loss[c("lum_a", "lum_c")]
-    )
-    arg_list$x <- newx
+    predict_prob_fun <- sprintf("r_%s_pred_prob", loss_fun)
+    predict_class_fun <- sprintf("r_%s_pred_y", loss_fun)
+    arg_list <- list(x = newx)
     pred_list <- switch(
         type,
         "class" = {
