@@ -27,7 +27,7 @@ $(tar): $(objects)
 	R CMD build .
 
 $(checkLog): $(tar)
-	R CMD check $(tar)
+	R CMD check --as-cran $(tar)
 
 .PHONY: readme
 readme: README.md
