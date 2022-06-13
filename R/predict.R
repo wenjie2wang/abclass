@@ -55,7 +55,10 @@ predict.abclass <- function(object,
     if (missing(newx)) {
         stop("The 'newx' must be specified.")
     }
-    if (! is.matrix(newx)) {
+    is_x_sparse <- FALSE
+    if (inherits(newx, "sparseMatrix")) {
+        is_x_sparse <- TRUE
+    } else if (! is.matrix(newx)) {
         newx <- as.matrix(newx)
     }
     type <- match.arg(type, c("class", "probability"))
@@ -85,6 +88,10 @@ predict.abclass <- function(object,
     loss_fun <- gsub("-", "_", object$loss$loss, fixed = TRUE)
     predict_prob_fun <- sprintf("r_%s_pred_prob", loss_fun)
     predict_class_fun <- sprintf("r_%s_pred_y", loss_fun)
+    if (is_x_sparse) {
+        predict_prob_fun <- paste0(predict_prob_fun, "_sp")
+        predict_class_fun <- paste0(predict_class_fun, "_sp")
+    }
     arg_list <- list(x = newx)
     pred_list <- switch(
         type,

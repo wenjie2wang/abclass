@@ -75,7 +75,10 @@ abclass <- function(x, y,
     dot_list <- list(...)
     control <- do.call(abclass.control, modify_list(control, dot_list))
     ## pre-process
-    if (! is.matrix(x)) {
+    is_x_sparse <- FALSE
+    if (inherits(x, "sparseMatrix")) {
+        is_x_sparse <- TRUE
+    } else if (! is.matrix(x)) {
         x <- as.matrix(x)
     }
     cat_y <- cat2z(y)
@@ -96,6 +99,9 @@ abclass <- function(x, y,
         } else {
             sprintf("r_%s_net", loss2)
         }
+    if (is_x_sparse) {
+        fun_to_call <- paste0(fun_to_call, "_sp")
+    }
     args_to_call <- default_args_to_call[
         names(default_args_to_call) %in% formal_names(fun_to_call)
     ]
