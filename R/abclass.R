@@ -213,9 +213,13 @@ abclass.control <- function(lambda = NULL,
                             verbose = 0,
                             ...)
 {
-    all_alignment <- c("fraction", "lambda")
-    alignment <- match.arg(alignment, all_alignment)
-    alignment <- match(alignment, all_alignment) - 1L
+    if (is.integer(alignment)) {
+        alignment <- alignment[1L]
+    } else {
+        all_alignment <- c("fraction", "lambda")
+        alignment <- match.arg(alignment, choices = all_alignment)
+        alignment <- match(alignment, all_alignment) - 1L
+    }
     if (grouped) {
         group_penalty <- match.arg(
             group_penalty, choices = c("lasso", "scad", "mcp")
