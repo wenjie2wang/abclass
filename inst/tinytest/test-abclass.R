@@ -42,22 +42,3 @@ model4 <- abclass(train_x, train_y, nlambda = 5, nfolds = 3,
 pred4 <- predict(model4, test_x)
 expect_true(mean(test_y == pred4) > 0.5)
 expect_equivalent(dim(coef(model4)), c(p + 1, k - 1))
-
-## for sparse matrix
-if (requireNamespace("Matrix", quietly = TRUE)) {
-    library(Matrix)
-    n = 100
-    p = 5
-    nzc = trunc(p / 10)
-    x = matrix(rnorm(n * p), n, p)
-    iz = sample(n * p, size = n * p * 0.9)
-    x[iz] = 0
-    sx = Matrix(x, sparse = TRUE)
-    inherits(sx, "sparseMatrix")  # confirm that it is sparse
-    beta = rnorm(nzc)
-    fx = x[, seq(nzc)] %*% beta
-    px = 1 / (1 + exp(- fx))
-    ly = rbinom(n = length(px), prob = px, size = 1)
-    system.time(fit1 <- abclass(sx, ly))
-    system.time(fit2 <- abclass(x, ly))
-}
