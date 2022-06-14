@@ -35,6 +35,7 @@ namespace abclass
         using AbclassGroup<T_loss, T_x>::inter_;
         using AbclassGroup<T_loss, T_x>::mm_lowerbound_;
         using AbclassGroup<T_loss, T_x>::mm_lowerbound0_;
+        using AbclassGroup<T_loss, T_x>::num_iter_;
 
         // functions
         using AbclassGroup<T_loss, T_x>::loss_derivative;
@@ -102,12 +103,11 @@ namespace abclass
         using AbclassGroup<T_loss, T_x>::vertex_;
         using AbclassGroup<T_loss, T_x>::x_;
         using AbclassGroup<T_loss, T_x>::y_;
-        using AbclassGroup<T_loss, T_x>::permuted_;
+        using AbclassGroup<T_loss, T_x>::et_npermuted_;
 
         using AbclassGroup<T_loss, T_x>::lambda_max_;
         using AbclassGroup<T_loss, T_x>::custom_lambda_;
         using AbclassGroup<T_loss, T_x>::coef_;
-        using AbclassGroup<T_loss, T_x>::num_iter_;
 
         using AbclassGroup<T_loss, T_x>::rescale_coef;
         using AbclassGroup<T_loss, T_x>::set_group_weight;
@@ -360,8 +360,7 @@ namespace abclass
         // optim with varying active set when p > n
         double old_lambda { lambda_max_ }; // for strong rule
         // main loop: for each lambda
-        size_t li { 0 };
-        for (; li < control_.lambda_.n_elem; ++li) {
+        for (size_t li { 0 }; li < control_.lambda_.n_elem; ++li) {
             double lambda_li { control_.lambda_(li) };
             // early exit for lambda greater than lambda_max_
             // note that lambda is sorted
@@ -436,22 +435,25 @@ namespace abclass
                 }
             }
             // check if any permuted predictors are selected
-            if (permuted_ > 0) {
+            if (et_npermuted_ > 0) {
                 if (control_.verbose_ > 0) {
-                    msg("checking if any pseudo-predictors were selected.");
+                    msg("[ET] check if any pseudo-predictors was selected.");
                 }
                 // assume the last (permuted ) predictors are inactive
-                arma::mat permuted_beta { one_beta.tail_rows(permuted_) };
+                arma::mat permuted_beta { one_beta.tail_rows(et_npermuted_) };
                 if (! permuted_beta.is_zero(arma::datum::eps)) {
                     if (li == 0) {
-                        msg("Warning: fail to tune; lambda too small.");
+                        msg("[ET] Warning: fail to tune; lambda too small.");
                     } else {
                         coef_ = coef_.head_slices(li);
                     }
                     if (control_.verbose_ > 0) {
-                        msg("Found selected pseudo-predictor(s).\n");
+                        msg("[ET] selected pseudo-predictor(s).\n");
                     }
                     break;
+                }
+                if (control_.verbose_ > 0) {
+                    msg("[ET] none of pseudo-predictors was selected.\n");
                 }
             }
             coef_.slice(li) = rescale_coef(one_beta);

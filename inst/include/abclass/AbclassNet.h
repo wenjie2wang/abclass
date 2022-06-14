@@ -42,6 +42,9 @@ namespace abclass
         using Abclass<T_loss, T_x>::objective0;
         using Abclass<T_loss, T_x>::loss_derivative;
 
+        // cache
+        unsigned int num_iter_;   // number of CMD cycles till convergence
+
         // common methods
         inline double regularization(const arma::mat& beta,
                                      const double l1_lambda,
@@ -138,7 +141,8 @@ namespace abclass
         using Abclass<T_loss, T_x>::p0_;
         using Abclass<T_loss, T_x>::p1_;
         using Abclass<T_loss, T_x>::n_obs_;
-        using Abclass<T_loss, T_x>::permuted_;
+        using Abclass<T_loss, T_x>::et_npermuted_;
+        using Abclass<T_loss, T_x>::coef_;
         using Abclass<T_loss, T_x>::set_mm_lowerbound;
 
         // regularization
@@ -148,15 +152,8 @@ namespace abclass
         // did user specified a customized lambda sequence?
         bool custom_lambda_ = false;
 
-        // estimates
-        arma::cube coef_;         // p1_ by km1_
-
-        // cache
-        unsigned int num_iter_;   // number of CMD cycles till convergence
-
         // for a sequence of lambda's
         inline void fit();
-
 
     };
 
@@ -429,6 +426,7 @@ namespace abclass
     {
         // set the CMD lowerbound
         set_mm_lowerbound();
+        // TODO: allow groupwise adaptive weights
         // initialize
         arma::vec one_inner { arma::zeros(n_obs_) };
         arma::mat one_beta { arma::zeros(p1_, km1_) },
@@ -573,6 +571,27 @@ namespace abclass
                         msg("The strong rule worked.\n");
                     }
                     kkt_failed = false;
+                }
+            }
+            if (et_npermuted_ > 0) {
+                if (control_.verbose_ > 0) {
+                    msg("[ET] check if any pseudo-predictors was selected.");
+                }
+                // assume the last (permuted ) predictors are inactive
+                arma::mat permuted_beta { one_beta.tail_rows(et_npermuted_) };
+                if (! permuted_beta.is_zero(arma::datum::eps)) {
+                    if (li == 0) {
+                        msg("[ET] Warning: fail to tune; lambda too small.");
+                    } else {
+                        coef_ = coef_.head_slices(li);
+                    }
+                    if (control_.verbose_ > 0) {
+                        msg("[ET] selected pseudo-predictor(s).\n");
+                    }
+                    break;
+                }
+                if (control_.verbose_ > 0) {
+                    msg("[ET] none of pseudo-predictors was selected.\n");
                 }
             }
             coef_.slice(li) = rescale_coef(one_beta);

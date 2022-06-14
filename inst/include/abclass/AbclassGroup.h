@@ -36,6 +36,9 @@ namespace abclass
         using Abclass<T_loss, T_x>::km1_;
         using Abclass<T_loss, T_x>::loss_derivative;
 
+        // cache
+        unsigned int num_iter_;   // number of GMD cycles till convergence
+
         // define gradient function for j-th predictor
         inline arma::rowvec mm_gradient(const arma::vec& inner,
                                         const unsigned int j) const
@@ -76,27 +79,6 @@ namespace abclass
             return out / dn_obs_;
         }
 
-        inline arma::vec gen_group_weight(
-            const arma::vec& group_weight = arma::vec()
-            ) const
-        {
-            if (group_weight.n_elem < p0_) {
-                arma::vec out { arma::ones(p0_) };
-                if (group_weight.is_empty()) {
-                    return out;
-                }
-            } else if (group_weight.n_elem == p0_) {
-                if (arma::any(group_weight < 0.0)) {
-                    throw std::range_error(
-                        "The 'group_weight' cannot be negative.");
-                }
-                return group_weight;
-            }
-            // else
-            throw std::range_error("Incorrect length of the 'group_weight'.");
-        }
-
-
     public:
         // inherit constructors
         using Abclass<T_loss, T_x>::Abclass;
@@ -106,7 +88,8 @@ namespace abclass
         using Abclass<T_loss, T_x>::x_;
         using Abclass<T_loss, T_x>::y_;
         using Abclass<T_loss, T_x>::vertex_;
-        using Abclass<T_loss, T_x>::permuted_;
+        using Abclass<T_loss, T_x>::et_npermuted_;
+        using Abclass<T_loss, T_x>::coef_;
 
         // regularization
         // the "big" enough lambda => zero coef
@@ -114,22 +97,8 @@ namespace abclass
         // did user specified a customized lambda sequence?
         bool custom_lambda_ = false;
 
-        // estimates
-        arma::cube coef_;         // p1_ by km1_
-
-        // cache
-        unsigned int num_iter_;   // number of GMD cycles till convergence
-
         // for a sequence of lambda's
         virtual void fit() = 0;
-
-        // setter for group weights
-        inline void set_group_weight(
-            const arma::vec& group_weight = arma::vec()
-            )
-        {
-            control_.group_weight_ = gen_group_weight(group_weight);
-        }
 
     };
 

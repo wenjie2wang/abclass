@@ -103,8 +103,29 @@ namespace abclass
             mm_lowerbound_ = loss_.mm_lowerbound(x_, control_.obs_weight_);
         }
 
+        inline arma::vec gen_group_weight(
+            const arma::vec& group_weight = arma::vec()
+            ) const
+        {
+            if (group_weight.n_elem < p0_) {
+                arma::vec out { arma::ones(p0_) };
+                if (group_weight.is_empty()) {
+                    return out;
+                }
+            } else if (group_weight.n_elem == p0_) {
+                if (arma::any(group_weight < 0.0)) {
+                    throw std::range_error(
+                        "The 'group_weight' cannot be negative.");
+                }
+                return group_weight;
+            }
+            // else
+            throw std::range_error("Incorrect length of the 'group_weight'.");
+        }
+
     public:
 
+        // from the data
         unsigned int n_obs_;    // number of observations
         unsigned int k_;        // number of categories
         unsigned int p0_;       // number of predictors without intercept
@@ -115,16 +136,21 @@ namespace abclass
         arma::rowvec x_center_; // the column center of x_
         arma::rowvec x_scale_;  // the column scale of x_
 
+        // parameters
         Control control_;       // control parameters
-        T_loss loss_;
+        T_loss loss_;           // loss funciton class
 
         // tuning by cross-validation
         arma::mat cv_accuracy_;
         arma::vec cv_accuracy_mean_;
         arma::vec cv_accuracy_sd_;
 
-        // tuning by permutation
-        unsigned int permuted_; // number of permuted predictors
+        // tuning by ET-Lasso
+        unsigned int et_npermuted_; // number of permuted predictors
+        arma::uvec et_vs_;          // indices of selected predictors
+
+        // estimates
+        arma::cube coef_;       // p1_ by km1_ for linear learning
 
         // default constructor
         Abclass() {}
@@ -208,6 +234,14 @@ namespace abclass
                 control_.obs_weight_ = weight / arma::sum(weight) * dn_obs_;
             }
             return this;
+        }
+
+        // setter for group weights
+        inline void set_group_weight(
+            const arma::vec& group_weight = arma::vec()
+            )
+        {
+            control_.group_weight_ = gen_group_weight(group_weight);
         }
 
         // linear predictor

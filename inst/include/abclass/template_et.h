@@ -29,51 +29,68 @@
 namespace abclass {
 
     template <typename T>
-    inline void et_group_lambda(T& obj,
-                                const unsigned int nstage = 1)
+    inline void et_lambda(T& obj,
+                          const unsigned int nstage = 1)
     {
+        // record some original data
         const unsigned int p0 { obj.p0_ };
-        const arma::mat x0 { obj.x_ };
+        const unsigned int inter { obj.p1_ - obj.p0_ };
+        const auto x0 { obj.x_ };
         obj.set_group_weight();
         const arma::vec gw0 { obj.control_.group_weight_ };
         // initialize
-        arma::mat active_x { obj.x_ };
-        arma::uvec active_idx { arma::regspace<arma::uvec>(0, p0 - 1) };
+        // (0, 1, ...p0 - 1), assuming p0 > 0
+        obj.et_vs_ = arma::regspace<arma::uvec>(0, p0 - 1);
         arma::mat active_beta;
+        arma::uvec active_idx0;
         for (size_t i { 0 }; i < nstage; ++i) {
             // create pseudo-features
-            arma::uvec perm_idx { arma::randperm(obj.n_obs_) };
+            const arma::uvec perm_idx { arma::randperm(obj.n_obs_) };
             arma::mat x_perm { x0.rows(perm_idx) };
-            x_perm = arma::join_rows(active_x, std::move(x_perm));
+            x_perm = arma::join_rows(x0.cols(obj.et_vs_), std::move(x_perm));
             obj.control_.group_weight_ = arma::join_cols(
-                obj.control_.group_weight_, gw0);
+                obj.control_.group_weight_.elem(obj.et_vs_), gw0);
             obj.set_data(x_perm, obj.y_);
-            obj.permuted_ = p0;
+            obj.et_npermuted_ = p0;
             obj.fit();
-            // reset lambda
+            // reset lambda if it was internally set
             if (! obj.custom_lambda_) {
                 obj.control_.lambda_.clear();
             }
             // update active x
-            size_t p1_i { obj.p1_ - p0 };
-            size_t p0_i { obj.p0_ - p0 };
+            const unsigned int p1_i { obj.p1_ - p0 };
+            const unsigned int p0_i { obj.p0_ - p0 };
             active_beta = obj.coef_.slice(
                 obj.coef_.n_slices - 1).head_rows(p1_i);
-            arma::vec l1_beta { arma::zeros(p1_i) };
+            arma::vec l1_beta { arma::zeros(p0_i) };
             // get the indices of the selected predictors
-            for (size_t row_i {0}; row_i < p1_i; ++row_i) {
-                l1_beta[row_i] = l1_norm(active_beta.row(row_i));
+            for (size_t j { 0 }; j < p0_i; ++j) {
+                l1_beta[j] = l1_norm(active_beta.row(inter + j));
             }
-            arma::uvec idx0 { arma::find(l1_beta.tail_rows(p0_i) > 0) };
-            active_x = active_x.cols(idx0);
-            active_idx = active_idx.elem(arma::find(l1_beta > 0));
-            obj.control_.group_weight_ = obj.control_.group_weight_.elem(idx0);
+            active_idx0 = arma::find(l1_beta > 0);
+            obj.et_vs_ = obj.et_vs_.elem(active_idx0);
+            // verbose
+            if (obj.control_.verbose_ > 0) {
+                Rcpp::Rcout << "[ET] (stage "
+                            << i + 1
+                            << ") Number of active predictors: "
+                            << obj.et_vs_.n_elem
+                            << "\n";
+            }
         }
         // update obj
-        obj.set_data(x0, obj.y_);
+        obj.set_data(std::move(x0), obj.y_);
+        obj.set_group_weight(std::move(gw0));
         obj.coef_ = arma::cube(obj.p1_, obj.k_ - 1, 1, arma::fill::zeros);
-        obj.coef_.slice(0).rows(active_idx) = active_beta.rows(active_idx);
-        obj.permuted_ = 0;
+        if (obj.control_.intercept_) {
+            obj.coef_.slice(0).rows(obj.et_vs_ + 1) =
+                active_beta.rows(active_idx0);
+            // intercept
+            obj.coef_.slice(0).row(0) = active_beta.row(0);
+        } else {
+            obj.coef_.slice(0).rows(obj.et_vs_) = active_beta.rows(active_idx0);
+        }
+        obj.et_npermuted_ = 0;
     }
 
 }
