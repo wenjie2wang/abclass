@@ -35,7 +35,6 @@ namespace abclass
         // cache variables
         double dn_obs_;              // double version of n_obs_
         unsigned int km1_;           // k - 1
-        unsigned int p1_;            // number of predictors (with intercept)
         unsigned int inter_;         // integer version of intercept_
 
         // for the CMD/GMD algorithm
@@ -109,7 +108,8 @@ namespace abclass
         unsigned int n_obs_;    // number of observations
         unsigned int k_;        // number of categories
         unsigned int p0_;       // number of predictors without intercept
-        T_x x_;                   // (standardized) x_: n by p (with intercept)
+        unsigned int p1_;       // number of predictors (with intercept)
+        T_x x_;                 // (standardized) x_: n by p (with intercept)
         arma::uvec y_;          // y vector ranging in {0, ..., k - 1}
         arma::mat vertex_;      // unique vertex: k by (k - 1)
         arma::rowvec x_center_; // the column center of x_
@@ -122,6 +122,9 @@ namespace abclass
         arma::mat cv_accuracy_;
         arma::vec cv_accuracy_mean_;
         arma::vec cv_accuracy_sd_;
+
+        // tuning by permutation
+        unsigned int permuted_; // number of permuted predictors
 
         // default constructor
         Abclass() {}

@@ -32,7 +32,6 @@ namespace abclass
         // data
         using AbclassGroup<T_loss, T_x>::dn_obs_;
         using AbclassGroup<T_loss, T_x>::km1_;
-        using AbclassGroup<T_loss, T_x>::p1_;
         using AbclassGroup<T_loss, T_x>::inter_;
         using AbclassGroup<T_loss, T_x>::mm_lowerbound_;
         using AbclassGroup<T_loss, T_x>::mm_lowerbound0_;
@@ -99,9 +98,11 @@ namespace abclass
         using AbclassGroup<T_loss, T_x>::control_;
         using AbclassGroup<T_loss, T_x>::n_obs_;
         using AbclassGroup<T_loss, T_x>::p0_;
+        using AbclassGroup<T_loss, T_x>::p1_;
         using AbclassGroup<T_loss, T_x>::vertex_;
         using AbclassGroup<T_loss, T_x>::x_;
         using AbclassGroup<T_loss, T_x>::y_;
+        using AbclassGroup<T_loss, T_x>::permuted_;
 
         using AbclassGroup<T_loss, T_x>::lambda_max_;
         using AbclassGroup<T_loss, T_x>::custom_lambda_;
@@ -359,7 +360,8 @@ namespace abclass
         // optim with varying active set when p > n
         double old_lambda { lambda_max_ }; // for strong rule
         // main loop: for each lambda
-        for (size_t li { 0 }; li < control_.lambda_.n_elem; ++li) {
+        size_t li { 0 };
+        for (; li < control_.lambda_.n_elem; ++li) {
             double lambda_li { control_.lambda_(li) };
             // early exit for lambda greater than lambda_max_
             // note that lambda is sorted
@@ -431,6 +433,25 @@ namespace abclass
                         msg("The strong rule worked.\n");
                     }
                     kkt_failed = false;
+                }
+            }
+            // check if any permuted predictors are selected
+            if (permuted_ > 0) {
+                if (control_.verbose_ > 0) {
+                    msg("checking if any pseudo-predictors were selected.");
+                }
+                // assume the last (permuted ) predictors are inactive
+                arma::mat permuted_beta { one_beta.tail_rows(permuted_) };
+                if (! permuted_beta.is_zero(arma::datum::eps)) {
+                    if (li == 0) {
+                        msg("Warning: fail to tune; lambda too small.");
+                    } else {
+                        coef_ = coef_.head_slices(li);
+                    }
+                    if (control_.verbose_ > 0) {
+                        msg("Found selected pseudo-predictor(s).\n");
+                    }
+                    break;
                 }
             }
             coef_.slice(li) = rescale_coef(one_beta);

@@ -32,7 +32,6 @@ namespace abclass
         // data
         using AbclassGroup<T_loss, T_x>::dn_obs_;
         using AbclassGroup<T_loss, T_x>::km1_;
-        using AbclassGroup<T_loss, T_x>::p1_;
         using AbclassGroup<T_loss, T_x>::inter_;
         using AbclassGroup<T_loss, T_x>::mm_lowerbound_;
         using AbclassGroup<T_loss, T_x>::mm_lowerbound0_;
@@ -123,9 +122,11 @@ namespace abclass
         using AbclassGroup<T_loss, T_x>::control_;
         using AbclassGroup<T_loss, T_x>::n_obs_;
         using AbclassGroup<T_loss, T_x>::p0_;
+        using AbclassGroup<T_loss, T_x>::p1_;
         using AbclassGroup<T_loss, T_x>::vertex_;
         using AbclassGroup<T_loss, T_x>::x_;
         using AbclassGroup<T_loss, T_x>::y_;
+        using AbclassGroup<T_loss, T_x>::permuted_;
 
         using AbclassGroup<T_loss, T_x>::lambda_max_;
         using AbclassGroup<T_loss, T_x>::custom_lambda_;

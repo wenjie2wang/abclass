@@ -34,7 +34,6 @@ namespace abclass
     protected:
         using Abclass<T_loss, T_x>::inter_;
         using Abclass<T_loss, T_x>::km1_;
-        using Abclass<T_loss, T_x>::p1_;
         using Abclass<T_loss, T_x>::mm_lowerbound_;
         using Abclass<T_loss, T_x>::mm_lowerbound0_;
 
@@ -137,7 +136,9 @@ namespace abclass
         using Abclass<T_loss, T_x>::control_;
         using Abclass<T_loss, T_x>::x_;
         using Abclass<T_loss, T_x>::p0_;
+        using Abclass<T_loss, T_x>::p1_;
         using Abclass<T_loss, T_x>::n_obs_;
+        using Abclass<T_loss, T_x>::permuted_;
         using Abclass<T_loss, T_x>::set_mm_lowerbound;
 
         // regularization
@@ -460,7 +461,8 @@ namespace abclass
             }
         }
         // initialize the estimate cube
-        coef_ = arma::cube(p1_, km1_, control_.lambda_.n_elem);
+        coef_ = arma::cube(p1_, km1_, control_.lambda_.n_elem,
+                           arma::fill::zeros);
         // for ridge penalty
         if (is_ridge_only) {
             for (size_t li { 0 }; li < control_.lambda_.n_elem; ++li) {

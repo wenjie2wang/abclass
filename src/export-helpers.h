@@ -6,9 +6,6 @@ template <typename T>
 Rcpp::List abclass_net_fit(T& object)
 {
     object.fit();
-    Rcpp::NumericVector lambda_vec {
-        abclass::arma2rvec(object.control_.lambda_)
-    };
     if (object.control_.cv_nfolds_ > 0) {
         arma::uvec strata;
         if (object.control_.cv_stratified_) {
@@ -33,7 +30,8 @@ Rcpp::List abclass_net_fit(T& object)
             abclass::arma2rvec(object.cv_accuracy_sd_)
             ),
         Rcpp::Named("regularization") = Rcpp::List::create(
-            Rcpp::Named("lambda") = abclass::arma2rvec(lambda_vec),
+            Rcpp::Named("lambda") =
+            abclass::arma2rvec(object.control_.lambda_),
             Rcpp::Named("alpha") = object.control_.alpha_,
             Rcpp::Named("l1_lambda_max") = object.l1_lambda_max_
             )
@@ -45,9 +43,6 @@ template <typename T>
 Rcpp::List abclass_group_lasso_fit(T& object)
 {
     object.fit();
-    Rcpp::NumericVector lambda_vec {
-        abclass::arma2rvec(object.control_.lambda_)
-    };
     if (object.control_.cv_nfolds_ > 0) {
         arma::uvec strata;
         if (object.control_.cv_stratified_) {
@@ -72,7 +67,8 @@ Rcpp::List abclass_group_lasso_fit(T& object)
             abclass::arma2rvec(object.cv_accuracy_sd_)
             ),
         Rcpp::Named("regularization") = Rcpp::List::create(
-            Rcpp::Named("lambda") = abclass::arma2rvec(lambda_vec),
+            Rcpp::Named("lambda") =
+            abclass::arma2rvec(object.control_.lambda_),
             Rcpp::Named("group_weight") =
             abclass::arma2rvec(object.control_.group_weight_),
             Rcpp::Named("lambda_max") = object.lambda_max_
@@ -85,9 +81,6 @@ template <typename T>
 Rcpp::List abclass_group_ncv_fit(T& object)
 {
     object.fit();
-    Rcpp::NumericVector lambda_vec {
-        abclass::arma2rvec(object.control_.lambda_)
-    };
     if (object.control_.cv_nfolds_ > 0) {
         arma::uvec strata;
         if (object.control_.cv_stratified_) {
@@ -112,7 +105,8 @@ Rcpp::List abclass_group_ncv_fit(T& object)
             abclass::arma2rvec(object.cv_accuracy_sd_)
             ),
         Rcpp::Named("regularization") = Rcpp::List::create(
-            Rcpp::Named("lambda") = abclass::arma2rvec(lambda_vec),
+            Rcpp::Named("lambda") =
+            abclass::arma2rvec(object.control_.lambda_),
             Rcpp::Named("group_weight") =
             abclass::arma2rvec(object.control_.group_weight_),
             Rcpp::Named("dgamma") = object.control_.dgamma_,

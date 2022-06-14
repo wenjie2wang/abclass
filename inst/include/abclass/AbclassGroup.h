@@ -106,6 +106,7 @@ namespace abclass
         using Abclass<T_loss, T_x>::x_;
         using Abclass<T_loss, T_x>::y_;
         using Abclass<T_loss, T_x>::vertex_;
+        using Abclass<T_loss, T_x>::permuted_;
 
         // regularization
         // the "big" enough lambda => zero coef
