@@ -37,8 +37,11 @@ namespace abclass {
         CrossValidation cv_obj {
             obj.n_obs_, obj.control_.cv_nfolds_, strata
         };
-        obj.cv_accuracy_ = arma::zeros(obj.control_.lambda_.n_elem,
-                                       obj.control_.cv_nfolds_);
+        size_t ntune { obj.control_.lambda_.n_elem };
+        if (ntune == 0) {
+            ntune = obj.control_.nlambda_;
+        }
+        obj.cv_accuracy_ = arma::zeros(ntune, obj.control_.cv_nfolds_);
         // model fits
         for (size_t i { 0 }; i < obj.control_.cv_nfolds_; ++i) {
             auto train_x { subset_rows(obj.x_, cv_obj.train_index_.at(i)) };
@@ -60,7 +63,7 @@ namespace abclass {
             }
             new_obj.control_.set_verbose(0);
             new_obj.fit();
-            for (size_t l { 0 }; l < obj.control_.lambda_.n_elem; ++l) {
+            for (size_t l { 0 }; l < ntune; ++l) {
                 obj.cv_accuracy_(l, i) = new_obj.accuracy(
                     new_obj.coef_.slice(l), test_x, test_y);
             }
