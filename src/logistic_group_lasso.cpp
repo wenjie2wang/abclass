@@ -23,11 +23,12 @@ template <typename T>
 Rcpp::List logistic_glasso(
     const T& x,
     const arma::uvec& y,
-    const abclass::Control& control
+    const abclass::Control& control,
+    const bool main_fit
     )
 {
     abclass::LogisticGroupLasso<T> object { x, y, control };
-    return abclass_group_lasso_fit(object);
+    return template_fit(object, main_fit);
 }
 
 // [[Rcpp::export]]
@@ -41,13 +42,15 @@ Rcpp::List r_logistic_glasso(
     const arma::vec& weight,
     const bool intercept = true,
     const bool standardize = true,
-    const unsigned int nfolds = 0,
-    const bool stratified_cv = true,
-    const unsigned int alignment = 0,
     const unsigned int maxit = 1e5,
     const double epsilon = 1e-3,
     const bool varying_active_set = true,
-    const unsigned int verbose = 0
+    const unsigned int verbose = 0,
+    const unsigned int nfolds = 0,
+    const bool stratified = true,
+    const unsigned int alignment = 0,
+    const unsigned int nstages = 0,
+    const bool main_fit = true
     )
 {
     abclass::Control control { maxit, epsilon, standardize, verbose };
@@ -56,8 +59,9 @@ Rcpp::List r_logistic_glasso(
         reg_path(nlambda, lambda_min_ratio, varying_active_set)->
         reg_path(lambda)->
         reg_group(group_weight)->
-        tune_cv(nfolds, stratified_cv, alignment);
-    return logistic_glasso<arma::mat>(x, y, control);
+        tune_cv(nfolds, stratified, alignment)->
+        tune_et(nstages);
+    return logistic_glasso<arma::mat>(x, y, control, main_fit);
 }
 
 // [[Rcpp::export]]
@@ -71,13 +75,15 @@ Rcpp::List r_logistic_glasso_sp(
     const arma::vec& weight,
     const bool intercept = true,
     const bool standardize = true,
-    const unsigned int nfolds = 0,
-    const bool stratified_cv = true,
-    const unsigned int alignment = 0,
     const unsigned int maxit = 1e5,
     const double epsilon = 1e-3,
     const bool varying_active_set = true,
-    const unsigned int verbose = 0
+    const unsigned int verbose = 0,
+    const unsigned int nfolds = 0,
+    const bool stratified = true,
+    const unsigned int alignment = 0,
+    const unsigned int nstages = 0,
+    const bool main_fit = true
     )
 {
     abclass::Control control { maxit, epsilon, standardize, verbose };
@@ -86,6 +92,7 @@ Rcpp::List r_logistic_glasso_sp(
         reg_path(nlambda, lambda_min_ratio, varying_active_set)->
         reg_path(lambda)->
         reg_group(group_weight)->
-        tune_cv(nfolds, stratified_cv, alignment);
-    return logistic_glasso<arma::sp_mat>(x, y, control);
+        tune_cv(nfolds, stratified, alignment)->
+        tune_et(nstages);
+    return logistic_glasso<arma::sp_mat>(x, y, control, main_fit);
 }

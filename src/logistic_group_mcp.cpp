@@ -23,11 +23,12 @@ template <typename T>
 Rcpp::List logistic_gmcp(
     const T& x,
     const arma::uvec& y,
-    const abclass::Control& control
+    const abclass::Control& control,
+    const bool main_fit
     )
 {
     abclass::LogisticGroupMCP<T> object { x, y, control };
-    return abclass_group_ncv_fit(object);
+    return template_fit(object, main_fit);
 }
 
 // [[Rcpp::export]]
@@ -42,13 +43,15 @@ Rcpp::List r_logistic_gmcp(
     const arma::vec& weight,
     const bool intercept = true,
     const bool standardize = true,
-    const unsigned int nfolds = 0,
-    const bool stratified_cv = true,
-    const unsigned int alignment = 0,
     const unsigned int maxit = 1e5,
     const double epsilon = 1e-3,
     const bool varying_active_set = true,
-    const unsigned int verbose = 0
+    const unsigned int verbose = 0,
+    const unsigned int nfolds = 0,
+    const bool stratified = true,
+    const unsigned int alignment = 0,
+    const unsigned int nstages = 0,
+    const bool main_fit = true
     )
 {
     abclass::Control control { maxit, epsilon, standardize, verbose };
@@ -57,8 +60,9 @@ Rcpp::List r_logistic_gmcp(
         reg_path(nlambda, lambda_min_ratio, varying_active_set)->
         reg_path(lambda)->
         reg_group(group_weight, dgamma)->
-        tune_cv(nfolds, stratified_cv, alignment);
-    return logistic_gmcp<arma::mat>(x, y, control);
+        tune_cv(nfolds, stratified, alignment)->
+        tune_et(nstages);
+    return logistic_gmcp<arma::mat>(x, y, control, main_fit);
 }
 
 // [[Rcpp::export]]
@@ -73,13 +77,15 @@ Rcpp::List r_logistic_gmcp_sp(
     const arma::vec& weight,
     const bool intercept = true,
     const bool standardize = true,
-    const unsigned int nfolds = 0,
-    const bool stratified_cv = true,
-    const unsigned int alignment = 0,
     const unsigned int maxit = 1e5,
     const double epsilon = 1e-3,
     const bool varying_active_set = true,
-    const unsigned int verbose = 0
+    const unsigned int verbose = 0,
+    const unsigned int nfolds = 0,
+    const bool stratified = true,
+    const unsigned int alignment = 0,
+    const unsigned int nstages = 0,
+    const bool main_fit = true
     )
 {
     abclass::Control control { maxit, epsilon, standardize, verbose };
@@ -88,6 +94,7 @@ Rcpp::List r_logistic_gmcp_sp(
         reg_path(nlambda, lambda_min_ratio, varying_active_set)->
         reg_path(lambda)->
         reg_group(group_weight, dgamma)->
-        tune_cv(nfolds, stratified_cv, alignment);
-    return logistic_gmcp<arma::sp_mat>(x, y, control);
+        tune_cv(nfolds, stratified, alignment)->
+        tune_et(nstages);
+    return logistic_gmcp<arma::sp_mat>(x, y, control, main_fit);
 }

@@ -24,13 +24,14 @@ Rcpp::List lum_gscad(
     const T& x,
     const arma::uvec& y,
     const abclass::Control& control,
+    const bool main_fit,
     const double lum_a,
     const double lum_c
     )
 {
     abclass::LumGroupSCAD<T> object { x, y, control };
     object.loss_.set_ac(lum_a, lum_c);
-    return abclass_group_ncv_fit(object);
+    return template_fit(object, main_fit);
 }
 
 // [[Rcpp::export]]
@@ -45,15 +46,17 @@ Rcpp::List r_lum_gscad(
     const arma::vec& weight,
     const bool intercept = true,
     const bool standardize = true,
-    const unsigned int nfolds = 0,
-    const bool stratified_cv = true,
-    const unsigned int alignment = 0,
     const unsigned int maxit = 1e5,
     const double epsilon = 1e-3,
     const bool varying_active_set = true,
+    const unsigned int verbose = 0,
+    const unsigned int nfolds = 0,
+    const bool stratified = true,
+    const unsigned int alignment = 0,
+    const unsigned int nstages = 0,
+    const bool main_fit = true,
     const double lum_a = 1.0,
-    const double lum_c = 0.0,
-    const unsigned int verbose = 0
+    const double lum_c = 0.0
     )
 {
     abclass::Control control { maxit, epsilon, standardize, verbose };
@@ -62,8 +65,9 @@ Rcpp::List r_lum_gscad(
         reg_path(nlambda, lambda_min_ratio, varying_active_set)->
         reg_path(lambda)->
         reg_group(group_weight, dgamma)->
-        tune_cv(nfolds, stratified_cv, alignment);
-    return lum_gscad<arma::mat>(x, y, control, lum_a, lum_c);
+        tune_cv(nfolds, stratified, alignment)->
+        tune_et(nstages);
+    return lum_gscad<arma::mat>(x, y, control, main_fit, lum_a, lum_c);
 }
 
 // [[Rcpp::export]]
@@ -78,15 +82,17 @@ Rcpp::List r_lum_gscad_sp(
     const arma::vec& weight,
     const bool intercept = true,
     const bool standardize = true,
-    const unsigned int nfolds = 0,
-    const bool stratified_cv = true,
-    const unsigned int alignment = 0,
     const unsigned int maxit = 1e5,
     const double epsilon = 1e-3,
     const bool varying_active_set = true,
+    const unsigned int verbose = 0,
+    const unsigned int nfolds = 0,
+    const bool stratified = true,
+    const unsigned int alignment = 0,
+    const unsigned int nstages = 0,
+    const bool main_fit = true,
     const double lum_a = 1.0,
-    const double lum_c = 0.0,
-    const unsigned int verbose = 0
+    const double lum_c = 0.0
     )
 {
     abclass::Control control { maxit, epsilon, standardize, verbose };
@@ -95,6 +101,7 @@ Rcpp::List r_lum_gscad_sp(
         reg_path(nlambda, lambda_min_ratio, varying_active_set)->
         reg_path(lambda)->
         reg_group(group_weight, dgamma)->
-        tune_cv(nfolds, stratified_cv, alignment);
-    return lum_gscad<arma::sp_mat>(x, y, control, lum_a, lum_c);
+        tune_cv(nfolds, stratified, alignment)->
+        tune_et(nstages);
+    return lum_gscad<arma::sp_mat>(x, y, control, main_fit, lum_a, lum_c);
 }

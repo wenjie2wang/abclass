@@ -27,12 +27,13 @@ Rcpp::List boost_net(
     const T& x,
     const arma::uvec& y,
     const abclass::Control& control,
+    const bool main_fit,
     const double inner_min
     )
 {
     abclass::BoostNet<T> object { x, y, control };
     object.loss_.set_inner_min(inner_min);
-    return abclass_net_fit(object);
+    return template_fit(object, main_fit);
 }
 
 // [[Rcpp::export]]
@@ -46,14 +47,16 @@ Rcpp::List r_boost_net(
     const arma::vec& weight,
     const bool intercept = true,
     const bool standardize = true,
-    const unsigned int nfolds = 0,
-    const bool stratified_cv = true,
-    const unsigned int alignment = 0,
     const unsigned int maxit = 1e5,
     const double epsilon = 1e-3,
     const bool varying_active_set = true,
-    const double boost_umin = -5.0,
-    const unsigned int verbose = 0
+    const unsigned int verbose = 0,
+    const unsigned int nfolds = 0,
+    const bool stratified = true,
+    const unsigned int alignment = 0,
+    const unsigned int nstages = 0,
+    const bool main_fit = true,
+    const double boost_umin = -5.0
     )
 {
     abclass::Control control { maxit, epsilon, standardize, verbose };
@@ -62,8 +65,9 @@ Rcpp::List r_boost_net(
         reg_path(nlambda, lambda_min_ratio, varying_active_set)->
         reg_path(lambda)->
         reg_net(alpha)->
-        tune_cv(nfolds, stratified_cv, alignment);
-    return boost_net<arma::mat>(x, y, control, boost_umin);
+        tune_cv(nfolds, stratified, alignment)->
+        tune_et(nstages);
+    return boost_net<arma::mat>(x, y, control, main_fit, boost_umin);
 }
 
 // [[Rcpp::export]]
@@ -77,14 +81,16 @@ Rcpp::List r_boost_net_sp(
     const arma::vec& weight,
     const bool intercept = true,
     const bool standardize = true,
-    const unsigned int nfolds = 0,
-    const bool stratified_cv = true,
-    const unsigned int alignment = 0,
     const unsigned int maxit = 1e5,
     const double epsilon = 1e-3,
     const bool varying_active_set = true,
-    const double boost_umin = -5.0,
-    const unsigned int verbose = 0
+    const unsigned int verbose = 0,
+    const unsigned int nfolds = 0,
+    const bool stratified = true,
+    const unsigned int alignment = 0,
+    const unsigned int nstages = 0,
+    const bool main_fit = true,
+    const double boost_umin = -5.0
     )
 {
     abclass::Control control { maxit, epsilon, standardize, verbose };
@@ -93,6 +99,7 @@ Rcpp::List r_boost_net_sp(
         reg_path(nlambda, lambda_min_ratio, varying_active_set)->
         reg_path(lambda)->
         reg_net(alpha)->
-        tune_cv(nfolds, stratified_cv, alignment);
-    return boost_net<arma::sp_mat>(x, y, control, boost_umin);
+        tune_cv(nfolds, stratified, alignment)->
+        tune_et(nstages);
+    return boost_net<arma::sp_mat>(x, y, control, main_fit, boost_umin);
 }
