@@ -18,7 +18,7 @@
 ##' Angle-Based Classification
 ##'
 ##' Multi-category angle-based large-margin classifiers with regularization by
-##' the elastic-net penalty.
+##' the elastic-net or groupwise penalty.
 ##'
 ##' @name abclass
 ##'
@@ -42,7 +42,7 @@
 ##'     al. (2011) for details.
 ##' @param control A list of control parameters. See \code{abclass.control()}
 ##'     for details.
-##' @param ... Other control parameters passed to \code{abclass.control}.
+##' @param ... Other control parameters passed to \code{abclass.control()}.
 ##'
 ##' @return The function \code{abclass()} returns an object of class
 ##'     \code{abclass} representing a trained classifier; The function
@@ -107,23 +107,30 @@ abclass <- function(x, y,
     ]
     res <- do.call(fun_to_call, args_to_call)
     ## post-process
+    res$cross_validation <- NULL
     res$category <- cat_y
-    ## res$call <- Call
-    res$loss <- list(
-        loss = loss,
-        lum_a = control$lum_a,
-        lum_c = control$lum_c,
-        boost_umin = control$boost_umin
+    res$loss <- with(
+        control,
+        switch(loss,
+               "logistic" = list(loss = loss),
+               "boost" = list(loss = loss, boost_umin = boost_umin),
+               "hinge-boost" = list(loss = loss, lum_c = lum_c),
+               "lum" = list(loss = loss, lum_a = lum_a, lum_c = lum_c))
     )
+    res$regularization <-
+        if (control$grouped) {
+            if (control$group_penalty == "lasso") {
+                res$regularization[c("lambda", "lambda_max", "group_weight")]
+            } else {
+                res$regularization[c("lambda", "lambda_max", "group_weight",
+                                     "dgamma", "gamma")]
+            }
+        } else {
+            res$regularization[c("lambda", "lambda_max", "alpha")]
+        }
     res$intercept <- intercept
     res$control <- control[c("standardize", "maxit", "epsilon",
                              "varying_active_set", "verbose")]
-    ## add cv idx if available
-    if (length(res$cross_validation$cv_accuracy)) {
-        cv_idx_list <- with(res$cross_validation,
-                            select_lambda(cv_accuracy_mean, cv_accuracy_sd))
-        res$cross_validation <- c(res$cross_validation, cv_idx_list)
-    }
     class_suffix <- if (control$grouped)
                         paste0("_group_", control$group_penalty)
                     else
@@ -159,19 +166,6 @@ abclass <- function(x, y,
 ##'     penalty.
 ##' @param dgamma A positive number specifying the increment to the minimal
 ##'     gamma parameter for group SCAD or group MCP.
-##' @param nfolds A nonnegative integer specifying the number of folds for
-##'     cross-validation.  The default value is \code{0} and no cross-validation
-##'     will be performed if \code{nfolds < 2}.
-##' @param stratified_cv A logical value indicating if the cross-validation
-##'     procedure should be stratified by the response label. The default value
-##'     is \code{TRUE}.
-##' @param alignment A character vector specifying how to align the lambda
-##'     sequence used in the main fit with the cross-validation fits.  The
-##'     available options are \code{"fraction"} for allowing cross-validation
-##'     fits to have their own lambda sequences and \code{"lambda"} for using
-##'     the same lambda sequence of the main fit.  The option \code{"lambda"}
-##'     will be applied if a meaningful \code{lambda} is specified.  The default
-##'     value is \code{"fraction"}.
 ##' @param lum_a A positive number greater than one representing the parameter
 ##'     \emph{a} in LUM, which will be used only if \code{loss = "lum"}.  The
 ##'     default value is \code{1.0}.
@@ -206,9 +200,6 @@ abclass.control <- function(lambda = NULL,
                             group_weight = NULL,
                             group_penalty = c("lasso", "scad", "mcp"),
                             dgamma = 1,
-                            nfolds = 0,
-                            stratified_cv = TRUE,
-                            alignment = c("fraction", "lambda"),
                             lum_a = 1.0,
                             lum_c = 1.0,
                             boost_umin = - 5.0,
@@ -219,13 +210,6 @@ abclass.control <- function(lambda = NULL,
                             verbose = 0,
                             ...)
 {
-    if (is.numeric(alignment) || is.integer(alignment)) {
-        alignment <- as.integer(alignment[1L])
-    } else {
-        all_alignment <- c("fraction", "lambda")
-        alignment <- match.arg(alignment, choices = all_alignment)
-        alignment <- match(alignment, all_alignment) - 1L
-    }
     if (grouped) {
         group_penalty <- match.arg(
             group_penalty, choices = c("lasso", "scad", "mcp")
@@ -239,9 +223,6 @@ abclass.control <- function(lambda = NULL,
         grouped = grouped,
         group_penalty = group_penalty,
         group_weight = null2num0(group_weight),
-        nfolds = nfolds,
-        stratified_cv = stratified_cv,
-        alignment = alignment,
         standardize = standardize,
         maxit = maxit,
         epsilon = epsilon,

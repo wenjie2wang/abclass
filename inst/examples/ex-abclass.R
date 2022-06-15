@@ -25,17 +25,17 @@ train_y <- y[train_idx]
 test_y <- y[- train_idx]
 
 ## Regularization through ridge penalty
-control1 <- abclass.control(nlambda = 5, lambda_min_ratio = 1e-2,
-                            alpha = 0, grouped = FALSE, nfolds = 3)
+control1 <- abclass.control(nlambda = 5, lambda_min_ratio = 1e-3,
+                            alpha = 1, grouped = FALSE)
 model1 <- abclass(train_x, train_y, loss = "logistic",
                   control = control1)
-pred1 <- predict(model1, test_x)
+pred1 <- predict(model1, test_x, s = 5)
 table(test_y, pred1)
 mean(test_y == pred1) # accuracy
 
 ## groupwise regularization via group lasso
 model2 <- abclass(train_x, train_y, loss = "boost",
-                  grouped = TRUE, nlambda = 5, nfolds = 3)
-pred2 <- predict(model2, test_x, s = "cv_1se")
+                  grouped = TRUE, nlambda = 5)
+pred2 <- predict(model2, test_x, s = 5)
 table(test_y, pred2)
 mean(test_y == pred2) # accuracy
