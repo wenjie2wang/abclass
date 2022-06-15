@@ -74,63 +74,19 @@ abclass <- function(x, y,
     ## controls
     dot_list <- list(...)
     control <- do.call(abclass.control, modify_list(control, dot_list))
-    ## pre-process
-    is_x_sparse <- FALSE
-    if (inherits(x, "sparseMatrix")) {
-        is_x_sparse <- TRUE
-    } else if (! is.matrix(x)) {
-        x <- as.matrix(x)
-    }
-    cat_y <- cat2z(y)
-    if (is.null(control$lambda_min_ratio)) {
-        control$lambda_min_ratio <- if (nrow(x) < ncol(x)) 1e-4 else 1e-2
-    }
-    ## model fitting
-    default_args_to_call <- c(
+    ## prepare arguments
+    args_to_call <- c(
         list(x = x,
-             y = cat_y$y,
+             y = y,
              intercept = intercept,
              weight = null2num0(weight)),
         control
     )
-    fun_to_call <-
-        if (control$grouped) {
-            sprintf("r_%s_g%s", loss2, control$group_penalty)
-        } else {
-            sprintf("r_%s_net", loss2)
-        }
-    if (is_x_sparse) {
-        fun_to_call <- paste0(fun_to_call, "_sp")
-    }
-    args_to_call <- default_args_to_call[
-        names(default_args_to_call) %in% formal_names(fun_to_call)
+    args_to_call <- args_to_call[
+        names(args_to_call) %in% formal_names(.abclass)
     ]
-    res <- do.call(fun_to_call, args_to_call)
+    res <- do.call(.abclass, args_to_call)
     ## post-process
-    res$cross_validation <- NULL
-    res$category <- cat_y
-    res$loss <- with(
-        control,
-        switch(loss,
-               "logistic" = list(loss = loss),
-               "boost" = list(loss = loss, boost_umin = boost_umin),
-               "hinge-boost" = list(loss = loss, lum_c = lum_c),
-               "lum" = list(loss = loss, lum_a = lum_a, lum_c = lum_c))
-    )
-    res$regularization <-
-        if (control$grouped) {
-            if (control$group_penalty == "lasso") {
-                res$regularization[c("lambda", "lambda_max", "group_weight")]
-            } else {
-                res$regularization[c("lambda", "lambda_max", "group_weight",
-                                     "dgamma", "gamma")]
-            }
-        } else {
-            res$regularization[c("lambda", "lambda_max", "alpha")]
-        }
-    res$intercept <- intercept
-    res$control <- control[c("standardize", "maxit", "epsilon",
-                             "varying_active_set", "verbose")]
     class_suffix <- if (control$grouped)
                         paste0("_group_", control$group_penalty)
                     else
@@ -194,20 +150,20 @@ abclass <- function(x, y,
 ##' @export
 abclass.control <- function(lambda = NULL,
                             alpha = 0.5,
-                            nlambda = 50,
+                            nlambda = 50L,
                             lambda_min_ratio = NULL,
                             grouped = TRUE,
                             group_weight = NULL,
                             group_penalty = c("lasso", "scad", "mcp"),
-                            dgamma = 1,
+                            dgamma = 1.0,
                             lum_a = 1.0,
                             lum_c = 1.0,
                             boost_umin = - 5.0,
-                            maxit = 1e5,
+                            maxit = 1e5L,
                             epsilon = 1e-3,
                             standardize = TRUE,
                             varying_active_set = TRUE,
-                            verbose = 0,
+                            verbose = 0L,
                             ...)
 {
     if (grouped) {

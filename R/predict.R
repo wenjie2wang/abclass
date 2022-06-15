@@ -68,7 +68,7 @@ predict.abclass <- function(object,
         selection_idx <- 1L
     }
     ## for integer indices
-    if (is.numeric(selection) || is.integer(selection)) {
+    if (is.numeric(selection)) {
         selection <- as.integer(selection)
         if (any(selection > n_slice)) {
             stop(sprintf("The integer 'selection' must <= %d.", n_slice))

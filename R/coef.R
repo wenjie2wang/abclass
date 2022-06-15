@@ -52,7 +52,7 @@ coef.abclass <- function(object,
         return(object$coefficients[, , 1])
     }
     ## for integer indices
-    if (is.numeric(selection) || is.integer(selection)) {
+    if (is.numeric(selection)) {
         selection <- as.integer(selection)
         if (any(selection > dk)) {
             stop(sprintf("The integer 'selection' must <= %d.", dk))
