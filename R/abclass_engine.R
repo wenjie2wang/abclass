@@ -90,7 +90,6 @@
         "hinge_boost" = list(loss = loss2, lum_c = lum_c),
         "lum" = list(loss = loss2, lum_a = lum_a, lum_c = lum_c)
     )
-
     res$control <- list(
         standardize = standardize,
         maxit = maxit,
@@ -101,20 +100,26 @@
     if (default_args_to_call$nfolds == 0L) {
         res$cross_validation <- NULL
     }
-    if (default_args_to_call$nstages == 0L) {
-        ## update regularization
-        res$regularization <-
-            if (grouped) {
-                common_pars <- c("lambda", "lambda_max", "group_weight")
-                if (group_penalty == "lasso") {
-                    res$regularization[common_pars]
-                } else {
-                    res$regularization[c(common_pars, "dgamma", "gamma")]
-                }
+    ## update regularization
+    return_lambda <-
+        if (default_args_to_call$nstages == 0L) {
+            c("lambda", "lambda_max")
+        } else {
+            ## update the selected index to one-based index
+            res$et$selected <- res$et$selected + 1L
+            NULL
+        }
+    res$regularization <-
+        if (grouped) {
+            common_pars <- c(return_lambda, "group_weight")
+            if (group_penalty == "lasso") {
+                res$regularization[common_pars]
             } else {
-                res$regularization[c("lambda", "lambda_max", "alpha")]
+                res$regularization[c(common_pars, "dgamma", "gamma")]
             }
-    }
+        } else {
+            res$regularization[c(return_lambda, "alpha")]
+        }
     ## return
     res
 }
