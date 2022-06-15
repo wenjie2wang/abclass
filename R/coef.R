@@ -45,6 +45,9 @@ coef.abclass <- function(object,
                          selection = c("cv_min", "cv_1se", "all"),
                          ...)
 {
+    if (inherits(object, "et.abclass")) {
+        return(object$coefficients)
+    }
     ## if only one solution
     dim_coef <- dim(object$coefficients)
     dk <- dim_coef[3L]

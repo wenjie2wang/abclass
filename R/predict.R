@@ -62,28 +62,7 @@ predict.abclass <- function(object,
         newx <- as.matrix(newx)
     }
     type <- match.arg(type, c("class", "probability"))
-    n_slice <- dim(object$coefficients)[3L]
-    ## set the selection index
-    if (is.na(n_slice) || n_slice == 1L) {
-        selection_idx <- 1L
-    }
-    ## for integer indices
-    if (is.numeric(selection)) {
-        selection <- as.integer(selection)
-        if (any(selection > n_slice)) {
-            stop(sprintf("The integer 'selection' must <= %d.", n_slice))
-        }
-        selection_idx <- selection
-    } else {
-        selection <- match.arg(selection, c("cv_min", "cv_1se", "all"))
-        if (! length(object$cross_validation$cv_accuracy) ||
-            selection == "all") {
-            selection_idx <- seq_len(n_slice)
-        } else {
-            cv_idx_list <- object$cross_validation
-            selection_idx <- cv_idx_list[[selection]]
-        }
-    }
+    res_coef <- coef(object, selection = selection)
     ## determine the internal function to call
     loss_fun <- gsub("-", "_", object$loss$loss, fixed = TRUE)
     predict_prob_fun <- sprintf("r_%s_pred_prob", loss_fun)
@@ -93,28 +72,46 @@ predict.abclass <- function(object,
         predict_class_fun <- paste0(predict_class_fun, "_sp")
     }
     arg_list <- list(x = newx)
-    pred_list <- switch(
+    if (is.matrix(res_coef)) {
+        arg_list$beta <- res_coef
+        out <- switch(
+            type,
+            "class" = {
+                tmp <- do.call(predict_class_fun, arg_list)
+                tmp <- z2cat(as.integer(tmp), object$category)
+                ## names(tmp) <- rownames(newx)
+                tmp
+            },
+            "probability" = {
+                tmp <- do.call(predict_prob_fun, arg_list)
+                colnames(tmp) <- object$category$label
+                ## rownames(tmp) <- rownames(newx)
+                tmp
+            })
+        return(out)
+    }
+    ## else
+    nslice <- dim(res_coef)[3L]
+    ## return
+    switch(
         type,
         "class" = {
-            lapply(selection_idx, function(i) {
-                arg_list$beta <- as.matrix(object$coefficients[, , i])
+            lapply(seq_len(nslice), function(i) {
+                arg_list$beta <- res_coef[, , i]
                 tmp <- do.call(predict_class_fun, arg_list)
-                z2cat(as.integer(tmp), object$category)
+                tmp <- z2cat(as.integer(tmp), object$category)
+                ## names(tmp) <- rownames(newx)
+                tmp
             })
         },
         "probability" = {
-            lapply(selection_idx, function(i) {
-                arg_list$beta <- as.matrix(object$coefficients[, , i])
+            lapply(seq_len(nslice), function(i) {
+                arg_list$beta <- res_coef[, , i]
                 tmp <- do.call(predict_prob_fun, arg_list)
                 colnames(tmp) <- object$category$label
-                rownames(tmp) <- rownames(newx)
+                ## rownames(tmp) <- rownames(newx)
                 tmp
             })
         }
     )
-    ## return
-    if (length(pred_list) == 1L) {
-        return(pred_list[[1L]])
-    }
-    pred_list
 }
