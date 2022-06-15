@@ -9,12 +9,19 @@ Rcpp::List template_fit(T& object, const bool main_fit)
         abclass::et_lambda(object);
         return Rcpp::List::create(
             Rcpp::Named("coefficients") = object.coef_.slice(0),
-            Rcpp::Named("nstages") = object.control_.et_nstages_,
-            Rcpp::Named("selected") = abclass::arma2rvec(object.et_vs_),
             Rcpp::Named("weight") =
             abclass::arma2rvec(object.control_.obs_weight_),
-            Rcpp::Named("group_weight") =
-            abclass::arma2rvec(object.control_.group_weight_)
+            Rcpp::Named("et") = Rcpp::List::create(
+                Rcpp::Named("nstages") = object.control_.et_nstages_,
+                Rcpp::Named("selected") = abclass::arma2rvec(object.et_vs_)
+                ),
+            Rcpp::Named("regularization") = Rcpp::List::create(
+                Rcpp::Named("alpha") = object.control_.alpha_,
+                Rcpp::Named("group_weight") =
+                abclass::arma2rvec(object.control_.group_weight_),
+                Rcpp::Named("dgamma") = object.control_.dgamma_,
+                Rcpp::Named("gamma") = object.control_.gamma_
+                )
             );
     }
     Rcpp::List cv_res;
