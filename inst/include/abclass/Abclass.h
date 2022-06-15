@@ -146,8 +146,8 @@ namespace abclass
         arma::vec cv_accuracy_sd_;
 
         // tuning by ET-Lasso
-        unsigned int et_npermuted_; // number of permuted predictors
-        arma::uvec et_vs_;          // indices of selected predictors
+        unsigned int et_npermuted_ { 0 }; // number of permuted predictors
+        arma::uvec et_vs_;                // indices of selected predictors
 
         // estimates
         arma::cube coef_;       // p1_ by km1_ for linear learning

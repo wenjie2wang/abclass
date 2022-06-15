@@ -140,9 +140,6 @@ namespace abclass
         using AbclassGroup<T_loss, T_x>::rescale_coef;
         using AbclassGroup<T_loss, T_x>::set_group_weight;
 
-        // regularization
-        double gamma_;       // the gamma parameter > 1
-
         // for a sequence of lambda's
         inline void fit() override;
 
@@ -156,7 +153,7 @@ namespace abclass
                 std::max(mm_lowerbound_.max(), mm_lowerbound0_)
             };
             if (dgamma > 0.0) {
-                gamma_ = dgamma + 1.0 + 1.0 / max_mg;
+                control_.gamma_ = dgamma + 1.0 + 1.0 / max_mg;
                 return;
             }
             throw std::range_error("The 'dgamma' must be positive.");
@@ -415,7 +412,7 @@ namespace abclass
                              one_inner,
                              is_active_strong,
                              lambda_max_,
-                             gamma_,
+                             control_.gamma_,
                              false,
                              control_.max_iter_,
                              control_.epsilon_,
@@ -440,8 +437,8 @@ namespace abclass
                 }
                 double one_strong_lhs { l2_norm(one_grad_beta.row(*it)) };
                 one_strong_rhs = control_.group_weight_(*it) *
-                    (gamma_ / (gamma_ - 2) * (lambda_li - old_lambda) +
-                     lambda_li);
+                    (control_.gamma_ / (control_.gamma_ - 2) *
+                     (lambda_li - old_lambda) + lambda_li);
                 if (one_strong_lhs >= one_strong_rhs) {
                     is_active_strong(*it) = 1;
                 }
@@ -460,7 +457,7 @@ namespace abclass
                                      one_inner,
                                      is_active_strong,
                                      lambda_li,
-                                     gamma_,
+                                     control_.gamma_,
                                      control_.varying_active_set_,
                                      control_.max_iter_,
                                      control_.epsilon_,

@@ -32,15 +32,15 @@ namespace abclass {
     // cross-validation method for Abclass objects
     //! @param alignment 0 for alignment by fraction, 1 for alignment by lambda
     template <typename T>
-    inline void cv_lambda(T& obj,
-                          const unsigned int nfolds = 5,
-                          const arma::uvec strata = arma::uvec(),
-                          const unsigned int alignment = 0)
+    inline void cv_lambda(T& obj, const arma::uvec strata = arma::uvec())
     {
-        CrossValidation cv_obj { obj.n_obs_, nfolds, strata };
-        obj.cv_accuracy_ = arma::zeros(obj.control_.lambda_.n_elem, nfolds);
+        CrossValidation cv_obj {
+            obj.n_obs_, obj.control_.cv_nfolds_, strata
+        };
+        obj.cv_accuracy_ = arma::zeros(obj.control_.lambda_.n_elem,
+                                       obj.control_.cv_nfolds_);
         // model fits
-        for (size_t i { 0 }; i < nfolds; ++i) {
+        for (size_t i { 0 }; i < obj.control_.cv_nfolds_; ++i) {
             auto train_x { subset_rows(obj.x_, cv_obj.train_index_.at(i)) };
             arma::uvec train_y { obj.y_.rows(cv_obj.train_index_.at(i)) };
             arma::vec train_weight {
@@ -54,7 +54,7 @@ namespace abclass {
             new_obj.set_data(std::move(train_x),
                              std::move(train_y))->set_k(obj.k_);
             new_obj.set_weight(std::move(train_weight));
-            if (! obj.custom_lambda_ && alignment == 0) {
+            if (! obj.custom_lambda_ && obj.control_.cv_alignment_ == 0) {
                 // reset lambda
                 new_obj.control_.reg_path(arma::vec());
             }

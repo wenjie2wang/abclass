@@ -42,12 +42,15 @@ namespace abclass
         arma::vec group_weight_ { arma::vec() }; // adaptive group weights
         //   group {scad,mcp}
         double dgamma_ { 0.01 }; // delta gamma
+        double gamma_ { - 1.0 }; // gamma for group ncv penalty
 
         // tuning
         //   cross-validation
-        unsigned int cv_nfolds_ { 5 };
+        unsigned int cv_nfolds_ { 0 };
         bool cv_stratified_ { true };
         unsigned int cv_alignment_ { 0 };
+        //   ET-lasso
+        unsigned int et_nstages_ { 0 };
 
         // optimization
         unsigned int max_iter_ { 100000 }; // maximum number of iterations
@@ -139,6 +142,12 @@ namespace abclass
             cv_alignment_ = alignment;
             return this;
         }
+        Control* tune_et(const unsigned int nstages)
+        {
+            et_nstages_ = nstages;
+            return this;
+        }
+
 
     };
 

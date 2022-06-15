@@ -29,8 +29,7 @@
 namespace abclass {
 
     template <typename T>
-    inline void et_lambda(T& obj,
-                          const unsigned int nstage = 1)
+    inline void et_lambda(T& obj)
     {
         // record some original data
         const unsigned int p0 { obj.p0_ };
@@ -43,10 +42,10 @@ namespace abclass {
         obj.et_vs_ = arma::regspace<arma::uvec>(0, p0 - 1);
         arma::mat active_beta;
         arma::uvec active_idx0;
-        for (size_t i { 0 }; i < nstage; ++i) {
+        for (size_t i { 0 }; i < obj.control_.et_nstages_; ++i) {
             // create pseudo-features
             const arma::uvec perm_idx { arma::randperm(obj.n_obs_) };
-            arma::mat x_perm { x0.rows(perm_idx) };
+            auto x_perm { subset_rows(x0, perm_idx) };
             x_perm = arma::join_rows(x0.cols(obj.et_vs_), std::move(x_perm));
             obj.control_.group_weight_ = arma::join_cols(
                 obj.control_.group_weight_.elem(obj.et_vs_), gw0);

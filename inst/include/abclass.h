@@ -60,8 +60,9 @@
 // utils
 #include "abclass/utils.h"
 
-// for cross-validation
+// for tuning
 #include "abclass/CrossValidation.h"
 #include "abclass/template_cv.h"
+#include "abclass/template_et.h"
 
 #endif
