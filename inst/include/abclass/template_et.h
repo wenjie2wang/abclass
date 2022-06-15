@@ -83,7 +83,7 @@ namespace abclass {
         obj.coef_ = arma::cube(obj.p1_, obj.k_ - 1, 1, arma::fill::zeros);
         if (obj.control_.intercept_) {
             obj.coef_.slice(0).rows(obj.et_vs_ + 1) =
-                active_beta.rows(active_idx0);
+                active_beta.rows(active_idx0 + 1);
             // intercept
             obj.coef_.slice(0).row(0) = active_beta.row(0);
         } else {
