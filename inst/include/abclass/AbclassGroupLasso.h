@@ -58,7 +58,7 @@ namespace abclass
             arma::uvec::iterator it { idx.begin() };
             arma::uvec::iterator it_end { idx.end() };
             for (; it != it_end; ++it) {
-                out += group_weight(*it) * l2_norm(beta.row(*it));
+                out += group_weight(*it) * l2_norm(beta.row(*it + inter_));
             }
             return lambda * out;
         }

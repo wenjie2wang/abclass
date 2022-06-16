@@ -87,7 +87,7 @@
         loss2,
         "logistic" = list(loss = loss2),
         "boost" = list(loss = loss2, boost_umin = boost_umin),
-        "hinge_boost" = list(loss = loss2, lum_c = lum_c),
+        "hinge-boost" = list(loss = loss2, lum_c = lum_c),
         "lum" = list(loss = loss2, lum_a = lum_a, lum_c = lum_c)
     )
     res$control <- list(

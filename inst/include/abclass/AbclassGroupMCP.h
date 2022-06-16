@@ -77,7 +77,7 @@ namespace abclass
             arma::uvec::iterator it_end { idx.end() };
             for (; it != it_end; ++it) {
                 out += mcp_group_penalty(
-                    beta.row(*it),
+                    beta.row(*it + inter_),
                     lambda * group_weight(*it),
                     gamma);
             }
@@ -211,15 +211,15 @@ namespace abclass
             } else {
                 double tmp { 1 - lambda_j / mj / zj2 };
                 if (tmp <= 0.0) {
-                    beta.row(j1) = arma::zeros<arma::rowvec>(km1_);
+                    beta.row(j1).zeros();
                 } else {
                     beta.row(j1) = gamma * mj / (gamma * mj - 1) * tmp * zj;
                 }
             }
+            arma::rowvec delta_beta_j { (beta.row(j1) - old_beta_j) };
             for (size_t i {0}; i < n_obs_; ++i) {
                 inner(i) += x_(i, j) *
-                    arma::accu((beta.row(j1) - old_beta_j) %
-                               vertex_.row(y_(i)));
+                    arma::accu(delta_beta_j % vertex_.row(y_(i)));
             }
             if (update_active) {
                 // check if it has been shrinkaged to zero
