@@ -79,7 +79,8 @@ abclass <- function(x, y,
         list(x = x,
              y = y,
              intercept = intercept,
-             weight = null2num0(weight)),
+             weight = null2num0(weight),
+             loss = loss2),
         control
     )
     args_to_call <- args_to_call[

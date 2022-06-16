@@ -42,6 +42,7 @@ et.abclass <- function(x, y,
              y = y,
              intercept = intercept,
              weight = null2num0(weight),
+             loss = loss2,
              nstages = nstages,
              main_fit = FALSE),
         control
