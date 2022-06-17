@@ -196,7 +196,7 @@ namespace abclass
                 arma::vec vj_xl { x_.col(l) % v_j };
                 double dlj { mm_gradient(inner, vj_xl) };
                 double tmp { beta(l1, j) };
-                // if cmd_lowerbound = 0 and l1_lambda > 0, numer will be 0
+                // if mm_lowerbound = 0 and l1_lambda > 0, numer will be 0
                 double numer {
                     soft_threshold(mm_lowerbound_(l) * beta(l1, j) - dlj,
                                    l1_lambda)

@@ -160,16 +160,22 @@ namespace abclass
             size_t j1 { j + inter_ };
             arma::rowvec old_beta_j { beta.row(j1) };
             double mj { mm_lowerbound_(j) };
+            // early exit for zero mj from constant columns
+            if (isAlmostEqual(mj, 0.0)) {
+                beta.row(j1).zeros();
+                is_active(j) = 0;
+                continue;
+            }
             arma::rowvec uj {
                 - mm_gradient(inner, j) + mj * beta.row(j1)
             };
             double lambda_j { lambda * control_.group_weight_(j) };
             double pos_part { 1 - lambda_j / l2_norm(uj) };
             // update beta
-            if (pos_part <= 0.0) {
-                beta.row(j1).zeros();
-            } else {
+            if (pos_part > 0.0) {
                 beta.row(j1) = uj * pos_part / mj;
+            } else {
+                beta.row(j1).zeros();
             }
             for (size_t i {0}; i < n_obs_; ++i) {
                 inner(i) += x_(i, j) *
@@ -178,7 +184,7 @@ namespace abclass
             }
             if (update_active) {
                 // check if it has been shrinkaged to zero
-                if (arma::any(beta.row(j1) != 0.0)) {
+                if (l1_norm(beta.row(j1)) > 0.0) {
                     is_active(j) = 1;
                 } else {
                     is_active(j) = 0;

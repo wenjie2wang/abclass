@@ -205,8 +205,14 @@ namespace abclass
             size_t j1 { j + inter_ };
             arma::rowvec old_beta_j { beta.row(j1) };
             double mj { mm_lowerbound_(j) }; // m_g
+            // early exit for zero mj from constant columns
+            if (isAlmostEqual(mj, 0.0)) {
+                beta.row(j1).zeros();
+                is_active(j) = 0;
+                continue;
+            }
             arma::rowvec zj {
-                - mm_gradient(inner, j) / mj + beta.row(j1)
+                - mm_gradient(inner, j) / mj + old_beta_j
             };
             double lambda_j { lambda * control_.group_weight_(j) };
             double zj2 { l2_norm(zj) };
@@ -214,25 +220,25 @@ namespace abclass
             if (zj2 > gamma * lambda_j) {
                 beta.row(j1) = zj;
             } else if (zj2 > (mj + 1) * lambda_j / mj) {
-                double tmp { (gamma - 1) * mj };
-                beta.row(j1) = tmp / (tmp - 1) *
-                    (1 - gamma * lambda_j / tmp / zj2) * zj;
+                double tmp { (gamma - 1.0) * mj };
+                beta.row(j1) = tmp / (tmp - 1.0) *
+                    (1.0 - gamma * lambda_j / tmp / zj2) * zj;
             } else {
                 double tmp { 1 - lambda_j / mj / zj2 };
                 if (tmp <= 0.0) {
-                    beta.row(j1).zeros();
-                } else {
                     beta.row(j1) = tmp * zj;
+                } else {
+                    beta.row(j1).zeros();
                 }
             }
             arma::rowvec delta_beta_j { (beta.row(j1) - old_beta_j) };
+            arma::vec delta_vj { vertex_ * delta_beta_j.t() };
             for (size_t i {0}; i < n_obs_; ++i) {
-                inner(i) += x_(i, j) *
-                    arma::accu(delta_beta_j % vertex_.row(y_(i)));
+                inner(i) += x_(i, j) * delta_vj(y_[i]);
             }
             if (update_active) {
                 // check if it has been shrinkaged to zero
-                if (arma::any(beta.row(j1) != 0.0)) {
+                if (l1_norm(beta.row(j1)) > 0.0) {
                     is_active(j) = 1;
                 } else {
                     is_active(j) = 0;
@@ -277,7 +283,7 @@ namespace abclass
         if (varying_active_set) {
             arma::uvec is_active_strong { is_active },
                 is_active_varying { is_active };
-            if (verbose > 1) {
+            if (verbose > 0) {
                 Rcpp::Rcout << "The size of active set from strong rule: "
                             << l1_norm(is_active_strong)
                             << "\n";
@@ -286,6 +292,7 @@ namespace abclass
                 // cycles over the active set
                 size_t ii {0};
                 while (ii < max_iter) {
+                    num_iter_ = ii + 1;
                     Rcpp::checkUserInterrupt();
                     run_one_active_cycle(beta, inner, is_active_varying,
                                          lambda, gamma, true, verbose);
@@ -299,10 +306,11 @@ namespace abclass
                 // run a full cycle over the converged beta
                 run_one_active_cycle(beta, inner, is_active,
                                      lambda, gamma, true, verbose);
+                ++num_iter_;
                 // check two active sets coincide
                 if (is_gt(l1_norm(is_active_varying - is_active), 0)) {
                     // if different, repeat this process
-                    if (verbose > 1) {
+                    if (verbose > 0) {
                         Rcpp::Rcout << "Changed the active set from "
                                     << l1_norm(is_active_varying)
                                     << " to "
@@ -316,38 +324,46 @@ namespace abclass
                     is_active = is_active_strong;
                     i++;
                 } else {
-                    if (verbose > 1) {
+                    if (verbose > 0) {
                         Rcpp::Rcout << "Converged over the active set after "
                                     << num_iter_ + 1
                                     << " iteration(s)\n";
                         Rcpp::Rcout << "The size of active set is "
                                     << l1_norm(is_active) << "\n";
                     }
-                    num_iter_ = i + 1;
                     break;
                 }
+            }
+            if (verbose > 0) {
+                msg("Outer loop reached the maximum number of iteratons.");
             }
         } else {
             // regular coordinate descent
             while (i < max_iter) {
                 Rcpp::checkUserInterrupt();
+                num_iter_ = i + 1;
                 run_one_active_cycle(beta, inner, is_active,
                                      lambda, gamma, false, verbose);
-                if (rel_diff(beta0, beta) < epsilon) {
-                    num_iter_ = i + 1;
+                // if (rel_diff(beta0, beta) < epsilon) {
+                //     num_iter_ = i + 1;
+                //     break;
+                // }
+                // beta0 = beta;
+                loss1 = objective0(inner);
+                if (std::abs(loss1 - loss0) < epsilon) {
                     break;
                 }
-                beta0 = beta;
+                loss0 = loss1;
                 i++;
             }
-        }
-        if (verbose > 0) {
-            if (num_iter_ < max_iter) {
-                Rcpp::Rcout << "Converged after "
-                            << num_iter_
-                            << " iteration(s)\n";
-            } else {
-                msg("Reached the maximum number of iteratons.");
+            if (verbose > 0) {
+                if (num_iter_ < max_iter) {
+                    Rcpp::Rcout << "Outer loop converged after "
+                                << num_iter_
+                                << " iteration(s)\n";
+                } else {
+                    msg("Outer loop reached the maximum number of iteratons.");
+                }
             }
         }
     }

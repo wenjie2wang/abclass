@@ -55,7 +55,6 @@ namespace abclass
             T sqx { arma::square(x) };
             double dn_obs { static_cast<double>(x.n_rows) };
             return obs_weight.t() * sqx / (4.0 * dn_obs);
-
         }
         // for the intercept
         inline double mm_lowerbound(const double dn_obs,
