@@ -149,11 +149,13 @@ namespace abclass
             if (mm_lowerbound_.empty()) {
                 set_mm_lowerbound();
             }
-            const double max_mg {
-                std::max(mm_lowerbound_.max(), mm_lowerbound0_)
+            // exclude zeros lowerbounds from constant columns
+            const double min_mg {
+                std::min(mm_lowerbound_(arma::find(mm_lowerbound_ > 0.0)).min(),
+                         mm_lowerbound0_)
             };
             if (dgamma > 0.0) {
-                control_.gamma_ = dgamma + 1.0 + 1.0 / max_mg;
+                control_.gamma_ = dgamma + 1.0 + 1.0 / min_mg;
                 return;
             }
             throw std::range_error("The 'dgamma' must be positive.");
