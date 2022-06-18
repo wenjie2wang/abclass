@@ -205,7 +205,6 @@ namespace abclass
                 continue;
             }
             size_t j1 { j + inter_ };
-            arma::rowvec old_beta_j { beta.row(j1) };
             double mj { mm_lowerbound_(j) }; // m_g
             // early exit for zero mj from constant columns
             if (isAlmostEqual(mj, 0.0)) {
@@ -213,6 +212,7 @@ namespace abclass
                 is_active(j) = 0;
                 continue;
             }
+            arma::rowvec old_beta_j { beta.row(j1) };
             arma::rowvec zj {
                 - mm_gradient(inner, j) / mj + old_beta_j
             };
@@ -227,7 +227,7 @@ namespace abclass
                     (1.0 - gamma * lambda_j / tmp / zj2) * zj;
             } else {
                 double tmp { 1 - lambda_j / mj / zj2 };
-                if (tmp <= 0.0) {
+                if (tmp > 0.0) {
                     beta.row(j1) = tmp * zj;
                 } else {
                     beta.row(j1).zeros();
@@ -310,7 +310,7 @@ namespace abclass
                                      lambda, gamma, true, verbose);
                 ++num_iter_;
                 // check two active sets coincide
-                if (is_gt(l1_norm(is_active_varying - is_active), 0)) {
+                if (l1_norm(is_active_varying - is_active) > 0) {
                     // if different, repeat this process
                     if (verbose > 0) {
                         Rcpp::Rcout << "Changed the active set from "
