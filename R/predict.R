@@ -97,7 +97,7 @@ predict.abclass <- function(object,
         type,
         "class" = {
             lapply(seq_len(nslice), function(i) {
-                arg_list$beta <- res_coef[, , i]
+                arg_list$beta <- as.matrix(res_coef[, , i])
                 tmp <- do.call(predict_class_fun, arg_list)
                 tmp <- z2cat(as.integer(tmp), object$category)
                 ## names(tmp) <- rownames(newx)
@@ -106,7 +106,7 @@ predict.abclass <- function(object,
         },
         "probability" = {
             lapply(seq_len(nslice), function(i) {
-                arg_list$beta <- res_coef[, , i]
+                arg_list$beta <- as.matrix(res_coef[, , i])
                 tmp <- do.call(predict_prob_fun, arg_list)
                 colnames(tmp) <- object$category$label
                 ## rownames(tmp) <- rownames(newx)

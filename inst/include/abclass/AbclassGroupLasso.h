@@ -177,10 +177,10 @@ namespace abclass
             } else {
                 beta.row(j1).zeros();
             }
+            arma::rowvec delta_beta_j { (beta.row(j1) - old_beta_j) };
+            arma::vec delta_vj { vertex_ * delta_beta_j.t() };
             for (size_t i {0}; i < n_obs_; ++i) {
-                inner(i) += x_(i, j) *
-                    arma::accu((beta.row(j1) - old_beta_j) %
-                               vertex_.row(y_(i)));
+                inner(i) += x_(i, j) * delta_vj(y_[i]);
             }
             if (update_active) {
                 // check if it has been shrinkaged to zero

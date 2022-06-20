@@ -52,7 +52,7 @@ coef.abclass <- function(object,
     dim_coef <- dim(object$coefficients)
     dk <- dim_coef[3L]
     if (is.na(dk) || dk == 1L) {
-        return(object$coefficients[, , 1])
+        return(object$coefficients[, , 1, drop = FALSE])
     }
     ## for integer indices
     if (is.numeric(selection)) {
