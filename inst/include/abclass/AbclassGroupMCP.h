@@ -49,25 +49,29 @@ namespace abclass
         // common methods
         inline double mcp_group_penalty(const arma::rowvec& beta,
                                         const double lambda,
-                                        const double gamma) const
+                                        const double gamma,
+                                        const double ridge) const
         {
             double l2_beta { l2_norm(beta) };
-            return mcp_penalty(l2_beta, lambda, gamma);
+            return mcp_penalty(l2_beta, lambda, gamma, ridge);
         }
         inline double mcp_penalty(const double theta,
                                   const double lambda,
-                                  const double gamma) const
+                                  const double gamma,
+                                  const double ridge) const
         {
+            const double ridge_pen { ridge * theta * theta };
             if (theta < gamma * lambda) {
-                return theta * (lambda - 0.5 * theta / gamma);
+                return theta * (lambda - 0.5 * theta / gamma) + ridge_pen;
             }
-            return 0.5 * gamma * lambda * lambda;
+            return 0.5 * gamma * lambda * lambda + ridge_pen;
         }
 
         inline double regularization(
             const arma::mat& beta,
             const double lambda,
             const double gamma,
+            const double ridge,
             const arma::vec& group_weight
             ) const
         {
@@ -79,7 +83,8 @@ namespace abclass
                 out += mcp_group_penalty(
                     beta.row(*it + inter_),
                     lambda * group_weight(*it),
-                    gamma);
+                    gamma,
+                    ridge);
             }
             return out;
         }
@@ -90,11 +95,12 @@ namespace abclass
             const arma::mat& beta,
             const double lambda,
             const double gamma,
+            const double ridge,
             const arma::vec& group_weight
             ) const
         {
             return objective0(inner) +
-                regularization(beta, lambda, gamma, group_weight);
+                regularization(beta, lambda, gamma, ridge, group_weight);
         }
 
         // run one cycle of coordinate descent over a given active set
@@ -103,6 +109,7 @@ namespace abclass
                                          arma::uvec& is_active,
                                          const double lambda,
                                          const double gamma,
+                                         const double ridge,
                                          const bool update_active,
                                          const unsigned int verbose);
 
@@ -112,6 +119,7 @@ namespace abclass
                                          arma::uvec& is_active,
                                          const double lambda,
                                          const double gamma,
+                                         const double ridge,
                                          const bool varying_active_set,
                                          const unsigned int max_iter,
                                          const double epsilon,
@@ -146,16 +154,10 @@ namespace abclass
             }
             // exclude zeros lowerbounds from constant columns
             const double min_mg {
-                std::min(mm_lowerbound_(arma::find(mm_lowerbound_ > 0.0)).min(),
-                         mm_lowerbound0_)
+                mm_lowerbound_(arma::find(mm_lowerbound_ > 0.0)).min()
             };
-            if (dgamma > 0.0) {
-                control_.gamma_ = dgamma + 1.0 / min_mg;
-                return;
-            }
-            throw std::range_error("The 'dgamma' must be positive.");
+            control_.gamma_ = dgamma + 1.0 / min_mg;
         }
-
     };
 
     // run one GMD cycle over active sets
@@ -166,6 +168,7 @@ namespace abclass
         arma::uvec& is_active,
         const double lambda,
         const double gamma,
+        const double ridge,
         const bool update_active,
         const unsigned int verbose
         )
@@ -179,7 +182,7 @@ namespace abclass
         };
         if (verbose > 1) {
             obj_verbose = objective0(inner);
-            reg_verbose = regularization(beta, lambda, gamma,
+            reg_verbose = regularization(beta, lambda, gamma, ridge,
                                          control_.group_weight_);
             ell_verbose = obj_verbose + reg_verbose;
         }
@@ -199,31 +202,31 @@ namespace abclass
             if (is_active(j) == 0) {
                 continue;
             }
-            size_t j1 { j + inter_ };
-            arma::rowvec old_beta_j { beta.row(j1) };
-            double mj { mm_lowerbound_(j) }; // m_g
+            const size_t j1 { j + inter_ };
+            const double mj { mm_lowerbound_(j) }; // m_g
             // early exit for zero mj from constant columns
             if (isAlmostEqual(mj, 0.0)) {
                 beta.row(j1).zeros();
                 is_active(j) = 0;
                 continue;
             }
+            const arma::rowvec old_beta_j { beta.row(j1) };
             arma::rowvec zj {
                 - mm_gradient(inner, j) / mj + old_beta_j
             };
             double lambda_j { lambda * control_.group_weight_(j) };
             double zj2 { l2_norm(zj) };
             // update beta
-            if (zj2 > gamma * lambda_j) {
-                beta.row(j1) = zj;
-            } else {
+            if (zj2 < gamma * lambda_j) {
                 double tmp { 1 - lambda_j / mj / zj2 };
                 if (tmp > 0.0) {
                     double igamma_j { 1.0 / (gamma * mj) };
-                    beta.row(j1) = tmp * zj / (1 - igamma_j);
+                    beta.row(j1) = tmp * zj / ((1.0 + ridge) - igamma_j);
                 } else {
                     beta.row(j1).zeros();
                 }
+            } else {
+                beta.row(j1) = zj / (1.0 + ridge / mj);
             }
             arma::rowvec delta_beta_j { (beta.row(j1) - old_beta_j) };
             arma::vec delta_vj { vertex_ * delta_beta_j.t() };
@@ -245,7 +248,7 @@ namespace abclass
             Rprintf("  from %7.7f (obj. %7.7f + reg. %7.7f)\n",
                     ell_verbose, obj_verbose, reg_verbose);
             obj_verbose = objective0(inner);
-            reg_verbose = regularization(beta, lambda, gamma,
+            reg_verbose = regularization(beta, lambda, gamma, ridge,
                                          control_.group_weight_);
             ell_verbose = obj_verbose + reg_verbose;
             Rprintf("    to %7.7f (obj. %7.7f + reg. %7.7f)\n",
@@ -265,6 +268,7 @@ namespace abclass
         arma::uvec& is_active,
         const double lambda,
         const double gamma,
+        const double ridge,
         const bool varying_active_set,
         const unsigned int max_iter,
         const double epsilon,
@@ -289,9 +293,9 @@ namespace abclass
                     num_iter_ = ii + 1;
                     Rcpp::checkUserInterrupt();
                     run_one_active_cycle(beta, inner, is_active_varying,
-                                         lambda, gamma, true, verbose);
                     if (rel_diff(beta0, beta) < epsilon) {
                         num_iter_ = ii + 1;
+                                         lambda, gamma, ridge, true, verbose);
                         break;
                     }
                     beta0 = beta;
@@ -299,7 +303,7 @@ namespace abclass
                 }
                 // run a full cycle over the converged beta
                 run_one_active_cycle(beta, inner, is_active,
-                                     lambda, gamma, true, verbose);
+                                     lambda, gamma, ridge, true, verbose);
                 ++num_iter_;
                 // check two active sets coincide
                 if (is_gt(l1_norm(is_active_varying - is_active), 0)) {
@@ -337,9 +341,9 @@ namespace abclass
                 Rcpp::checkUserInterrupt();
                 num_iter_ = i + 1;
                 run_one_active_cycle(beta, inner, is_active,
-                                     lambda, gamma, false, verbose);
                 if (rel_diff(beta0, beta) < epsilon) {
                     num_iter_ = i + 1;
+                                     lambda, gamma, ridge, false, verbose);
                     break;
                 }
                 beta0 = beta;
@@ -382,6 +386,7 @@ namespace abclass
              it != penalty_group.end(); ++it) {
             double tmp { l2_norm(one_grad_beta.row(*it)) };
             tmp /= control_.group_weight_(*it);
+            tmp /= std::max(control_.alpha_, 1e-2);
             if (lambda_max_ < tmp) {
                 lambda_max_ = tmp;
             }
@@ -412,20 +417,25 @@ namespace abclass
              it != penalty_free.end(); ++it) {
             is_active_strong(*it) = 1;
         }
+        double l1_lambda { control_.alpha_ * lambda_max_ };
+        double l2_lambda { 0.5 * (1 - control_.alpha_ * lambda_max_) };
         run_gmd_active_cycle(one_beta,
                              one_inner,
                              is_active_strong,
-                             lambda_max_,
+                             l1_lambda,
                              control_.gamma_,
+                             l2_lambda,
                              false,
                              control_.max_iter_,
                              control_.epsilon_,
                              control_.verbose_);
         // optim with varying active set when p > n
-        double old_lambda { lambda_max_ }; // for strong rule
+        double old_lambda { l1_lambda }; // for strong rule
         // main loop: for each lambda
         for (size_t li { 0 }; li < control_.lambda_.n_elem; ++li) {
             double lambda_li { control_.lambda_(li) };
+            l1_lambda = control_.alpha_ * lambda_li;
+            l2_lambda = 0.5 * (1 - control_.alpha_) * lambda_li;
             // early exit for lambda greater than lambda_max_
             // note that lambda is sorted
             if (lambda_li >= lambda_max_) {
@@ -442,14 +452,14 @@ namespace abclass
                 double one_strong_lhs { l2_norm(one_grad_beta.row(*it)) };
                 one_strong_rhs = control_.group_weight_(*it) *
                     (control_.gamma_ / (control_.gamma_ - 1) *
-                     (lambda_li - old_lambda) + lambda_li);
+                     (l1_lambda - old_lambda) + l1_lambda);
                 if (one_strong_lhs >= one_strong_rhs) {
                     is_active_strong(*it) = 1;
                 }
             }
-            old_lambda = lambda_li;
+            old_lambda = l1_lambda;
             bool kkt_failed { true };
-            one_strong_rhs = lambda_li;
+            one_strong_rhs = l1_lambda;
             // eventually, strong rule will guess correctly
             while (kkt_failed) {
                 arma::uvec is_active_strong_old { is_active_strong };
@@ -460,8 +470,9 @@ namespace abclass
                 run_gmd_active_cycle(one_beta,
                                      one_inner,
                                      is_active_strong,
-                                     lambda_li,
+                                     l1_lambda,
                                      control_.gamma_,
+                                     l2_lambda,
                                      control_.varying_active_set_,
                                      control_.max_iter_,
                                      control_.epsilon_,
