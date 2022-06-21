@@ -276,7 +276,8 @@ namespace abclass
         )
     {
         size_t i {0};
-        arma::mat beta0 { beta };
+        // arma::mat beta0 { beta };
+        double loss0 { objective0(inner) }, loss1 { loss0 };
         // use active-set if p > n ("helps when p >> n")
         if (varying_active_set) {
             arma::uvec is_active_strong { is_active },
@@ -293,12 +294,16 @@ namespace abclass
                     num_iter_ = ii + 1;
                     Rcpp::checkUserInterrupt();
                     run_one_active_cycle(beta, inner, is_active_varying,
-                    if (rel_diff(beta0, beta) < epsilon) {
-                        num_iter_ = ii + 1;
                                          lambda, gamma, ridge, true, verbose);
+                    // if (rel_diff(beta0, beta) < epsilon) {
+                    //     break;
+                    // }
+                    // beta0 = beta;
+                    loss1 = objective0(inner);
+                    if (std::abs(loss1 - loss0) < epsilon) {
                         break;
                     }
-                    beta0 = beta;
+                    loss0 = loss1;
                     ii++;
                 }
                 // run a full cycle over the converged beta
@@ -341,12 +346,16 @@ namespace abclass
                 Rcpp::checkUserInterrupt();
                 num_iter_ = i + 1;
                 run_one_active_cycle(beta, inner, is_active,
-                if (rel_diff(beta0, beta) < epsilon) {
-                    num_iter_ = i + 1;
                                      lambda, gamma, ridge, false, verbose);
+                // if (rel_diff(beta0, beta) < epsilon) {
+                //     break;
+                // }
+                // beta0 = beta;
+                loss1 = objective0(inner);
+                if (std::abs(loss1 - loss0) < epsilon) {
                     break;
                 }
-                beta0 = beta;
+                loss0 = loss1;
                 i++;
             }
             if (verbose > 0) {
@@ -533,6 +542,10 @@ namespace abclass
                 }
             }
             coef_.slice(li) = rescale_coef(one_beta);
+            loss_wo_penalty_(li) = objective0(one_inner);
+            penalty_(li) = regularization(one_beta, l1_lambda,
+                                          control_.gamma_, l2_lambda,
+                                          control_.group_weight_);
         }
     }
 

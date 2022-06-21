@@ -152,6 +152,10 @@ namespace abclass
         // estimates
         arma::cube coef_;       // p1_ by km1_ for linear learning
 
+        // loss along the solution path
+        arma::vec loss_wo_penalty_;
+        arma::vec penalty_;
+
         // default constructor
         Abclass() {}
 
