@@ -484,6 +484,8 @@ namespace abclass
         // initialize the estimate cube
         coef_ = arma::cube(p1_, km1_, control_.lambda_.n_elem,
                            arma::fill::zeros);
+        this->loss_wo_penalty_ = arma::zeros(control_.lambda_.n_elem);
+        this->penalty_ = this->loss_wo_penalty_;
         // for ridge penalty
         if (is_ridge_only) {
             for (size_t li { 0 }; li < control_.lambda_.n_elem; ++li) {
@@ -495,6 +497,9 @@ namespace abclass
                                    control_.epsilon_,
                                    control_.verbose_);
                 coef_.slice(li) = rescale_coef(one_beta);
+                this->loss_wo_penalty_(li) = objective0(one_inner);
+                this->penalty_(li) = regularization(
+                    one_beta, l1_lambda, l2_lambda);
             }
             return;             // early exit
         }
