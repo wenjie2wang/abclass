@@ -40,11 +40,11 @@ set.seed(123)
 
 ## toy examples for demonstration purpose
 ## reference: example 1 in Zhang and Liu (2014)
-ntrain <- 100 # size of training set
-ntest <- 1000 # size of testing set
-p0 <- 10      # number of actual predictors
-p1 <- 100     # number of random predictors
-k <- 5        # number of categories
+ntrain <- 200  # size of training set
+ntest <- 10000 # size of testing set
+p0 <- 10       # number of actual predictors
+p1 <- 100      # number of random predictors
+k <- 5         # number of categories
 
 n <- ntrain + ntest; p <- p0 + p1
 train_idx <- seq_len(ntrain)
@@ -63,58 +63,58 @@ test_y <- y[- train_idx]
 
 ### regularization through elastic-net penalty
 ## logistic deviance loss
-model1 <- abclass(train_x, train_y, nlambda = 100, nfolds = 3,
-                  grouped = FALSE, loss = "logistic")
+model1 <- cv.abclass(train_x, train_y, nlambda = 100, nfolds = 3,
+                     grouped = FALSE, loss = "logistic")
 pred1 <- predict(model1, test_x)
 table(test_y, pred1)
 mean(test_y == pred1) # accuracy
 
 ## exponential loss approximating AdaBoost
-model2 <- abclass(train_x, train_y, nlambda = 100, nfolds = 3,
-                  grouped = FALSE, loss = "boost")
+model2 <- cv.abclass(train_x, train_y, nlambda = 100, nfolds = 3,
+                     grouped = FALSE, loss = "boost")
 pred2 <- predict(model2, test_x, s = "cv_1se")
 table(test_y, pred2)
 mean(test_y == pred2) # accuracy
 
 ## hybrid hinge-boost loss
-model3 <- abclass(train_x, train_y, nlambda = 100, nfolds = 3,
-                  grouped = FALSE, loss = "hinge-boost")
+model3 <- cv.abclass(train_x, train_y, nlambda = 100, nfolds = 3,
+                     grouped = FALSE, loss = "hinge-boost")
 pred3 <- predict(model3, test_x)
 table(test_y, pred3)
 mean(test_y == pred3) # accuracy
 
 ## large-margin unified loss
-model4 <- abclass(train_x, train_y, nlambda = 100, nfolds = 3,
-                  grouped = FALSE, loss = "lum")
+model4 <- cv.abclass(train_x, train_y, nlambda = 100, nfolds = 3,
+                     grouped = FALSE, loss = "lum")
 pred4 <- predict(model4, test_x)
 table(test_y, pred4)
 mean(test_y == pred4) # accuracy
 
 ### variable selection via group lasso
 ## logistic deviance loss
-model1 <- abclass(train_x, train_y, nlambda = 100, nfolds = 3,
-                  grouped = TRUE, loss = "logistic")
+model1 <- cv.abclass(train_x, train_y, nlambda = 100, nfolds = 3,
+                     grouped = TRUE, loss = "logistic")
 pred1 <- predict(model1, test_x, s = "cv_1se")
 table(test_y, pred1)
 mean(test_y == pred1) # accuracy
 
 ## exponential loss approximating AdaBoost
-model2 <- abclass(train_x, train_y, nlambda = 100, nfolds = 3,
-                  grouped = TRUE, loss = "boost")
+model2 <- cv.abclass(train_x, train_y, nlambda = 100, nfolds = 3,
+                     grouped = TRUE, loss = "boost")
 pred2 <- predict(model2, test_x, s = "cv_1se")
 table(test_y, pred2)
 mean(test_y == pred2) # accuracy
 
 ## hybrid hinge-boost loss
-model3 <- abclass(train_x, train_y, nlambda = 100, nfolds = 3,
-                  grouped = TRUE, loss = "hinge-boost")
+model3 <- cv.abclass(train_x, train_y, nlambda = 100, nfolds = 3,
+                     grouped = TRUE, loss = "hinge-boost")
 pred3 <- predict(model3, test_x)
 table(test_y, pred3)
 mean(test_y == pred3) # accuracy
 
 ## large-margin unified loss
-model4 <- abclass(train_x, train_y, nlambda = 100, nfolds = 3,
-                  grouped = TRUE, loss = "lum")
+model4 <- cv.abclass(train_x, train_y, nlambda = 100, nfolds = 3,
+                     grouped = TRUE, loss = "lum", alpha = 0.5)
 pred4 <- predict(model4, test_x)
 table(test_y, pred4)
 mean(test_y == pred4) # accuracy
