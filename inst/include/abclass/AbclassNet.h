@@ -526,6 +526,9 @@ namespace abclass
             // note that lambda is sorted
             if (l1_lambda >= l1_lambda_max_) {
                 coef_.slice(li) = rescale_coef(one_beta);
+                this->loss_wo_penalty_(li) = objective0(one_inner);
+                this->penalty_(li) = regularization(
+                    one_beta, l1_lambda, l2_lambda);
                 continue;
             }
             // update active set by strong rule
@@ -618,6 +621,9 @@ namespace abclass
                 }
             }
             coef_.slice(li) = rescale_coef(one_beta);
+            this->loss_wo_penalty_(li) = objective0(one_inner);
+            this->penalty_(li) = regularization(
+                one_beta, l1_lambda, l2_lambda);
         }
     }
 
