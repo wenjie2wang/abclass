@@ -60,7 +60,7 @@ namespace abclass
                                   const double gamma,
                                   const double ridge) const
         {
-            const double ridge_pen { ridge * theta * theta };
+            const double ridge_pen { 0.5 * ridge * theta * theta };
             if (theta < gamma * lambda) {
                 return theta * (lambda - 0.5 * theta / gamma) + ridge_pen;
             }
@@ -76,13 +76,10 @@ namespace abclass
             ) const
         {
             double out { 0.0 };
-            arma::uvec idx { arma::find(group_weight > 0.0) };
-            arma::uvec::iterator it { idx.begin() };
-            arma::uvec::iterator it_end { idx.end() };
-            for (; it != it_end; ++it) {
+            for (size_t g {0}; g < group_weight.n_elem; ++g) {
                 out += mcp_group_penalty(
-                    beta.row(*it + inter_),
-                    lambda * group_weight(*it),
+                    beta.row(g + inter_),
+                    lambda * group_weight(g),
                     gamma,
                     ridge);
             }
@@ -211,22 +208,23 @@ namespace abclass
                 continue;
             }
             const arma::rowvec old_beta_j { beta.row(j1) };
-            arma::rowvec zj {
+            const arma::rowvec zj {
                 - mm_gradient(inner, j) / mj + old_beta_j
             };
-            double lambda_j { lambda * control_.group_weight_(j) };
-            double zj2 { l2_norm(zj) };
+            const double lambda_j { lambda * control_.group_weight_(j) };
+            const double zj2 { l2_norm(zj) };
+            const double mj_ratio { 1.0 + ridge / mj }; // m_g' / m_g
             // update beta
-            if (zj2 < gamma * lambda_j) {
+            if (zj2 < gamma * lambda_j * mj_ratio) {
                 double tmp { 1 - lambda_j / mj / zj2 };
                 if (tmp > 0.0) {
                     double igamma_j { 1.0 / (gamma * mj) };
-                    beta.row(j1) = tmp * zj / ((1.0 + ridge) - igamma_j);
+                    beta.row(j1) = tmp * zj / (mj_ratio - igamma_j);
                 } else {
                     beta.row(j1).zeros();
                 }
             } else {
-                beta.row(j1) = zj / (1.0 + ridge / mj);
+                beta.row(j1) = zj / mj_ratio;
             }
             arma::rowvec delta_beta_j { (beta.row(j1) - old_beta_j) };
             arma::vec delta_vj { vertex_ * delta_beta_j.t() };
@@ -311,7 +309,7 @@ namespace abclass
                                      lambda, gamma, ridge, true, verbose);
                 ++num_iter_;
                 // check two active sets coincide
-                if (is_gt(l1_norm(is_active_varying - is_active), 0)) {
+                if (l1_norm(is_active_varying - is_active) > 0) {
                     // if different, repeat this process
                     if (verbose > 0) {
                         Rcpp::Rcout << "Changed the active set from "
@@ -417,6 +415,8 @@ namespace abclass
         // initialize the estimate cube
         coef_ = arma::cube(p1_, km1_, control_.lambda_.n_elem,
                            arma::fill::zeros);
+        this->loss_wo_penalty_ = arma::zeros(control_.lambda_.n_elem);
+        this->penalty_ = this->loss_wo_penalty_;
 
         double one_strong_rhs { 0.0 };
         // get the solution (intercepts) of l1_lambda_max for a warm start
@@ -427,7 +427,7 @@ namespace abclass
             is_active_strong(*it) = 1;
         }
         double l1_lambda { control_.alpha_ * lambda_max_ };
-        double l2_lambda { 0.5 * (1 - control_.alpha_ * lambda_max_) };
+        double l2_lambda { (1 - control_.alpha_) * lambda_max_ };
         run_gmd_active_cycle(one_beta,
                              one_inner,
                              is_active_strong,
@@ -444,11 +444,15 @@ namespace abclass
         for (size_t li { 0 }; li < control_.lambda_.n_elem; ++li) {
             double lambda_li { control_.lambda_(li) };
             l1_lambda = control_.alpha_ * lambda_li;
-            l2_lambda = 0.5 * (1 - control_.alpha_) * lambda_li;
+            l2_lambda = (1 - control_.alpha_) * lambda_li;
             // early exit for lambda greater than lambda_max_
             // note that lambda is sorted
             if (lambda_li >= lambda_max_) {
                 coef_.slice(li) = rescale_coef(one_beta);
+                this->loss_wo_penalty_(li) = objective0(one_inner);
+                this->penalty_(li) = regularization(
+                    one_beta, l1_lambda, control_.gamma_,
+                    l2_lambda, control_.group_weight_);
                 continue;
             }
             // update active set by strong rule
@@ -466,7 +470,7 @@ namespace abclass
                     is_active_strong(*it) = 1;
                 }
             }
-            old_lambda = l1_lambda;
+            old_lambda = l1_lambda; // for next iteration
             bool kkt_failed { true };
             one_strong_rhs = l1_lambda;
             // eventually, strong rule will guess correctly
@@ -542,10 +546,10 @@ namespace abclass
                 }
             }
             coef_.slice(li) = rescale_coef(one_beta);
-            loss_wo_penalty_(li) = objective0(one_inner);
-            penalty_(li) = regularization(one_beta, l1_lambda,
-                                          control_.gamma_, l2_lambda,
-                                          control_.group_weight_);
+            this->loss_wo_penalty_(li) = objective0(one_inner);
+            this->penalty_(li) = regularization(
+                one_beta, l1_lambda, control_.gamma_,
+                l2_lambda, control_.group_weight_);
         }
     }
 
