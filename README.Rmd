@@ -12,7 +12,10 @@ The package **abclass** provides implementations of the multi-category
 angle-based classifiers (Zhang & Liu, 2014) with the large-margin unified
 machines (Liu, et al., 2011) for high-dimensional data.
 
-Notice that the package is still experimental and under active development.
+> **Note**
+> This package is still very experimental and under active development.
+> The function interface may be subject to change without backward compatibility.
+
 
 ## Installation
 
