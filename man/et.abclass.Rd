@@ -11,7 +11,7 @@ et.abclass(
   weight = NULL,
   loss = c("logistic", "boost", "hinge-boost", "lum"),
   control = list(),
-  nstages = 1,
+  nstages = 2,
   ...
 )
 }
@@ -43,7 +43,8 @@ al. (2011) for details.}
 for details.}
 
 \item{nstages}{A positive integer specifying for the number of stages in the
-ET-Lasso procedure.}
+ET-Lasso procedure.  By default, two rounds of tuning by random
+permutations will be performed as suggested in Yang, et al. (2019).}
 
 \item{...}{Other control parameters passed to \code{abclass.control()}.}
 }

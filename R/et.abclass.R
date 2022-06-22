@@ -23,7 +23,8 @@
 ##' @inheritParams abclass
 ##'
 ##' @param nstages A positive integer specifying for the number of stages in the
-##'     ET-Lasso procedure.
+##'     ET-Lasso procedure.  By default, two rounds of tuning by random
+##'     permutations will be performed as suggested in Yang, et al. (2019).
 ##'
 ##' @references
 ##'
@@ -38,7 +39,7 @@ et.abclass <- function(x, y,
                        weight = NULL,
                        loss = c("logistic", "boost", "hinge-boost", "lum"),
                        control = list(),
-                       nstages = 1,
+                       nstages = 2,
                        ...)
 {
     ## nstages
