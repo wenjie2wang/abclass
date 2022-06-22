@@ -60,6 +60,9 @@ Rcpp::List template_fit(T& object, const bool main_fit)
             abclass::arma2rvec(object.control_.group_weight_),
             Rcpp::Named("dgamma") = object.control_.dgamma_,
             Rcpp::Named("gamma") = object.control_.gamma_
-            )
+            ),
+        Rcpp::Named("loss_wo_penalty") = abclass::arma2rvec(
+            object.loss_wo_penalty_),
+        Rcpp::Named("penalty") = abclass::arma2rvec(object.penalty_)
         );
 }

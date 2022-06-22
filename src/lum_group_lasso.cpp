@@ -16,7 +16,7 @@
 //
 
 #include <RcppArmadillo.h>
-#include <abclass.h>
+#include <abclass/LumGroupLasso.h>
 #include "export-helpers.h"
 
 template <typename T>
@@ -39,6 +39,7 @@ Rcpp::List r_lum_glasso(
     const arma::mat& x,
     const arma::uvec& y,
     const arma::vec& lambda,
+    const double alpha,
     const unsigned int nlambda,
     const double lambda_min_ratio,
     const arma::vec& group_weight,
@@ -63,6 +64,7 @@ Rcpp::List r_lum_glasso(
         set_weight(weight)->
         reg_path(nlambda, lambda_min_ratio, varying_active_set)->
         reg_path(lambda)->
+        reg_net(alpha)->
         reg_group(group_weight)->
         tune_cv(nfolds, stratified, alignment)->
         tune_et(nstages);
@@ -74,6 +76,7 @@ Rcpp::List r_lum_glasso_sp(
     const arma::sp_mat& x,
     const arma::uvec& y,
     const arma::vec& lambda,
+    const double alpha,
     const unsigned int nlambda,
     const double lambda_min_ratio,
     const arma::vec& group_weight,
@@ -98,6 +101,7 @@ Rcpp::List r_lum_glasso_sp(
         set_weight(weight)->
         reg_path(nlambda, lambda_min_ratio, varying_active_set)->
         reg_path(lambda)->
+        reg_net(alpha)->
         reg_group(group_weight)->
         tune_cv(nfolds, stratified, alignment)->
         tune_et(nstages);

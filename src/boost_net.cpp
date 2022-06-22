@@ -16,10 +16,7 @@
 //
 
 #include <RcppArmadillo.h>
-// [[Rcpp::plugins(cpp11)]]
-// [[Rcpp::depends(RcppArmadillo)]]
-
-#include <abclass.h>
+#include <abclass/BoostNet.h>
 #include "export-helpers.h"
 
 template <typename T>

@@ -16,7 +16,7 @@
 //
 
 #include <RcppArmadillo.h>
-#include <abclass.h>
+#include <abclass/LumNet.h>
 #include "export-helpers.h"
 
 template <typename T>
