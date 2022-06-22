@@ -53,10 +53,10 @@ namespace abclass
             if (control_.intercept_) {
                 arma::mat beta0int { beta.tail_rows(p0_) };
                 return l1_lambda * l1_norm(beta0int) +
-                    l2_lambda * l2_norm_square(beta0int);
+                    0.5 * l2_lambda * l2_norm_square(beta0int);
             }
             return l1_lambda * l1_norm(beta) +
-                l2_lambda * l2_norm_square(beta);
+                0.5 * l2_lambda * l2_norm_square(beta);
         }
 
         // objective function with regularization
@@ -418,15 +418,14 @@ namespace abclass
         double loss0 { objective0(inner) }, loss1 { loss0 };
         for (size_t i {0}; i < max_iter; ++i) {
             Rcpp::checkUserInterrupt();
+            num_iter_ = i + 1;
             run_one_full_cycle(beta, inner, l1_lambda, l2_lambda, verbose);
             // if (rel_diff(beta0, beta) < epsilon) {
-            //     num_iter_ = i + 1;
             //     break;
             // }
             // beta0 = beta;
             loss1 = objective0(inner);
             if (std::abs(loss1 - loss0) < epsilon) {
-                num_iter_ = i + 1;
                 break;
             }
             loss0 = loss1;
