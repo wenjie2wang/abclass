@@ -205,7 +205,7 @@ namespace abclass
                 if (isAlmostEqual(numer, 0)) {
                     beta(l1, j) = 0;
                 } else {
-                    double denom { mm_lowerbound_(l) + 2 * l2_lambda };
+                    double denom { mm_lowerbound_(l) + l2_lambda };
                     beta(l1, j) = numer / denom;
                 }
                 inner += (beta(l1, j) - tmp) * vj_xl;
@@ -247,12 +247,13 @@ namespace abclass
         )
     {
         size_t i {0};
-        arma::mat beta0 { beta };
+        // arma::mat beta0 { beta };
+        double loss0 { objective0(inner) }, loss1 { loss0 };
         // use active-set if p > n ("helps when p >> n")
         if (varying_active_set) {
             arma::umat is_active_strong { is_active },
                 is_active_varying { is_active };
-            if (verbose > 1) {
+            if (verbose > 0) {
                 Rcpp::Rcout << "The size of active set from strong rule: "
                             << l1_norm(is_active_strong)
                             << "\n";
@@ -261,23 +262,29 @@ namespace abclass
                 // cycles over the active set
                 size_t ii {0};
                 while (ii < max_iter) {
+                    num_iter_ = ii + 1;
                     Rcpp::checkUserInterrupt();
                     run_one_active_cycle(beta, inner, is_active_varying,
                                          l1_lambda, l2_lambda, true, verbose);
-                    if (rel_diff(beta0, beta) < epsilon) {
-                        num_iter_ = ii + 1;
+                    // if (rel_diff(beta0, beta) < epsilon) {
+                    //     break;
+                    // }
+                    // beta0 = beta;
+                    loss1 = objective0(inner);
+                    if (std::abs(loss1 - loss0) < epsilon) {
                         break;
                     }
-                    beta0 = beta;
+                    loss0 = loss1;
                     ii++;
                 }
                 // run a full cycle over the converged beta
                 run_one_active_cycle(beta, inner, is_active,
                                      l1_lambda, l2_lambda, true, verbose);
+                ++num_iter_;
                 // check two active sets coincide
                 if (l1_norm(is_active_varying - is_active) > 0) {
                     // if different, repeat this process
-                    if (verbose > 1) {
+                    if (verbose > 0) {
                         Rcpp::Rcout << "Changed the active set from "
                                     << l1_norm(is_active_varying)
                                     << " to "
@@ -291,36 +298,45 @@ namespace abclass
                     is_active = is_active_strong;
                     i++;
                 } else {
-                    if (verbose > 1) {
+                    if (verbose > 0) {
                         Rcpp::Rcout << "Converged over the active set after "
-                                    << num_iter_ + 1
+                                    << num_iter_
                                     << " iteration(s)\n";
+                        Rcpp::Rcout << "The size of active set is "
+                                    << l1_norm(is_active) << "\n";
                     }
-                    num_iter_ = i + 1;
                     break;
+                }
+                if (verbose > 0) {
+                    msg("Outer loop reached the maximum number of iteratons.");
                 }
             }
         } else {
             // regular coordinate descent
             while (i < max_iter) {
                 Rcpp::checkUserInterrupt();
+                num_iter_ = i + 1;
                 run_one_active_cycle(beta, inner, is_active,
                                      l1_lambda, l2_lambda, false, verbose);
-                if (rel_diff(beta0, beta) < epsilon) {
-                    num_iter_ = i + 1;
+                // if (rel_diff(beta0, beta) < epsilon) {
+                //     break;
+                // }
+                // beta0 = beta;
+                loss1 = objective0(inner);
+                if (std::abs(loss1 - loss0) < epsilon) {
                     break;
                 }
-                beta0 = beta;
+                loss0 = loss1;
                 i++;
             }
-        }
-        if (verbose > 0) {
-            if (num_iter_ < max_iter) {
-                Rcpp::Rcout << "Converged after "
-                            << num_iter_
-                            << " iteration(s)\n";
-            } else {
-                msg("Reached the maximum number of iteratons.");
+            if (verbose > 0) {
+                if (num_iter_ < max_iter) {
+                    Rcpp::Rcout << "Outer loop converged after "
+                                << num_iter_
+                                << " iteration(s)\n";
+                } else {
+                    msg("Outer loop reached the maximum number of iteratons.");
+                }
             }
         }
     }
@@ -367,7 +383,7 @@ namespace abclass
                 if (isAlmostEqual(numer, 0)) {
                     beta(l1, j) = 0;
                 } else {
-                    double denom { mm_lowerbound_(l) + 2 * l2_lambda };
+                    double denom { mm_lowerbound_(l) + l2_lambda };
                     beta(l1, j) = numer / denom;
                 }
                 inner += (beta(l1, j) - tmp) * vj_xl;
@@ -398,15 +414,22 @@ namespace abclass
         const unsigned int verbose
         )
     {
-        arma::mat beta0 { beta };
+        // arma::mat beta0 { beta };
+        double loss0 { objective0(inner) }, loss1 { loss0 };
         for (size_t i {0}; i < max_iter; ++i) {
             Rcpp::checkUserInterrupt();
             run_one_full_cycle(beta, inner, l1_lambda, l2_lambda, verbose);
-            if (rel_diff(beta0, beta) < epsilon) {
+            // if (rel_diff(beta0, beta) < epsilon) {
+            //     num_iter_ = i + 1;
+            //     break;
+            // }
+            // beta0 = beta;
+            loss1 = objective0(inner);
+            if (std::abs(loss1 - loss0) < epsilon) {
                 num_iter_ = i + 1;
                 break;
             }
-            beta0 = beta;
+            loss0 = loss1;
         }
         if (verbose > 0) {
             if (num_iter_ < max_iter) {
@@ -477,7 +500,7 @@ namespace abclass
         }
         // else, not just ridge penalty with l1_lambda > 0
         double one_strong_rhs { 0.0 };
-        l2_lambda = 0.5 * lambda_max_ * (1 - control_.alpha_);
+        l2_lambda = lambda_max_ * (1 - control_.alpha_);
         // get the solution (intercepts) of l1_lambda_max for a warm start
         arma::umat is_active_strong { arma::zeros<arma::umat>(p0_, km1_) };
         if (control_.intercept_) {
@@ -498,7 +521,7 @@ namespace abclass
         for (size_t li { 0 }; li < control_.lambda_.n_elem; ++li) {
             double lambda_li { control_.lambda_(li) };
             l1_lambda = lambda_li * control_.alpha_;
-            l2_lambda = 0.5 * lambda_li * (1 - control_.alpha_);
+            l2_lambda = lambda_li * (1 - control_.alpha_);
             // early exit for lambda greater than lambda_max_
             // note that lambda is sorted
             if (l1_lambda >= l1_lambda_max_) {
