@@ -28,7 +28,7 @@ abclass.control(
   lum_c = 1,
   boost_umin = -5,
   maxit = 100000L,
-  epsilon = 0.001,
+  epsilon = 1e-04,
   standardize = TRUE,
   varying_active_set = TRUE,
   verbose = 0L,
@@ -109,7 +109,7 @@ internal majorization procedure.}
 The default value is \code{10^5}.}
 
 \item{epsilon}{A positive number specifying the relative tolerance that
-determines convergence.  The default value is \code{1e-3}.}
+determines convergence.  The default value is \code{1e-4}.}
 
 \item{standardize}{A logical value indicating if each column of the design
 matrix should be standardized internally to have mean zero and standard
