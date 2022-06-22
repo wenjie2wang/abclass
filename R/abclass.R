@@ -108,7 +108,7 @@ abclass <- function(x, y,
 ##'     The specified \code{lambda} will be sorted in decreasing order
 ##'     internally and only the unique values will be kept.
 ##' @param alpha A numeric value in [0, 1] representing the mixing parameter
-##'     \emph{alpha} in elastic-net penalty.
+##'     \emph{alpha} in elastic-net penalty.  The default value is \code{1.0}.
 ##' @param nlambda A positive integer specifying the length of the internally
 ##'     generated \emph{lambda} sequence.  This argument will be ignored if a
 ##'     valid \code{lambda} is specified.  The default value is \code{50}.
@@ -131,8 +131,8 @@ abclass <- function(x, y,
 ##'     "lum"}.  The default value is \code{1.0}.
 ##' @param boost_umin A negative number for adjusting the boosting loss for the
 ##'     internal majorization procedure.
-##' @param maxit A positive integer specifying the maximum number of
-##'     iteration.  The default value is \code{10^5}.
+##' @param maxit A positive integer specifying the maximum number of iteration.
+##'     The default value is \code{10^5}.
 ##' @param epsilon A positive number specifying the relative tolerance that
 ##'     determines convergence.  The default value is \code{1e-3}.
 ##' @param standardize A logical value indicating if each column of the design
@@ -150,7 +150,7 @@ abclass <- function(x, y,
 ##'
 ##' @export
 abclass.control <- function(lambda = NULL,
-                            alpha = 0.5,
+                            alpha = 1.0,
                             nlambda = 50L,
                             lambda_min_ratio = NULL,
                             grouped = TRUE,
