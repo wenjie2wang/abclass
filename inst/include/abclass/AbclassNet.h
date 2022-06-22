@@ -455,7 +455,7 @@ namespace abclass
         arma::mat one_beta { arma::zeros(p1_, km1_) },
             one_grad_beta { one_beta };
         const bool is_ridge_only { isAlmostEqual(control_.alpha_, 0.0) };
-        double l1_lambda, l2_lambda;
+        double l1_lambda { 0.0 }, l2_lambda { 0.0 };
         if (! control_.lambda_.empty()) {
             control_.lambda_ = arma::reverse(arma::unique(control_.lambda_));
             control_.nlambda_ = control_.lambda_.n_elem;
@@ -489,10 +489,11 @@ namespace abclass
         // for ridge penalty
         if (is_ridge_only) {
             for (size_t li { 0 }; li < control_.lambda_.n_elem; ++li) {
+                l2_lambda = control_.lambda_(li);
                 run_cmd_full_cycle(one_beta,
                                    one_inner,
-                                   0.0,
-                                   0.5 * control_.lambda_(li),
+                                   l1_lambda,
+                                   l2_lambda,
                                    control_.max_iter_,
                                    control_.epsilon_,
                                    control_.verbose_);
