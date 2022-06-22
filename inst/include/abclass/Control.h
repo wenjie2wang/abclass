@@ -126,10 +126,14 @@ namespace abclass
             return this;
         }
         Control* reg_group(const arma::vec& group_weight,
-                           const double dgamma = 0.01)
+                           const double dgamma = 1.0)
         {
             group_weight_ = group_weight;
-            dgamma_ = dgamma;
+            if (dgamma > 0.0) {
+                dgamma_ = dgamma;
+            } else {
+                throw std::range_error("The 'dgamma' must be positive.");
+            }
             return this;
         }
         // tuning
