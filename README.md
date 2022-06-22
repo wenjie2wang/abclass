@@ -11,8 +11,8 @@ angle-based classifiers (Zhang & Liu, 2014) with the large-margin
 unified machines (Liu, et al., 2011) for high-dimensional data.
 
 > **Note** This package is still very experimental and under active
-> development. The function interface may be subject to change without
-> backward compatibility.
+> development. The function interface is subject to change without
+> guarantee of backward compatibility.
 
 ## Installation
 
