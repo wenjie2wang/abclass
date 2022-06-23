@@ -35,7 +35,6 @@ namespace abclass
         using AbclassGroup<T_loss, T_x>::inter_;
         using AbclassGroup<T_loss, T_x>::mm_lowerbound_;
         using AbclassGroup<T_loss, T_x>::mm_lowerbound0_;
-        using AbclassGroup<T_loss, T_x>::num_iter_;
 
         // functions
         using AbclassGroup<T_loss, T_x>::loss_derivative;
@@ -244,14 +243,14 @@ namespace abclass
         const unsigned int verbose
         )
     {
-        size_t i {0};
+        size_t i {0}, num_iter {0};
         // arma::mat beta0 { beta };
         double loss0 { objective0(inner) }, loss1 { loss0 };
         // use active-set if p > n ("helps when p >> n")
         if (varying_active_set) {
             arma::uvec is_active_strong { is_active },
                 is_active_varying { is_active };
-            if (verbose > 1) {
+            if (verbose > 0) {
                 Rcpp::Rcout << "The size of active set from strong rule: "
                             << l1_norm(is_active_strong)
                             << "\n";
@@ -261,6 +260,7 @@ namespace abclass
                 size_t ii {0};
                 while (ii < max_iter) {
                     Rcpp::checkUserInterrupt();
+                    num_iter = ii + 1;
                     run_one_active_cycle(beta, inner, is_active_varying,
                                          lambda, ridge, true, verbose);
                     // if (rel_diff(beta0, beta) < epsilon) {
@@ -269,40 +269,39 @@ namespace abclass
                     // beta0 = beta;
                     loss1 = objective0(inner);
                     if (std::abs(loss1 - loss0) < epsilon) {
-                        num_iter_ = ii + 1;
                         break;
                     }
                     loss0 = loss1;
-                    ii++;
+                    ++ii;
                 }
                 // run a full cycle over the converged beta
                 run_one_active_cycle(beta, inner, is_active,
                                      lambda, ridge, true, verbose);
+                ++num_iter;
                 // check two active sets coincide
                 if (l1_norm(is_active_varying - is_active) > 0) {
                     // if different, repeat this process
-                    if (verbose > 1) {
+                    if (verbose > 0) {
                         Rcpp::Rcout << "Changed the active set from "
                                     << l1_norm(is_active_varying)
                                     << " to "
                                     << l1_norm(is_active)
                                     << " after "
-                                    << num_iter_ + 1
+                                    << num_iter
                                     << " iteration(s)\n";
                     }
                     is_active_varying = is_active;
                     // recover the active set
                     is_active = is_active_strong;
-                    i++;
+                    ++i;
                 } else {
-                    if (verbose > 1) {
+                    if (verbose > 0) {
                         Rcpp::Rcout << "Converged over the active set after "
-                                    << num_iter_ + 1
+                                    << num_iter
                                     << " iteration(s)\n";
                         Rcpp::Rcout << "The size of active set is "
                                     << l1_norm(is_active) << "\n";
                     }
-                    num_iter_ = i + 1;
                     break;
                 }
             }
@@ -310,7 +309,7 @@ namespace abclass
             // regular coordinate descent
             while (i < max_iter) {
                 Rcpp::checkUserInterrupt();
-                num_iter_ = i + 1;
+                ++num_iter;
                 run_one_active_cycle(beta, inner, is_active,
                                      lambda, ridge, false, verbose);
                 // if (rel_diff(beta0, beta) < epsilon) {
@@ -319,20 +318,19 @@ namespace abclass
                 // beta0 = beta;
                 loss1 = objective0(inner);
                 if (std::abs(loss1 - loss0) < epsilon) {
-                    num_iter_ = i + 1;
                     break;
                 }
                 loss0 = loss1;
-                i++;
+                ++i;
             }
-        }
-        if (verbose > 0) {
-            if (num_iter_ < max_iter) {
-                Rcpp::Rcout << "Converged after "
-                            << num_iter_
-                            << " iteration(s)\n";
-            } else {
-                msg("Reached the maximum number of iteratons.");
+            if (verbose > 0) {
+                if (num_iter < max_iter) {
+                    Rcpp::Rcout << "Outer loop converged after "
+                                << num_iter
+                                << " iteration(s)\n";
+                } else {
+                    msg("Reached the maximum number of iteratons.");
+                }
             }
         }
     }
@@ -495,7 +493,11 @@ namespace abclass
                 arma::mat permuted_beta { one_beta.tail_rows(et_npermuted_) };
                 if (! permuted_beta.is_zero(arma::datum::eps)) {
                     if (li == 0) {
-                        msg("[ET] Warning: fail to tune; lambda too small.");
+                        msg("Warning: Fail to tune by ET-lasso; ",
+                            "selected pseudo-predictor(s) by ",
+                            "the largest lamabda.\n",
+                            "Suggestion: increase 'lambda', ",
+                            "'lambda_min_ratio' or 'nlambda'?");
                     } else {
                         coef_ = coef_.head_slices(li);
                     }
@@ -506,6 +508,12 @@ namespace abclass
                 }
                 if (control_.verbose_ > 0) {
                     msg("[ET] none of pseudo-predictors was selected.\n");
+                }
+                if (li == control_.lambda_.n_elem - 1) {
+                    msg("Warning: Fail to tune by ET-lasso; ",
+                        "no pseudo-predictors selected ",
+                        "by the smallest lambda.\n",
+                        "Suggestion: decrease 'lambda' or 'lambda_min_ratio'?");
                 }
             }
             coef_.slice(li) = rescale_coef(one_beta);

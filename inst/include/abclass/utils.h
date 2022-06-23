@@ -168,10 +168,14 @@ namespace abclass {
         return arma::sort(arma::conv_to<ARMA_VEC_TYPE<T>>::from(res));
     }
 
-    template <typename T>
-    inline void msg(const T& m)
+    inline void msg() {
+        Rcpp::Rcout << "\n";
+    }
+    template <typename T1, typename ... T2>
+    inline void msg(const T1& m1, const T2&... m2)
     {
-        Rcpp::Rcout << m << "\n";
+        Rcpp::Rcout << m1;
+        msg(m2...);
     }
 
     // FIXME select rows: remedy for sparse matrices

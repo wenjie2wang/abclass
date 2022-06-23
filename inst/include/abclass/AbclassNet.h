@@ -612,7 +612,11 @@ namespace abclass
                 arma::mat permuted_beta { one_beta.tail_rows(et_npermuted_) };
                 if (! permuted_beta.is_zero(arma::datum::eps)) {
                     if (li == 0) {
-                        msg("[ET] Warning: fail to tune; lambda too small.");
+                        msg("Warning: Fail to tune by ET-lasso; ",
+                            "selected pseudo-predictor(s) by ",
+                            "the largest lamabda.\n",
+                            "Suggestion: increase 'lambda', ",
+                            "'lambda_min_ratio' or 'nlambda'?");
                     } else {
                         coef_ = coef_.head_slices(li);
                     }
@@ -623,6 +627,12 @@ namespace abclass
                 }
                 if (control_.verbose_ > 0) {
                     msg("[ET] none of pseudo-predictors was selected.\n");
+                }
+                if (li == control_.lambda_.n_elem - 1) {
+                    msg("Warning: Fail to tune by ET-lasso; ",
+                        "no pseudo-predictors selected ",
+                        "by the smallest lambda.\n",
+                        "Suggestion: decrease 'lambda' or 'lambda_min_ratio'?");
                 }
             }
             coef_.slice(li) = rescale_coef(one_beta);

@@ -36,9 +36,6 @@ namespace abclass
         using Abclass<T_loss, T_x>::km1_;
         using Abclass<T_loss, T_x>::loss_derivative;
 
-        // cache
-        unsigned int num_iter_;   // number of GMD cycles till convergence
-
         // define gradient function for j-th predictor
         inline arma::rowvec mm_gradient(const arma::vec& inner,
                                         const unsigned int j) const
