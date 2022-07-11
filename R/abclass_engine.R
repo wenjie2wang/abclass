@@ -120,11 +120,11 @@
     ## update regularization
     return_lambda <-
         if (default_args_to_call$nstages == 0L) {
-            c("lambda", "lambda_max")
+            c("alpha", "lambda", "lambda_max")
         } else {
             ## update the selected index to one-based index
             res$et$selected <- res$et$selected + 1L
-            NULL
+            "alpha"
         }
     res$regularization <-
         if (grouped) {
@@ -135,7 +135,7 @@
                 res$regularization[c(common_pars, "dgamma", "gamma")]
             }
         } else {
-            res$regularization[c(return_lambda, "alpha")]
+            res$regularization[return_lambda]
         }
     ## return
     res
