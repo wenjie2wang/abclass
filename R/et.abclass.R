@@ -28,9 +28,9 @@
 ##'
 ##' @references
 ##'
-##' Yang, S., Wen, J., Zhan, X., & Kifer, D. (2019). ET-Lasso: A new efficient
+##' Yang, S., Wen, J., Zhan, X., \& Kifer, D. (2019). ET-Lasso: A new efficient
 ##' tuning of lasso-type regularization for high-dimensional data. In
-##' /emph{Proceedings of the 25th ACM SIGKDD International Conference on
+##' \emph{Proceedings of the 25th ACM SIGKDD International Conference on
 ##' Knowledge Discovery \& Data Mining} (pp. 607--616).
 ##'
 ##' @export
