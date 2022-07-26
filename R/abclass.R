@@ -101,14 +101,14 @@ abclass <- function(x, y,
 
 ##' @rdname abclass
 ##'
-##' @param lambda A numeric vector specifying the tuning parameter \emph{lambda}
-##'     of elastic-net penalty.  A data-driven \emph{lambda} sequence will be
-##'     generated and used according to specified \code{alpha}, \code{nlambda}
-##'     and \code{lambda_min_ratio} if this argument is \code{NULL} by default.
-##'     The specified \code{lambda} will be sorted in decreasing order
+##' @param lambda A numeric vector specifying the tuning parameter
+##'     \emph{lambda}.  A data-driven \emph{lambda} sequence will be generated
+##'     and used according to specified \code{alpha}, \code{nlambda} and
+##'     \code{lambda_min_ratio} if this argument is left as \code{NULL} by
+##'     default.  The specified \code{lambda} will be sorted in decreasing order
 ##'     internally and only the unique values will be kept.
 ##' @param alpha A numeric value in [0, 1] representing the mixing parameter
-##'     \emph{alpha} in elastic-net penalty.  The default value is \code{1.0}.
+##'     \emph{alpha}.  The default value is \code{1.0}.
 ##' @param nlambda A positive integer specifying the length of the internally
 ##'     generated \emph{lambda} sequence.  This argument will be ignored if a
 ##'     valid \code{lambda} is specified.  The default value is \code{50}.
@@ -116,9 +116,10 @@ abclass <- function(x, y,
 ##'     smallest lambda parameter to the largest lambda parameter.  The default
 ##'     value is set to \code{1e-4} if the sample size is larger than the number
 ##'     of predictors, and \code{1e-2} otherwise.
-##' @param grouped A logicial value.  Experimental flag to apply group Lasso.
+##' @param grouped A logicial value.  Experimental flag to apply group
+##'     penalties.
 ##' @param group_weight A numerical vector with nonnegative values representing
-##'     the adaptive penalty factors for grouped lasso.
+##'     the adaptive penalty factors for the specified group penalty.
 ##' @param group_penalty A character vector specifying the name of the group
 ##'     penalty.
 ##' @param dgamma A positive number specifying the increment to the minimal
@@ -145,8 +146,8 @@ abclass <- function(x, y,
 ##'     algorithm.  The default value is \code{TRUE} for usually more efficient
 ##'     estimation procedure.
 ##' @param verbose A nonnegative integer specifying if the estimation procedure
-##'     should print out intermediate steps/results.  The default value is
-##'     \code{0} for silent estimation procedure.
+##'     is allowed to print out intermediate steps/results.  The default value
+##'     is \code{0} for silent estimation procedure.
 ##'
 ##' @export
 abclass.control <- function(lambda = NULL,
