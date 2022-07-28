@@ -33,6 +33,10 @@ r_boost_net_sp <- function(x, y, lambda, alpha, nlambda, lambda_min_ratio, weigh
     .Call('_abclass_r_boost_net_sp', PACKAGE = 'abclass', x, y, lambda, alpha, nlambda, lambda_min_ratio, weight, intercept, standardize, maxit, epsilon, varying_active_set, verbose, nfolds, stratified, alignment, nstages, main_fit, boost_umin)
 }
 
+cv_samples <- function(nobs, nfolds, strata) {
+    .Call('_abclass_cv_samples', PACKAGE = 'abclass', nobs, nfolds, strata)
+}
+
 r_hinge_boost_glasso <- function(x, y, lambda, alpha, nlambda, lambda_min_ratio, group_weight, weight, intercept = TRUE, standardize = TRUE, maxit = 1e5L, epsilon = 1e-3, varying_active_set = TRUE, verbose = 0L, nfolds = 0L, stratified = TRUE, alignment = 0L, nstages = 0L, main_fit = TRUE, lum_c = 0.0) {
     .Call('_abclass_r_hinge_boost_glasso', PACKAGE = 'abclass', x, y, lambda, alpha, nlambda, lambda_min_ratio, group_weight, weight, intercept, standardize, maxit, epsilon, varying_active_set, verbose, nfolds, stratified, alignment, nstages, main_fit, lum_c)
 }
