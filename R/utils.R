@@ -78,3 +78,28 @@ modify_list <- function (x, val) {
     }
     x
 }
+
+## L2-norm square
+l2norm2 <- function(x) {
+    sum(x ^ 2)
+}
+## L2-norm
+l2norm <- function(x) {
+    sqrt(l2norm2(x))
+}
+## row-wise L2-norms
+rowL2norms <- function(x) {
+    apply(x, 1L, l2norm)
+}
+## sum of row-wise L2-norms
+rowL2sums <- function(x) {
+    sum(rowL2norms(x))
+}
+
+## check if the suggested package is available
+suggest_pkg <- function(pkg_name) {
+    if (! requireNamespace(pkg_name, quietly = TRUE)) {
+        stop(sprintf("The package '%s' is needed.", pkg_name), call. = FALSE)
+    }
+    invisible()
+}
