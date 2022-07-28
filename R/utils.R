@@ -16,16 +16,17 @@
 ##
 
 ## convert all the categories to {0, ..., k - 1}
-cat2z <- function(y) {
+## or {1, ..., k} if zero_based is FALSE
+cat2z <- function(y, zero_based = TRUE) {
     fac_y <- as.factor(y)
-    list(y = as.integer(fac_y) - 1L,
+    list(y = as.integer(fac_y) - as.integer(zero_based),
          label = levels(fac_y),
          class_y = class(y))
 }
 
 ## reverse convert
-z2cat <- function(y, cat_y) {
-    out <- cat_y$label[y + 1L]
+z2cat <- function(y, cat_y, zero_based = TRUE) {
+    out <- cat_y$label[y + as.integer(zero_based)]
     switch(cat_y$class_y,
            "integer" = as.integer(out),
            "numeric" = as.numeric(out),
@@ -80,26 +81,46 @@ modify_list <- function (x, val) {
 }
 
 ## L2-norm square
-l2norm2 <- function(x) {
+l2norm2 <- function(x)
+{
     sum(x ^ 2)
 }
 ## L2-norm
-l2norm <- function(x) {
+l2norm <- function(x)
+{
     sqrt(l2norm2(x))
 }
 ## row-wise L2-norms
-rowL2norms <- function(x) {
+rowL2norms <- function(x)
+{
     apply(x, 1L, l2norm)
 }
 ## sum of row-wise L2-norms
-rowL2sums <- function(x) {
+rowL2sums <- function(x)
+{
     sum(rowL2norms(x))
 }
 
 ## check if the suggested package is available
-suggest_pkg <- function(pkg_name) {
+suggest_pkg <- function(pkg_name)
+{
     if (! requireNamespace(pkg_name, quietly = TRUE)) {
         stop(sprintf("The package '%s' is needed.", pkg_name), call. = FALSE)
     }
     invisible()
+}
+
+## get the default values of arguments
+default_args <- function(fun)
+{
+    flist <- formals(fun)
+    lapply(flist, function(a) {
+        if (is.symbol(a)) {
+            return(NULL)
+        }
+        if (is.language(a)) {
+            return(eval(a))
+        }
+        a
+    })
 }

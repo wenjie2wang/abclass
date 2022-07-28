@@ -49,7 +49,7 @@ supclass <- function(x, y,
     if (! is.matrix(x)) {
         x <- as.matrix(x)
     }
-    cat_y <- cat2z(y)
+    cat_y <- cat2z(y, zero_based = FALSE)
     K <- max(cat_y$y)
     p <- ncol(x)
     pp <- p + 1L
@@ -111,10 +111,7 @@ supclass <- function(x, y,
         "svm" = supclass_msvm(x, cat_y$y, penalty, start, control)
     )
     ## impose shrinkage
-    for (l in seq_along(control$lambda)) {
-        eta_l <- rowL2norms(beta[, , l])
-        beta[eta_l < control$shrinkage, , l] <- 0
-    }
+    beta[beta < control$shrinkage] <- 0
     ## scale the estimate back for the original scale of x
     if (control$standardize) {
         for (l in seq_along(control$lambda)) {
