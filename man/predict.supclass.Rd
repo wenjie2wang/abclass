@@ -2,7 +2,7 @@
 % Please edit documentation in R/predict.R
 \name{predict.supclass}
 \alias{predict.supclass}
-\title{Predictions}
+\title{Predictions from A Trained Sup-Norm Classifier}
 \usage{
 \method{predict}{supclass}(
   object,
@@ -12,6 +12,38 @@
   ...
 )
 }
+\arguments{
+\item{object}{An object of class \code{abclass}.}
+
+\item{newx}{A numeric matrix representing the design matrix for predictions.}
+
+\item{type}{A character value specifying the desired type of predictions.
+The available options are \code{"class"} for predicted labels and
+\code{"probability"} for class conditional probability estimates.}
+
+\item{selection}{An integer vector for the solution indices or a character
+value specifying how to select a particular set of coefficient estimates
+from the entire solution path for prediction. If the specified
+\code{object} contains the cross-validation results, one may set
+\code{selection} to \code{"cv_min"} (or \code{"cv_1se"}) for using the
+estimates giving the smallest cross-validation error (or the set of
+estimates resulted from the largest \emph{lambda} within one standard
+error of the smallest cross-validation error) or prediction.  The
+prediction for the entire solution path will be returned in a list if
+\code{selection = "all"} or no cross-validation results are available in
+the specified \code{object}.}
+
+\item{...}{Other arguments not used now.}
+}
+\value{
+A vector representing the predictions or a list containing the
+    predictions for each set of estimates.
+}
 \description{
-Predictions
+Predict class labels or estimate conditional probabilities for the specified
+new data.
+}
+\examples{
+## see examples of `supclass()`.
+
 }

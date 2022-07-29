@@ -29,14 +29,14 @@
 ##' @param selection An integer vector for the solution indices or a character
 ##'     value specifying how to select a particular set of coefficient estimates
 ##'     from the entire solution path for prediction. If the specified
-##'     \code{abclass} object contains the cross-validation results, one may set
+##'     \code{object} contains the cross-validation results, one may set
 ##'     \code{selection} to \code{"cv_min"} (or \code{"cv_1se"}) for using the
 ##'     estimates giving the smallest cross-validation error (or the set of
 ##'     estimates resulted from the largest \emph{lambda} within one standard
 ##'     error of the smallest cross-validation error) or prediction.  The
 ##'     prediction for the entire solution path will be returned in a list if
 ##'     \code{selection = "all"} or no cross-validation results are available in
-##'     the specified \code{abclass} object.
+##'     the specified \code{object}.
 ##'
 ##' @return A vector representing the predictions or a list containing the
 ##'     predictions for each set of estimates along the solution path.
@@ -117,8 +117,20 @@ predict.abclass <- function(object,
 }
 
 
-##' Predictions
+##' Predictions from A Trained Sup-Norm Classifier
 ##'
+##' Predict class labels or estimate conditional probabilities for the specified
+##' new data.
+##'
+##' @inheritParams predict.abclass
+##'
+##' @return A vector representing the predictions or a list containing the
+##'     predictions for each set of estimates.
+##'
+##' @examples
+##' ## see examples of `supclass()`.
+##'
+##' @importFrom stats predict
 ##' @export
 predict.supclass <- function(object,
                              newx,
@@ -149,7 +161,7 @@ predict.supclass <- function(object,
             },
             "probability" = {
                 exp_xbeta <- exp(xbeta)
-                prob <- exp_xb / rowSums(exp_xb)
+                prob <- exp_xbeta / rowSums(exp_xbeta)
                 colnames(prob) <- object$category$label
                 prob
             })
@@ -172,7 +184,7 @@ predict.supclass <- function(object,
             lapply(seq_len(nslice), function(i) {
                 beta <- as.matrix(res_coef[, , i])
                 exp_xbeta <- exp(newx %*% beta)
-                prob <- exp_xb / rowSums(exp_xb)
+                prob <- exp_xbeta / rowSums(exp_xbeta)
                 colnames(prob) <- object$category$label
                 prob
             })

@@ -17,6 +17,7 @@
 ##'
 ##' @return An S3 object of class \code{cv.supclass}.
 ##'
+##' @importFrom stats sd
 ##' @importFrom parallel mclapply
 ##' @export
 cv.supclass <- function(x, y,

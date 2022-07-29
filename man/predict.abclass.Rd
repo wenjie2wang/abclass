@@ -24,14 +24,14 @@ The available options are \code{"class"} for predicted labels and
 \item{selection}{An integer vector for the solution indices or a character
 value specifying how to select a particular set of coefficient estimates
 from the entire solution path for prediction. If the specified
-\code{abclass} object contains the cross-validation results, one may set
+\code{object} contains the cross-validation results, one may set
 \code{selection} to \code{"cv_min"} (or \code{"cv_1se"}) for using the
 estimates giving the smallest cross-validation error (or the set of
 estimates resulted from the largest \emph{lambda} within one standard
 error of the smallest cross-validation error) or prediction.  The
 prediction for the entire solution path will be returned in a list if
 \code{selection = "all"} or no cross-validation results are available in
-the specified \code{abclass} object.}
+the specified \code{object}.}
 
 \item{...}{Other arguments not used now.}
 }
