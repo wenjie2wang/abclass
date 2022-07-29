@@ -53,8 +53,8 @@ cv.abclass <- function(x, y,
 {
     ## nfolds
     nfolds <- as.integer(nfolds)
-    if (nfolds < 2L) {
-        stop("The 'nfolds' must be > 1.")
+    if (nfolds < 3L) {
+        stop("The 'nfolds' must be > 2.")
     }
     ## alignment
     if (is.numeric(alignment)) {
