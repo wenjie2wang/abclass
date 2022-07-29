@@ -115,3 +115,67 @@ predict.abclass <- function(object,
         }
     )
 }
+
+
+##' Predictions
+##'
+##' @export
+predict.supclass <- function(object,
+                             newx,
+                             type = c("class", "probability"),
+                             selection = c("cv_min", "cv_1se", "all"),
+                             ...)
+{
+    type <- match.arg(type, choices = c("class", "probability"))
+    if (object$model %in% c("psvm", "svm") && type == "probability") {
+        stop("Probability estimates are not available.")
+    }
+    if (missing(newx)) {
+        stop("The 'newx' must be specified.")
+    }
+    if (! is.matrix(newx)) {
+        newx <- as.matrix(newx)
+    }
+    newx <- cbind(1, newx)
+    ## get coefficient estimates
+    res_coef <- coef(object, selection = selection)
+    if (is.matrix(res_coef)) {
+        xbeta <- newx %*% res_coef
+        out <- switch(
+            type,
+            "class" = {
+                tmp <- apply(xbeta, 1L, which.max)
+                z2cat(as.integer(tmp), object$category, zero_based = FALSE)
+            },
+            "probability" = {
+                exp_xbeta <- exp(xbeta)
+                prob <- exp_xb / rowSums(exp_xb)
+                colnames(prob) <- object$category$label
+                prob
+            })
+        return(out)
+    }
+    ## else
+    nslice <- dim(res_coef)[3L]
+    ## return
+    switch(
+        type,
+        "class" = {
+            lapply(seq_len(nslice), function(i) {
+                beta <- as.matrix(res_coef[, , i])
+                xbeta <- newx %*% beta
+                tmp <- apply(xbeta, 1L, which.max)
+                z2cat(as.integer(tmp), object$category, zero_based = FALSE)
+            })
+        },
+        "probability" = {
+            lapply(seq_len(nslice), function(i) {
+                beta <- as.matrix(res_coef[, , i])
+                exp_xbeta <- exp(newx %*% beta)
+                prob <- exp_xb / rowSums(exp_xb)
+                colnames(prob) <- object$category$label
+                prob
+            })
+        }
+    )
+}
