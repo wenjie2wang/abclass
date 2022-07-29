@@ -254,6 +254,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cv_samples
+Rcpp::List cv_samples(const unsigned int nobs, const unsigned int nfolds, const arma::uvec& strata);
+RcppExport SEXP _abclass_cv_samples(SEXP nobsSEXP, SEXP nfoldsSEXP, SEXP strataSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const unsigned int >::type nobs(nobsSEXP);
+    Rcpp::traits::input_parameter< const unsigned int >::type nfolds(nfoldsSEXP);
+    Rcpp::traits::input_parameter< const arma::uvec& >::type strata(strataSEXP);
+    rcpp_result_gen = Rcpp::wrap(cv_samples(nobs, nfolds, strata));
+    return rcpp_result_gen;
+END_RCPP
+}
 // r_hinge_boost_glasso
 Rcpp::List r_hinge_boost_glasso(const arma::mat& x, const arma::uvec& y, const arma::vec& lambda, const double alpha, const unsigned int nlambda, const double lambda_min_ratio, const arma::vec& group_weight, const arma::vec& weight, const bool intercept, const bool standardize, const unsigned int maxit, const double epsilon, const bool varying_active_set, const unsigned int verbose, const unsigned int nfolds, const bool stratified, const unsigned int alignment, const unsigned int nstages, const bool main_fit, const double lum_c);
 RcppExport SEXP _abclass_r_hinge_boost_glasso(SEXP xSEXP, SEXP ySEXP, SEXP lambdaSEXP, SEXP alphaSEXP, SEXP nlambdaSEXP, SEXP lambda_min_ratioSEXP, SEXP group_weightSEXP, SEXP weightSEXP, SEXP interceptSEXP, SEXP standardizeSEXP, SEXP maxitSEXP, SEXP epsilonSEXP, SEXP varying_active_setSEXP, SEXP verboseSEXP, SEXP nfoldsSEXP, SEXP stratifiedSEXP, SEXP alignmentSEXP, SEXP nstagesSEXP, SEXP main_fitSEXP, SEXP lum_cSEXP) {
@@ -1182,6 +1195,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_abclass_r_boost_gscad_sp", (DL_FUNC) &_abclass_r_boost_gscad_sp, 21},
     {"_abclass_r_boost_net", (DL_FUNC) &_abclass_r_boost_net, 19},
     {"_abclass_r_boost_net_sp", (DL_FUNC) &_abclass_r_boost_net_sp, 19},
+    {"_abclass_cv_samples", (DL_FUNC) &_abclass_cv_samples, 3},
     {"_abclass_r_hinge_boost_glasso", (DL_FUNC) &_abclass_r_hinge_boost_glasso, 20},
     {"_abclass_r_hinge_boost_glasso_sp", (DL_FUNC) &_abclass_r_hinge_boost_glasso_sp, 20},
     {"_abclass_r_hinge_boost_gmcp", (DL_FUNC) &_abclass_r_hinge_boost_gmcp, 21},
