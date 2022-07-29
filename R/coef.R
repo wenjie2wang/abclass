@@ -51,7 +51,67 @@ coef.abclass <- function(object,
     ## if only one solution
     dim_coef <- dim(object$coefficients)
     dk <- dim_coef[3L]
-    if (is.na(dk) || dk == 1L) {
+    if (is.na(dk)) {
+        return(object$coefficients)
+    }
+    if (dk == 1L) {
+        return(object$coefficients[, , 1L, drop = TRUE])
+    }
+    ## for integer indices
+    if (is.numeric(selection)) {
+        selection <- as.integer(selection)
+        if (any(selection > dk)) {
+            stop(sprintf("The integer 'selection' must <= %d.", dk))
+        }
+        return(object$coefficients[, , selection])
+    }
+    selection <- match.arg(selection, c("cv_min", "cv_1se", "all"))
+    if (! length(object$cross_validation$cv_accuracy) || selection == "all") {
+        return(object$coefficients)
+    }
+    cv_idx_list <- object$cross_validation
+    selection_idx <- cv_idx_list[[selection]]
+    object$coefficients[, , selection_idx]
+}
+
+
+##' Coefficient Estimates of A Trained Sup-Norm Classifier
+##'
+##' Extract coefficient estimates from an \code{supclass} object.
+##'
+##' @param object An object of class \code{supclass}.
+##' @param selection An integer vector for the indices of solution or a
+##'     character value specifying how to select a particular set of coefficient
+##'     estimates from the entire solution path.  If the specified
+##'     \code{supclass} object contains the cross-validation results, one may
+##'     set \code{selection} to \code{"cv_min"} (or \code{"cv_1se"}) for the
+##'     estimates giving the smallest cross-validation error (or the set of
+##'     estimates resulted from the largest \emph{lambda} within one standard
+##'     error of the smallest cross-validation error).  The entire solution path
+##'     will be returned in an array if \code{selection = "all"} or no
+##'     cross-validation results are available in the specified \code{supclass}
+##'     object.
+##' @param ... Other arguments not used now.
+##'
+##' @return A matrix representing the coefficient estimates or an array
+##'     representing all the selected solutions.
+##'
+##' @examples
+##' ## see examples of `supclass()`.
+##'
+##' @importFrom stats coef
+##' @export
+coef.supclass <- function(object,
+                          selection = c("cv_min", "cv_1se", "all"),
+                          ...)
+{
+    ## if only one solution
+    dim_coef <- dim(object$coefficients)
+    dk <- dim_coef[3L]
+    if (is.na(dk)) {
+        return(object$coefficients)
+    }
+    if (dk == 1L) {
         return(object$coefficients[, , 1L, drop = TRUE])
     }
     ## for integer indices
