@@ -1,6 +1,6 @@
 ntrain <- 100
 ntest <- 1000
-p <- 30
+p <- 5
 k <- 5
 n <- ntrain + ntest
 train_idx <- seq_len(ntrain)
@@ -16,7 +16,7 @@ train_y <- y[train_idx]
 test_y <- y[- train_idx]
 
 ## logistic deviance loss
-model1 <- cv.abclass(train_x, train_y, nlambda = 10,
+model1 <- cv.abclass(train_x, train_y, nlambda = 5,
                      lambda_min_ratio = 1e-3, epsilon = 1e-3,
                      grouped = FALSE, nfolds = 3)
 pred1 <- predict(model1, test_x)
@@ -24,14 +24,14 @@ expect_true(mean(test_y == pred1) > 0.5)
 expect_equivalent(dim(coef(model1, s = 10)), c(p + 1, k - 1))
 
 ## exponential loss approximating AdaBoost
-model2 <- cv.abclass(train_x, train_y, nlambda = 10,
+model2 <- cv.abclass(train_x, train_y, nlambda = 5,
                      loss = "boost", epsilon = 1e-3)
 pred2 <- predict(model2, test_x)
 expect_true(mean(test_y == pred2) > 0.5)
 expect_equivalent(dim(coef(model2, s = 10)), c(p + 1, k - 1))
 
 ## hinge-boost loss
-model3 <- cv.abclass(train_x, train_y, nlambda = 10,
+model3 <- cv.abclass(train_x, train_y, nlambda = 5,
                      loss = "hinge-boost", epsilon = 1e-3)
 pred3 <- predict(model3, test_x)
 expect_true(mean(test_y == pred3) > 0.5)
