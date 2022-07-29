@@ -28,6 +28,8 @@
 ##' Li, N., & Zhang, H. H. (2021). Sparse learning with non-convex penalty in
 ##' multi-classification. \emph{Journal of Data Science}, 19(1), 56--74.
 ##'
+##' @example inst/examples/ex-supclass.R
+##'
 ##' @export
 supclass <- function(x, y,
                      model = c("logistic", "psvm", "svm"),
