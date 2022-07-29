@@ -87,23 +87,29 @@ supclass <- function(x, y,
             }
         }
     }
-    ## adaptive weights
-    if (is.null(control$adaptive_weight)) {
-        control$adaptive_weight <- rep(1, p)
-        control$is_adaptive_mat <- FALSE
-    } else {
-        is_adaptive_mat <- is.matrix(control$adaptive_weight)
-        if (is_adaptive_mat && any(dim(control$adaptive_weight) != c(p, k))) {
-            stop(sprintf(
-                "The adaptive weight matrix should have %d rows and %d columns",
-                p, k), call. = FALSE)
+    ## adaptive weights for lasso
+    if (penalty == "lasso") {
+        if (is.null(control$adaptive_weight)) {
+            control$adaptive_weight <- rep(1, p)
+            control$is_adaptive_mat <- FALSE
+        } else {
+            is_adaptive_mat <- is.matrix(control$adaptive_weight)
+            if (is_adaptive_mat &&
+                any(dim(control$adaptive_weight) != c(p, k))) {
+                stop(sprintf(
+                    "The adaptive weight matrix must be %d by %d.",
+                    p, k), call. = FALSE)
+            }
+            if (! is_adaptive_mat && length(control$adaptive_weight) != p) {
+                stop(sprintf(
+                    "The length of the adaptive weight vector must be %d.", p),
+                    call. = FALSE)
+            }
+            if (any(control$adaptive_weight < 0)) {
+                stop("The adaptive weights must be nonnegative.")
+            }
+            control$is_adaptive_mat <- is_adaptive_mat
         }
-        if (! is_adaptive_mat && length(control$adaptive_weight) != p) {
-            stop(sprintf(
-                "The length of the adaptive weight vector should be %d", p),
-                call. = FALSE)
-        }
-        control$is_adaptive_mat <- is_adaptive_mat
     }
     ## call the corresponding function
     beta <- switch(
@@ -279,25 +285,26 @@ supclass_mlog <- function(x, y, penalty, start, control)
         A0[seq.int(i, by = pp, length.out = K), i] <- 1
     }
     ## prepare the matrix for the inequality constraints
-    A1s <- lapply(seq_len(K), function(k) {
-        A1 <- matrix(0, nrow = df, ncol = p)
-        for (j in seq_len(p)) {
-            A1[(k - 1) * pp + 1 + j, j] <- - 1
-            A1[j + ppK, j] <- 1
-        }
-        A1
-    })
-    A2s <- lapply(seq_len(K), function(k) {
-        A1 <- matrix(0, nrow = df, ncol = p)
-        for (j in seq_len(p)) {
-            A1[(k - 1) * pp + 1 + j, j] <- 1
-            A1[j + ppK, j] <- 1
-        }
-        A1
-    })
-    A1s <- do.call(cbind, A1s)
-    A2s <- do.call(cbind, A2s)
-    Amat <- cbind(A0, A1s, A2s)
+    Aineq <- if (isTRUE(control$is_adaptive_mat)) {
+                 lapply(seq_len(K), function(k) {
+                     A1 <- matrix(0, nrow = df, ncol = p)
+                     idx_mat <- cbind((k - 1) * pp + 1 + seq_len(p), seq_len(p))
+                     A1[idx_mat] <- - control$adaptive_weight[, k]
+                     A1[cbind(seq_len(p) + ppK, seq_len(p))] <- 1
+                     cbind(A1, abs(A1))
+                 })
+             } else {
+                 ## abs(beta_k) <= eta_k
+                 lapply(seq_len(K), function(k) {
+                     A1 <- matrix(0, nrow = df, ncol = p)
+                     idx_mat <- cbind((k - 1) * pp + 1 + seq_len(p), seq_len(p))
+                     A1[idx_mat] <- - 1
+                     A1[cbind(seq_len(p) + ppK, seq_len(p))] <- 1
+                     cbind(A1, abs(A1))
+                 })
+             }
+    Aineq <- do.call(cbind, Aineq)
+    Amat <- cbind(A0, Aineq)
     b0vec <- rep(0, pp + 2 * p * K)
     sc <- sqrt(.Machine$double.eps)
     ## initialize
@@ -323,7 +330,12 @@ supclass_mlog <- function(x, y, penalty, start, control)
             dvec0 <- - grad_vec + hess_mat %*% as.numeric(outer_beta0)
             inner_beta0 <- outer_beta0
             if (penalty == "lasso") {
-                dvec <- c(dvec0, - rep(control$lambda[l], p))
+                dp <- if (control$is_adaptive_mat) {
+                          - rep(control$lambda[l], p)
+                      } else {
+                          - control$lambda[l] * control$adaptive_weight
+                      }
+                dvec <- c(dvec0, dp)
                 qres <- quadprog::solve.QP(Dmat = Dmat,
                                            dvec = dvec,
                                            Amat = Amat,
@@ -385,26 +397,26 @@ supclass_mpsvm <- function(x, y, penalty, start, control)
         A0[seq.int(i, by = pp, length.out = K), i] <- 1
     }
     ## prepare the matrix for the inequality constraints
-    ## abs(beta_k) <= eta_k
-    A1s <- lapply(seq_len(K), function(k) {
-        A1 <- matrix(0, nrow = df, ncol = p)
-        for (j in seq_len(p)) {
-            A1[(k - 1) * pp + 1 + j, j] <- - 1
-            A1[j + ppK, j] <- 1
-        }
-        A1
-    })
-    A2s <- lapply(seq_len(K), function(k) {
-        A1 <- matrix(0, nrow = df, ncol = p)
-        for (j in seq_len(p)) {
-            A1[(k - 1) * pp + 1 + j, j] <- 1
-            A1[j + ppK, j] <- 1
-        }
-        A1
-    })
-    A1s <- do.call(cbind, A1s)
-    A2s <- do.call(cbind, A2s)
-    Amat <- cbind(A0, A1s, A2s)
+    Aineq <- if (isTRUE(control$is_adaptive_mat)) {
+                 lapply(seq_len(K), function(k) {
+                     A1 <- matrix(0, nrow = df, ncol = p)
+                     idx_mat <- cbind((k - 1) * pp + 1 + seq_len(p), seq_len(p))
+                     A1[idx_mat] <- - control$adaptive_weight[, k]
+                     A1[cbind(seq_len(p) + ppK, seq_len(p))] <- 1
+                     cbind(A1, abs(A1))
+                 })
+             } else {
+                 ## abs(beta_k) <= eta_k
+                 lapply(seq_len(K), function(k) {
+                     A1 <- matrix(0, nrow = df, ncol = p)
+                     idx_mat <- cbind((k - 1) * pp + 1 + seq_len(p), seq_len(p))
+                     A1[idx_mat] <- - 1
+                     A1[cbind(seq_len(p) + ppK, seq_len(p))] <- 1
+                     cbind(A1, abs(A1))
+                 })
+             }
+    Aineq <- do.call(cbind, Aineq)
+    Amat <- cbind(A0, Aineq)
     b0vec <- rep(0, pp + 2 * p * K)
     ## prepare the vector for the objective function
     delta <- matrix(1, nrow = n, ncol = K) / n
@@ -427,7 +439,12 @@ supclass_mpsvm <- function(x, y, penalty, start, control)
                      start
                  }
         if (penalty == "lasso") {
-            dvec <- c(dvec0, - rep(control$lambda[l], p))
+            dp <- if (control$is_adaptive_mat) {
+                      - rep(control$lambda[l], p)
+                  } else {
+                      - control$lambda[l] * control$adaptive_weight
+                  }
+            dvec <- c(dvec0, dp)
             qres <- quadprog::solve.QP(Dmat = Dmat,
                                        dvec = dvec,
                                        Amat = Amat,
@@ -520,22 +537,29 @@ supclass_msvm <- function(x, y, penalty, start, control)
         A1
     })
     A1s <- do.call(rbind, A1s)
-    ## abs(beta_k) <= eta_k
-    A3s <- lapply(seq_len(p), function(j) {
-        A3 <- matrix(0, nrow = K, ncol = df)
-        A3[cbind(seq_len(K), seq.int(1 + j, by = pp, length.out = K))] <- 1
-        A3[, ppK + nK + j] <- 1
-        A3
-    })
-    A3s <- do.call(rbind, A3s)
-    A4s <- lapply(seq_len(p), function(j) {
-        A4 <- matrix(0, nrow = K, ncol = df)
-        A4[cbind(seq_len(K), seq.int(1 + j, by = pp, length.out = K))] <- - 1
-        A4[, ppK + nK + j] <- 1
-        A4
-    })
-    A4s <- do.call(rbind, A4s)
-    Amat <- rbind(A0, A1s, A3s, A4s)
+    Aineq <- if (isTRUE(control$is_adaptive_mat)) {
+                 ## abs(beta_k * adaptive_weight_k) <= eta_k
+                 lapply(seq_len(p), function(j) {
+                     A3 <- matrix(0, nrow = K, ncol = df)
+                     idx_mat <- cbind(seq_len(K),
+                                      seq.int(1 + j, by = pp, length.out = K))
+                     A3[idx_mat] <- - control$adaptive_weight[j, ]
+                     A3[, ppK + nK + j] <- 1
+                     rbind(A3, abs(A3))
+                 })
+             } else {
+                 ## abs(beta_k) <= eta_k
+                 lapply(seq_len(p), function(j) {
+                     A3 <- matrix(0, nrow = K, ncol = df)
+                     idx_mat <- cbind(seq_len(K),
+                                      seq.int(1 + j, by = pp, length.out = K))
+                     A3[idx_mat] <- - 1
+                     A3[, ppK + nK + j] <- 1
+                     rbind(A3, abs(A3))
+                 })
+             }
+    Aineq <- do.call(rbind, Aineq)
+    Amat <- rbind(A0, A1s, Aineq)
     b0vec <- rep(0, pp + nK + 2 * p * K)
     b0vec[seq.int(pp + 1, pp + nK)] <- 1
     ## prepare the vector for the objective function
@@ -553,7 +577,12 @@ supclass_msvm <- function(x, y, penalty, start, control)
                      start
                  }
         if (penalty == "lasso") {
-            objective_in <- c(rep(0, ppK), delta, rep(control$lambda[l], p))
+            dp <- if (control$is_adaptive_mat) {
+                      rep(control$lambda[l], p)
+                  } else {
+                      control$lambda[l] * control$adaptive_weight
+                  }
+            objective_in <- c(rep(0, ppK), delta, dp)
             lres <- Rglpk::Rglpk_solve_LP(obj = objective_in,
                                           mat = Amat,
                                           dir = const_dir,
