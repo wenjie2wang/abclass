@@ -68,6 +68,7 @@ cv.supclass <- function(x, y,
         control = control,
         ...
     )
+    nlambda <- length(res$regularization$lambda)
     ## cv part
     cv_res <- parallel::mclapply(seq_len(nfolds),
                                  function(i) {
@@ -84,16 +85,16 @@ cv.supclass <- function(x, y,
                                      )
                                      valid_pred <- predict(
                                          object = tmp_fit,
-                                         newx = x[valid_idx, ],
+                                         newx = x[valid_idx, , drop = FALSE],
                                          type = "class",
                                          selection = "all"
                                      )
-                                     if (length(control$lambda) > 1)
+                                     if (nlambda > 1) {
                                          sapply(
                                              valid_pred,
                                              function(a) mean(a == y[valid_idx])
                                          )
-                                     else {
+                                     } else {
                                          mean(valid_pred == y[valid_idx])
                                      }
                                  })
