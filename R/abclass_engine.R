@@ -99,6 +99,7 @@
     res <- do.call(fun_to_call, args_to_call)
     ## post-process
     res$category <- cat_y
+    res$intercept <- intercept
     loss2 <- gsub("_", "-", loss, fixed = TRUE)
     res$loss <- switch(
         loss2,
