@@ -62,7 +62,7 @@ coef.abclass <- function(object,
                 coef_arr[idx, , k] <- tmp$coefficients[, , k]
             }
             tmp$coefficients <- coef_arr
-            return(coef.abclass(tmp))
+            return(coef.abclass(tmp, selection = selection, ...))
         }
     }
     ## if only one solution
