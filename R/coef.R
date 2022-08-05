@@ -46,7 +46,24 @@ coef.abclass <- function(object,
                          ...)
 {
     if (inherits(object, "et.abclass")) {
-        return(object$coefficients)
+        if (isFALSE(object$et$refit)) {
+            return(object$coefficients)
+        } else {
+            tmp <- object$et$refit
+            nlambda <- tmp$coefficients
+            p <- nrow(object$coefficients) - as.integer(object$intercept)
+            dk <- dim(tmp$coefficients)[3L]
+            coef_arr <- array(0, dim = c(dim(object$coefficients), dk))
+            idx <- object$et$selected
+            if (object$intercept) {
+                idx <- c(1L, idx + 1L)
+            }
+            for (k in seq_len(dk)) {
+                coef_arr[idx, , k] <- tmp$coefficients[, , k]
+            }
+            tmp$coefficients <- coef_arr
+            return(coef.abclass(tmp))
+        }
     }
     ## if only one solution
     dim_coef <- dim(object$coefficients)

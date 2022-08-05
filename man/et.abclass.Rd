@@ -12,6 +12,7 @@ et.abclass(
   loss = c("logistic", "boost", "hinge-boost", "lum"),
   control = list(),
   nstages = 2,
+  refit = list(lambda = 1e-06),
   ...
 )
 }
@@ -45,6 +46,11 @@ for details.}
 \item{nstages}{A positive integer specifying for the number of stages in the
 ET-Lasso procedure.  By default, two rounds of tuning by random
 permutations will be performed as suggested in Yang, et al. (2019).}
+
+\item{refit}{A logical value indicating if a new classifier should be
+trained using the selected predictors.  This argument can also be a list
+with named elements, which will be passed to \code{abclass.control()} to
+specify how the new classifier should be trained.}
 
 \item{...}{Other control parameters passed to \code{abclass.control()}.}
 }

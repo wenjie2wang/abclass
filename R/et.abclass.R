@@ -25,6 +25,10 @@
 ##' @param nstages A positive integer specifying for the number of stages in the
 ##'     ET-Lasso procedure.  By default, two rounds of tuning by random
 ##'     permutations will be performed as suggested in Yang, et al. (2019).
+##' @param refit A logical value indicating if a new classifier should be
+##'     trained using the selected predictors.  This argument can also be a list
+##'     with named elements, which will be passed to \code{abclass.control()} to
+##'     specify how the new classifier should be trained.
 ##'
 ##' @references
 ##'
@@ -40,6 +44,7 @@ et.abclass <- function(x, y,
                        loss = c("logistic", "boost", "hinge-boost", "lum"),
                        control = list(),
                        nstages = 2,
+                       refit = list(lambda = 1e-6),
                        ...)
 {
     ## nstages
@@ -69,6 +74,40 @@ et.abclass <- function(x, y,
         names(args_to_call) %in% formal_names(.abclass)
     ]
     res <- do.call(.abclass, args_to_call)
+    ## refit if needed
+    if (! isFALSE(refit) && length(res$et$selected) > 0) {
+        if (isTRUE(refit)) {
+            refit <- list(lambda = 1e-6)
+        }
+        idx <- res$et$selected
+        refit_control <- modify_list(control, refit)
+        args_to_call <- c(
+            list(x = x[, idx, drop = FALSE],
+                 y = y,
+                 ## assume intercept, weight, loss are the same with et-lasso
+                 intercept = intercept,
+                 weight = res$weight,
+                 loss = loss2,
+                 nstages = 0,
+                 main_fit = TRUE),
+            refit_control
+        )
+        args_to_call <- args_to_call[
+            names(args_to_call) %in% formal_names(.abclass)
+        ]
+        refit_res <- do.call(.abclass, args_to_call)
+        if (! is.null(refit_res$cross_validation)) {
+            ## add cv idx
+            cv_idx_list <- with(refit_res$cross_validation,
+                                select_lambda(cv_accuracy_mean, cv_accuracy_sd))
+            refit_res$cross_validation <- c(refit_res$cross_validation,
+                                            cv_idx_list)
+        }
+        res$et$refit <- refit_res[! names(refit_res) %in%
+                                  c("intercept", "weight", "loss", "category")]
+    } else {
+        res$et$refit <- FALSE
+    }
     ## add class
     class_suffix <- if (control$grouped)
                         paste0("_group_", control$group_penalty)
