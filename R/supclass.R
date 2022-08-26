@@ -353,24 +353,42 @@ supclass_mlog <- function(x, y, penalty, start, control)
                           - control$lambda[l] * control$adaptive_weight
                       }
                 dvec <- c(dvec0, dp)
-                qres <- quadprog::solve.QP(Dmat = Dmat,
-                                           dvec = dvec,
-                                           Amat = Amat,
-                                           bvec = b0vec,
-                                           meq = pp)
-                beta1 <- get_beta(qres$solution)
+                qres <- tryCatch({
+                    quadprog::solve.QP(Dmat = Dmat,
+                                       dvec = dvec,
+                                       Amat = Amat,
+                                       bvec = b0vec,
+                                       meq = pp)
+                }, error = function(e) e)
+                beta1 <- if (inherits(qres, "error")) {
+                             warning(qres,
+                                     "\nRevert to the solution from last step.")
+                             outer_beta0
+                         } else {
+                             get_beta(qres$solution)
+                         }
             } else {
                 while (inner_iter < control$maxit) {
                     inner_iter <- inner_iter + 1
                     dp <- - scaddp(control$scad_a, control$lambda[l], eta)
                     dvec <- c(dvec0, dp)
-                    qres <- quadprog::solve.QP(Dmat = Dmat,
-                                               dvec = dvec,
-                                               Amat = Amat,
-                                               bvec = b0vec,
-                                               meq = pp)
-                    beta1 <- get_beta(qres$solution)
-                    eta <- get_eta(qres$solution)
+                    qres <- tryCatch({
+                        quadprog::solve.QP(Dmat = Dmat,
+                                           dvec = dvec,
+                                           Amat = Amat,
+                                           bvec = b0vec,
+                                           meq = pp)
+                    }, error = function(e) e)
+                    if (inherits(qres, "error")) {
+                        warning(
+                            qres,
+                            "\nRevert to the soltion from last step."
+                        )
+                        beta1 <- inner_beta0
+                    } else {
+                        beta1 <- get_beta(qres$solution)
+                        eta <- get_eta(qres$solution)
+                    }
                     inner_diff <- l2norm(beta1 - inner_beta0)
                     if (inner_diff < control$epsilon) {
                         break
@@ -462,12 +480,20 @@ supclass_mpsvm <- function(x, y, penalty, start, control)
                       - control$lambda[l] * control$adaptive_weight
                   }
             dvec <- c(dvec0, dp)
-            qres <- quadprog::solve.QP(Dmat = Dmat,
-                                       dvec = dvec,
-                                       Amat = Amat,
-                                       bvec = b0vec,
-                                       meq = pp)
-            beta1 <- get_beta(qres$solution)
+            qres <- tryCatch({
+                quadprog::solve.QP(Dmat = Dmat,
+                                   dvec = dvec,
+                                   Amat = Amat,
+                                   bvec = b0vec,
+                                   meq = pp)
+            }, error = function(e) e)
+            beta1 <- if (inherits(qres, "error")) {
+                         warning(qres,
+                                 "\nRevert to the solution from last step.")
+                         beta0
+                     } else {
+                         get_beta(qres$solution)
+                     }
         } else {
             ## main loop for one single lambda
             iter <- 0
@@ -476,13 +502,20 @@ supclass_mpsvm <- function(x, y, penalty, start, control)
                 iter <- iter + 1
                 dp <- - scaddp(control$scad_a, control$lambda[l], eta)
                 dvec <- c(dvec0, dp)
-                qres <- quadprog::solve.QP(Dmat = Dmat,
-                                           dvec = dvec,
-                                           Amat = Amat,
-                                           bvec = b0vec,
-                                           meq = pp)
-                beta1 <- get_beta(qres$solution)
-                eta <- get_eta(qres$solution)
+                qres <- tryCatch({
+                    quadprog::solve.QP(Dmat = Dmat,
+                                       dvec = dvec,
+                                       Amat = Amat,
+                                       bvec = b0vec,
+                                       meq = pp)
+                }, error = function(e) e)
+                if (inherits(qres, "error")) {
+                    warning(qres, "\nRevert to the solution from last step.")
+                    beta1 <- beta0
+                } else {
+                    beta1 <- get_beta(qres$solution)
+                    eta <- get_eta(qres$solution)
+                }
                 tol <- rowL2sums(beta1 - beta0)
                 if (tol < control$epsilon) {
                     break
@@ -600,7 +633,39 @@ supclass_msvm <- function(x, y, penalty, start, control)
                       control$lambda[l] * control$adaptive_weight
                   }
             objective_in <- c(rep(0, ppK), delta, dp)
-            lres <- Rglpk::Rglpk_solve_LP(obj = objective_in,
+            lres <- tryCatch({
+                Rglpk::Rglpk_solve_LP(obj = objective_in,
+                                      mat = Amat,
+                                      dir = const_dir,
+                                      rhs = b0vec,
+                                      bounds = list(
+                                          lower = list(
+                                              ind = seq_len(ppK),
+                                              val = - rep(Inf, ppK)
+                                          )
+                                      ),
+                                      control = list(
+                                          verbose = control$verbose,
+                                          presolver = TRUE
+                                      ))
+            }, error = function(e) e)
+            beta1 <- if (inherits(lres, "error")) {
+                         warning(lres,
+                                 "\nRevert to the solution from last step.")
+                         beta0
+                     } else {
+                         get_beta(lres$solution)
+                     }
+        } else {
+            ## main loop for one single lambda
+            iter <- 0L
+            eta <- apply(abs(beta0[- 1L, ]), 1, max)
+            while (iter < control$maxit) {
+                iter <- iter + 1L
+                dp <- scaddp(control$scad_a, control$lambda[l], eta)
+                objective_in <- c(rep(0, ppK), delta, dp)
+                lres <- tryCatch(
+                    Rglpk::Rglpk_solve_LP(obj = objective_in,
                                           mat = Amat,
                                           dir = const_dir,
                                           rhs = b0vec,
@@ -613,32 +678,16 @@ supclass_msvm <- function(x, y, penalty, start, control)
                                           control = list(
                                               verbose = control$verbose,
                                               presolver = TRUE
-                                          ))
-            beta1 <- get_beta(lres$solution)
-        } else {
-            ## main loop for one single lambda
-            iter <- 0L
-            eta <- apply(abs(beta0[- 1L, ]), 1, max)
-            while (iter < control$maxit) {
-                iter <- iter + 1L
-                dp <- scaddp(control$scad_a, control$lambda[l], eta)
-                objective_in <- c(rep(0, ppK), delta, dp)
-                lres <- Rglpk::Rglpk_solve_LP(obj = objective_in,
-                                              mat = Amat,
-                                              dir = const_dir,
-                                              rhs = b0vec,
-                                              bounds = list(
-                                                  lower = list(
-                                                      ind = seq_len(ppK),
-                                                      val = - rep(Inf, ppK)
-                                                  )
-                                              ),
-                                              control = list(
-                                                  verbose = control$verbose,
-                                                  presolver = TRUE
-                                              ))
-                beta1 <- get_beta(lres$solution)
-                eta <- get_eta(lres$solution)
+                                          )),
+                    error = function(e) e
+                )
+                if (inherits(lres, "error")) {
+                    warning(lres, "\nRevert to the solution from last step.")
+                    beta1 <- beta0
+                } else {
+                    eta <- get_eta(lres$solution)
+                    beta1 <- get_beta(lres$solution)
+                }
                 tol <- rowL2sums(beta1 - beta0)
                 if (tol < control$epsilon) {
                     break
