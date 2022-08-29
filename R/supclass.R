@@ -136,8 +136,11 @@ supclass <- function(x, y,
         "psvm" = supclass_mpsvm(x, cat_y$y, penalty, start, control),
         "svm" = supclass_msvm(x, cat_y$y, penalty, start, control)
     )
-    ## impose shrinkage
-    beta[beta < control$shrinkage] <- 0
+    ## impose shrinkage for every slice
+    for (l in seq_along(control$lambda)) {
+        beta[rowSupnorms(beta[, , l]) < control$shrinkage, , l] <- 0
+    }
+    ## beta[abs(beta) < control$shrinkage] <- 0
     ## scale the estimate back for the original scale of x
     if (control$standardize) {
         for (l in seq_along(control$lambda)) {

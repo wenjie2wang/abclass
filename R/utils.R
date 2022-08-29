@@ -100,6 +100,10 @@ rowL2sums <- function(x)
 {
     sum(rowL2norms(x))
 }
+## row-wise sup-norm
+rowSupnorms <- function(x) {
+    apply(abs(x), 1L, max)
+}
 
 ## check if the suggested package is available
 suggest_pkg <- function(pkg_name)
