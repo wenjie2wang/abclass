@@ -34,7 +34,7 @@ regression model, \code{"psvm"} for proximal support vector machine
 \item{penalty}{A charactor vector specifying the penalty function for the
 sup-norms.  The available options are \code{"lasso"} for sup-norm
 regularization proposed by Zhang et al. (2008) and \code{"scad"} for
-supSCAD regularization proposed by Li and Zhang (2021).}
+supSCAD regularization proposed by Li & Zhang (2021).}
 
 \item{start}{A numeric matrix representing the starting values for the
 quadratic approximation procedure behind the scene.}

@@ -19,7 +19,7 @@ supclass.control(
   lambda = 0.001,
   adaptive_weight = NULL,
   scad_a = 3.7,
-  maxit = 100,
+  maxit = 50,
   epsilon = 1e-04,
   shrinkage = 1e-04,
   warm_start = TRUE,
@@ -46,7 +46,7 @@ regression model, \code{"psvm"} for proximal support vector machine
 \item{penalty}{A charactor vector specifying the penalty function for the
 sup-norms.  The available options are \code{"lasso"} for sup-norm
 regularization proposed by Zhang et al. (2008) and \code{"scad"} for
-supSCAD regularization proposed by Li and Zhang (2021).}
+supSCAD regularization proposed by Li & Zhang (2021).}
 
 \item{start}{A numeric matrix representing the starting values for the
 quadratic approximation procedure behind the scene.}
@@ -76,7 +76,7 @@ lasso penalty only.}
 the SCAD penalty.}
 
 \item{maxit}{A positive integer specifying the maximum number of iteration.
-The default value is \code{100}.}
+The default value is \code{50} as suggested in Li & Zhang (2021).}
 
 \item{epsilon}{A positive number specifying the relative tolerance that
 determines convergence.  The default value is \code{1e-4}.}

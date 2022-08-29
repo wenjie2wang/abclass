@@ -29,7 +29,7 @@
 ##' @param penalty A charactor vector specifying the penalty function for the
 ##'     sup-norms.  The available options are \code{"lasso"} for sup-norm
 ##'     regularization proposed by Zhang et al. (2008) and \code{"scad"} for
-##'     supSCAD regularization proposed by Li and Zhang (2021).
+##'     supSCAD regularization proposed by Li & Zhang (2021).
 ##' @param start A numeric matrix representing the starting values for the
 ##'     quadratic approximation procedure behind the scene.
 ##' @param control A list with named elements.
@@ -72,19 +72,6 @@ supclass <- function(x, y,
     K <- max(cat_y$y)
     p <- ncol(x)
     pp <- p + 1L
-    ## check start
-    if (is.null(start)) {
-        start <- matrix(0, nrow = pp, ncol = K)
-    } else {
-        if (! is.matrix(start)) {
-            start <- as.matrix(start)
-        }
-        if (nrow(start) != pp || ncol(start) != K) {
-            stop(sprintf(
-                "The starting value should be a %d by %d matrix", pp, k
-            ), call. = FALSE)
-        }
-    }
     ## controls
     dot_list <- list(...)
     control <- do.call(supclass.control, modify_list(control, dot_list))
@@ -126,6 +113,20 @@ supclass <- function(x, y,
                 stop("The adaptive weights must be nonnegative.")
             }
             control$is_adaptive_mat <- is_adaptive_mat
+        }
+    }
+    ## check start
+    if (is.null(start)) {
+        ## TODO use ridge estimates instead
+        start <- matrix(0, nrow = pp, ncol = K)
+    } else {
+        if (! is.matrix(start)) {
+            start <- as.matrix(start)
+        }
+        if (nrow(start) != pp || ncol(start) != K) {
+            stop(sprintf(
+                "The starting value should be a %d by %d matrix", pp, k
+            ), call. = FALSE)
         }
     }
     ## call the corresponding function
@@ -188,10 +189,12 @@ supclass <- function(x, y,
 ##' @param scad_a A positive number specifying the tuning parameter \emph{a} in
 ##'     the SCAD penalty.
 ##' @param maxit A positive integer specifying the maximum number of iteration.
-##'     The default value is \code{100}.
+##'     The default value is \code{50} as suggested in Li & Zhang (2021).
 ##' @param shrinkage A nonnegative tolerance to shrink estimates with sup-norm
 ##'     close enough to zero (within the specified tolerance) to zeros.  The
 ##'     default value is \code{1e-4}.
+## @param ridge_lambda The tuning parameter lambda of the ridge penalty used to
+##     set the (first set of) starting values.
 ##' @param warm_start A logical value indicating if the estimates from last
 ##'     lambda should be used as the starting values for the next lambda.  If
 ##'     \code{FALSE}, the user-specified starting values will be used instead.
@@ -203,9 +206,10 @@ supclass <- function(x, y,
 supclass.control <- function(lambda = 1e-3,
                              adaptive_weight = NULL,
                              scad_a = 3.7,
-                             maxit = 100,
+                             maxit = 50,
                              epsilon = 1e-4,
                              shrinkage = 1e-4,
+                             ## ridge_lambda = 1e-4,
                              warm_start = TRUE,
                              standardize = TRUE,
                              verbose = 0L,
@@ -279,7 +283,7 @@ deriv_mlog <- function(x, y, beta)
     )
 }
 
-## multinomial logistic model
+## multinomial logistic model with sup-norm penalties
 supclass_mlog <- function(x, y, penalty, start, control)
 {
     K <- max(y)
@@ -389,7 +393,7 @@ supclass_mlog <- function(x, y, penalty, start, control)
                         beta1 <- get_beta(qres$solution)
                         eta <- get_eta(qres$solution)
                     }
-                    inner_diff <- l2norm(beta1 - inner_beta0)
+                    inner_diff <- rowL2sums(beta1 - inner_beta0)
                     if (inner_diff < control$epsilon) {
                         break
                     }
@@ -408,7 +412,7 @@ supclass_mlog <- function(x, y, penalty, start, control)
     beta_array
 }
 
-## mpsvm
+## mpsvm with sup-norm penalties
 supclass_mpsvm <- function(x, y, penalty, start, control)
 {
     K <- max(y)
@@ -529,7 +533,7 @@ supclass_mpsvm <- function(x, y, penalty, start, control)
     beta_array
 }
 
-## msvm
+## msvm with sup-norm penalties
 supclass_msvm <- function(x, y, penalty, start, control)
 {
     K <- max(y)
@@ -645,8 +649,7 @@ supclass_msvm <- function(x, y, penalty, start, control)
                                           )
                                       ),
                                       control = list(
-                                          verbose = control$verbose,
-                                          presolver = TRUE
+                                          verbose = control$verbose
                                       ))
             }, error = function(e) e)
             beta1 <- if (inherits(lres, "error")) {
