@@ -1,6 +1,6 @@
 ntrain <- 100
 ntest <- 1000
-p <- 30
+p <- 10
 k <- 5
 n <- ntrain + ntest
 train_idx <- seq_len(ntrain)
@@ -41,6 +41,57 @@ expect_equivalent(dim(coef(model3, s = 10)), c(p + 1, k - 1))
 model4 <- abclass(train_x, train_y, nlambda = 5,
                   loss = "lum", epsilon = 1e-2,
                   group_penalty = "mcp")
-pred4 <- predict(model4, test_x, s = 5)
+pred4 <- predict(model4, test_x)[[5]]
 expect_true(mean(test_y == pred4) > 0.5)
+
+## prob
+prob <- predict(model4, test_x, type = "prob", s = 1)
+prob4 <- predict(model4, test_x, type = "prob")
+expect_equal(prob, prob4[[1]])
+expect_equal(length(prob4), 5L)
+expect_equal(dim(prob), c(ntest, k))
+
 expect_equivalent(dim(coef(model4, s = 5)), c(p + 1, k - 1))
+expect_error(predict(model4), "newx")
+
+## test sparse matrices
+if (requireNamespace("Matrix", quietly = TRUE)) {
+    model4 <- abclass(as(train_x, "sparseMatrix"),
+                      train_y, nlambda = 5, loss = "lum",
+                      epsilon = 1e-2, group_penalty = "scad")
+    sp_newx <- as(test_x, "sparseMatrix")
+    expect_equal(predict(model4, sp_newx, s = 5),
+                 predict(model4, test_x, s = 5))
+}
+
+## test as.matrix
+model4 <- abclass(as.data.frame(train_x),
+                  train_y, nlambda = 5,
+                  loss = "lum", epsilon = 1e-2,
+                  group_penalty = "mcp")
+expect_equal(predict(model4, as.data.frame(test_x), s = 5), pred4)
+
+## quick tests for other options
+qset <- expand.grid(loss = c("logistic", "boost", "hinge-boost", "lum"),
+                    gpenalty = c("mcp", "scad"),
+                    KEEP.OUT.ATTRS = FALSE,
+                    stringsAsFactors = FALSE)
+for (k in nrow(qset)) {
+    qmodel <- abclass(train_x, train_y,
+                      loss = qset$loss[k],
+                      group_penalty = qset$gpenalty[k])
+    qpred <- predict(qmodel, test_x)
+}
+
+## ungrouped penalty
+qset <- expand.grid(loss = c("logistic", "boost", "hinge-boost", "lum"),
+                    alpha = c(0, 1),
+                    KEEP.OUT.ATTRS = FALSE,
+                    stringsAsFactors = FALSE)
+for (k in nrow(qset)) {
+    qmodel <- abclass(train_x, train_y,
+                      loss = qset$loss[k],
+                      alpha = qset$alpha[k],
+                      grouped = FALSE)
+    qpred <- predict(qmodel, test_x)
+}

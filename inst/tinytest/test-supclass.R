@@ -16,42 +16,52 @@ train_y <- y[train_idx]
 test_y <- y[- train_idx]
 
 ## logistic + suplasso
-model <- supclass(train_x, train_y, model = "logistic", penalty = "lasso")
-pred <- predict(model, test_x)
+model <- supclass(train_x, train_y, model = "logistic", penalty = "lasso",
+                  lambda = c(0.1, 0.2), epsilon = 1e-3, maxit = 10)
+pred <- predict(model, test_x, s = 1)
 expect_true(mean(test_y == pred) > 0.5)
-expect_equivalent(dim(coef(model)), c(p + 1, k))
+
+## test as.matrix
+pred2 <- predict(model, as.data.frame(test_x), s = 1)
+expect_equal(pred, pred2)
+
+prob <- predict(model, test_x, type = "prob")
+expect_equal(dim(prob[[1]]), c(ntest, k))
+expect_equal(length(prob), 2)
+expect_equivalent(dim(coef(model, s = 1)), c(p + 1, k))
+expect_error(predict(model), "newx")
 
 ## logistic + supscad
 model <- supclass(train_x, train_y, model = "logistic", penalty = "scad",
-                  maxit = 50, epsilon = 1e-3, scad_a = 10)
+                  maxit = 25, epsilon = 1e-3, scad_a = 10)
 pred <- predict(model, test_x)
 expect_true(mean(test_y == pred) > 0.5)
 expect_equivalent(dim(coef(model)), c(p + 1, k))
 
 ## psvm + suplasso
 model <- supclass(train_x, train_y, model = "psvm", penalty = "lasso",
-                  maxit = 50, epsilon = 1e-3)
+                  maxit = 25, epsilon = 1e-3)
 pred <- predict(model, test_x)
 expect_true(mean(test_y == pred) > 0.5)
 expect_equivalent(dim(coef(model)), c(p + 1, k))
 
 ## psvm + supscad
 model <- supclass(train_x, train_y, model = "psvm", penalty = "scad",
-                  maxit = 50, epsilon = 1e-3)
+                  maxit = 25, epsilon = 1e-3)
 pred <- predict(model, test_x)
 expect_true(mean(test_y == pred) > 0.5)
 expect_equivalent(dim(coef(model)), c(p + 1, k))
 
 ## svm + suplasso
 model <- supclass(train_x, train_y, model = "svm", penalty = "lasso",
-                  maxit = 50, epsilon = 1e-3)
+                  maxit = 25, epsilon = 1e-3)
 pred <- predict(model, test_x)
 expect_true(mean(test_y == pred) > 0.5)
 expect_equivalent(dim(coef(model)), c(p + 1, k))
 
 ## svm + supscad
 model <- supclass(train_x, train_y, model = "svm", penalty = "scad",
-                  maxit = 50, epsilon = 1e-3)
+                  maxit = 25, epsilon = 1e-3)
 pred <- predict(model, test_x)
 expect_true(mean(test_y == pred) > 0.5)
 expect_equivalent(dim(coef(model)), c(p + 1, k))
