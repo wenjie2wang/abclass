@@ -140,7 +140,8 @@ predict.supclass <- function(object,
 {
     type <- match.arg(type, choices = c("class", "probability"))
     if (object$model %in% c("psvm", "svm") && type == "probability") {
-        stop("Probability estimates are not available.")
+        stop(sprintf("Probability estimates are not available for '%s' model.",
+                     object$model))
     }
     if (missing(newx)) {
         stop("The 'newx' must be specified.")

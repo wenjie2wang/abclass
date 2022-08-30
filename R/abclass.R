@@ -69,7 +69,7 @@ abclass <- function(x, y,
                     ...)
 {
     all_loss <- c("logistic", "boost", "hinge-boost", "lum")
-    loss <- match.arg(loss, choices = all_loss)
+    loss <- match.arg(as.character(loss), choices = all_loss)
     loss2 <- gsub("-", "_", loss, fixed = TRUE)
     ## controls
     dot_list <- list(...)
@@ -170,7 +170,8 @@ abclass.control <- function(lambda = NULL,
 {
     if (grouped) {
         group_penalty <- match.arg(
-            group_penalty, choices = c("lasso", "scad", "mcp")
+            as.character(group_penalty),
+            choices = c("lasso", "scad", "mcp")
         )
     }
     structure(list(

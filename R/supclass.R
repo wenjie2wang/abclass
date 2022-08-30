@@ -56,14 +56,16 @@ supclass <- function(x, y,
                      ...)
 {
     ## select models
-    model <- match.arg(model, choices = c("logistic", "psvm", "svm"))
+    model <- match.arg(as.character(model),
+                       choices = c("logistic", "psvm", "svm"))
     if (model %in% c("logistic", "psvm")) {
         suggest_pkg("quadprog")
     } else {
         suggest_pkg("Rglpk")
     }
     ## select panalty
-    penalty <- match.arg(penalty, choices = c("lasso", "scad"))
+    penalty <- match.arg(as.character(penalty),
+                         choices = c("lasso", "scad"))
     ## pre-process x and y
     if (! is.matrix(x)) {
         x <- as.matrix(x)
@@ -117,7 +119,7 @@ supclass <- function(x, y,
     }
     ## check start
     if (is.null(start)) {
-        ## TODO use ridge estimates instead
+        ## TODO apply ridge estimates instead of zeros
         start <- matrix(0, nrow = pp, ncol = K)
     } else {
         if (! is.matrix(start)) {
