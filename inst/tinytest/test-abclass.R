@@ -76,7 +76,7 @@ qset <- expand.grid(loss = c("logistic", "boost", "hinge-boost", "lum"),
                     gpenalty = c("mcp", "scad"),
                     KEEP.OUT.ATTRS = FALSE,
                     stringsAsFactors = FALSE)
-for (k in nrow(qset)) {
+for (k in seq_len(nrow(qset))) {
     qmodel <- abclass(train_x, train_y,
                       loss = qset$loss[k],
                       group_penalty = qset$gpenalty[k])
@@ -88,7 +88,7 @@ qset <- expand.grid(loss = c("logistic", "boost", "hinge-boost", "lum"),
                     alpha = c(0, 1),
                     KEEP.OUT.ATTRS = FALSE,
                     stringsAsFactors = FALSE)
-for (k in nrow(qset)) {
+for (k in seq_len(nrow(qset))) {
     qmodel <- abclass(train_x, train_y,
                       loss = qset$loss[k],
                       alpha = qset$alpha[k],
