@@ -21,6 +21,7 @@ LinkingTo:
     Rcpp,
     RcppArmadillo
 Suggests:
+    Matrix,
     Rglpk,
     quadprog,
     tinytest
