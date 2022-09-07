@@ -25,6 +25,7 @@ train_y <- y[train_idx]
 test_y <- y[- train_idx]
 
 ## regularization with the supnorm lasso penalty
+options("mc.cores" = 1)
 model <- supclass(train_x, train_y, model = "psvm", penalty = "lasso")
 pred <- predict(model, test_x)
 table(test_y, pred)
