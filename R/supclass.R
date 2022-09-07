@@ -127,7 +127,7 @@ supclass <- function(x, y,
         }
         if (nrow(start) != pp || ncol(start) != K) {
             stop(sprintf(
-                "The starting value should be a %d by %d matrix", pp, k
+                "The starting value should be a %d by %d matrix", pp, K
             ), call. = FALSE)
         }
     }
