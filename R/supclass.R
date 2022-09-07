@@ -288,6 +288,15 @@ deriv_mlog <- function(x, y, beta)
     )
 }
 
+## negative log-likelihood
+nll_mlog <- function(x, y, beta) {
+    exp_xb <- exp(x %*% beta)
+    sum_exp_xb <- rowSums(exp_xb)
+    prob <- exp_xb / sum_exp_xb
+    lnp <- log(prob[cbind(seq_along(y), y)])
+    - mean(lnp)
+}
+
 ## multinomial logistic model with sup-norm penalties
 supclass_mlog <- function(x, y, penalty, start, control)
 {
@@ -335,6 +344,7 @@ supclass_mlog <- function(x, y, penalty, start, control)
     sc <- sqrt(.Machine$double.eps)
     ## initialize
     beta_array <- array(NA, dim = c(pp, K, length(control$lambda)))
+    nll_vec <- rep(NA, length(control$lambda))
     ## for a sequence of lambda's
     for (l in seq_along(control$lambda)) {
         outer_beta0 <- if (l > 1 && control$warm_start) {
@@ -412,8 +422,11 @@ supclass_mlog <- function(x, y, penalty, start, control)
             outer_beta0 <- beta1
         }
         beta_array[, , l] <- beta1
+        ## for computing BIC for logistic model later
+        nll_vec[l] <- nll_mlog(x, y, beta1)
     }
     ## return
+    attr(beta_array, "negLogL") <- nll_vec
     beta_array
 }
 
@@ -505,10 +518,10 @@ supclass_mpsvm <- function(x, y, penalty, start, control)
                      }
         } else {
             ## main loop for one single lambda
-            iter <- 0
+            iter <- 0L
             eta <- apply(abs(beta0[- 1L, ]), 1, max)
             while (iter < control$maxit) {
-                iter <- iter + 1
+                iter <- iter + 1L
                 dp <- - scaddp(control$scad_a, control$lambda[l], eta)
                 dvec <- c(dvec0, dp)
                 qres <- tryCatch({
