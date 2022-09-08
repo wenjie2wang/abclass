@@ -109,7 +109,8 @@ rowSupnorms <- function(x) {
 suggest_pkg <- function(pkg_name)
 {
     if (! requireNamespace(pkg_name, quietly = TRUE)) {
-        stop(sprintf("The package '%s' is needed.", pkg_name), call. = FALSE)
+        stop(sprintf("The package '%s' is needed but not available.",
+                     pkg_name), call. = FALSE)
     }
     invisible()
 }

@@ -20,6 +20,12 @@
 ##' Experimental implementations of multi-category classifiers with sup-norm
 ##' penalties proposed by Zhang, et al. (2008) and Li & Zhang (2021).
 ##'
+##' For the multinomial logistic model or the proximal SVM model, this function
+##' utilizes the function \code{quadprog::solve.QP()} to solve the equivalent
+##' quadratic problem; For the multi-class SVM, this function utilizes GNU GLPK
+##' to solve the equivalent linear programming problem via the package {Rglpk}.
+##' It is recommended to use a recent version of {GLPK}.
+##'
 ##' @inheritParams abclass
 ##'
 ##' @param model A charactor vector specifying the classification model.  The
@@ -178,10 +184,9 @@ supclass <- function(x, y,
 ##' @inheritParams abclass.control
 ##'
 ##' @param lambda A numeric vector specifying the tuning parameter
-##'     \emph{lambda}.  The default value is \code{0.001}.  Users should tune
-##'     this parameter for a better model fit.  The specified lambda will be
-##'     sorted in decreasing order internally and only the unique values will be
-##'     kept.
+##'     \emph{lambda}.  The default value is \code{0.1}.  Users should tune this
+##'     parameter for a better model fit.  The specified lambda will be sorted
+##'     in decreasing order internally and only the unique values will be kept.
 ##' @param adaptive_weight A numeric vector or matrix representing the adaptive
 ##'     penalty weights.  The default value is \code{NULL} for equal weights.
 ##'     Zhang, et al. (2008) proposed two ways to employ the adaptive weights.
@@ -197,9 +202,9 @@ supclass <- function(x, y,
 ##'     The default value is \code{50} as suggested in Li & Zhang (2021).
 ##' @param shrinkage A nonnegative tolerance to shrink estimates with sup-norm
 ##'     close enough to zero (within the specified tolerance) to zeros.  The
-##'     default value is \code{1e-4}.
-## @param ridge_lambda The tuning parameter lambda of the ridge penalty used to
-##     set the (first set of) starting values.
+##'     default value is \code{1e-4}.  ## @param ridge_lambda The tuning
+##'     parameter lambda of the ridge penalty used to ## set the (first set of)
+##'     starting values.
 ##' @param warm_start A logical value indicating if the estimates from last
 ##'     lambda should be used as the starting values for the next lambda.  If
 ##'     \code{FALSE}, the user-specified starting values will be used instead.
@@ -208,7 +213,7 @@ supclass <- function(x, y,
 ##'     zero and standardization
 ##'
 ##' @export
-supclass.control <- function(lambda = 1e-3,
+supclass.control <- function(lambda = 0.1,
                              adaptive_weight = NULL,
                              scad_a = 3.7,
                              maxit = 50,
@@ -572,7 +577,7 @@ supclass_msvm <- function(x, y, penalty, start, control)
         theta[seq.int(ppK + nK + 1, by = 1, length.out = p)]
     }
     ## helper to check variable names
-    ## get_var_names <- function(x) {
+    ## .get_var_names <- function(x) {
     ##     gen_names <- function(na, nb, a_zero_based = FALSE,
     ##                           b_zero_based = FALSE) {
     ##         do.call(
@@ -590,6 +595,9 @@ supclass_msvm <- function(x, y, penalty, start, control)
     ##     )
     ##     idx <- x != 0
     ##     setNames(x[idx], var_names[idx])
+    ## }
+    ## get_var_names <- function(x) {
+    ##     apply(as.matrix(x), 1, .get_var_names, simplify = FALSE)
     ## }
     ## data
     x <- cbind(1, x)
@@ -668,7 +676,23 @@ supclass_msvm <- function(x, y, penalty, start, control)
                                       ),
                                       control = list(
                                           verbose = control$verbose
+                                          ## presolve = TRUE
                                       ))
+                ## Rsymphony::Rsymphony_solve_LP(
+                ##                obj = objective_in,
+                ##                mat = Amat,
+                ##                dir = const_dir,
+                ##                rhs = b0vec,
+                ##                bounds = list(
+                ##                    lower = list(
+                ##                        ind = seq_len(ppK),
+                ##                        val = - rep(Inf, ppK)
+                ##                    )
+                ##                ),
+                ##                verbosity = - 2
+                ##                ## write_mps = TRUE,
+                ##                ## write_lp = TRUE
+                ##            )
             }, error = function(e) e)
             beta1 <- if (inherits(lres, "error")) {
                          warning(lres,

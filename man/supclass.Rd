@@ -16,7 +16,7 @@ supclass(
 )
 
 supclass.control(
-  lambda = 0.001,
+  lambda = 0.1,
   adaptive_weight = NULL,
   scad_a = 3.7,
   maxit = 50,
@@ -57,10 +57,9 @@ quadratic approximation procedure behind the scene.}
 \code{supclass.control()}.}
 
 \item{lambda}{A numeric vector specifying the tuning parameter
-\emph{lambda}.  The default value is \code{0.001}.  Users should tune
-this parameter for a better model fit.  The specified lambda will be
-sorted in decreasing order internally and only the unique values will be
-kept.}
+\emph{lambda}.  The default value is \code{0.1}.  Users should tune this
+parameter for a better model fit.  The specified lambda will be sorted
+in decreasing order internally and only the unique values will be kept.}
 
 \item{adaptive_weight}{A numeric vector or matrix representing the adaptive
 penalty weights.  The default value is \code{NULL} for equal weights.
@@ -83,7 +82,9 @@ determines convergence.  The default value is \code{1e-4}.}
 
 \item{shrinkage}{A nonnegative tolerance to shrink estimates with sup-norm
 close enough to zero (within the specified tolerance) to zeros.  The
-default value is \code{1e-4}.}
+default value is \code{1e-4}.  ## @param ridge_lambda The tuning
+parameter lambda of the ridge penalty used to ## set the (first set of)
+starting values.}
 
 \item{warm_start}{A logical value indicating if the estimates from last
 lambda should be used as the starting values for the next lambda.  If
@@ -100,6 +101,13 @@ is \code{0} for silent estimation procedure.}
 \description{
 Experimental implementations of multi-category classifiers with sup-norm
 penalties proposed by Zhang, et al. (2008) and Li & Zhang (2021).
+}
+\details{
+For the multinomial logistic model or the proximal SVM model, this function
+utilizes the function \code{quadprog::solve.QP()} to solve the equivalent
+quadratic problem; For the multi-class SVM, this function utilizes GNU GLPK
+to solve the equivalent linear programming problem via the package {Rglpk}.
+It is recommended to use a recent version of {GLPK}.
 }
 \examples{
 library(abclass)
