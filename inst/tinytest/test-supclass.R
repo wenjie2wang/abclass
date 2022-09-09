@@ -26,8 +26,7 @@ pred2 <- predict(model, as.data.frame(test_x), s = 1)
 expect_equal(pred, pred2)
 
 prob <- predict(model, test_x, type = "prob")
-expect_equal(dim(prob[[1]]), c(ntest, k))
-expect_equal(length(prob), 2)
+expect_equal(dim(prob), c(ntest, k))
 expect_equivalent(dim(coef(model, s = 1)), c(p + 1, k))
 expect_error(predict(model), "newx")
 

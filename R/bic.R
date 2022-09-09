@@ -29,3 +29,9 @@ BIC.logistic_suplasso <- function(object, ...)
 
 ##' @export
 BIC.logistic_supscad <- BIC.logistic_suplasso
+
+##' @export
+BIC.supclass <- function(object, ...)
+{
+    NULL
+}

@@ -140,6 +140,12 @@ coef.supclass <- function(object,
         return(object$coefficients[, , selection])
     }
     selection <- match.arg(selection, c("cv_min", "cv_1se", "all"))
+    ## BIC for logistic model
+    bic_vec <- BIC(object)
+    if (! is.null(bic_vec)) {
+        return(object$coefficients[, , which.min(bic_vec)])
+    }
+    ## otherwise
     if (! length(object$cross_validation$cv_accuracy) || selection == "all") {
         return(object$coefficients)
     }
