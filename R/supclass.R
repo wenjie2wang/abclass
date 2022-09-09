@@ -65,7 +65,7 @@ supclass <- function(x, y,
     model <- match.arg(as.character(model),
                        choices = c("logistic", "psvm", "svm"))
     if (model %in% c("logistic", "psvm")) {
-        suggest_pkg("quadprog")
+        suggest_pkg("qpmadr")
     } else {
         suggest_pkg("Rglpk")
     }
@@ -319,6 +319,29 @@ supclass_mlog <- function(x, y, penalty, start, control)
     }
     x <- cbind(1, x)
     df <- ppK + p
+    ## helper to check variable names
+    ## .get_var_names <- function(x) {
+    ##     gen_names <- function(na, nb, a_zero_based = FALSE,
+    ##                           b_zero_based = FALSE) {
+    ##         do.call(
+    ##             function(a, b) sprintf("%d_%d", a, b),
+    ##             as.list(expand.grid(
+    ##                 a = seq_len(na) - as.integer(a_zero_based),
+    ##                 b = seq_len(nb) - as.integer(b_zero_based)
+    ##             ))
+    ##         )
+    ##     }
+    ##     var_names <- c(
+    ##         paste0("beta_", gen_names(pp, K, TRUE)),
+    ##         paste0("eta_", seq_len(p))
+    ##     )
+    ##     idx <- x != 0
+    ##     setNames(x[idx], var_names[idx])
+    ## }
+    ## get_var_names <- function(x) {
+    ##     apply(as.matrix(x), 2, .get_var_names, simplify = FALSE)
+    ## }
+    ## TODO avoid t(Amat) by generating Amat in a different way
     ## prepare the matrix for the equality constraints
     A0 <- matrix(0, nrow = df, ncol = pp)
     for (i in seq_len(pp)) {
@@ -368,21 +391,28 @@ supclass_mlog <- function(x, y, penalty, start, control)
             Dmat <- matrix(0, nrow = df, ncol = df)
             Dmat[seq_len(ppK), seq_len(ppK)] <- hess_mat
             diag(Dmat) <- diag(Dmat) + sc
-            dvec0 <- - grad_vec + hess_mat %*% as.numeric(outer_beta0)
+            dvec0 <- grad_vec - hess_mat %*% as.numeric(outer_beta0)
             inner_beta0 <- outer_beta0
             if (penalty == "lasso") {
                 dp <- if (control$is_adaptive_mat) {
-                          - rep(control$lambda[l], p)
+                          rep(control$lambda[l], p)
                       } else {
-                          - control$lambda[l] * control$adaptive_weight
+                          control$lambda[l] * control$adaptive_weight
                       }
                 dvec <- c(dvec0, dp)
                 qres <- tryCatch({
-                    quadprog::solve.QP(Dmat = Dmat,
-                                       dvec = dvec,
-                                       Amat = Amat,
-                                       bvec = b0vec,
-                                       meq = pp)
+                    ## quadprog::solve.QP(Dmat = Dmat,
+                    ##                    dvec = - dvec,
+                    ##                    Amat = Amat,
+                    ##                    bvec = b0vec,
+                    ##                    meq = pp)
+                    qpmadr::solveqp(
+                                H = Dmat,
+                                h = dvec,
+                                A = t(Amat),
+                                Alb = b0vec,
+                                Aub = c(rep(0, pp), rep(Inf, 2 * p * K))
+                            )
                 }, error = function(e) e)
                 beta1 <- if (inherits(qres, "error")) {
                              warning(qres,
@@ -394,14 +424,21 @@ supclass_mlog <- function(x, y, penalty, start, control)
             } else {
                 while (inner_iter < control$maxit) {
                     inner_iter <- inner_iter + 1
-                    dp <- - scaddp(control$scad_a, control$lambda[l], eta)
+                    dp <- scaddp(control$scad_a, control$lambda[l], eta)
                     dvec <- c(dvec0, dp)
                     qres <- tryCatch({
-                        quadprog::solve.QP(Dmat = Dmat,
-                                           dvec = dvec,
-                                           Amat = Amat,
-                                           bvec = b0vec,
-                                           meq = pp)
+                        ## quadprog::solve.QP(Dmat = Dmat,
+                        ##                    dvec = - dvec,
+                        ##                    Amat = Amat,
+                        ##                    bvec = b0vec,
+                        ##                    meq = pp)
+                        qpmadr::solveqp(
+                                    H = Dmat,
+                                    h = dvec,
+                                    A = t(Amat),
+                                    Alb = b0vec,
+                                    Aub = c(rep(0, pp), rep(Inf, 2 * p * K))
+                                )
                     }, error = function(e) e)
                     if (inherits(qres, "error")) {
                         warning(
@@ -483,7 +520,7 @@ supclass_mpsvm <- function(x, y, penalty, start, control)
     ## prepare the vector for the objective function
     delta <- matrix(1, nrow = n, ncol = K) / n
     delta[cbind(seq_len(n), y)] <- 0
-    dvec0 <- - 2 * as.numeric(crossprod(x, delta))
+    dvec0 <- 2 * as.numeric(crossprod(x, delta))
     Dmat <- matrix(0, nrow = df, ncol = df)
     for (k in seq_len(K)) {
         idx <- seq.int(1 + (k - 1) * pp, k * pp)
@@ -502,17 +539,24 @@ supclass_mpsvm <- function(x, y, penalty, start, control)
                  }
         if (penalty == "lasso") {
             dp <- if (control$is_adaptive_mat) {
-                      - rep(control$lambda[l], p)
+                      rep(control$lambda[l], p)
                   } else {
-                      - control$lambda[l] * control$adaptive_weight
+                      control$lambda[l] * control$adaptive_weight
                   }
             dvec <- c(dvec0, dp)
             qres <- tryCatch({
-                quadprog::solve.QP(Dmat = Dmat,
-                                   dvec = dvec,
-                                   Amat = Amat,
-                                   bvec = b0vec,
-                                   meq = pp)
+                ## quadprog::solve.QP(Dmat = Dmat,
+                ##                    dvec = - dvec,
+                ##                    Amat = Amat,
+                ##                    bvec = b0vec,
+                ##                    meq = pp)
+                qpmadr::solveqp(
+                            H = Dmat,
+                            h = dvec,
+                            A = t(Amat),
+                            Alb = b0vec,
+                            Aub = c(rep(0, pp), rep(Inf, 2 * p * K))
+                        )
             }, error = function(e) e)
             beta1 <- if (inherits(qres, "error")) {
                          warning(qres,
@@ -527,14 +571,21 @@ supclass_mpsvm <- function(x, y, penalty, start, control)
             eta <- apply(abs(beta0[- 1L, ]), 1, max)
             while (iter < control$maxit) {
                 iter <- iter + 1L
-                dp <- - scaddp(control$scad_a, control$lambda[l], eta)
+                dp <- scaddp(control$scad_a, control$lambda[l], eta)
                 dvec <- c(dvec0, dp)
                 qres <- tryCatch({
-                    quadprog::solve.QP(Dmat = Dmat,
-                                       dvec = dvec,
-                                       Amat = Amat,
-                                       bvec = b0vec,
-                                       meq = pp)
+                    ## quadprog::solve.QP(Dmat = Dmat,
+                    ##                    dvec = - dvec,
+                    ##                    Amat = Amat,
+                    ##                    bvec = b0vec,
+                    ##                    meq = pp)
+                    qpmadr::solveqp(
+                                H = Dmat,
+                                h = dvec,
+                                A = t(Amat),
+                                Alb = b0vec,
+                                Aub = c(rep(0, pp), rep(Inf, 2 * p * K))
+                            )
                 }, error = function(e) e)
                 if (inherits(qres, "error")) {
                     warning(qres, "\nRevert to the solution from last step.")

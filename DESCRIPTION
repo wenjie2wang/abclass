@@ -23,7 +23,7 @@ LinkingTo:
 Suggests:
     Matrix,
     Rglpk,
-    quadprog,
+    qpmadr,
     tinytest
 Copyright: Eli Lilly and Company
 License: GPL (>= 3)
