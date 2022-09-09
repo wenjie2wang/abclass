@@ -421,6 +421,12 @@ supclass_mlog <- function(x, y, penalty, start, control)
                          } else {
                              get_beta(qres$solution)
                          }
+                if (anyNA(beta1)) {
+                    warning("Found NA in the beta estimates.",
+                            "The specified lambda was probably too small.",
+                            "\nRevert to the solution from last step.")
+                    beta1 <- outer_beta0
+                }
             } else {
                 while (inner_iter < control$maxit) {
                     inner_iter <- inner_iter + 1
@@ -449,6 +455,12 @@ supclass_mlog <- function(x, y, penalty, start, control)
                     } else {
                         beta1 <- get_beta(qres$solution)
                         eta <- get_eta(qres$solution)
+                    }
+                    if (anyNA(beta1)) {
+                        warning("Found NA in the beta estimates.",
+                                "The specified lambda was probably too small.",
+                                "\nRevert to the solution from last step.")
+                        beta1 <- inner_beta0
                     }
                     inner_diff <- rowL2sums(beta1 - inner_beta0)
                     if (inner_diff < control$epsilon) {
@@ -565,6 +577,12 @@ supclass_mpsvm <- function(x, y, penalty, start, control)
                      } else {
                          get_beta(qres$solution)
                      }
+            if (anyNA(beta1)) {
+                warning("Found NA in the beta estimates.",
+                        "The specified lambda was probably too small.",
+                        "\nRevert to the solution from last step.")
+                beta1 <- beta0
+            }
         } else {
             ## main loop for one single lambda
             iter <- 0L
@@ -593,6 +611,12 @@ supclass_mpsvm <- function(x, y, penalty, start, control)
                 } else {
                     beta1 <- get_beta(qres$solution)
                     eta <- get_eta(qres$solution)
+                }
+                if (anyNA(beta1)) {
+                    warning("Found NA in the beta estimates.",
+                            "The specified lambda was probably too small.",
+                            "\nRevert to the solution from last step.")
+                    beta1 <- beta0
                 }
                 tol <- rowL2sums(beta1 - beta0)
                 if (tol < control$epsilon) {
