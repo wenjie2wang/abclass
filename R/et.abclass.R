@@ -18,7 +18,7 @@
 ##' Tune Angle-Based Classifiers by ET-Lasso
 ##'
 ##' Tune the regularization parameter for an angle-based large-margin classifier
-##' by ET-Lasso (Yang, et al., 2019).
+##' by the ET-Lasso method (Yang, et al., 2019).
 ##'
 ##' @inheritParams abclass
 ##'

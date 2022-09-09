@@ -15,7 +15,7 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ##
 
-##' Tune A Sup-Norm Classifier by Cross-Validation
+##' Tune Sup-Norm Classifiers by Cross-Validation
 ##'
 ##' Tune the regularization parameter lambda for a sup-norm classifier by
 ##' cross-validation.

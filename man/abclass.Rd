@@ -3,7 +3,7 @@
 \name{abclass}
 \alias{abclass}
 \alias{abclass.control}
-\title{Angle-Based Classification}
+\title{Multi-Category Angle-Based Classification}
 \usage{
 abclass(
   x,

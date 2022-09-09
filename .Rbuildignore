@@ -5,6 +5,7 @@
 ^GPATH$
 ^GRTAGS$
 ^GTAGS$
+^LICENSE$
 ^Makefile$
 ^README\.Rmd$
 ^README\.html$

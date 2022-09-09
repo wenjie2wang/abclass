@@ -56,7 +56,7 @@ specify how the new classifier should be trained.}
 }
 \description{
 Tune the regularization parameter for an angle-based large-margin classifier
-by ET-Lasso (Yang, et al., 2019).
+by the ET-Lasso method (Yang, et al., 2019).
 }
 \references{
 Yang, S., Wen, J., Zhan, X., \& Kifer, D. (2019). ET-Lasso: A new efficient

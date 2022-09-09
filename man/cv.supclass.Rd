@@ -2,7 +2,7 @@
 % Please edit documentation in R/cv.supclass.R
 \name{cv.supclass}
 \alias{cv.supclass}
-\title{Tune A Sup-Norm Classifier by Cross-Validation}
+\title{Tune Sup-Norm Classifiers by Cross-Validation}
 \usage{
 cv.supclass(
   x,
