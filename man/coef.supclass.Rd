@@ -4,7 +4,7 @@
 \alias{coef.supclass}
 \title{Coefficient Estimates of A Trained Sup-Norm Classifier}
 \usage{
-\method{coef}{supclass}(object, selection = c("cv_min", "cv_1se", "all"), ...)
+\method{coef}{supclass}(object, selection = c("cv_1se", "cv_min", "all"), ...)
 }
 \arguments{
 \item{object}{An object of class \code{supclass}.}

@@ -14,6 +14,7 @@ cv.abclass(
   nfolds = 5L,
   stratified = TRUE,
   alignment = c("fraction", "lambda"),
+  refit = FALSE,
   ...
 )
 }
@@ -61,6 +62,10 @@ fits to have their own lambda sequences and \code{"lambda"} for using
 the same lambda sequence of the main fit.  The option \code{"lambda"}
 will be applied if a meaningful \code{lambda} is specified.  The default
 value is \code{"fraction"}.}
+
+\item{refit}{A logical value or a named list specifying if and how a refit
+for those selected predictors should be performed.  The default valie is
+\code{FALSE}.}
 
 \item{...}{Other control parameters passed to \code{abclass.control()}.}
 }

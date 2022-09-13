@@ -8,7 +8,7 @@
   object,
   newx,
   type = c("class", "probability"),
-  selection = c("cv_min", "cv_1se", "all"),
+  selection = c("cv_1se", "cv_min", "all"),
   ...
 )
 }

@@ -4,7 +4,7 @@
 \alias{coef.abclass}
 \title{Coefficient Estimates of A Trained Angle-Based Classifier}
 \usage{
-\method{coef}{abclass}(object, selection = c("cv_min", "cv_1se", "all"), ...)
+\method{coef}{abclass}(object, selection = c("cv_1se", "cv_min", "all"), ...)
 }
 \arguments{
 \item{object}{An object of class \code{abclass}.}
