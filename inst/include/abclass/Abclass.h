@@ -245,7 +245,12 @@ namespace abclass
             const arma::vec& group_weight = arma::vec()
             )
         {
-            control_.group_weight_ = gen_group_weight(group_weight);
+            if (group_weight.n_elem > 0) {
+                control_.group_weight_ = gen_group_weight(group_weight);
+            } else {
+                control_.group_weight_ = gen_group_weight(
+                    control_.group_weight_);
+            }
         }
 
         // linear predictor

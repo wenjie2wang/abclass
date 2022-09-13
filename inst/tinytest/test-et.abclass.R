@@ -49,3 +49,23 @@ model1 <- et.abclass(train_x, train_y, nstages = 2,
 expect_equivalent(dim(coef(model1, selection = 10)), c(p + 1, k - 1))
 pred1 <- predict(model1, test_x, s = 10)
 expect_true(mean(test_y == pred1) > 0.5)
+
+## incorrect length of group weights
+expect_error(
+    et.abclass(train_x, train_y, group_weight = runif(ncol(train_x) + 1))
+)
+
+## with refit and group weights
+model1 <- et.abclass(train_x, train_y, nstages = 2,
+                     lambda_min_ratio = 1e-4,
+                     control = list(
+                         grouped = TRUE,
+                         group_weight = runif(ncol(train_x))
+                     ),
+                     refit = list(
+                         alpha = 0
+                     ))
+
+expect_equivalent(dim(coef(model1, selection = 10)), c(p + 1, k - 1))
+pred1 <- predict(model1, test_x, s = 10)
+expect_true(mean(test_y == pred1) > 0.5)

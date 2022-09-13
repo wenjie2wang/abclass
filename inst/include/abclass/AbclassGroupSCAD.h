@@ -392,7 +392,7 @@ namespace abclass
         // set the CMD lowerbound
         set_mm_lowerbound();
         // set group weight
-        set_group_weight(control_.group_weight_);
+        set_group_weight();
         // set gamma
         set_gamma(control_.dgamma_);
         arma::uvec penalty_group { arma::find(control_.group_weight_ > 0.0) };

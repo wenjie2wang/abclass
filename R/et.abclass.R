@@ -80,6 +80,10 @@ et.abclass <- function(x, y,
             refit <- list(lambda = 1e-6)
         }
         idx <- res$et$selected
+        ## inherit the group weights for those selected predictors
+        if (! is.null(res$regularization$group_weight)) {
+            refit$group_weight <- res$regularization$group_weight[idx]
+        }
         refit_control <- modify_list(control, refit)
         args_to_call <- c(
             list(x = x[, idx, drop = FALSE],
