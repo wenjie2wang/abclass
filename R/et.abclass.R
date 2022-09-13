@@ -107,10 +107,11 @@ et.abclass <- function(x, y,
             refit_res$cross_validation <- c(refit_res$cross_validation,
                                             cv_idx_list)
         }
-        res$et$refit <- refit_res[! names(refit_res) %in%
-                                  c("intercept", "weight", "loss", "category")]
+        res$refit <- refit_res[! names(refit_res) %in%
+                               c("intercept", "weight", "loss", "category")]
+        res$refit$selected_coef <- idx
     } else {
-        res$et$refit <- FALSE
+        res$refit <- FALSE
     }
     ## add class
     class_suffix <- if (control$grouped)

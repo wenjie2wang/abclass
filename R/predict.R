@@ -49,7 +49,7 @@
 predict.abclass <- function(object,
                             newx,
                             type = c("class", "probability"),
-                            selection = c("cv_min", "cv_1se", "all"),
+                            selection = c("cv_1se", "cv_min", "all"),
                             ...)
 {
     if (missing(newx)) {
@@ -135,7 +135,7 @@ predict.abclass <- function(object,
 predict.supclass <- function(object,
                              newx,
                              type = c("class", "probability"),
-                             selection = c("cv_min", "cv_1se", "all"),
+                             selection = c("cv_1se", "cv_min", "all"),
                              ...)
 {
     type <- match.arg(type, choices = c("class", "probability"))

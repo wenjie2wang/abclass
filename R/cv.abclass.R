@@ -37,6 +37,9 @@
 ##'     the same lambda sequence of the main fit.  The option \code{"lambda"}
 ##'     will be applied if a meaningful \code{lambda} is specified.  The default
 ##'     value is \code{"fraction"}.
+##' @param refit A logical value or a named list specifying if and how a refit
+##'     for those selected predictors should be performed.  The default valie is
+##'     \code{FALSE}.
 ##'
 ##' @return An S3 object of class \code{cv.abclass}.
 ##'
@@ -49,6 +52,7 @@ cv.abclass <- function(x, y,
                        nfolds = 5L,
                        stratified = TRUE,
                        alignment = c("fraction", "lambda"),
+                       refit = FALSE,
                        ...)
 {
     ## nfolds
@@ -92,6 +96,49 @@ cv.abclass <- function(x, y,
     cv_idx_list <- with(res$cross_validation,
                         select_lambda(cv_accuracy_mean, cv_accuracy_sd))
     res$cross_validation <- c(res$cross_validation, cv_idx_list)
+    ## refit if needed
+    if (! isFALSE(refit)) {
+        if (isTRUE(refit)) {
+            ## default controls
+            refit <- list(lambda = 1e-6)
+        }
+        ## TODO allow selection of min and 1se
+        coef_idx <- res$cross_validation$cv_1se
+        idx <- which(apply(res$coefficients[- 1, , coef_idx] > 0, 1, any))
+        ## inherit the group weights for those selected predictors
+        if (! is.null(res$regularization$group_weight)) {
+            refit$group_weight <- res$regularization$group_weight[idx]
+        }
+        refit_control <- modify_list(control, refit)
+        args_to_call <- c(
+            list(x = x[, idx, drop = FALSE],
+                 y = y,
+                 ## assume intercept, weight, loss are the same with et-lasso
+                 intercept = intercept,
+                 weight = res$weight,
+                 loss = loss2,
+                 nstages = 0,
+                 main_fit = TRUE),
+            refit_control
+        )
+        args_to_call <- args_to_call[
+            names(args_to_call) %in% formal_names(.abclass)
+        ]
+        refit_res <- do.call(.abclass, args_to_call)
+        if (! is.null(refit_res$cross_validation)) {
+            ## add cv idx
+            cv_idx_list <- with(refit_res$cross_validation,
+                                select_lambda(cv_accuracy_mean, cv_accuracy_sd))
+            refit_res$cross_validation <- c(refit_res$cross_validation,
+                                            cv_idx_list)
+        }
+        res$refit <- refit_res[
+            ! names(refit_res) %in% c("intercept", "weight", "loss", "category")
+        ]
+        res$refit$selected_coef <- idx
+    } else {
+        res$refit <- FALSE
+    }
     ## add class
     class_suffix <- if (control$grouped)
                         paste0("_group_", control$group_penalty)

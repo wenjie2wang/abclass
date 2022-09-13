@@ -42,28 +42,27 @@
 ##' @importFrom stats coef
 ##' @export
 coef.abclass <- function(object,
-                         selection = c("cv_min", "cv_1se", "all"),
+                         selection = c("cv_1se", "cv_min", "all"),
                          ...)
 {
-    if (inherits(object, "et.abclass")) {
-        if (isFALSE(object$et$refit)) {
-            return(object$coefficients)
-        } else {
-            tmp <- object$et$refit
-            nlambda <- tmp$coefficients
-            p <- nrow(object$coefficients) - as.integer(object$intercept)
-            dk <- dim(tmp$coefficients)[3L]
-            coef_arr <- array(0, dim = c(dim(object$coefficients), dk))
-            idx <- object$et$selected
-            if (object$intercept) {
-                idx <- c(1L, idx + 1L)
-            }
-            for (k in seq_len(dk)) {
-                coef_arr[idx, , k] <- tmp$coefficients[, , k]
-            }
-            tmp$coefficients <- coef_arr
-            return(coef.abclass(tmp, selection = selection, ...))
+    if (! (is.null(object$refit) || isFALSE(object$refit))) {
+        tmp <- object$refit
+        nlambda <- tmp$coefficients
+        p <- nrow(object$coefficients) - as.integer(object$intercept)
+        dk <- dim(tmp$coefficients)[3L]
+        coef_arr <- array(0, dim = c(dim(object$coefficients)[seq_len(2)], dk))
+        idx <- object$refit$selected_coef
+        if (object$intercept) {
+            idx <- c(1L, idx + 1L)
         }
+        for (k in seq_len(dk)) {
+            coef_arr[idx, , k] <- tmp$coefficients[, , k]
+        }
+        tmp$coefficients <- coef_arr
+        return(coef.abclass(tmp, selection = selection, ...))
+    }
+    if (inherits(object, "et.abclass")) { # refit must be FALSE here
+        return(object$coefficients)
     }
     ## if only one solution
     dim_coef <- dim(object$coefficients)
@@ -82,7 +81,7 @@ coef.abclass <- function(object,
         }
         return(object$coefficients[, , selection])
     }
-    selection <- match.arg(selection, c("cv_min", "cv_1se", "all"))
+    selection <- match.arg(selection, c("cv_1se", "cv_min", "all"))
     if (! length(object$cross_validation$cv_accuracy) || selection == "all") {
         return(object$coefficients)
     }
@@ -119,7 +118,7 @@ coef.abclass <- function(object,
 ##' @importFrom stats coef
 ##' @export
 coef.supclass <- function(object,
-                          selection = c("cv_min", "cv_1se", "all"),
+                          selection = c("cv_1se", "cv_min", "all"),
                           ...)
 {
     ## if only one solution
@@ -139,7 +138,7 @@ coef.supclass <- function(object,
         }
         return(object$coefficients[, , selection])
     }
-    selection <- match.arg(selection, c("cv_min", "cv_1se", "all"))
+    selection <- match.arg(selection, c("cv_1se", "cv_min", "all"))
     ## BIC for logistic model
     bic_vec <- BIC(object)
     if (! is.null(bic_vec)) {

@@ -39,8 +39,36 @@ expect_equivalent(dim(coef(model3, s = 3)), c(p + 1, k - 1))
 
 ## LUM loss
 model4 <- cv.abclass(train_x, train_y, nlambda = 5,
-                     loss = "lum", epsilon = 1e-2,
+                     loss = "lum", epsilon = 1e-3,
                      group_penalty = "mcp")
 pred4 <- predict(model4, test_x, s = "cv_1se")
 expect_true(mean(test_y == pred4) > 0.5)
 expect_equivalent(dim(coef(model4, s = 5)), c(p + 1, k - 1))
+
+## default refit
+model <- cv.abclass(train_x, train_y, nlambda = 5, refit = TRUE)
+expect_equivalent(dim(coef(model)), c(p + 1, k - 1))
+pred <- predict(model, test_x)
+expect_true(mean(test_y == pred) > 0.5)
+
+## refit with cross-validation
+model <- cv.abclass(train_x, train_y,
+                    nlambda = 5,
+                    refit = list(nfolds = 5,
+                                 nlambda = 5,
+                                 lambda_min_ratio = 1e-4,
+                                 alpha = 0)
+                    )
+
+## cv_1se (by default)
+expect_equivalent(dim(coef(model)), c(p + 1, k - 1))
+pred <- predict(model, test_x)
+expect_true(mean(test_y == pred) > 0.5)
+
+## cv_min
+expect_equivalent(dim(coef(model, s = "cv_min")), c(p + 1, k - 1))
+pred <- predict(model, test_x, s = "cv_min")
+expect_true(mean(test_y == pred) > 0.5)
+
+## all
+expect_equivalent(dim(coef(model, s = "all")), c(p + 1, k - 1, 5))
