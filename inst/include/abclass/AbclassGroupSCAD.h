@@ -133,7 +133,7 @@ namespace abclass
         using AbclassGroup<T_loss, T_x>::n_obs_;
         using AbclassGroup<T_loss, T_x>::p0_;
         using AbclassGroup<T_loss, T_x>::p1_;
-        using AbclassGroup<T_loss, T_x>::vertex_;
+        using AbclassGroup<T_loss, T_x>::ex_vertex_;
         using AbclassGroup<T_loss, T_x>::x_;
         using AbclassGroup<T_loss, T_x>::y_;
         using AbclassGroup<T_loss, T_x>::et_npermuted_;
@@ -200,10 +200,8 @@ namespace abclass
                 - mm_gradient0(inner) / mm_lowerbound0_
             };
             beta.row(0) += delta_beta0;
-            arma::vec tmp_du { vertex_ * delta_beta0.t() };
-            for (size_t i { 0 }; i < n_obs_; ++i) {
-                inner[i] += tmp_du(y_[i]);
-            }
+            arma::vec tmp_du { ex_vertex_ * delta_beta0.t() };
+            inner += tmp_du;
         }
         // for predictors
         for (size_t j {0}; j < p0_; ++j) {
@@ -243,10 +241,8 @@ namespace abclass
                 }
             }
             arma::rowvec delta_beta_j { (beta.row(j1) - old_beta_j) };
-            arma::vec delta_vj { vertex_ * delta_beta_j.t() };
-            for (size_t i {0}; i < n_obs_; ++i) {
-                inner(i) += x_(i, j) * delta_vj(y_[i]);
-            }
+            arma::vec delta_vj { ex_vertex_ * delta_beta_j.t() };
+            inner += x_.col(j) % delta_vj;
             if (update_active) {
                 // check if it has been shrinkaged to zero
                 if (l1_norm(beta.row(j1)) > 0.0) {

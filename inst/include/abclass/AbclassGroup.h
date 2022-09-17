@@ -41,22 +41,18 @@ namespace abclass
                                         const unsigned int j) const
         {
             arma::vec inner_grad { loss_derivative(inner) };
-            arma::rowvec out { arma::zeros<arma::rowvec>(km1_) };
-            for (size_t i {0}; i < n_obs_; ++i) {
-                out += control_.obs_weight_[i] * inner_grad[i] * x_(i, j) *
-                    vertex_.row(y_[i]);
-            }
+            arma::vec tmp_vec {
+                x_.col(j) % control_.obs_weight_ % inner_grad
+            };
+            arma::rowvec out { tmp_vec.t() * ex_vertex_ };
             return out / dn_obs_;
         }
         // for intercept
         inline arma::rowvec mm_gradient0(const arma::vec& inner) const
         {
             arma::vec inner_grad { loss_derivative(inner) };
-            arma::rowvec out { arma::zeros<arma::rowvec>(km1_) };
-            for (size_t i {0}; i < n_obs_; ++i) {
-                out += control_.obs_weight_[i] * inner_grad[i] *
-                    vertex_.row(y_[i]);
-            }
+            arma::vec tmp_vec { control_.obs_weight_ % inner_grad };
+            arma::rowvec out { tmp_vec.t() * ex_vertex_ };
             return out / dn_obs_;
         }
 
@@ -66,11 +62,10 @@ namespace abclass
             arma::mat out { arma::zeros(p0_, km1_) };
             arma::vec inner_grad { loss_derivative(inner) };
             for (size_t j {0}; j < p0_; ++j) {
-                arma::rowvec tmp { arma::zeros<arma::rowvec>(km1_) };
-                for (size_t i {0}; i < n_obs_; ++i) {
-                    tmp += control_.obs_weight_[i] * inner_grad[i] * x_(i, j) *
-                        vertex_.row(y_[i]);
-                }
+                arma::vec tmp_vec {
+                    x_.col(j) % control_.obs_weight_ % inner_grad
+                };
+                arma::rowvec tmp { tmp_vec.t() * ex_vertex_ };
                 out.row(j) = tmp;
             }
             return out / dn_obs_;
@@ -84,7 +79,7 @@ namespace abclass
         using Abclass<T_loss, T_x>::p0_;
         using Abclass<T_loss, T_x>::x_;
         using Abclass<T_loss, T_x>::y_;
-        using Abclass<T_loss, T_x>::vertex_;
+        using Abclass<T_loss, T_x>::ex_vertex_;
         using Abclass<T_loss, T_x>::et_npermuted_;
         using Abclass<T_loss, T_x>::coef_;
 

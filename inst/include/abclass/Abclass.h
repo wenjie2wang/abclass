@@ -47,12 +47,20 @@ namespace abclass
             Simplex sim { k };
             vertex_ = sim.get_vertex();
         }
+        inline void set_ex_vertex_matrix()
+        {
+            ex_vertex_ = arma::mat(n_obs_, km1_);
+            for (size_t i {0}; i < n_obs_; ++i) {
+                ex_vertex_.row(i) = vertex_.row(y_[i]);
+            }
+        }
 
         inline arma::vec get_vertex_y(const unsigned int j) const
         {
             // j in {0, 1, ..., k - 2}
-            arma::vec vj { vertex_.col(j) };
-            return vj.elem(y_);
+            // arma::vec vj { vertex_.col(j) };
+            // return vj.elem(y_);
+            return ex_vertex_.col(j);
         }
 
         // transfer coef for standardized data to coef for non-standardized data
@@ -130,9 +138,10 @@ namespace abclass
         unsigned int k_;        // number of categories
         unsigned int p0_;       // number of predictors without intercept
         unsigned int p1_;       // number of predictors (with intercept)
-        T_x x_;                 // (standardized) x_: n by p (with intercept)
+        T_x x_;                 // (standardized) x_: n by p (without intercept)
         arma::uvec y_;          // y vector ranging in {0, ..., k - 1}
         arma::mat vertex_;      // unique vertex: k by (k - 1)
+        arma::mat ex_vertex_;   // expanded vertex for y_: n by (k - 1)
         arma::rowvec x_center_; // the column center of x_
         arma::rowvec x_scale_;  // the column scale of x_
 
@@ -185,11 +194,12 @@ namespace abclass
             inter_ = static_cast<unsigned int>(control_.intercept_);
             km1_ = arma::max(y_); // assume y in {0, ..., k-1}
             k_ = km1_ + 1;
-            set_vertex_matrix(k_);
             n_obs_ = x_.n_rows;
             dn_obs_ = static_cast<double>(n_obs_);
             p0_ = x_.n_cols;
             p1_ = p0_ + inter_;
+            set_vertex_matrix(k_);
+            set_ex_vertex_matrix();
             if (control_.standardize_) {
                 if (control_.intercept_) {
                     x_center_ = arma::mean(x_);
