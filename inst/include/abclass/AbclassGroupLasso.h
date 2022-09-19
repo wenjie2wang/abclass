@@ -450,13 +450,21 @@ namespace abclass
                     msg("Checking the KKT condition for the null set.");
                 }
                 // check kkt condition
+                // cache some variables inside of mm_gradient
+                arma::vec tmp_vec;
+                if (penalty_group.n_elem > 0) {
+                    const arma::vec inner_grad = loss_derivative(one_inner);
+                    tmp_vec = control_.obs_weight_ % inner_grad;
+                }
                 for (arma::uvec::iterator it { penalty_group.begin() };
                      it != penalty_group.end(); ++it) {
                     if (is_active_strong_old(*it) > 0) {
                         continue;
                     }
-                    if (l2_norm(mm_gradient(one_inner, *it)) >
-                        one_strong_rhs * control_.group_weight_(*it)) {
+                    arma::vec tmp_vec_it { x_.col(*it) % tmp_vec };
+                    arma::rowvec tmp_mm_grad { tmp_vec_it.t() * ex_vertex_ };
+                    double tmp_l2 { l2_norm(tmp_mm_grad) / dn_obs_ };
+                    if (tmp_l2 > one_strong_rhs * control_.group_weight_(*it)) {
                         // update active set
                         is_strong_rule_failed(*it) = 1;
                     }

@@ -371,7 +371,7 @@ namespace abclass
             // others
             for (size_t l { 0 }; l < p0_; ++l) {
                 size_t l1 { l + inter_ };
-                arma::vec vj_xl { v_j % x_.col(l) };
+                arma::vec vj_xl { x_.col(l) % v_j };
                 double dlj { mm_gradient(inner, vj_xl) };
                 double tmp { beta(l1, j) };
                 // if cmd_lowerbound = 0 and l1_lambda > 0, numer will be 0
@@ -572,15 +572,18 @@ namespace abclass
                     msg("Checking the KKT condition for the null set.");
                 }
                 // check kkt condition
-                for (size_t j { 0 }; j < km1_; ++j) {
-                    arma::vec v_j { get_vertex_y(j) };
-                    for (size_t l { 0 }; l < p0_; ++l) {
+                const arma::vec inner_grad {
+                    control_.obs_weight_ % loss_derivative(one_inner)
+                };
+                for (size_t l { 0 }; l < p0_; ++l) {
+                    arma::vec x_l { x_.col(l) };
+                    for (size_t j { 0 }; j < km1_; ++j) {
                         if (is_active_strong_old(l, j) > 0) {
                             continue;
                         }
-                        arma::vec vj_xl { v_j % x_.col(l) };
-                        if (std::abs(mm_gradient(one_inner, vj_xl)) >
-                            one_strong_rhs) {
+                        arma::vec vj_xl { x_l % get_vertex_y(j) };
+                        double tmp { arma::mean(vj_xl % inner_grad) };
+                        if (std::abs(tmp) > one_strong_rhs) {
                             // update active set
                             is_strong_rule_failed(l, j) = 1;
                         }
