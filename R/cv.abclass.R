@@ -75,6 +75,12 @@ cv.abclass <- function(x, y,
     ## controls
     dot_list <- list(...)
     control <- do.call(abclass.control, modify_list(control, dot_list))
+    ## adjust lambda alignment
+    if (alignment == 0L && length(control$lambda) > 0) {
+        warning("Changed to `alignment` = 'lambda'",
+                " for the specified lambda sequence.")
+        alignment <- 1L
+    }
     ## prepare arguments
     args_to_call <- c(
         list(x = x,

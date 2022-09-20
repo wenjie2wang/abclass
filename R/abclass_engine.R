@@ -85,6 +85,11 @@
         nstages = as.integer(nstages),
         main_fit = main_fit
     )
+    ## adjust lambda alignment
+    if (default_args_to_call$alignment == 0L &&
+        length(default_args_to_call$lambda) > 0) {
+        default_args_to_call$alignment <- 1L
+    }
     fun_to_call <- if (grouped) {
                        sprintf("r_%s_g%s", loss, group_penalty)
                    } else {
