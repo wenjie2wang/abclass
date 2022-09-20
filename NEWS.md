@@ -1,6 +1,10 @@
-# abclass 0.4.1.9000
+# abclass 0.4.1.9010
 
-## TODO
+## Minor changes
+
+* Changed the default `alignment` to `lambda` for `cv.abclass()` and `refit` in
+  `et.abclass()` if a sequence of lambda's is specified.  A warning message
+  would be thrown out for the former.
 
 
 # abclass 0.4.0
