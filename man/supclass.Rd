@@ -22,9 +22,10 @@ supclass.control(
   maxit = 50,
   epsilon = 1e-04,
   shrinkage = 1e-04,
+  ridge_lambda = 1,
   warm_start = TRUE,
   standardize = TRUE,
-  verbose = 0L,
+  Rglpk = list(verbose = TRUE, tm_limit = 6e+05),
   ...
 )
 }
@@ -82,9 +83,10 @@ determines convergence.  The default value is \code{1e-4}.}
 
 \item{shrinkage}{A nonnegative tolerance to shrink estimates with sup-norm
 close enough to zero (within the specified tolerance) to zeros.  The
-default value is \code{1e-4}.  ## @param ridge_lambda The tuning
-parameter lambda of the ridge penalty used to ## set the (first set of)
-starting values.}
+default value is \code{1e-4}.}
+
+\item{ridge_lambda}{TODO The tuning parameter lambda of the ridge penalty
+used to set the starting values for multinomial logistic models.}
 
 \item{warm_start}{A logical value indicating if the estimates from last
 lambda should be used as the starting values for the next lambda.  If
@@ -94,9 +96,8 @@ lambda should be used as the starting values for the next lambda.  If
 should be performed so that each column of the design matrix has mean
 zero and standardization}
 
-\item{verbose}{A nonnegative integer specifying if the estimation procedure
-is allowed to print out intermediate steps/results.  The default value
-is \code{0} for silent estimation procedure.}
+\item{Rglpk}{A named list that consists of control parameters passed to
+\code{Rglpk_solve_LP()}.}
 }
 \description{
 Experimental implementations of multi-category classifiers with sup-norm

@@ -167,7 +167,7 @@ supclass <- function(x, y,
                  c("lambda", "scad_a")
              }
     ctrls <- c("maxit", "epsilon", "shrinkage", "warm_start",
-               "standardize", "verbose")
+               "standardize", "Rglpk")
     structure(list(
         coefficients = beta,
         category = cat_y,
@@ -202,16 +202,17 @@ supclass <- function(x, y,
 ##'     The default value is \code{50} as suggested in Li & Zhang (2021).
 ##' @param shrinkage A nonnegative tolerance to shrink estimates with sup-norm
 ##'     close enough to zero (within the specified tolerance) to zeros.  The
-##'     default value is \code{1e-4}.  ## @param ridge_lambda The tuning
-##'     parameter lambda of the ridge penalty used to ## set the (first set of)
-##'     starting values.
+##'     default value is \code{1e-4}.
+##' @param ridge_lambda TODO The tuning parameter lambda of the ridge penalty
+##'     used to set the starting values for multinomial logistic models.
 ##' @param warm_start A logical value indicating if the estimates from last
 ##'     lambda should be used as the starting values for the next lambda.  If
 ##'     \code{FALSE}, the user-specified starting values will be used instead.
 ##' @param standardize A logical value indicating if a standardization procedure
 ##'     should be performed so that each column of the design matrix has mean
 ##'     zero and standardization
-##'
+##' @param Rglpk A named list that consists of control parameters passed to
+##'     \code{Rglpk_solve_LP()}.
 ##' @export
 supclass.control <- function(lambda = 0.1,
                              adaptive_weight = NULL,
@@ -219,10 +220,13 @@ supclass.control <- function(lambda = 0.1,
                              maxit = 50,
                              epsilon = 1e-4,
                              shrinkage = 1e-4,
-                             ## ridge_lambda = 1e-4,
+                             ridge_lambda = 1,
                              warm_start = TRUE,
                              standardize = TRUE,
-                             verbose = 0L,
+                             Rglpk = list(
+                                 verbose = TRUE,
+                                 tm_limit = 6e5
+                             ),
                              ...)
 {
     structure(list(
@@ -234,7 +238,7 @@ supclass.control <- function(lambda = 0.1,
         shrinkage = shrinkage,
         warm_start = warm_start,
         standardize = standardize,
-        verbose = verbose
+        Rglpk = Rglpk
     ), class = "supclass.control")
 }
 
@@ -749,10 +753,7 @@ supclass_msvm <- function(x, y, penalty, start, control)
                                               val = - rep(Inf, ppK)
                                           )
                                       ),
-                                      control = list(
-                                          verbose = control$verbose
-                                          ## presolve = TRUE
-                                      ))
+                                      control = control$Rglpk)
                 ## Rsymphony::Rsymphony_solve_LP(
                 ##                obj = objective_in,
                 ##                mat = Amat,
@@ -795,10 +796,7 @@ supclass_msvm <- function(x, y, penalty, start, control)
                                                   val = - rep(Inf, ppK)
                                               )
                                           ),
-                                          control = list(
-                                              verbose = control$verbose,
-                                              presolver = TRUE
-                                          )),
+                                          control = control$Rglpk),
                     error = function(e) e
                 )
                 if (inherits(lres, "error")) {
