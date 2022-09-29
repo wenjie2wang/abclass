@@ -42,7 +42,7 @@ namespace abclass
         arma::vec group_weight_ { arma::vec() }; // adaptive group weights
         //   group {scad,mcp}
         double dgamma_ { 0.01 }; // delta gamma
-        double gamma_ { - 1.0 }; // gamma for group ncv penalty
+        double gamma_ { - 1.0 }; // gamma for group non-convex penalty
 
         // tuning
         //   cross-validation

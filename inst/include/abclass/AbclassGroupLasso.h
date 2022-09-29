@@ -175,7 +175,6 @@ namespace abclass
                 continue;
             }
             const size_t j1 { j + inter_ };
-            const arma::rowvec old_beta_j { beta.row(j1) };
             const double mj { mm_lowerbound_(j) };
             // early exit for zero mj from constant columns
             if (isAlmostEqual(mj, 0.0)) {
@@ -183,8 +182,9 @@ namespace abclass
                 is_active(j) = 0;
                 continue;
             }
+            const arma::rowvec old_beta_j { beta.row(j1) };
             const arma::rowvec uj {
-                - mm_gradient(inner, j) + mj * beta.row(j1)
+                - mm_gradient(inner, j) + mj * old_beta_j
             };
             const double lambda_j { lambda * control_.group_weight_(j) };
             const double pos_part { 1 - lambda_j / l2_norm(uj) };
