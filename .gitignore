@@ -5,6 +5,7 @@
 *~
 .Rhistory
 .clang_complete
+.clangd
 GPATH
 GRTAGS
 GTAGS

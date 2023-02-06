@@ -17,6 +17,7 @@
 ^\.Rproj\.user$
 ^\.\#
 ^\.clang_complete$
+^\.clangd$
 ^\.dir-locals\.el$
 ^\.git$
 ^\.github$
