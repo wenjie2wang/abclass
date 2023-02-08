@@ -1,6 +1,6 @@
 Package: abclass
 Title: Angle-Based Large-Margin Classifiers
-Version: 0.4.1.9010
+Version: 0.4.1.9020
 Authors@R: c(
     person(given = "Wenjie", family = "Wang",
            email = "wang@wwenjie.org",

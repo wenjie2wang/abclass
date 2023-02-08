@@ -69,12 +69,12 @@ namespace abclass
             arma::mat out { beta };
             if (control_.standardize_) {
                 if (control_.intercept_) {
+                    arma::rowvec tmp_row { x_center_ / x_scale_ };
                     // for each columns
                     for (size_t k { 0 }; k < km1_; ++k) {
                         arma::vec coef_k { beta.col(k) };
                         out(0, k) = beta(0, k) -
-                            arma::as_scalar((x_center_ / x_scale_) *
-                                            coef_k.tail_rows(p0_));
+                            arma::dot(tmp_row, coef_k.tail_rows(p0_));
                         for (size_t l { 1 }; l < p1_; ++l) {
                             out(l, k) = coef_k(l) / x_scale_(l - 1);
                         }
