@@ -65,7 +65,7 @@ test_y <- y[- train_idx]
 ### logistic deviance loss with elastic-net penalty
 model1 <- cv.abclass(train_x, train_y, nlambda = 100, nfolds = 3,
                      grouped = FALSE, loss = "logistic")
-pred1 <- predict(model1, test_x, s = "cv_min")
+pred1 <- predict(model1, test_x, selection = "cv_min")
 table(test_y, pred1)
 ```
 
@@ -87,7 +87,7 @@ mean(test_y == pred1) # accuracy
 ### hinge-boost loss with groupwise lasso
 model2 <- cv.abclass(train_x, train_y, nlambda = 100, nfolds = 3,
                      grouped = TRUE, loss = "hinge-boost")
-pred2 <- predict(model2, test_x, s = "cv_1se")
+pred2 <- predict(model2, test_x, selection = "cv_1se")
 table(test_y, pred2)
 ```
 
@@ -129,11 +129,11 @@ mean(test_y == pred3) # accuracy
 
 ## References
 
--   Zhang, C., & Liu, Y. (2014). Multicategory Angle-Based Large-Margin
-    Classification. *Biometrika*, 101(3), 625–640.
--   Liu, Y., Zhang, H. H., & Wu, Y. (2011). Hard or soft classification?
-    large-margin unified machines. *Journal of the American Statistical
-    Association*, 106(493), 166–177.
+- Zhang, C., & Liu, Y. (2014). Multicategory Angle-Based Large-Margin
+  Classification. *Biometrika*, 101(3), 625–640.
+- Liu, Y., Zhang, H. H., & Wu, Y. (2011). Hard or soft classification?
+  large-margin unified machines. *Journal of the American Statistical
+  Association*, 106(493), 166–177.
 
 ## License
 
