@@ -18,6 +18,10 @@
 #ifndef ABCLASS_H
 #define ABCLASS_H
 
+#ifndef ARMA_NO_DEBUG
+#define ARMA_NO_DEBUG
+#endif
+
 // class
 #include "abclass/Abclass.h"
 #include "abclass/AbclassGroup.h"
