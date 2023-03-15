@@ -18,100 +18,120 @@
 #include <RcppArmadillo.h>
 #include <abclass.h>
 
-template <typename T_loss, typename T_x>
-arma::mat predict_prob(const arma::mat& beta, const T_x& x)
+template <typename T_x>
+arma::mat predict_prob(const T_x& x,
+                       const arma::mat& beta,
+                       const size_t loss_id,
+                       const Rcpp::List& loss_params)
 {
     const unsigned int k { beta.n_cols + 1 };
-    abclass::Abclass<T_loss, T_x> object { k };
-    object.set_intercept(beta.n_rows > x.n_cols);
-    return object.predict_prob(beta, x);
+    switch (loss_id) {
+        case 1:
+        {
+            abclass::Abclass<abclass::Logistic, T_x> object { k };
+            object.set_intercept(beta.n_rows > x.n_cols);
+            return object.predict_prob(beta, x);
+        }
+        case 2:
+        {
+            abclass::Abclass<abclass::Boost, T_x> object { k };
+            object.loss_.set_inner_min(loss_params["boost_umin"]);
+            object.set_intercept(beta.n_rows > x.n_cols);
+            return object.predict_prob(beta, x);
+        }
+        case 3:
+        {
+            abclass::Abclass<abclass::HingeBoost, T_x> object { k };
+            object.loss_.set_c(loss_params["lum_c"]);
+            object.set_intercept(beta.n_rows > x.n_cols);
+            return object.predict_prob(beta, x);
+        }
+        case 4:
+        {
+            abclass::Abclass<abclass::Lum, T_x> object { k };
+            object.loss_.set_ac(loss_params["lum_a"], loss_params["lum_c"]);
+            object.set_intercept(beta.n_rows > x.n_cols);
+            return object.predict_prob(beta, x);
+        }
+        default:
+            break;
+    }
+    return arma::mat();
 }
 
-template <typename T_loss, typename T_x>
-arma::uvec predict_y(const arma::mat& beta, const T_x& x)
+template <typename T_x>
+arma::uvec predict_y(const T_x& x,
+                     const arma::mat& beta,
+                     const size_t loss_id,
+                     const Rcpp::List& loss_params)
 {
     const unsigned int k { beta.n_cols + 1 };
-    abclass::Abclass<T_loss, T_x> object { k };
-    object.set_intercept(beta.n_rows > x.n_cols);
-    return object.predict_y(beta, x);
+    switch (loss_id) {
+        case 1:
+        {
+            abclass::Abclass<abclass::Logistic, T_x> object { k };
+            object.set_intercept(beta.n_rows > x.n_cols);
+            return object.predict_y(beta, x);
+        }
+        case 2:
+        {
+            abclass::Abclass<abclass::Boost, T_x> object { k };
+            object.loss_.set_inner_min(loss_params["boost_umin"]);
+            object.set_intercept(beta.n_rows > x.n_cols);
+            return object.predict_y(beta, x);
+        }
+        case 3:
+        {
+            abclass::Abclass<abclass::HingeBoost, T_x> object { k };
+            object.loss_.set_c(loss_params["lum_c"]);
+            object.set_intercept(beta.n_rows > x.n_cols);
+            return object.predict_y(beta, x);
+        }
+        case 4:
+        {
+            abclass::Abclass<abclass::Lum, T_x> object { k };
+            object.loss_.set_ac(loss_params["lum_a"], loss_params["lum_c"]);
+            object.set_intercept(beta.n_rows > x.n_cols);
+            return object.predict_y(beta, x);
+        }
+        default:
+            break;
+    }
+    return arma::uvec();
 }
 
 // [[Rcpp::export]]
 arma::mat rcpp_pred_prob(const arma::mat& beta,
                          const arma::mat& x,
-                         const size_t loss_id)
+                         const size_t loss_id,
+                         const Rcpp::List& loss_params)
 {
-    switch (loss_id) {
-        case 1:
-            return predict_prob<abclass::Logistic, arma::mat>(beta, x);
-        case 2:
-            return predict_prob<abclass::Boost, arma::mat>(beta, x);
-        case 3:
-            return predict_prob<abclass::HingeBoost, arma::mat>(beta, x);
-        case 4:
-            return predict_prob<abclass::Lum, arma::mat>(beta, x);
-        default:
-            break;
-    }
-    return arma::mat();
+    return predict_prob(x, beta, loss_id, loss_params);
 }
 
 // [[Rcpp::export]]
 arma::mat rcpp_pred_prob_sp(const arma::mat& beta,
                             const arma::sp_mat& x,
-                            const size_t loss_id)
+                            const size_t loss_id,
+                            const Rcpp::List& loss_params)
 {
-    switch (loss_id) {
-        case 1:
-            return predict_prob<abclass::Logistic, arma::sp_mat>(beta, x);
-        case 2:
-            return predict_prob<abclass::Boost, arma::sp_mat>(beta, x);
-        case 3:
-            return predict_prob<abclass::HingeBoost, arma::sp_mat>(beta, x);
-        case 4:
-            return predict_prob<abclass::Lum, arma::sp_mat>(beta, x);
-        default:
-            break;
-    }
-    return arma::mat();
+    return predict_prob(x, beta, loss_id, loss_params);
 }
 
 // [[Rcpp::export]]
 arma::uvec rcpp_pred_y(const arma::mat& beta,
                        const arma::mat& x,
-                       const size_t loss_id)
+                       const size_t loss_id,
+                       const Rcpp::List& loss_params)
 {
-    switch (loss_id) {
-        case 1:
-            return predict_y<abclass::Logistic, arma::mat>(beta, x);
-        case 2:
-            return predict_y<abclass::Boost, arma::mat>(beta, x);
-        case 3:
-            return predict_y<abclass::HingeBoost, arma::mat>(beta, x);
-        case 4:
-            return predict_y<abclass::Lum, arma::mat>(beta, x);
-        default:
-            break;
-    }
-    return arma::uvec();
+    return predict_y(x, beta, loss_id, loss_params);
 }
 
 // [[Rcpp::export]]
 arma::uvec rcpp_pred_y_sp(const arma::mat& beta,
                           const arma::sp_mat& x,
-                          const size_t loss_id)
+                          const size_t loss_id,
+                          const Rcpp::List& loss_params)
 {
-    switch (loss_id) {
-        case 1:
-            return predict_y<abclass::Logistic, arma::sp_mat>(beta, x);
-        case 2:
-            return predict_y<abclass::Boost, arma::sp_mat>(beta, x);
-        case 3:
-            return predict_y<abclass::HingeBoost, arma::sp_mat>(beta, x);
-        case 4:
-            return predict_y<abclass::Lum, arma::sp_mat>(beta, x);
-        default:
-            break;
-    }
-    return arma::uvec();
+    return predict_y(x, beta, loss_id, loss_params);
 }

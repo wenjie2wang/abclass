@@ -64,13 +64,14 @@ predict.abclass <- function(object,
     type <- match.arg(type, c("class", "probability"))
     res_coef <- coef(object, selection = selection)
     loss_id <- match(object$loss, c("logistic", "boost", "hinge-boost", "lum"))
+    loss_params <- object$control[c("boost_umin", "lum_a", "lum_c")]
     predict_prob_fun <- "rcpp_pred_prob"
     predict_class_fun <- "rcpp_pred_y"
     if (is_x_sparse) {
         predict_prob_fun <- paste0(predict_prob_fun, "_sp")
         predict_class_fun <- paste0(predict_class_fun, "_sp")
     }
-    arg_list <- list(x = newx, loss_id = loss_id)
+    arg_list <- list(x = newx, loss_id = loss_id, loss_params = loss_params)
     if (is.matrix(res_coef)) {
         arg_list$beta <- res_coef
         out <- switch(
