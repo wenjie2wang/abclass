@@ -70,30 +70,18 @@ abclass <- function(x, y,
 {
     all_loss <- c("logistic", "boost", "hinge-boost", "lum")
     loss <- match.arg(as.character(loss), choices = all_loss)
-    loss2 <- gsub("-", "_", loss, fixed = TRUE)
     ## controls
     dot_list <- list(...)
     control <- do.call(abclass.control, modify_list(control, dot_list))
-    ## prepare arguments
-    args_to_call <- c(
-        list(x = x,
-             y = y,
-             intercept = intercept,
-             weight = null2num0(weight),
-             loss = loss2),
-        control
+    res <- .abclass(
+        x = x,
+        y = y,
+        intercept = intercept,
+        weight = null2num0(weight),
+        loss = loss,
+        control = control
     )
-    args_to_call <- args_to_call[
-        names(args_to_call) %in% formal_names(.abclass)
-    ]
-    res <- do.call(.abclass, args_to_call)
-    ## post-process
-    class_suffix <- if (control$grouped)
-                        paste0("_group_", control$group_penalty)
-                    else
-                        "_net"
-    res_cls <- paste0(loss2, class_suffix)
-    class(res) <- c(res_cls, "abclass")
+    class(res) <- c("abclass_path", "abclass")
     ## return
     res
 }
@@ -168,25 +156,28 @@ abclass.control <- function(lambda = NULL,
                             verbose = 0L,
                             ...)
 {
-    if (grouped) {
-        group_penalty <- match.arg(
-            as.character(group_penalty),
-            choices = c("lasso", "scad", "mcp")
-        )
-    }
+    group_penalty <-
+        if (grouped) {
+            match.arg(
+                as.character(group_penalty),
+                choices = c("lasso", "scad", "mcp")
+            )
+        } else {
+            NULL
+        }
     structure(list(
         alpha = alpha,
         lambda = null2num0(lambda),
-        nlambda = nlambda,
+        nlambda = as.integer(nlambda),
         lambda_min_ratio = lambda_min_ratio,
         grouped = grouped,
         group_penalty = group_penalty,
         group_weight = null2num0(group_weight),
         standardize = standardize,
-        maxit = maxit,
+        maxit = as.integer(maxit),
         epsilon = epsilon,
         varying_active_set = varying_active_set,
-        verbose = verbose,
+        verbose = as.integer(verbose),
         boost_umin = boost_umin,
         lum_a = lum_a,
         lum_c = lum_c,

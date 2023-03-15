@@ -71,7 +71,6 @@ cv.abclass <- function(x, y,
     ## loss
     all_loss <- c("logistic", "boost", "hinge-boost", "lum")
     loss <- match.arg(loss, choices = all_loss)
-    loss2 <- gsub("-", "_", loss, fixed = TRUE)
     ## controls
     dot_list <- list(...)
     control <- do.call(abclass.control, modify_list(control, dot_list))
@@ -82,22 +81,15 @@ cv.abclass <- function(x, y,
         alignment <- 1L
     }
     ## prepare arguments
-    args_to_call <- c(
-        list(x = x,
-             y = y,
-             intercept = intercept,
-             weight = null2num0(weight),
-             loss = loss2,
-             nfolds = nfolds,
-             stratified = stratified,
-             alignment = alignment,
-             main_fit = TRUE),
-        control
-    )
-    args_to_call <- args_to_call[
-        names(args_to_call) %in% formal_names(.abclass)
-    ]
-    res <- do.call(.abclass, args_to_call)
+    res <- .abclass(x = x,
+                    y = y,
+                    intercept = intercept,
+                    weight = null2num0(weight),
+                    loss = loss,
+                    control = control,
+                    nfolds = nfolds,
+                    stratified = stratified,
+                    alignment = alignment)
     ## add cv idx
     cv_idx_list <- with(res$cross_validation,
                         select_lambda(cv_accuracy_mean, cv_accuracy_sd))
@@ -116,21 +108,18 @@ cv.abclass <- function(x, y,
             refit$group_weight <- res$regularization$group_weight[idx]
         }
         refit_control <- modify_list(control, refit)
-        args_to_call <- c(
-            list(x = x[, idx, drop = FALSE],
-                 y = y,
-                 ## assume intercept, weight, loss are the same with et-lasso
-                 intercept = intercept,
-                 weight = res$weight,
-                 loss = loss2,
-                 nstages = 0,
-                 main_fit = TRUE),
-            refit_control
+        refit_res <- .abclass(
+            x = x[, idx, drop = FALSE],
+            y = y,
+            ## assume intercept, weight, loss are the same with
+            intercept = intercept,
+            weight = res$weight,
+            loss = loss,
+            control = refit_control,
+            nfolds = null0(refit$nfolds),
+            stratified = ! isFALSE(refit$straitified),
+            nstages = null0(refit$nstages)
         )
-        args_to_call <- args_to_call[
-            names(args_to_call) %in% formal_names(.abclass)
-        ]
-        refit_res <- do.call(.abclass, args_to_call)
         if (! is.null(refit_res$cross_validation)) {
             ## add cv idx
             cv_idx_list <- with(refit_res$cross_validation,
@@ -146,12 +135,7 @@ cv.abclass <- function(x, y,
         res$refit <- FALSE
     }
     ## add class
-    class_suffix <- if (control$grouped)
-                        paste0("_group_", control$group_penalty)
-                    else
-                        "_net"
-    res_cls <- paste0(loss2, class_suffix)
-    class(res) <- c(res_cls, "cv.abclass", "abclass")
+    class(res) <- c("cv.abclass", "abclass")
     ## return
     res
 }

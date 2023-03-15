@@ -50,6 +50,14 @@ null2mat0 <- function(x) {
     x
 }
 
+## return 0 if null, x otherwise
+null0 <- function(x) {
+    if (is.null(x)) {
+        return(0)
+    }
+    x
+}
+
 ## select lambda's from the solution path
 select_lambda <- function(cv_mean, cv_sd) {
     ## the cv_mean and cv_sd correspond to the decreasing lambda sequence
