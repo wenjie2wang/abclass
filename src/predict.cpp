@@ -36,106 +36,82 @@ arma::uvec predict_y(const arma::mat& beta, const T_x& x)
     return object.predict_y(beta, x);
 }
 
-// logistic ==================================================================
 // [[Rcpp::export]]
-arma::mat r_logistic_pred_prob(const arma::mat& beta,
-                                  const arma::mat& x)
+arma::mat rcpp_pred_prob(const arma::mat& beta,
+                         const arma::mat& x,
+                         const size_t loss_id)
 {
-    return predict_prob<abclass::Logistic, arma::mat>(beta, x);
-}
-// [[Rcpp::export]]
-arma::mat r_logistic_pred_prob_sp(const arma::mat& beta,
-                                  const arma::sp_mat& x)
-{
-    return predict_prob<abclass::Logistic, arma::sp_mat>(beta, x);
-}
-// [[Rcpp::export]]
-arma::uvec r_logistic_pred_y(const arma::mat& beta,
-                             const arma::mat& x)
-{
-    return predict_y<abclass::Logistic, arma::mat>(beta, x);
-}
-// [[Rcpp::export]]
-arma::uvec r_logistic_pred_y_sp(const arma::mat& beta,
-                                const arma::sp_mat& x)
-{
-    return predict_y<abclass::Logistic, arma::sp_mat>(beta, x);
+    switch (loss_id) {
+        case 1:
+            return predict_prob<abclass::Logistic, arma::mat>(beta, x);
+        case 2:
+            return predict_prob<abclass::Boost, arma::mat>(beta, x);
+        case 3:
+            return predict_prob<abclass::HingeBoost, arma::mat>(beta, x);
+        case 4:
+            return predict_prob<abclass::Lum, arma::mat>(beta, x);
+        default:
+            break;
+    }
+    return arma::mat();
 }
 
-// boost =====================================================================
 // [[Rcpp::export]]
-arma::mat r_boost_pred_prob(const arma::mat& beta,
-                            const arma::mat& x)
+arma::mat rcpp_pred_prob_sp(const arma::mat& beta,
+                            const arma::sp_mat& x,
+                            const size_t loss_id)
 {
-    return predict_prob<abclass::Boost, arma::mat>(beta, x);
-}
-// [[Rcpp::export]]
-arma::mat r_boost_pred_prob_sp(const arma::mat& beta,
-                               const arma::sp_mat& x)
-{
-    return predict_prob<abclass::Boost, arma::sp_mat>(beta, x);
-}
-// [[Rcpp::export]]
-arma::uvec r_boost_pred_y(const arma::mat& beta,
-                          const arma::mat& x)
-{
-    return predict_y<abclass::Boost, arma::mat>(beta, x);
-}
-// [[Rcpp::export]]
-arma::uvec r_boost_pred_y_sp(const arma::mat& beta,
-                             const arma::sp_mat& x)
-{
-    return predict_y<abclass::Boost, arma::sp_mat>(beta, x);
+    switch (loss_id) {
+        case 1:
+            return predict_prob<abclass::Logistic, arma::sp_mat>(beta, x);
+        case 2:
+            return predict_prob<abclass::Boost, arma::sp_mat>(beta, x);
+        case 3:
+            return predict_prob<abclass::HingeBoost, arma::sp_mat>(beta, x);
+        case 4:
+            return predict_prob<abclass::Lum, arma::sp_mat>(beta, x);
+        default:
+            break;
+    }
+    return arma::mat();
 }
 
-// hinge-boost ===============================================================
 // [[Rcpp::export]]
-arma::mat r_hinge_boost_pred_prob(const arma::mat& beta,
-                                  const arma::mat& x)
+arma::uvec rcpp_pred_y(const arma::mat& beta,
+                       const arma::mat& x,
+                       const size_t loss_id)
 {
-    return predict_prob<abclass::HingeBoost, arma::mat>(beta, x);
-}
-// [[Rcpp::export]]
-arma::mat r_hinge_boost_pred_prob_sp(const arma::mat& beta,
-                                     const arma::sp_mat& x)
-{
-    return predict_prob<abclass::HingeBoost, arma::sp_mat>(beta, x);
-}
-// [[Rcpp::export]]
-arma::uvec r_hinge_boost_pred_y(const arma::mat& beta,
-                                const arma::mat& x)
-{
-    return predict_y<abclass::HingeBoost, arma::mat>(beta, x);
-}
-// [[Rcpp::export]]
-arma::uvec r_hinge_boost_pred_y_sp(const arma::mat& beta,
-                                   const arma::sp_mat& x)
-{
-    return predict_y<abclass::HingeBoost, arma::sp_mat>(beta, x);
+    switch (loss_id) {
+        case 1:
+            return predict_y<abclass::Logistic, arma::mat>(beta, x);
+        case 2:
+            return predict_y<abclass::Boost, arma::mat>(beta, x);
+        case 3:
+            return predict_y<abclass::HingeBoost, arma::mat>(beta, x);
+        case 4:
+            return predict_y<abclass::Lum, arma::mat>(beta, x);
+        default:
+            break;
+    }
+    return arma::uvec();
 }
 
-// lum =======================================================================
 // [[Rcpp::export]]
-arma::mat r_lum_pred_prob(const arma::mat& beta,
-                          const arma::mat& x)
+arma::uvec rcpp_pred_y_sp(const arma::mat& beta,
+                          const arma::sp_mat& x,
+                          const size_t loss_id)
 {
-    return predict_prob<abclass::Lum, arma::mat>(beta, x);
-}
-// [[Rcpp::export]]
-arma::mat r_lum_pred_prob_sp(const arma::mat& beta,
-                             const arma::sp_mat& x)
-{
-    return predict_prob<abclass::Lum, arma::sp_mat>(beta, x);
-}
-// [[Rcpp::export]]
-arma::uvec r_lum_pred_y(const arma::mat& beta,
-                        const arma::mat& x)
-{
-    return predict_y<abclass::Lum, arma::mat>(beta, x);
-}
-// [[Rcpp::export]]
-arma::uvec r_lum_pred_y_sp(const arma::mat& beta,
-                           const arma::sp_mat& x)
-{
-    return predict_y<abclass::Lum, arma::sp_mat>(beta, x);
+    switch (loss_id) {
+        case 1:
+            return predict_y<abclass::Logistic, arma::sp_mat>(beta, x);
+        case 2:
+            return predict_y<abclass::Boost, arma::sp_mat>(beta, x);
+        case 3:
+            return predict_y<abclass::HingeBoost, arma::sp_mat>(beta, x);
+        case 4:
+            return predict_y<abclass::Lum, arma::sp_mat>(beta, x);
+        default:
+            break;
+    }
+    return arma::uvec();
 }

@@ -63,15 +63,14 @@ predict.abclass <- function(object,
     }
     type <- match.arg(type, c("class", "probability"))
     res_coef <- coef(object, selection = selection)
-    ## determine the internal function to call
-    loss_fun <- gsub("-", "_", object$loss$loss, fixed = TRUE)
-    predict_prob_fun <- sprintf("r_%s_pred_prob", loss_fun)
-    predict_class_fun <- sprintf("r_%s_pred_y", loss_fun)
+    loss_id <- match(object$loss, c("logistic", "boost", "hinge-boost", "lum"))
+    predict_prob_fun <- "rcpp_pred_prob"
+    predict_class_fun <- "rcpp_pred_y"
     if (is_x_sparse) {
         predict_prob_fun <- paste0(predict_prob_fun, "_sp")
         predict_class_fun <- paste0(predict_class_fun, "_sp")
     }
-    arg_list <- list(x = newx)
+    arg_list <- list(x = newx, loss_id = loss_id)
     if (is.matrix(res_coef)) {
         arg_list$beta <- res_coef
         out <- switch(
