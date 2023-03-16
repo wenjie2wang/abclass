@@ -26,7 +26,7 @@ test_y <- y[- train_idx]
 
 ## Regularization through ridge penalty
 control1 <- abclass.control(nlambda = 5, lambda_min_ratio = 1e-3,
-                            alpha = 1, grouped = FALSE)
+                            alpha = 0, grouped = FALSE)
 model1 <- abclass(train_x, train_y, loss = "logistic",
                   control = control1)
 pred1 <- predict(model1, test_x, s = 5)
