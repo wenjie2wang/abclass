@@ -1,3 +1,20 @@
+//
+// R package abclass developed by Wenjie Wang <wang@wwenjie.org>
+// Copyright (C) 2021-2023 Eli Lilly and Company
+//
+// This file is part of the R package abclass.
+//
+// The R package abclass is free software: You can redistribute it and/or
+// modify it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or any later
+// version (at your option). See the GNU General Public License at
+// <https://www.gnu.org/licenses/> for details.
+//
+// The R package abclass is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//
+
 #include <RcppArmadillo.h>
 #include <abclass.h>
 
@@ -105,14 +122,17 @@ Rcpp::List template_abclass_fit(
         }
         case 102: {
             abclass::BoostNet<T> object {x, y, ctrl};
+            object.loss_.set_inner_min(control["boost_umin"]);
             return template_fit(object);
         }
         case 103: {
             abclass::HingeBoostNet<T> object {x, y, ctrl};
+            object.loss_.set_c(control["lum_c"]);
             return template_fit(object);
         }
         case 104: {
             abclass::LumNet<T> object {x, y, ctrl};
+            object.loss_.set_ac(control["lum_a"], control["lum_c"]);
             return template_fit(object);
         }
         case 201: {
@@ -121,14 +141,17 @@ Rcpp::List template_abclass_fit(
         }
         case 202: {
             abclass::BoostGroupLasso<T> object {x, y, ctrl};
+            object.loss_.set_inner_min(control["boost_umin"]);
             return template_fit(object);
         }
         case 203: {
             abclass::HingeBoostGroupLasso<T> object {x, y, ctrl};
+            object.loss_.set_c(control["lum_c"]);
             return template_fit(object);
         }
         case 204: {
             abclass::LumGroupLasso<T> object {x, y, ctrl};
+            object.loss_.set_ac(control["lum_a"], control["lum_c"]);
             return template_fit(object);
         }
         case 301: {
@@ -137,14 +160,17 @@ Rcpp::List template_abclass_fit(
         }
         case 302: {
             abclass::BoostGroupSCAD<T> object {x, y, ctrl};
+            object.loss_.set_inner_min(control["boost_umin"]);
             return template_fit(object);
         }
         case 303: {
             abclass::HingeBoostGroupSCAD<T> object {x, y, ctrl};
+            object.loss_.set_c(control["lum_c"]);
             return template_fit(object);
         }
         case 304: {
             abclass::LumGroupSCAD<T> object {x, y, ctrl};
+            object.loss_.set_ac(control["lum_a"], control["lum_c"]);
             return template_fit(object);
         }
         case 401: {
@@ -153,14 +179,17 @@ Rcpp::List template_abclass_fit(
         }
         case 402: {
             abclass::BoostGroupMCP<T> object {x, y, ctrl};
+            object.loss_.set_inner_min(control["boost_umin"]);
             return template_fit(object);
         }
         case 403: {
             abclass::HingeBoostGroupMCP<T> object {x, y, ctrl};
+            object.loss_.set_c(control["lum_c"]);
             return template_fit(object);
         }
         case 404: {
             abclass::LumGroupMCP<T> object {x, y, ctrl};
+            object.loss_.set_ac(control["lum_a"], control["lum_c"]);
             return template_fit(object);
         }
         default:
