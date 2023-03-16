@@ -28,7 +28,7 @@ namespace abclass
     {
     private:
         unsigned int k_;        // dimensions
-        // k vertex row vectors in R^(k-1) => k by (k - 1)
+        // k vertex column vectors in R^(k-1) => (k-1) by k
         arma::mat vertex_;
 
     public:
@@ -39,13 +39,13 @@ namespace abclass
                 throw std::range_error("k must be an integer > 1.");
             }
             k_ = k;
-            vertex_ = arma::zeros(k_, k_ - 1);
-            const arma::rowvec tmp { arma::ones<arma::rowvec>(k_ - 1) };
-            vertex_.row(0) = std::pow(k_ - 1.0, - 0.5) * tmp;
+            vertex_ = arma::zeros(k_ - 1, k_);
+            const arma::vec tmp { arma::ones<arma::vec>(k_ - 1) };
+            vertex_.col(0) = std::pow(k_ - 1.0, - 0.5) * tmp;
             for (size_t j {1}; j < k_; ++j) {
-                vertex_.row(j) = - (1.0 + std::sqrt(k_)) /
+                vertex_.col(j) = - (1.0 + std::sqrt(k_)) /
                     std::pow(k_ - 1.0, 1.5) * tmp;
-                vertex_(j, j - 1) += std::sqrt(k_ / (k_ - 1.0));
+                vertex_(j - 1, j) += std::sqrt(k_ / (k_ - 1.0));
             }
         }
 

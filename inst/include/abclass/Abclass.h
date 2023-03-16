@@ -36,6 +36,7 @@ namespace abclass
         double dn_obs_;              // double version of n_obs_
         unsigned int km1_;           // k - 1
         unsigned int inter_;         // integer version of intercept_
+        arma::mat t_vertex_;         // transpose of vertex_
 
         // for the CMD/GMD algorithm
         double mm_lowerbound0_;
@@ -46,12 +47,13 @@ namespace abclass
         {
             Simplex sim { k };
             vertex_ = sim.get_vertex();
+            t_vertex_ = vertex_.t();
         }
         inline void set_ex_vertex_matrix()
         {
             ex_vertex_ = arma::mat(n_obs_, km1_);
             for (size_t i {0}; i < n_obs_; ++i) {
-                ex_vertex_.row(i) = vertex_.row(y_[i]);
+                ex_vertex_.row(i) = t_vertex_.row(y_[i]);
             }
         }
 
@@ -140,7 +142,7 @@ namespace abclass
         unsigned int p1_;       // number of predictors (with intercept)
         T_x x_;                 // (standardized) x_: n by p (without intercept)
         arma::uvec y_;          // y vector ranging in {0, ..., k - 1}
-        arma::mat vertex_;      // unique vertex: k by (k - 1)
+        arma::mat vertex_;      // unique vertex: (k-1) by k
         arma::mat ex_vertex_;   // expanded vertex for y_: n by (k - 1)
         arma::rowvec x_center_; // the column center of x_
         arma::rowvec x_scale_;  // the column scale of x_
@@ -280,8 +282,8 @@ namespace abclass
         inline arma::mat predict_prob(const arma::mat& pred_f) const
         {
             // pred_f: n x (k - 1) matrix
-            // vertex_: k x (k - 1) matrix
-            arma::mat out { pred_f * vertex_.t() }; // n x k
+            // vertex_: (k - 1) x k matrix
+            arma::mat out { pred_f * vertex_ }; // n x k
             out.each_col([&](arma::vec& a) {
                 a = 1.0 / loss_derivative(a);
             });
@@ -293,8 +295,8 @@ namespace abclass
         inline arma::uvec predict_y(const arma::mat& pred_f) const
         {
             // pred_f: n x (k - 1) matrix
-            // vertex_: k x (k - 1) matrix
-            arma::mat out { pred_f * vertex_.t() }; // n x k
+            // vertex_: (k - 1) x k matrix
+            arma::mat out { pred_f * vertex_ }; // n x k
             return arma::index_max(out, 1);
         }
 
