@@ -21,11 +21,15 @@ rcpp_pred_prob_sp <- function(beta, x, loss_id, loss_params) {
     .Call('_abclass_rcpp_pred_prob_sp', PACKAGE = 'abclass', beta, x, loss_id, loss_params)
 }
 
-rcpp_pred_y <- function(beta, x, loss_id, loss_params) {
-    .Call('_abclass_rcpp_pred_y', PACKAGE = 'abclass', beta, x, loss_id, loss_params)
+rcpp_pred_y <- function(beta, x, loss_id) {
+    .Call('_abclass_rcpp_pred_y', PACKAGE = 'abclass', beta, x, loss_id)
 }
 
-rcpp_pred_y_sp <- function(beta, x, loss_id, loss_params) {
-    .Call('_abclass_rcpp_pred_y_sp', PACKAGE = 'abclass', beta, x, loss_id, loss_params)
+rcpp_pred_y_sp <- function(beta, x, loss_id) {
+    .Call('_abclass_rcpp_pred_y_sp', PACKAGE = 'abclass', beta, x, loss_id)
+}
+
+rcpp_vertex <- function(k) {
+    .Call('_abclass_rcpp_vertex', PACKAGE = 'abclass', k)
 }
 

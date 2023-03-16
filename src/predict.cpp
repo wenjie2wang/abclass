@@ -62,8 +62,7 @@ arma::mat predict_prob(const T_x& x,
 template <typename T_x>
 arma::uvec predict_y(const T_x& x,
                      const arma::mat& beta,
-                     const size_t loss_id,
-                     const Rcpp::List& loss_params)
+                     const size_t loss_id)
 {
     const unsigned int k { beta.n_cols + 1 };
     switch (loss_id) {
@@ -76,21 +75,18 @@ arma::uvec predict_y(const T_x& x,
         case 2:
         {
             abclass::Abclass<abclass::Boost, T_x> object { k };
-            object.loss_.set_inner_min(loss_params["boost_umin"]);
             object.set_intercept(beta.n_rows > x.n_cols);
             return object.predict_y(beta, x);
         }
         case 3:
         {
             abclass::Abclass<abclass::HingeBoost, T_x> object { k };
-            object.loss_.set_c(loss_params["lum_c"]);
             object.set_intercept(beta.n_rows > x.n_cols);
             return object.predict_y(beta, x);
         }
         case 4:
         {
             abclass::Abclass<abclass::Lum, T_x> object { k };
-            object.loss_.set_ac(loss_params["lum_a"], loss_params["lum_c"]);
             object.set_intercept(beta.n_rows > x.n_cols);
             return object.predict_y(beta, x);
         }
@@ -121,17 +117,15 @@ arma::mat rcpp_pred_prob_sp(const arma::mat& beta,
 // [[Rcpp::export]]
 arma::uvec rcpp_pred_y(const arma::mat& beta,
                        const arma::mat& x,
-                       const size_t loss_id,
-                       const Rcpp::List& loss_params)
+                       const size_t loss_id)
 {
-    return predict_y(x, beta, loss_id, loss_params);
+    return predict_y(x, beta, loss_id);
 }
 
 // [[Rcpp::export]]
 arma::uvec rcpp_pred_y_sp(const arma::mat& beta,
                           const arma::sp_mat& x,
-                          const size_t loss_id,
-                          const Rcpp::List& loss_params)
+                          const size_t loss_id)
 {
-    return predict_y(x, beta, loss_id, loss_params);
+    return predict_y(x, beta, loss_id);
 }
