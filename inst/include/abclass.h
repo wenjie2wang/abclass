@@ -27,39 +27,24 @@
 #include "abclass/AbclassGroup.h"
 #include "abclass/Control.h"
 #include "abclass/Simplex.h"
+
 // loss
 #include "abclass/Boost.h"
 #include "abclass/Logistic.h"
 #include "abclass/HingeBoost.h"
 #include "abclass/Lum.h"
 
-// with elastic-net
+// penalty
 #include "abclass/AbclassNet.h"
-#include "abclass/LogisticNet.h"
-#include "abclass/BoostNet.h"
-#include "abclass/HingeBoostNet.h"
-#include "abclass/LumNet.h"
-
-// with group lasso
 #include "abclass/AbclassGroupLasso.h"
-#include "abclass/LogisticGroupLasso.h"
-#include "abclass/BoostGroupLasso.h"
-#include "abclass/HingeBoostGroupLasso.h"
-#include "abclass/LumGroupLasso.h"
-
-// with group scad
 #include "abclass/AbclassGroupSCAD.h"
-#include "abclass/LogisticGroupSCAD.h"
-#include "abclass/BoostGroupSCAD.h"
-#include "abclass/HingeBoostGroupSCAD.h"
-#include "abclass/LumGroupSCAD.h"
-
-// with group mcp
 #include "abclass/AbclassGroupMCP.h"
-#include "abclass/LogisticGroupMCP.h"
-#include "abclass/BoostGroupMCP.h"
-#include "abclass/HingeBoostGroupMCP.h"
-#include "abclass/LumGroupMCP.h"
+
+// combination
+#include "abclass/LogisticT.h"
+#include "abclass/BoostT.h"
+#include "abclass/HingeBoostT.h"
+#include "abclass/LumT.h"
 
 // utils
 #include "abclass/utils.h"

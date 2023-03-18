@@ -15,33 +15,49 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //
 
-#ifndef ABCLASS_HINGE_BOOST_NET_H
-#define ABCLASS_HINGE_BOOST_NET_H
+#ifndef ABCLASS_HINGE_BOOST_T_H
+#define ABCLASS_HINGE_BOOST_T_H
 
 #include <RcppArmadillo.h>
 #include "AbclassNet.h"
+#include "AbclassGroupLasso.h"
+#include "AbclassGroupSCAD.h"
+#include "AbclassGroupMCP.h"
 #include "HingeBoost.h"
 #include "Control.h"
 
 namespace abclass
 {
     // define class for inputs and outputs
-    template <typename T_x>
-    class HingeBoostNet : public AbclassNet<HingeBoost, T_x>
+    template <typename T_class, typename T_x>
+    class HingeBoostT : public T_class
     {
     public:
-        // inherit
-        using AbclassNet<HingeBoost, T_x>::AbclassNet;
+        // inherit constructors
+        using T_class::T_class;
 
-        HingeBoostNet(const T_x& x,
-                      const arma::uvec& y,
-                      const Control& control) :
-            AbclassNet<HingeBoost, T_x>(x, y, control)
+        HingeBoostT(const T_x& x,
+                    const arma::uvec& y,
+                    const Control& control) :
+            T_class(x, y, control)
         {
             this->loss_.set_c(0.0);
         }
 
     };                          // end of class
+
+    // alias templates
+    template<typename T_x>
+    using HingeBoostNet = HingeBoostT<AbclassNet<HingeBoost, T_x>, T_x>;
+
+    template<typename T_x>
+    using HingeBoostGroupLasso = HingeBoostT<AbclassGroupLasso<HingeBoost, T_x>, T_x>;
+
+    template<typename T_x>
+    using HingeBoostGroupSCAD = HingeBoostT<AbclassGroupSCAD<HingeBoost, T_x>, T_x>;
+
+    template<typename T_x>
+    using HingeBoostGroupMCP = HingeBoostT<AbclassGroupMCP<HingeBoost, T_x>, T_x>;
 
 }
 

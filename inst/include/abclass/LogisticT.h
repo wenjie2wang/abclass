@@ -15,25 +15,39 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //
 
-#ifndef ABCLASS_LOGISTIC_NET_H
-#define ABCLASS_LOGISTIC_NET_H
+#ifndef ABCLASS_LOGISTIC_T_H
+#define ABCLASS_LOGISTIC_T_H
 
 #include <RcppArmadillo.h>
 #include "AbclassNet.h"
+#include "AbclassGroupLasso.h"
+#include "AbclassGroupSCAD.h"
+#include "AbclassGroupMCP.h"
 #include "Logistic.h"
 #include "Control.h"
 
 namespace abclass
 {
-    // define class for inputs and outputs
-    template <typename T_x>
-    class LogisticNet : public AbclassNet<Logistic, T_x>
+    template <typename T_class, typename T_x>
+    class LogisticT : public T_class
     {
     public:
-        // inherit
-        using AbclassNet<Logistic, T_x>::AbclassNet;
-
+        // inherit constructors
+        using T_class::T_class;
     };                          // end of class
+
+    // alias templates
+    template<typename T_x>
+    using LogisticNet = LogisticT<AbclassNet<Logistic, T_x>, T_x>;
+
+    template<typename T_x>
+    using LogisticGroupLasso = LogisticT<AbclassGroupLasso<Logistic, T_x>, T_x>;
+
+    template<typename T_x>
+    using LogisticGroupSCAD = LogisticT<AbclassGroupSCAD<Logistic, T_x>, T_x>;
+
+    template<typename T_x>
+    using LogisticGroupMCP = LogisticT<AbclassGroupMCP<Logistic, T_x>, T_x>;
 
 }
 

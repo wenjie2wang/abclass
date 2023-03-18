@@ -15,33 +15,49 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //
 
-#ifndef ABCLASS_LUM_NET_H
-#define ABCLASS_LUM_NET_H
+#ifndef ABCLASS_BOOST_T_H
+#define ABCLASS_BOOST_T_H
 
 #include <RcppArmadillo.h>
 #include "AbclassNet.h"
-#include "Lum.h"
+#include "AbclassGroupLasso.h"
+#include "AbclassGroupSCAD.h"
+#include "AbclassGroupMCP.h"
+#include "Boost.h"
 #include "Control.h"
 
 namespace abclass
 {
     // define class for inputs and outputs
-    template <typename T_x>
-    class LumNet : public AbclassNet<Lum, T_x>
+    template <typename T_class, typename T_x>
+    class BoostT : public T_class
     {
     public:
         // inherit constructors
-        using AbclassNet<Lum, T_x>::AbclassNet;
+        using T_class::T_class;
 
-        LumNet(const T_x& x,
+        BoostT(const T_x& x,
                const arma::uvec& y,
                const Control& control) :
-            AbclassNet<Lum, T_x>(x, y, control)
+            T_class(x, y, control)
         {
-            this->loss_.set_ac(1.0, 0.0);
+            this->loss_.set_inner_min(- 5.0);
         }
 
     };                          // end of class
+
+    // alias templates
+    template<typename T_x>
+    using BoostNet = BoostT<AbclassNet<Boost, T_x>, T_x>;
+
+    template<typename T_x>
+    using BoostGroupLasso = BoostT<AbclassGroupLasso<Boost, T_x>, T_x>;
+
+    template<typename T_x>
+    using BoostGroupSCAD = BoostT<AbclassGroupSCAD<Boost, T_x>, T_x>;
+
+    template<typename T_x>
+    using BoostGroupMCP = BoostT<AbclassGroupMCP<Boost, T_x>, T_x>;
 
 }
 
