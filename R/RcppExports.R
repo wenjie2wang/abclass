@@ -13,6 +13,14 @@ cv_samples <- function(nobs, nfolds, strata) {
     .Call('_abclass_cv_samples', PACKAGE = 'abclass', nobs, nfolds, strata)
 }
 
+rcpp_moml_fit <- function(x, treatment, reward, propensity_score, control) {
+    .Call('_abclass_rcpp_moml_fit', PACKAGE = 'abclass', x, treatment, reward, propensity_score, control)
+}
+
+rcpp_moml_fit_sp <- function(x, treatment, reward, propensity_score, control) {
+    .Call('_abclass_rcpp_moml_fit_sp', PACKAGE = 'abclass', x, treatment, reward, propensity_score, control)
+}
+
 rcpp_pred_prob <- function(beta, x, loss_id, loss_params) {
     .Call('_abclass_rcpp_pred_prob', PACKAGE = 'abclass', beta, x, loss_id, loss_params)
 }

@@ -49,7 +49,7 @@ namespace abclass
             vertex_ = sim.get_vertex();
             t_vertex_ = vertex_.t();
         }
-        inline void set_ex_vertex_matrix()
+        inline virtual void set_ex_vertex_matrix() // be virtual for Moml
         {
             ex_vertex_ = arma::mat(n_obs_, km1_);
             for (size_t i {0}; i < n_obs_; ++i) {

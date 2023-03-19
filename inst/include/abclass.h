@@ -27,6 +27,7 @@
 #include "abclass/AbclassGroup.h"
 #include "abclass/Control.h"
 #include "abclass/Simplex.h"
+#include "abclass/Moml.h"
 
 // loss
 #include "abclass/Boost.h"
