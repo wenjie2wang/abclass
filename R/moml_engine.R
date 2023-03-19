@@ -15,19 +15,22 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ##
 
-## engine function that should be called internally only
-.abclass <- function(x, y,
-                     intercept = TRUE,
-                     weight = NULL,
-                     loss = "logistic",
-                     ## abclass.control
-                     control = abclass.control(),
-                     ## cv
-                     nfolds = 0L,
-                     stratified = TRUE,
-                     alignment = 0L,
-                     ## et
-                     nstages = 0L)
+## internal engine function for MOML
+.moml <- function(x,
+                  treatment,
+                  reward,
+                  propensity_score,
+                  intercept = TRUE,
+                  ## weight = NULL,
+                  loss = "logistic",
+                  ## control
+                  control = moml.control(),
+                  ## cv
+                  nfolds = 0L,
+                  stratified = TRUE,
+                  alignment = 0L,
+                  ## et
+                  nstages = 0L)
 {
     ## pre-process
     is_x_sparse <- FALSE
@@ -36,7 +39,7 @@
     } else if (! is.matrix(x)) {
         x <- as.matrix(x)
     }
-    cat_y <- cat2z(y)
+    cat_y <- cat2z(treatment)
     if (is.null(control$lambda_min_ratio)) {
         control$lambda_min_ratio <- if (nrow(x) < ncol(x)) 1e-4 else 1e-2
     }
@@ -51,7 +54,7 @@
     ctrl <- c(
         control,
         list(intercept = intercept,
-             weight = null2num0(weight),
+             weight = numeric(0),
              nfolds = as.integer(nfolds),
              stratified = stratified,
              alignment = as.integer(alignment),
@@ -64,11 +67,15 @@
         ctrl$alignment <- 1L
     }
     ## arguments
-    call_list <- c(list(x = x, y = cat_y$y, control = ctrl))
+    call_list <- c(list(x = x,
+                        treatment = cat_y$y,
+                        reward = reward,
+                        propensity_score = propensity_score,
+                        control = ctrl))
     fun_to_call <- if (is_x_sparse) {
-                       rcpp_abclass_fit_sp
+                       rcpp_moml_fit_sp
                    } else {
-                       rcpp_abclass_fit
+                       rcpp_moml_fit
                    }
     res <- do.call(fun_to_call, call_list)
     ## post-process
@@ -76,6 +83,7 @@
     res$intercept <- intercept
     res$loss <- loss
     res$control <- control
+    res$weight <- NULL
     if (call_list$control$nfolds == 0L) {
         res$cross_validation <- NULL
     }
