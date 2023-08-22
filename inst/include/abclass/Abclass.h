@@ -194,7 +194,8 @@ namespace abclass
             x_ = x;
             y_ = y;
             inter_ = static_cast<unsigned int>(control_.intercept_);
-            km1_ = arma::max(y_); // assume y in {0, ..., k-1}
+            km1_ = std::max(1U, arma::max(y_)); // assume y in {0, ..., k-1}
+            // Binary classification will be assumed if y only takes zero.
             k_ = km1_ + 1;
             n_obs_ = x_.n_rows;
             dn_obs_ = static_cast<double>(n_obs_);
