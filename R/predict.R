@@ -75,8 +75,8 @@ predict.abclass <- function(object,
     if (type == "probability") {
         arg_list$loss_params <- loss_params
     }
-    if (is.matrix(res_coef)) {
-        arg_list$beta <- res_coef
+    if (is.matrix(res_coef) || is.vector(res_coef)) {
+        arg_list$beta <- as.matrix(res_coef)
         out <- switch(
             type,
             "class" = {
