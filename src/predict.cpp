@@ -21,6 +21,7 @@
 template <typename T_x>
 arma::mat predict_prob(const T_x& x,
                        const arma::mat& beta,
+                       const arma::mat& offset,
                        const size_t loss_id,
                        const Rcpp::List& loss_params)
 {
@@ -30,28 +31,28 @@ arma::mat predict_prob(const T_x& x,
         {
             abclass::Abclass<abclass::Logistic, T_x> object { k };
             object.set_intercept(beta.n_rows > x.n_cols);
-            return object.predict_prob(beta, x);
+            return object.predict_prob(beta, x, offset);
         }
         case 2:
         {
             abclass::Abclass<abclass::Boost, T_x> object { k };
             object.loss_.set_inner_min(loss_params["boost_umin"]);
             object.set_intercept(beta.n_rows > x.n_cols);
-            return object.predict_prob(beta, x);
+            return object.predict_prob(beta, x, offset);
         }
         case 3:
         {
             abclass::Abclass<abclass::HingeBoost, T_x> object { k };
             object.loss_.set_c(loss_params["lum_c"]);
             object.set_intercept(beta.n_rows > x.n_cols);
-            return object.predict_prob(beta, x);
+            return object.predict_prob(beta, x, offset);
         }
         case 4:
         {
             abclass::Abclass<abclass::Lum, T_x> object { k };
             object.loss_.set_ac(loss_params["lum_a"], loss_params["lum_c"]);
             object.set_intercept(beta.n_rows > x.n_cols);
-            return object.predict_prob(beta, x);
+            return object.predict_prob(beta, x, offset);
         }
         default:
             break;
@@ -62,6 +63,7 @@ arma::mat predict_prob(const T_x& x,
 template <typename T_x>
 arma::uvec predict_y(const T_x& x,
                      const arma::mat& beta,
+                     const arma::mat& offset,
                      const size_t loss_id)
 {
     const unsigned int k { beta.n_cols + 1 };
@@ -70,25 +72,25 @@ arma::uvec predict_y(const T_x& x,
         {
             abclass::Abclass<abclass::Logistic, T_x> object { k };
             object.set_intercept(beta.n_rows > x.n_cols);
-            return object.predict_y(beta, x);
+            return object.predict_y(beta, x, offset);
         }
         case 2:
         {
             abclass::Abclass<abclass::Boost, T_x> object { k };
             object.set_intercept(beta.n_rows > x.n_cols);
-            return object.predict_y(beta, x);
+            return object.predict_y(beta, x, offset);
         }
         case 3:
         {
             abclass::Abclass<abclass::HingeBoost, T_x> object { k };
             object.set_intercept(beta.n_rows > x.n_cols);
-            return object.predict_y(beta, x);
+            return object.predict_y(beta, x, offset);
         }
         case 4:
         {
             abclass::Abclass<abclass::Lum, T_x> object { k };
             object.set_intercept(beta.n_rows > x.n_cols);
-            return object.predict_y(beta, x);
+            return object.predict_y(beta, x, offset);
         }
         default:
             break;
@@ -96,36 +98,68 @@ arma::uvec predict_y(const T_x& x,
     return arma::uvec();
 }
 
+template <typename T_x>
+arma::mat predict_link(const T_x& x,
+                       const arma::mat& beta,
+                       const arma::mat& offset)
+{
+    const unsigned int k { beta.n_cols + 1 };
+    abclass::Abclass<abclass::Logistic, T_x> object { k };
+    object.set_intercept(beta.n_rows > x.n_cols);
+    return object.linear_score(beta, x, offset);
+}
+
+
 // [[Rcpp::export]]
 arma::mat rcpp_pred_prob(const arma::mat& beta,
                          const arma::mat& x,
+                         const arma::mat& offset,
                          const size_t loss_id,
                          const Rcpp::List& loss_params)
 {
-    return predict_prob(x, beta, loss_id, loss_params);
+    return predict_prob(x, beta, offset, loss_id, loss_params);
 }
 
 // [[Rcpp::export]]
 arma::mat rcpp_pred_prob_sp(const arma::mat& beta,
                             const arma::sp_mat& x,
+                            const arma::mat& offset,
                             const size_t loss_id,
                             const Rcpp::List& loss_params)
 {
-    return predict_prob(x, beta, loss_id, loss_params);
+    return predict_prob(x, beta, offset, loss_id, loss_params);
 }
 
 // [[Rcpp::export]]
 arma::uvec rcpp_pred_y(const arma::mat& beta,
                        const arma::mat& x,
+                       const arma::mat& offset,
                        const size_t loss_id)
 {
-    return predict_y(x, beta, loss_id);
+    return predict_y(x, beta, offset, loss_id);
 }
 
 // [[Rcpp::export]]
 arma::uvec rcpp_pred_y_sp(const arma::mat& beta,
                           const arma::sp_mat& x,
+                          const arma::mat& offset,
                           const size_t loss_id)
 {
-    return predict_y(x, beta, loss_id);
+    return predict_y(x, beta, offset, loss_id);
+}
+
+// [[Rcpp::export]]
+arma::mat rcpp_pred_link(const arma::mat& beta,
+                         const arma::mat& x,
+                         const arma::mat& offset)
+{
+    return predict_link(x, beta, offset);
+}
+
+// [[Rcpp::export]]
+arma::mat rcpp_pred_link_sp(const arma::mat& beta,
+                            const arma::sp_mat& x,
+                            const arma::mat& offset)
+{
+    return predict_link(x, beta, offset);
 }

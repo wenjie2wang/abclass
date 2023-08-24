@@ -24,8 +24,9 @@
 ##'
 ##' @param newx A numeric matrix representing the design matrix for predictions.
 ##' @param type A character value specifying the desired type of predictions.
-##'     The available options are \code{"class"} for predicted labels and
-##'     \code{"probability"} for class conditional probability estimates.
+##'     The available options are \code{"class"} for predicted labels,
+##'     \code{"probability"} for class conditional probability estimates, and
+##'     \code{"link"} for decision functions.
 ##' @param selection An integer vector for the solution indices or a character
 ##'     value specifying how to select a particular set of coefficient estimates
 ##'     from the entire solution path for prediction. If the specified
@@ -37,6 +38,7 @@
 ##'     prediction for the entire solution path will be returned in a list if
 ##'     \code{selection = "all"} or no cross-validation results are available in
 ##'     the specified \code{object}.
+##' @param newoffset An optional numeric matrix for the offsets.
 ##'
 ##' @return A vector representing the predictions or a list containing the
 ##'     predictions for each set of estimates along the solution path.
@@ -48,8 +50,9 @@
 ##' @export
 predict.abclass <- function(object,
                             newx,
-                            type = c("class", "probability"),
+                            type = c("class", "probability", "link"),
                             selection = c("cv_1se", "cv_min", "all"),
+                            newoffset = NULL,
                             ...)
 {
     if (missing(newx)) {
@@ -61,19 +64,33 @@ predict.abclass <- function(object,
     } else if (! is.matrix(newx)) {
         newx <- as.matrix(newx)
     }
-    type <- match.arg(type, c("class", "probability"))
+    type <- match.arg(type, c("class", "probability", "link"))
     res_coef <- coef(object, selection = selection)
     loss_id <- match(object$loss, c("logistic", "boost", "hinge-boost", "lum"))
     loss_params <- object$control[c("boost_umin", "lum_a", "lum_c")]
     predict_prob_fun <- "rcpp_pred_prob"
     predict_class_fun <- "rcpp_pred_y"
+    predict_link_fun <- "rcpp_pred_link"
     if (is_x_sparse) {
         predict_prob_fun <- paste0(predict_prob_fun, "_sp")
         predict_class_fun <- paste0(predict_class_fun, "_sp")
+        predict_link_fun <- paste0(predict_link_fun, "_sp")
     }
-    arg_list <- list(x = newx, loss_id = loss_id)
+    if (! is.null(newoffset)) {
+        if (! is.matrix(newoffset)) {
+            newoffset <- as.matrix(newoffset)
+        }
+        if (nrow(newoffset) != nrow(newx) ||
+            ncol(newoffset) != object$category$k - 1) {
+            stop(sprintf("The 'newoffset' must be a %d by %d matrix.",
+                         nrow(newx), object$category$k))
+        }
+    }
+    arg_list <- list(x = newx, loss_id = loss_id, offset = null2mat0(newoffset))
     if (type == "probability") {
         arg_list$loss_params <- loss_params
+    } else if (type == "link") {
+        arg_list$loss_id <- NULL
     }
     if (is.matrix(res_coef) || is.vector(res_coef)) {
         arg_list$beta <- as.matrix(res_coef)
@@ -90,6 +107,9 @@ predict.abclass <- function(object,
                 colnames(tmp) <- object$category$label
                 ## rownames(tmp) <- rownames(newx)
                 tmp
+            },
+            "link" = {
+                drop(do.call(predict_link_fun, arg_list))
             })
         return(out)
     }
@@ -115,6 +135,12 @@ predict.abclass <- function(object,
                 ## rownames(tmp) <- rownames(newx)
                 tmp
             })
+        },
+        "link" = {
+            lapply(seq_len(nslice), function(i) {
+                arg_list$beta <- as.matrix(res_coef[, , i])
+                drop(do.call(predict_link_fun, arg_list))
+            })
         }
     )
 }
@@ -137,11 +163,11 @@ predict.abclass <- function(object,
 ##' @export
 predict.supclass <- function(object,
                              newx,
-                             type = c("class", "probability"),
+                             type = c("class", "probability", "link"),
                              selection = c("cv_1se", "cv_min", "all"),
                              ...)
 {
-    type <- match.arg(type, choices = c("class", "probability"))
+    type <- match.arg(type, choices = c("class", "probability", "link"))
     if (object$model %in% c("psvm", "svm") && type == "probability") {
         stop(sprintf("Probability estimates are not available for '%s' model.",
                      object$model))
@@ -167,7 +193,10 @@ predict.supclass <- function(object,
                 exp_xbeta <- exp(xbeta)
                 prob <- exp_xbeta / rowSums(exp_xbeta)
                 colnames(prob) <- object$category$label
-                prob
+                drop(prob)
+            },
+            "link" = {
+                drop(xbeta)
             })
         return(out)
     }
@@ -190,7 +219,13 @@ predict.supclass <- function(object,
                 exp_xbeta <- exp(newx %*% beta)
                 prob <- exp_xbeta / rowSums(exp_xbeta)
                 colnames(prob) <- object$category$label
-                prob
+                drop(prob)
+            })
+        },
+        "link" = {
+            lapply(seq_len(nslice), function(i) {
+                beta <- as.matrix(res_coef[, , i])
+                drop(newx %*% beta)
             })
         }
     )
