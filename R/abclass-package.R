@@ -35,4 +35,5 @@
 ##'
 ##' @docType package
 ##' @name abclass-package
+##' @aliases abclass-package
 NULL
