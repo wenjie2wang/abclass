@@ -23,6 +23,7 @@ abclass.control(
   grouped = TRUE,
   group_weight = NULL,
   group_penalty = c("lasso", "scad", "mcp"),
+  offset = NULL,
   dgamma = 1,
   lum_a = 1,
   lum_c = 1,
@@ -91,6 +92,9 @@ the adaptive penalty factors for the specified group penalty.}
 
 \item{group_penalty}{A character vector specifying the name of the group
 penalty.}
+
+\item{offset}{An optional numeric matrix for offsets of the decision
+functions.}
 
 \item{dgamma}{A positive number specifying the increment to the minimal
 gamma parameter for group SCAD or group MCP.}

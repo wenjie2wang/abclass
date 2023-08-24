@@ -82,56 +82,86 @@ BEGIN_RCPP
 END_RCPP
 }
 // rcpp_pred_prob
-arma::mat rcpp_pred_prob(const arma::mat& beta, const arma::mat& x, const size_t loss_id, const Rcpp::List& loss_params);
-RcppExport SEXP _abclass_rcpp_pred_prob(SEXP betaSEXP, SEXP xSEXP, SEXP loss_idSEXP, SEXP loss_paramsSEXP) {
+arma::mat rcpp_pred_prob(const arma::mat& beta, const arma::mat& x, const arma::mat& offset, const size_t loss_id, const Rcpp::List& loss_params);
+RcppExport SEXP _abclass_rcpp_pred_prob(SEXP betaSEXP, SEXP xSEXP, SEXP offsetSEXP, SEXP loss_idSEXP, SEXP loss_paramsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::mat& >::type beta(betaSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type offset(offsetSEXP);
     Rcpp::traits::input_parameter< const size_t >::type loss_id(loss_idSEXP);
     Rcpp::traits::input_parameter< const Rcpp::List& >::type loss_params(loss_paramsSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpp_pred_prob(beta, x, loss_id, loss_params));
+    rcpp_result_gen = Rcpp::wrap(rcpp_pred_prob(beta, x, offset, loss_id, loss_params));
     return rcpp_result_gen;
 END_RCPP
 }
 // rcpp_pred_prob_sp
-arma::mat rcpp_pred_prob_sp(const arma::mat& beta, const arma::sp_mat& x, const size_t loss_id, const Rcpp::List& loss_params);
-RcppExport SEXP _abclass_rcpp_pred_prob_sp(SEXP betaSEXP, SEXP xSEXP, SEXP loss_idSEXP, SEXP loss_paramsSEXP) {
+arma::mat rcpp_pred_prob_sp(const arma::mat& beta, const arma::sp_mat& x, const arma::mat& offset, const size_t loss_id, const Rcpp::List& loss_params);
+RcppExport SEXP _abclass_rcpp_pred_prob_sp(SEXP betaSEXP, SEXP xSEXP, SEXP offsetSEXP, SEXP loss_idSEXP, SEXP loss_paramsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::mat& >::type beta(betaSEXP);
     Rcpp::traits::input_parameter< const arma::sp_mat& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type offset(offsetSEXP);
     Rcpp::traits::input_parameter< const size_t >::type loss_id(loss_idSEXP);
     Rcpp::traits::input_parameter< const Rcpp::List& >::type loss_params(loss_paramsSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpp_pred_prob_sp(beta, x, loss_id, loss_params));
+    rcpp_result_gen = Rcpp::wrap(rcpp_pred_prob_sp(beta, x, offset, loss_id, loss_params));
     return rcpp_result_gen;
 END_RCPP
 }
 // rcpp_pred_y
-arma::uvec rcpp_pred_y(const arma::mat& beta, const arma::mat& x, const size_t loss_id);
-RcppExport SEXP _abclass_rcpp_pred_y(SEXP betaSEXP, SEXP xSEXP, SEXP loss_idSEXP) {
+arma::uvec rcpp_pred_y(const arma::mat& beta, const arma::mat& x, const arma::mat& offset, const size_t loss_id);
+RcppExport SEXP _abclass_rcpp_pred_y(SEXP betaSEXP, SEXP xSEXP, SEXP offsetSEXP, SEXP loss_idSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::mat& >::type beta(betaSEXP);
     Rcpp::traits::input_parameter< const arma::mat& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type offset(offsetSEXP);
     Rcpp::traits::input_parameter< const size_t >::type loss_id(loss_idSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpp_pred_y(beta, x, loss_id));
+    rcpp_result_gen = Rcpp::wrap(rcpp_pred_y(beta, x, offset, loss_id));
     return rcpp_result_gen;
 END_RCPP
 }
 // rcpp_pred_y_sp
-arma::uvec rcpp_pred_y_sp(const arma::mat& beta, const arma::sp_mat& x, const size_t loss_id);
-RcppExport SEXP _abclass_rcpp_pred_y_sp(SEXP betaSEXP, SEXP xSEXP, SEXP loss_idSEXP) {
+arma::uvec rcpp_pred_y_sp(const arma::mat& beta, const arma::sp_mat& x, const arma::mat& offset, const size_t loss_id);
+RcppExport SEXP _abclass_rcpp_pred_y_sp(SEXP betaSEXP, SEXP xSEXP, SEXP offsetSEXP, SEXP loss_idSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::mat& >::type beta(betaSEXP);
     Rcpp::traits::input_parameter< const arma::sp_mat& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type offset(offsetSEXP);
     Rcpp::traits::input_parameter< const size_t >::type loss_id(loss_idSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpp_pred_y_sp(beta, x, loss_id));
+    rcpp_result_gen = Rcpp::wrap(rcpp_pred_y_sp(beta, x, offset, loss_id));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rcpp_pred_link
+arma::mat rcpp_pred_link(const arma::mat& beta, const arma::mat& x, const arma::mat& offset);
+RcppExport SEXP _abclass_rcpp_pred_link(SEXP betaSEXP, SEXP xSEXP, SEXP offsetSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type offset(offsetSEXP);
+    rcpp_result_gen = Rcpp::wrap(rcpp_pred_link(beta, x, offset));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rcpp_pred_link_sp
+arma::mat rcpp_pred_link_sp(const arma::mat& beta, const arma::sp_mat& x, const arma::mat& offset);
+RcppExport SEXP _abclass_rcpp_pred_link_sp(SEXP betaSEXP, SEXP xSEXP, SEXP offsetSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< const arma::sp_mat& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type offset(offsetSEXP);
+    rcpp_result_gen = Rcpp::wrap(rcpp_pred_link_sp(beta, x, offset));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -153,10 +183,12 @@ static const R_CallMethodDef CallEntries[] = {
     {"_abclass_cv_samples", (DL_FUNC) &_abclass_cv_samples, 3},
     {"_abclass_rcpp_moml_fit", (DL_FUNC) &_abclass_rcpp_moml_fit, 5},
     {"_abclass_rcpp_moml_fit_sp", (DL_FUNC) &_abclass_rcpp_moml_fit_sp, 5},
-    {"_abclass_rcpp_pred_prob", (DL_FUNC) &_abclass_rcpp_pred_prob, 4},
-    {"_abclass_rcpp_pred_prob_sp", (DL_FUNC) &_abclass_rcpp_pred_prob_sp, 4},
-    {"_abclass_rcpp_pred_y", (DL_FUNC) &_abclass_rcpp_pred_y, 3},
-    {"_abclass_rcpp_pred_y_sp", (DL_FUNC) &_abclass_rcpp_pred_y_sp, 3},
+    {"_abclass_rcpp_pred_prob", (DL_FUNC) &_abclass_rcpp_pred_prob, 5},
+    {"_abclass_rcpp_pred_prob_sp", (DL_FUNC) &_abclass_rcpp_pred_prob_sp, 5},
+    {"_abclass_rcpp_pred_y", (DL_FUNC) &_abclass_rcpp_pred_y, 4},
+    {"_abclass_rcpp_pred_y_sp", (DL_FUNC) &_abclass_rcpp_pred_y_sp, 4},
+    {"_abclass_rcpp_pred_link", (DL_FUNC) &_abclass_rcpp_pred_link, 3},
+    {"_abclass_rcpp_pred_link_sp", (DL_FUNC) &_abclass_rcpp_pred_link_sp, 3},
     {"_abclass_rcpp_vertex", (DL_FUNC) &_abclass_rcpp_vertex, 1},
     {NULL, NULL, 0}
 };

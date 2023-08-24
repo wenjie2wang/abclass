@@ -21,20 +21,28 @@ rcpp_moml_fit_sp <- function(x, treatment, reward, propensity_score, control) {
     .Call('_abclass_rcpp_moml_fit_sp', PACKAGE = 'abclass', x, treatment, reward, propensity_score, control)
 }
 
-rcpp_pred_prob <- function(beta, x, loss_id, loss_params) {
-    .Call('_abclass_rcpp_pred_prob', PACKAGE = 'abclass', beta, x, loss_id, loss_params)
+rcpp_pred_prob <- function(beta, x, offset, loss_id, loss_params) {
+    .Call('_abclass_rcpp_pred_prob', PACKAGE = 'abclass', beta, x, offset, loss_id, loss_params)
 }
 
-rcpp_pred_prob_sp <- function(beta, x, loss_id, loss_params) {
-    .Call('_abclass_rcpp_pred_prob_sp', PACKAGE = 'abclass', beta, x, loss_id, loss_params)
+rcpp_pred_prob_sp <- function(beta, x, offset, loss_id, loss_params) {
+    .Call('_abclass_rcpp_pred_prob_sp', PACKAGE = 'abclass', beta, x, offset, loss_id, loss_params)
 }
 
-rcpp_pred_y <- function(beta, x, loss_id) {
-    .Call('_abclass_rcpp_pred_y', PACKAGE = 'abclass', beta, x, loss_id)
+rcpp_pred_y <- function(beta, x, offset, loss_id) {
+    .Call('_abclass_rcpp_pred_y', PACKAGE = 'abclass', beta, x, offset, loss_id)
 }
 
-rcpp_pred_y_sp <- function(beta, x, loss_id) {
-    .Call('_abclass_rcpp_pred_y_sp', PACKAGE = 'abclass', beta, x, loss_id)
+rcpp_pred_y_sp <- function(beta, x, offset, loss_id) {
+    .Call('_abclass_rcpp_pred_y_sp', PACKAGE = 'abclass', beta, x, offset, loss_id)
+}
+
+rcpp_pred_link <- function(beta, x, offset) {
+    .Call('_abclass_rcpp_pred_link', PACKAGE = 'abclass', beta, x, offset)
+}
+
+rcpp_pred_link_sp <- function(beta, x, offset) {
+    .Call('_abclass_rcpp_pred_link_sp', PACKAGE = 'abclass', beta, x, offset)
 }
 
 rcpp_vertex <- function(k) {

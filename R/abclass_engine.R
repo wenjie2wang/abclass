@@ -73,6 +73,7 @@
     res <- do.call(fun_to_call, call_list)
     ## post-process
     res$category <- cat_y
+    res$category$k <- length(res$category$label)
     res$intercept <- intercept
     res$loss <- loss
     res$control <- control

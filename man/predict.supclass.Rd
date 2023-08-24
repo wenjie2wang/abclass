@@ -7,7 +7,7 @@
 \method{predict}{supclass}(
   object,
   newx,
-  type = c("class", "probability"),
+  type = c("class", "probability", "link"),
   selection = c("cv_1se", "cv_min", "all"),
   ...
 )
@@ -18,8 +18,9 @@
 \item{newx}{A numeric matrix representing the design matrix for predictions.}
 
 \item{type}{A character value specifying the desired type of predictions.
-The available options are \code{"class"} for predicted labels and
-\code{"probability"} for class conditional probability estimates.}
+The available options are \code{"class"} for predicted labels,
+\code{"probability"} for class conditional probability estimates, and
+\code{"link"} for decision functions.}
 
 \item{selection}{An integer vector for the solution indices or a character
 value specifying how to select a particular set of coefficient estimates
