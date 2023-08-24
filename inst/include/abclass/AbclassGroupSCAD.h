@@ -394,7 +394,13 @@ namespace abclass
         arma::uvec penalty_group { arma::find(control_.group_weight_ > 0.0) };
         arma::uvec penalty_free { arma::find(control_.group_weight_ == 0.0) };
         // initialize
-        arma::vec one_inner { arma::zeros(n_obs_) };
+        arma::vec one_inner;
+        if (control_.has_offset_) {
+            arma::mat ex_inner { ex_vertex_ % control_.offset_ };
+            one_inner = arma::sum(ex_inner, 1);
+        } else {
+            one_inner = arma::zeros(n_obs_);
+        }
         arma::mat one_beta { arma::zeros(p1_, km1_) },
             one_grad_beta { one_beta };
         // need to determine lambda_max

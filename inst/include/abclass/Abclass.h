@@ -183,8 +183,10 @@ namespace abclass
                 const Control& control = Control()) :
             control_ (control)
         {
+
             set_data(x, y);
             set_weight(control_.obs_weight_);
+            set_offset(control_.offset_);
         }
 
         // setter
@@ -253,6 +255,18 @@ namespace abclass
             return this;
         }
 
+        inline Abclass* set_offset(const arma::mat& offset)
+        {
+            if (offset.n_rows != n_obs_ || offset.n_cols != km1_) {
+                control_.offset_ = arma::mat();
+                control_.has_offset_ = false;
+            } else {
+                control_.offset_ = offset;
+                control_.has_offset_ = true;
+            }
+            return this;
+        }
+
         // setter for group weights
         inline void set_group_weight(
             const arma::vec& group_weight = arma::vec()
@@ -268,7 +282,8 @@ namespace abclass
 
         // linear predictor
         inline arma::mat linear_score(const arma::mat& beta,
-                                      const T_x& x) const
+                                      const T_x& x,
+                                      const arma::mat& offset) const
         {
             arma::mat pred_mat;
             if (control_.intercept_) {
@@ -276,6 +291,9 @@ namespace abclass
                 pred_mat.each_row() += beta.row(0);
             } else {
                 pred_mat = x * beta;
+            }
+            if (offset.n_rows == x.n_rows && offset.n_cols == beta.n_cols) {
+                pred_mat += offset;
             }
             return pred_mat;
         }
@@ -312,22 +330,25 @@ namespace abclass
         }
         // class conditional probability
         inline arma::mat predict_prob(const arma::mat& beta,
-                                      const T_x& x) const
+                                      const T_x& x,
+                                      const arma::mat& offset) const
         {
-            return predict_prob(linear_score(beta, x));
+            return predict_prob(linear_score(beta, x, offset));
         }
         // prediction based on the inner products
         inline arma::uvec predict_y(const arma::mat& beta,
-                                    const T_x& x) const
+                                    const T_x& x,
+                                    const arma::mat& offset) const
         {
-            return predict_y(linear_score(beta, x));
+            return predict_y(linear_score(beta, x, offset));
         }
         // accuracy for tuning
         inline double accuracy(const arma::mat& beta,
                                const T_x& x,
+                               const arma::mat& offset,
                                const arma::uvec& y) const
         {
-            return accuracy(linear_score(beta, x), y);
+            return accuracy(linear_score(beta, x, offset), y);
         }
 
     };

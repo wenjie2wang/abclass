@@ -141,6 +141,7 @@ namespace abclass
         using Abclass<T_loss, T_x>::p0_;
         using Abclass<T_loss, T_x>::p1_;
         using Abclass<T_loss, T_x>::n_obs_;
+        using Abclass<T_loss, T_x>::ex_vertex_;
         using Abclass<T_loss, T_x>::et_npermuted_;
         using Abclass<T_loss, T_x>::coef_;
         using Abclass<T_loss, T_x>::set_mm_lowerbound;
@@ -450,7 +451,13 @@ namespace abclass
         set_mm_lowerbound();
         // TODO: allow groupwise adaptive weights
         // initialize
-        arma::vec one_inner { arma::zeros(n_obs_) };
+        arma::vec one_inner;
+        if (control_.has_offset_) {
+            arma::mat ex_inner { ex_vertex_ % control_.offset_ };
+            one_inner = arma::sum(ex_inner, 1);
+        } else {
+            one_inner = arma::zeros(n_obs_);
+        }
         arma::mat one_beta { arma::zeros(p1_, km1_) },
             one_grad_beta { one_beta };
         const bool is_ridge_only { isAlmostEqual(control_.alpha_, 0.0) };

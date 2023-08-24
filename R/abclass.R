@@ -110,6 +110,8 @@ abclass <- function(x, y,
 ##'     the adaptive penalty factors for the specified group penalty.
 ##' @param group_penalty A character vector specifying the name of the group
 ##'     penalty.
+##' @param offset An optional numeric matrix for offsets of the decision
+##'     functions.
 ##' @param dgamma A positive number specifying the increment to the minimal
 ##'     gamma parameter for group SCAD or group MCP.
 ##' @param lum_a A positive number greater than one representing the parameter
@@ -145,6 +147,7 @@ abclass.control <- function(lambda = NULL,
                             grouped = TRUE,
                             group_weight = NULL,
                             group_penalty = c("lasso", "scad", "mcp"),
+                            offset = NULL,
                             dgamma = 1.0,
                             lum_a = 1.0,
                             lum_c = 1.0,
@@ -173,6 +176,7 @@ abclass.control <- function(lambda = NULL,
         grouped = grouped,
         group_penalty = group_penalty,
         group_weight = null2num0(group_weight),
+        offset = null2mat0(offset),
         standardize = standardize,
         maxit = as.integer(maxit),
         epsilon = epsilon,

@@ -89,6 +89,7 @@ inline abclass::Control conv_control(const Rcpp::List& control)
     };
     ctrl.set_intercept(control["intercept"])->
         set_weight(control["weight"])->
+        set_offset(control["offset"])->
         reg_path(control["nlambda"],
                  control["lambda_min_ratio"],
                  control["varying_active_set"])->

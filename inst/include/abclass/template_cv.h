@@ -45,18 +45,26 @@ namespace abclass {
         // model fits
         for (size_t i { 0 }; i < obj.control_.cv_nfolds_; ++i) {
             auto train_x { subset_rows(obj.x_, cv_obj.train_index_.at(i)) };
+            auto test_x { subset_rows(obj.x_, cv_obj.test_index_.at(i)) };
+            arma::mat train_offset, test_offset;
+            if (obj.control_.has_offset_) {
+                train_offset = subset_rows(obj.control_.offset_,
+                                           cv_obj.train_index_.at(i));
+                test_offset = subset_rows(obj.control_.offset_,
+                                          cv_obj.test_index_.at(i));
+            }
             arma::uvec train_y { obj.y_.rows(cv_obj.train_index_.at(i)) };
+            arma::uvec test_y { obj.y_.rows(cv_obj.test_index_.at(i)) };
             arma::vec train_weight {
                 obj.control_.obs_weight_.elem(cv_obj.train_index_.at(i))
             };
-            auto test_x { subset_rows(obj.x_, cv_obj.test_index_.at(i)) };
-            arma::uvec test_y { obj.y_.rows(cv_obj.test_index_.at(i)) };
             // create a new object
             T new_obj { obj };
             new_obj.set_standardize(false);
-            new_obj.set_data(std::move(train_x),
-                             std::move(train_y))->set_k(obj.k_);
-            new_obj.set_weight(std::move(train_weight));
+            new_obj.set_data(std::move(train_x), std::move(train_y))->
+                set_k(obj.k_)->
+                set_weight(std::move(train_weight))->
+                set_offset(std::move(train_offset));
             if (! obj.custom_lambda_ && obj.control_.cv_alignment_ == 0) {
                 // reset lambda
                 new_obj.control_.reg_path(arma::vec());
@@ -65,7 +73,7 @@ namespace abclass {
             new_obj.fit();
             for (size_t l { 0 }; l < ntune; ++l) {
                 obj.cv_accuracy_(l, i) = new_obj.accuracy(
-                    new_obj.coef_.slice(l), test_x, test_y);
+                    new_obj.coef_.slice(l), test_x, test_offset, test_y);
             }
         }
         obj.cv_accuracy_mean_ = mat2vec(arma::mean(obj.cv_accuracy_, 1));

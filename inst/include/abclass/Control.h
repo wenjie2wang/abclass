@@ -29,8 +29,12 @@ namespace abclass
     {
     public:
         // model
-        bool intercept_ { true };               // if to contrain intercepts
-        arma::vec obs_weight_ { arma::vec() } ; // observational weights
+        bool intercept_ { true };              // if to contrain intercepts
+        arma::vec obs_weight_ { arma::vec() }; // observational weights
+
+        // offset
+        bool has_offset_ { false };        // to avoid some computation
+        arma::mat offset_ { arma::mat() }; // for the decision functions
 
         // regularization
         arma::vec lambda_  { arma::vec() };
@@ -85,6 +89,12 @@ namespace abclass
         Control* set_weight(const arma::vec& obs_weight)
         {
             obs_weight_ = obs_weight;
+            return this;
+        }
+        Control* set_offset(const arma::mat& offset)
+        {
+            offset_ = offset;
+            has_offset_ = true;
             return this;
         }
         Control* set_standardize(const bool standardize)
