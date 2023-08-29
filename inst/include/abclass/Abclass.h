@@ -183,7 +183,6 @@ namespace abclass
                 const Control& control = Control()) :
             control_ (control)
         {
-
             set_data(x, y);
             set_weight(control_.obs_weight_);
             set_offset(control_.offset_);
