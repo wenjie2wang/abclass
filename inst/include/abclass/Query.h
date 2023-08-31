@@ -33,6 +33,12 @@ namespace abclass {
         // constructors
         Query() {};
 
+        explicit Query(const arma::vec& y)
+        {
+            desc_idx_ = arma::sort_index(y, "descend");
+            y_ = y.elem(desc_idx_);
+        }
+
         Query(const arma::mat& x,
               const arma::vec& y,
               const bool pairs = true)
@@ -40,7 +46,6 @@ namespace abclass {
             desc_idx_ = arma::sort_index(y, "descend");
             y_ = y.elem(desc_idx_);
             x_ = x.rows(desc_idx_);
-            has_pairs_ = pairs;
             if (pairs) {
                 construct_pairs();
             }
@@ -73,19 +78,20 @@ namespace abclass {
             for (size_t i {0}; i < ii; ++i) {
                 pair_x_.row(i) = x_.row(ivec[i]) - x_.row(jvec[i]);
             }
+            has_pairs_ = true;
         }
 
         // methods
         inline double max_dcg(const unsigned int top_k = 1)
         {
             unsigned int k { std::max(1U, std::min(top_k, y_.n_elem)) };
-            if (max_dcg_.n_elem == 0) {
+            if (max_dcg_.n_elem == y_.n_elem) {
                 return max_dcg_(k - 1);
             }
             max_dcg_ = arma::zeros(y_.n_elem);
             double out { 0.0 };
             for (size_t i {0}; i < k; ++i) {
-                out += (std::pow(y_(i), 2) - 1) / std::log2(i + 1);
+                out += (std::pow(2, y_(i)) - 1) / std::log2(i + 2);
                 max_dcg_(i) = out;
             }
             return out;
@@ -94,16 +100,18 @@ namespace abclass {
                           const unsigned int top_k = 1,
                           const bool sorted = true) const
         {
-            arma::vec s_pred { pred };
+            arma::uvec pred_idx;
+
             if (! sorted) {
-                s_pred = pred.elem(desc_idx_);
+                pred_idx = arma::sort_index(pred.elem(desc_idx_), "descend");
+            } else {
+                pred_idx = arma::sort_index(pred, "descend");
             }
-            arma::uvec pred_idx { arma::sort_index(s_pred, "descend") };
             arma::vec score { y_.elem(pred_idx) };
             unsigned int k { std::min(top_k, y_.n_elem) };
             double out { 0.0 };
             for (size_t i {0}; i < k; ++i) {
-                out += (std::pow(score(i), 2) - 1) / std::log2(i + 1);
+                out += (std::pow(2, score(i)) - 1) / std::log2(i + 2);
             }
             return out;
         }
@@ -117,19 +125,26 @@ namespace abclass {
         }
 
         // absolute value of dcg if swapping the pairs
-        inline void compute_delta_dcg(const arma::vec& pred)
+        inline void compute_delta_dcg(const arma::vec& pred,
+                                      const bool sorted = true)
         {
             if (! has_pairs_) {
                 construct_pairs();
             }
+            arma::uvec pred_drank;
+            if (! sorted) {
+                pred_drank = desc_rank(pred.elem(desc_idx_));
+            } else {
+                pred_drank = desc_rank(pred);
+            }
             delta_dcg_ = arma::ones(n_pairs_);
-            arma::uvec pred_drank { desc_rank(pred) };
             for (size_t i {0}; i < n_pairs_; ++i) {
-                double g_i { std::pow(pred(pair_i_[i]), 2) - 1 };
-                double g_j { std::pow(pred(pair_j_[i]), 2) - 1 };
-                double d_i { std::log2(1 + pred_drank(pair_i_[i])) };
-                double d_j { std::log2(1 + pred_drank(pair_j_[i])) };
-                delta_dcg_(i) = std::abs((g_i - g_j) * (d_i - d_j));
+                double g_i_p1 { std::pow(2, y_(pair_i_[i])) };
+                double g_j_p1 { std::pow(2, y_(pair_j_[i])) };
+                double d_i { std::log2(2.0 + pred_drank(pair_i_[i])) };
+                double d_j { std::log2(2.0 + pred_drank(pair_j_[i])) };
+                delta_dcg_(i) = std::abs((g_i_p1 - g_j_p1) *
+                                         (1.0 / d_i - 1.0 / d_j));
             }
         }
 
