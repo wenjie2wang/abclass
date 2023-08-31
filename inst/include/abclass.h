@@ -28,6 +28,8 @@
 #include "abclass/Control.h"
 #include "abclass/Simplex.h"
 #include "abclass/Moml.h"
+#include "abclass/Query.h"
+#include "abclass/Abrank.h"
 
 // loss
 #include "abclass/Boost.h"
