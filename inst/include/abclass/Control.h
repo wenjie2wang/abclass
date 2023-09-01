@@ -63,6 +63,10 @@ namespace abclass
         bool standardize_ { true };        // is x_ standardized (column-wise)
         unsigned int verbose_ { 0 };
 
+        // for ranking
+        bool query_weight_ { false };
+        bool lambda_weight_ { false };
+
         // default constructor
         Control() {}
 
@@ -161,7 +165,14 @@ namespace abclass
             et_nstages_ = nstages;
             return this;
         }
-
+        // ranking
+        Control* rank(const bool query_weight,
+                      const bool lambda_weight)
+        {
+            query_weight_ = query_weight;
+            lambda_weight_ = lambda_weight;
+            return this;
+        }
 
     };
 

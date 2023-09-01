@@ -78,16 +78,13 @@ namespace abclass
         }
 
         // set adaptive lambda-loss weights
-        inline Abrank* set_lambda_weight(const arma::vec& preds,
-                                         const bool balance_query = true)
+        inline Abrank* set_lambda_weight(const bool balance_query = true)
         {
-            if (preds.n_elem != n_all_pairs_) {
-                throw std::range_error("The preds must match the queries.");
-            }
             arma::vec out_w { arma::ones(n_all_pairs_) };
             for (size_t i {0}; i < query_vec_.size(); ++i) {
                 arma::vec pred_i {
-                    preds.subvec(pairs_start_(i), pairs_end_(i))
+                    abc_.linear_score(abc_.coef_.slice(0),
+                                      query_vec_.at(i).pair_x_)
                 };
                 arma::vec w_vec { query_vec_.at(i).delta_dcg(pred_i) };
                 if (balance_query) {
@@ -111,19 +108,76 @@ namespace abclass
             return this;
         }
 
-        // train the classifier
-        inline Abrank* fit()
-        {
-            abc_.fit();
-            return this;
-        }
-
         // the prediction method
         inline arma::mat predict(const arma::mat& beta,
                                  const T_x& x,
-                                 const arma::mat& offset) const
+                                 const arma::mat& offset = arma::vec()) const
         {
             return abc_.linear_score(beta, x, offset);
+        }
+
+        // train the classifier
+        inline Abrank* fit()
+        {
+            if (abc_.control_.query_weight_) {
+                set_query_weight();
+            }
+            abc_.fit();
+            if (abc_.control_.lambda_weight_) {
+                // assume there is only one lambda
+                abc_.control_.lambda_ = abc_.control_.lambda_[0];
+                set_lambda_weight(abc_.control_.query_weight_);
+                arma::vec w0 { abc_.control_.obs_weight_ };
+                for (size_t i {0}; i < abc_.control_.max_iter_; ++i) {
+                    abc_.fit();
+                    set_lambda_weight(abc_.control_.query_weight_);
+                    arma::vec w1 { abc_.control_.obs_weight_ };
+                    double tol { rel_diff(w0, w1) };
+                    if (tol < abc_.control_.epsilon_) {
+                        break;
+                    }
+                    w0 = w1;
+                }
+            }
+            return this;
+        }
+
+        // cross-validation
+        inline arma::cube cv_abrank_recall(
+            const arma::vec& top_props = {0.05, 0.10, 0.15, 0.25, 0.50}
+            )
+        {
+            size_t ntune { abc_.control_.lambda_.n_elem };
+            if (ntune == 0) {
+                ntune = abc_.control_.nlambda_;
+            }
+            arma::cube cv_recall {
+                arma::zeros(top_props.n_elem, ntune, query_vec_.size())
+            };
+            for (size_t i {0}; i < query_vec_.size(); ++i) {
+                T_x test_x { query_vec_.at(i).x_ };
+                Query<T_x> test_query { query_vec_.at(i).y_ };
+                std::vector<T_x> train_xs;
+                std::vector<arma::vec> train_ys;
+                for (size_t k {0}; k < query_vec_.size(); ++k) {
+                    if (k == i) {
+                        continue;
+                    }
+                    train_xs.push_back(query_vec_.at(k).x_);
+                    train_ys.push_back(query_vec_.at(k).y_);
+                }
+                Abrank<T_loss, T_x> cv_obj { train_xs, train_ys };
+                cv_obj.fit();
+                for (size_t j {0}; j < ntune; ++j) {
+                    arma::vec cv_pred {
+                        mat2vec(cv_obj.predict(cv_obj.abc_.coef_.slice(j),
+                                               test_x))
+                    };
+                    cv_recall.slice(i).col(j) =
+                        test_query.recall(cv_pred, top_props, false);
+                }
+            }
+            return cv_recall;
         }
 
     };
@@ -140,41 +194,6 @@ namespace abclass
 
     template<typename T_x>
     using LumRank = abclass::Abrank<abclass::Lum, T_x>;
-
-    // cross-validation
-    template <typename T_loss, typename T_x>
-    inline arma::cube cv_abrank_recall(const std::vector<T_x>& xs,
-                                       const std::vector<arma::vec>& ys,
-                                       const Control& control,
-                                       const arma::vec& top_props)
-    {
-        size_t ntune { control.lambda_.n_elem };
-        if (ntune == 0) {
-            ntune = control.nlambda_;
-        }
-        arma::cube cv_recall = arma::zeros(top_props.n_elem, ntune, xs.size());
-        for (size_t i {0}; i < xs.size(); ++i) {
-            T_x test_x { xs.at(i) };
-            arma::vec test_y { ys.at(i) };
-            arma::vec test_offset { arma::zeros(test_x.n_rows) };
-            Query<T_x> test_query { test_y };
-            std::vector<T_x> train_xs { xs };
-            std::vector<arma::vec> train_ys { ys };
-            train_xs.erase(train_xs.begin() + i);
-            train_ys.erase(train_ys.begin() + i);
-            Abrank<T_loss, T_x> cv_obj { train_xs, train_ys };
-            cv_obj.fit();
-            for (size_t j {0}; j < ntune; ++j) {
-                arma::vec cv_pred {
-                    mat2vec(cv_obj.predict(cv_obj.abc_.coef_.slice(j),
-                                           test_x, test_offset))
-                };
-                cv_recall.slice(i).col(j) =
-                    test_query.recall(cv_pred, top_props, false);
-            }
-        }
-        return cv_recall;
-    }
 
 }  // abclass
 
