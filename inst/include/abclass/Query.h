@@ -11,18 +11,13 @@ namespace abclass {
     class Query
     {
     protected:
-        // rank function in a descending order
-        inline arma::uvec desc_rank(const arma::vec& pred) const
-        {
-            return arma::sort_index(arma::sort_index(pred, "descend"));
-        }
 
     public:
         arma::uvec desc_idx_;   // order(y)
         T_x x_;                 // sorted
         arma::vec y_;           // sorted in a descending order
-        bool has_pairs_;        // if we have constructed the pairwise data
 
+        bool has_pairs_;        // if we have constructed the pairwise data
         unsigned int n_pairs_;  // number of pairs
         T_x pair_x_;            // x[i, ] - x[j, ]
         arma::uvec pair_i_;
@@ -92,6 +87,12 @@ namespace abclass {
                 max_dcg_(i) = tmp;
             }
             return this;
+        }
+
+        // rank function in a descending order
+        inline arma::uvec desc_rank(const arma::vec& pred) const
+        {
+            return arma::sort_index(arma::sort_index(pred, "descend"));
         }
 
         inline double max_dcg(const unsigned int top_k = 1) const
