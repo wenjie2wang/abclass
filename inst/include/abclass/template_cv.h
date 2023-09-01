@@ -73,7 +73,8 @@ namespace abclass {
             new_obj.fit();
             for (size_t l { 0 }; l < ntune; ++l) {
                 obj.cv_accuracy_(l, i) = new_obj.accuracy(
-                    new_obj.coef_.slice(l), test_x, test_offset, test_y);
+                    new_obj.coef_.slice(l), test_x, test_offset,
+                    test_y, test_offset);
             }
         }
         obj.cv_accuracy_mean_ = mat2vec(arma::mean(obj.cv_accuracy_, 1));

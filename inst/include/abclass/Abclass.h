@@ -280,9 +280,11 @@ namespace abclass
         }
 
         // linear predictor
-        inline arma::mat linear_score(const arma::mat& beta,
-                                      const T_x& x,
-                                      const arma::mat& offset) const
+        inline arma::mat linear_score(
+            const arma::mat& beta,
+            const T_x& x,
+            const arma::mat& offset = arma::vec()
+            ) const
         {
             arma::mat pred_mat;
             if (control_.intercept_) {
@@ -328,24 +330,30 @@ namespace abclass
                 static_cast<double>(y.n_elem);
         }
         // class conditional probability
-        inline arma::mat predict_prob(const arma::mat& beta,
-                                      const T_x& x,
-                                      const arma::mat& offset) const
+        inline arma::mat predict_prob(
+            const arma::mat& beta,
+            const T_x& x,
+            const arma::mat& offset = arma::vec()
+            ) const
         {
             return predict_prob(linear_score(beta, x, offset));
         }
         // prediction based on the inner products
-        inline arma::uvec predict_y(const arma::mat& beta,
-                                    const T_x& x,
-                                    const arma::mat& offset) const
+        inline arma::uvec predict_y(
+            const arma::mat& beta,
+            const T_x& x,
+            const arma::mat& offset = arma::vec()
+            ) const
         {
             return predict_y(linear_score(beta, x, offset));
         }
         // accuracy for tuning
-        inline double accuracy(const arma::mat& beta,
-                               const T_x& x,
-                               const arma::mat& offset,
-                               const arma::uvec& y) const
+        inline double accuracy(
+            const arma::mat& beta,
+            const T_x& x,
+            const arma::uvec& y,
+            const arma::mat& offset = arma::vec()
+            ) const
         {
             return accuracy(linear_score(beta, x, offset), y);
         }
