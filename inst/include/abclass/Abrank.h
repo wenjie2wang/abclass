@@ -166,7 +166,9 @@ namespace abclass
                     train_xs.push_back(query_vec_.at(k).x_);
                     train_ys.push_back(query_vec_.at(k).y_);
                 }
-                Abrank<T_loss, T_x> cv_obj { train_xs, train_ys };
+                Abrank<T_loss, T_x> cv_obj {
+                    train_xs, train_ys, abc_.control_
+                };
                 cv_obj.fit();
                 for (size_t j {0}; j < ntune; ++j) {
                     arma::vec cv_pred {
