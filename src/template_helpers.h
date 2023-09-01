@@ -81,7 +81,7 @@ inline Rcpp::List template_fit(T& object)
 }
 
 // convert the given control from Rcpp::List to abclass::Control
-inline abclass::Control conv_control(const Rcpp::List& control)
+inline abclass::Control abclass_control(const Rcpp::List& control)
 {
     abclass::Control ctrl {
         control["maxit"], control["epsilon"],

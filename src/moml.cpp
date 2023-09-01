@@ -32,7 +32,7 @@ Rcpp::List template_moml_fit(
     const size_t loss_id { control["loss_id"] };
     const size_t penalty_id { control["penalty_id"] };
     const size_t method_id { penalty_id * 100 + loss_id };
-    abclass::Control ctrl { conv_control(control) };
+    abclass::Control ctrl { abclass_control(control) };
     switch (method_id) {
         case 101: {
             abclass::MomlNet<abclass::Logistic, T> object {
