@@ -139,7 +139,9 @@ namespace abclass {
         {
             if (! has_pairs_) {
                 construct_pairs();
+                compute_max_dcg();
             }
+            double max_dcg_k { max_dcg_(y_.n_elem - 1) };
             arma::uvec pred_drank;
             if (! sorted) {
                 pred_drank = desc_rank(pred.elem(desc_idx_));
@@ -154,8 +156,6 @@ namespace abclass {
                 double d_j { std::log2(2.0 + pred_drank(pair_j_[i])) };
                 out(i) = std::abs((g_i_p1 - g_j_p1) * (1.0 / d_i - 1.0 / d_j));
             }
-            compute_max_dcg();
-            double max_dcg_k { max_dcg_(y_.n_elem - 1) };
             return out / max_dcg_k;
         }
 

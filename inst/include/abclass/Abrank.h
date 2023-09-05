@@ -59,7 +59,7 @@ namespace abclass
             pairs_end_ = pairs_start_;
             for (size_t i {0}; i < xs.size(); ++i) {
                 query_vec_.push_back(Query<T_x>(xs.at(i), ys.at(i)));
-                query_vec_.at(i).max_dcg();
+                query_vec_.at(i).compute_max_dcg();
                 pairs_end_(i) = query_vec_.at(i).n_pairs_;
             }
             pairs_end_ = arma::cumsum(pairs_end_);
