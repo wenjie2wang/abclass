@@ -30,9 +30,11 @@ namespace abclass {
     protected:
 
     public:
-        arma::uvec desc_idx_;   // order(y)
-        T_x x_;                 // sorted
+        arma::uvec desc_idx_;   // order(y, descending = TRUE)
+        arma::uvec asc_idx_;    // order(y, descending = FALSE)
+
         arma::vec y_;           // sorted in a descending order
+        T_x x_;                 // sorted corresponding to y
 
         bool has_pairs_;        // if we have constructed the pairwise data
         unsigned int n_pairs_;  // number of pairs
@@ -48,6 +50,7 @@ namespace abclass {
         explicit Query(const arma::vec& y)
         {
             desc_idx_ = arma::sort_index(y, "descend");
+            asc_idx_ = arma::sort_index(y, "ascend");
             y_ = y.elem(desc_idx_);
         }
 
@@ -56,6 +59,7 @@ namespace abclass {
               const bool pairs = true)
         {
             desc_idx_ = arma::sort_index(y, "descend");
+            asc_idx_ = arma::sort_index(y, "ascend");
             y_ = y.elem(desc_idx_);
             x_ = x.rows(desc_idx_);
             if (pairs) {
@@ -181,12 +185,18 @@ namespace abclass {
                                 const arma::vec& top_props,
                                 const bool sorted = true) const
         {
+            // we sort y in an ascending order to break ties
+            // corresponds to the recall of the worst case
             arma::uvec pred_idx;
             if (! sorted) {
-                pred_idx = arma::sort_index(pred.elem(desc_idx_), "descend");
+                arma::vec tmp_pred { pred.elem(desc_idx_) };
+                pred_idx = arma::stable_sort_index(tmp_pred.elem(asc_idx_),
+                                                   "descend");
             } else {
-                pred_idx = arma::sort_index(pred, "descend");
+                pred_idx = arma::stable_sort_index(pred.elem(asc_idx_),
+                                                   "descend");
             }
+            pred_idx = asc_idx_.elem(pred_idx);
             arma::vec out { arma::zeros(top_props.n_elem) };
             for (size_t i {0}; i < top_props.n_elem; ++i) {
                 unsigned int k {
