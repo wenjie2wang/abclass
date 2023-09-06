@@ -9,5 +9,5 @@ bibentry(
         ),
     year = "2023",
     url = "https://CRAN.R-project.org/package=abclass",
-    note = "{R} package version 0.5.0.9000"
+    note = "{R} package version 0.5.0.9010"
 )
