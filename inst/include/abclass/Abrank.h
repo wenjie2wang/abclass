@@ -62,9 +62,11 @@ namespace abclass
                 query_vec_.at(i).compute_max_dcg();
                 pairs_end_(i) = query_vec_.at(i).n_pairs_;
             }
-            pairs_end_ = arma::cumsum(pairs_end_);
-            pairs_start_ = arma::shift(pairs_end_, 1);
-            n_all_pairs_ = pairs_start_(0);
+            if (xs.size() > 1) {
+                pairs_end_ = arma::cumsum(pairs_end_);
+                pairs_start_ = arma::shift(pairs_end_, 1);
+            }
+            n_all_pairs_ = pairs_end_(xs.size() - 1);
             pairs_start_(0) = 0;
             pairs_end_ -= 1;
             T_x abc_x { query_vec_.at(0).pair_x_ };
