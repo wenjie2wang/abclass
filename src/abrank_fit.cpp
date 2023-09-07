@@ -32,7 +32,8 @@ inline abclass::Control abrank_control(const Rcpp::List& control)
     ctrl.set_intercept(false)->
         set_weight(control["weight"])->
         rank(control["query_weight"],
-             control["lambda_weight"])->
+             control["delta_weight"],
+             control["delta_maxit"])->
         set_offset(control["offset"])->
         reg_path(control["nlambda"],
                  control["lambda_min_ratio"],

@@ -65,7 +65,8 @@ namespace abclass
 
         // for ranking
         bool query_weight_ { false };
-        bool lambda_weight_ { false };
+        bool delta_weight_ { false };
+        unsigned int delta_max_iter_ { 10 };
 
         // default constructor
         Control() {}
@@ -167,10 +168,12 @@ namespace abclass
         }
         // ranking
         Control* rank(const bool query_weight,
-                      const bool lambda_weight)
+                      const bool lambda_weight,
+                      const unsigned int delta_max_iter = 10)
         {
             query_weight_ = query_weight;
-            lambda_weight_ = lambda_weight;
+            delta_weight_ = lambda_weight;
+            delta_max_iter_ = delta_max_iter;
             return this;
         }
 

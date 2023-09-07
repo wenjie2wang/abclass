@@ -154,9 +154,9 @@ namespace abclass {
             return dcg_k / max_dcg_k;
         }
 
-        // absolute value of dcg if swapping the pairs
-        inline arma::vec delta_dcg(const arma::vec& pred,
-                                   const bool sorted = true)
+        // absolute value of ndcg if swapping the pairs
+        inline arma::vec delta_ndcg(const arma::vec& pred,
+                                    const bool sorted = true)
         {
             if (! has_pairs_) {
                 construct_pairs();

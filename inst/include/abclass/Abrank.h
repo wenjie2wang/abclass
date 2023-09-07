@@ -80,7 +80,7 @@ namespace abclass
         }
 
         // set adaptive lambda-loss weights
-        inline Abrank* set_lambda_weight(const bool balance_query = true)
+        inline Abrank* set_delta_weight(const bool balance_query = true)
         {
             arma::vec out_w { arma::ones(n_all_pairs_) };
             for (size_t i {0}; i < query_vec_.size(); ++i) {
@@ -88,7 +88,7 @@ namespace abclass
                     abc_.linear_score(abc_.coef_.slice(0),
                                       query_vec_.at(i).pair_x_)
                 };
-                arma::vec w_vec { query_vec_.at(i).delta_dcg(pred_i) };
+                arma::vec w_vec { query_vec_.at(i).delta_ndcg(pred_i) };
                 if (balance_query) {
                     w_vec /= arma::accu(w_vec);
                 }
@@ -125,14 +125,14 @@ namespace abclass
                 set_query_weight();
             }
             abc_.fit();
-            if (abc_.control_.lambda_weight_) {
+            if (abc_.control_.delta_weight_) {
                 // assume there is only one lambda
                 abc_.control_.lambda_ = abc_.control_.lambda_[0];
-                set_lambda_weight(abc_.control_.query_weight_);
+                set_delta_weight(abc_.control_.query_weight_);
                 arma::vec w0 { abc_.control_.obs_weight_ };
-                for (size_t i {0}; i < abc_.control_.max_iter_; ++i) {
+                for (size_t i {0}; i < abc_.control_.delta_max_iter_; ++i) {
                     abc_.fit();
-                    set_lambda_weight(abc_.control_.query_weight_);
+                    set_delta_weight(abc_.control_.query_weight_);
                     arma::vec w1 { abc_.control_.obs_weight_ };
                     double tol { rel_diff(w0, w1) };
                     if (tol < abc_.control_.epsilon_) {
