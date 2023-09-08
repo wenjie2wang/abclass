@@ -211,7 +211,7 @@ namespace abclass
             }
             return out_recall;
         }
-        inline arma::mat cv_recall_sum(const double until_top = 0.50)
+        inline arma::mat cv_delta_recall(const double until_top = 0.50)
         {
             size_t ntune { abc_.control_.lambda_.n_elem };
             if (ntune == 0) {

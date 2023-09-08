@@ -73,7 +73,19 @@ inline Rcpp::List template_abrank_fit(T& object)
     if (object.abc_.control_.cv_nfolds_ == 2) {
         cv_res = Rcpp::List::create(
             Rcpp::Named("cv_metric") = 2,
-            Rcpp::Named("cv_delta_recall") = object.cv_recall_sum()
+            Rcpp::Named("cv_delta_recall") = object.cv_delta_recall()
+            );
+    }
+    if (object.abc_.control_.cv_nfolds_ >= 3) {
+        abclass::cv_lambda(object.abc_);
+        cv_res = Rcpp::List::create(
+            Rcpp::Named("nfolds") = object.abc_.control_.cv_nfolds_,
+            Rcpp::Named("alignment") = object.abc_.control_.cv_alignment_,
+            Rcpp::Named("cv_accuracy") = object.abc_.cv_accuracy_,
+            Rcpp::Named("cv_accuracy_mean") =
+            abclass::arma2rvec(object.abc_.cv_accuracy_mean_),
+            Rcpp::Named("cv_accuracy_sd") =
+            abclass::arma2rvec(object.abc_.cv_accuracy_sd_)
             );
     }
     object.fit();

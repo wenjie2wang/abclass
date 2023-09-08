@@ -196,7 +196,7 @@ namespace abclass
             y_ = y;
             inter_ = static_cast<unsigned int>(control_.intercept_);
             km1_ = std::max(1U, arma::max(y_)); // assume y in {0, ..., k-1}
-            // Binary classification will be assumed if y only takes zero.
+            // Binary classification will be assumed if y only takes zero/one.
             k_ = km1_ + 1;
             n_obs_ = x_.n_rows;
             dn_obs_ = static_cast<double>(n_obs_);
@@ -324,10 +324,14 @@ namespace abclass
         inline double accuracy(const arma::mat& pred_f,
                                const arma::uvec& y) const
         {
+            // in case the decision functions are all zeros
+            if (! control_.intercept_ && pred_f.is_zero()) {
+                return 1.0 / static_cast<double>(k_);
+            }
             arma::uvec max_idx { predict_y(pred_f) };
+            arma::uvec is_correct { max_idx == y };
             // note that y can be of length different than dn_obs_
-            return arma::sum(max_idx == y) /
-                static_cast<double>(y.n_elem);
+            return arma::sum(is_correct) / static_cast<double>(y.n_elem);
         }
         // class conditional probability
         inline arma::mat predict_prob(

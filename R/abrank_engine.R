@@ -74,7 +74,7 @@
         res$cross_validation$cv_recall_mean <- rowMeans(
             res$cross_validation$cv_recall, dims = 2
         )
-    } else {
+    } else if (call_list$control$cv_metric == 2L) {
         ## add mean over queries
         res$cross_validation$cv_delta_recall_mean <- colMeans(
             res$cross_validation$cv_delta_recall
