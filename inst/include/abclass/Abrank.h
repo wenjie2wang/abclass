@@ -38,6 +38,7 @@ namespace abclass
         std::vector<Query<T_x> > query_vec_;
         // cache
         size_t n_all_pairs_;
+        std::vector<arma::vec> offset_vec_;
         // index variables
         arma::uvec pairs_start_;
         arma::uvec pairs_end_;
@@ -48,25 +49,37 @@ namespace abclass
         // constructors
         Abrank() {};
 
-        Abrank(const std::vector<T_x>& xs,
-               const std::vector<arma::vec>& ys,
+        Abrank(const T_x& x,
+               const arma::vec& y,
+               const arma::uvec& qid,
                Control control = Control())
         {
-            if (xs.size() != ys.size()) {
-                throw std::range_error("xs.size() must match ys.size()");
-            }
-            pairs_start_ = arma::zeros<arma::uvec>(xs.size());
+            // qid must take values in {0, 1, 2, ...}
+            const size_t nquery { qid.max() + 1 };
+            pairs_start_ = arma::zeros<arma::uvec>(nquery);
             pairs_end_ = pairs_start_;
-            for (size_t i {0}; i < xs.size(); ++i) {
-                query_vec_.push_back(Query<T_x>(xs.at(i), ys.at(i)));
+            arma::vec abc_offset;
+            for (size_t i {0}; i < nquery; ++i) {
+                arma::uvec is_i { arma::find(qid == i) };
+                arma::mat x_i { x.rows(is_i) };
+                arma::vec y_i { y.elem(is_i) };
+                query_vec_.push_back(Query<T_x>(x_i, y_i));
                 query_vec_.at(i).compute_max_dcg();
                 pairs_end_(i) = query_vec_.at(i).n_pairs_;
+                if (control.has_offset_) {
+                    offset_vec_.push_back(control.offset_.elem(is_i));
+                    abc_offset = arma::join_cols(
+                        abc_offset,
+                        query_vec_.at(i).abrank_offset(offset_vec_.at(i)));
+                } else {
+                    offset_vec_.push_back(arma::vec());
+                }
             }
-            if (xs.size() > 1) {
+            if (nquery > 1) {
                 pairs_end_ = arma::cumsum(pairs_end_);
                 pairs_start_ = arma::shift(pairs_end_, 1);
             }
-            n_all_pairs_ = pairs_end_(xs.size() - 1);
+            n_all_pairs_ = pairs_end_(nquery - 1);
             pairs_start_(0) = 0;
             pairs_end_ -= 1;
             T_x abc_x { query_vec_.at(0).pair_x_ };
@@ -76,6 +89,8 @@ namespace abclass
             arma::uvec abc_y { arma::zeros<arma::uvec>(n_all_pairs_) };
             // not need intercept
             control.set_intercept(false);
+            // set offset
+            control.set_offset(abc_offset);
             abc_ = AbclassNet<T_loss, T_x>(abc_x, abc_y, control);
         }
 
@@ -111,9 +126,9 @@ namespace abclass
         }
 
         // the prediction method
-        inline arma::mat predict(const arma::mat& beta,
+        inline arma::vec predict(const arma::vec& beta,
                                  const T_x& x,
-                                 const arma::mat& offset = arma::vec()) const
+                                 const arma::vec& offset = arma::vec()) const
         {
             return abc_.linear_score(beta, x, offset);
         }
@@ -145,7 +160,7 @@ namespace abclass
         }
 
         // cross-validation
-        inline arma::cube cv_abrank_recall(
+        inline arma::cube cv_recall(
             const arma::vec& top_props = {0.05, 0.10, 0.15, 0.25, 0.50}
             )
         {
@@ -153,35 +168,97 @@ namespace abclass
             if (ntune == 0) {
                 ntune = abc_.control_.nlambda_;
             }
-            arma::cube cv_recall {
+            arma::cube out_recall {
                 arma::zeros(top_props.n_elem, ntune, query_vec_.size())
             };
             for (size_t i {0}; i < query_vec_.size(); ++i) {
                 T_x test_x { query_vec_.at(i).x_ };
                 Query<T_x> test_query { query_vec_.at(i).y_ };
-                std::vector<T_x> train_xs;
-                std::vector<arma::vec> train_ys;
-                for (size_t k {0}; k < query_vec_.size(); ++k) {
+                arma::vec test_offset { offset_vec_.at(i) };
+                T_x train_x;
+                arma::vec train_y;
+                arma::uvec train_qid;
+                arma::vec train_offset;
+                for (size_t k {0}, ki {0}; k < query_vec_.size(); ++k) {
                     if (k == i) {
                         continue;
                     }
-                    train_xs.push_back(query_vec_.at(k).x_);
-                    train_ys.push_back(query_vec_.at(k).y_);
+                    train_x = arma::join_cols(train_x, query_vec_.at(k).x_);
+                    train_y = arma::join_cols(train_y, query_vec_.at(k).y_);
+                    train_offset = arma::join_cols(train_offset,
+                                                   offset_vec_.at(k));
+                    train_qid = arma::join_cols(
+                        train_qid,
+                        arma::uvec(query_vec_.at(k).y_.n_elem,
+                                   arma::fill::value(ki))
+                        );
+                    ++ki;
                 }
+                Control train_ctrl { abc_.control_ };
+                train_ctrl.set_offset(train_offset);
                 Abrank<T_loss, T_x> cv_obj {
-                    train_xs, train_ys, abc_.control_
+                    train_x, train_y, train_qid, train_ctrl
                 };
                 cv_obj.fit();
                 for (size_t j {0}; j < ntune; ++j) {
                     arma::vec cv_pred {
                         mat2vec(cv_obj.predict(cv_obj.abc_.coef_.slice(j),
-                                               test_x))
+                                               test_x, test_offset))
                     };
-                    cv_recall.slice(i).col(j) =
+                    out_recall.slice(i).col(j) =
                         test_query.recall(cv_pred, top_props, false);
                 }
             }
-            return cv_recall;
+            return out_recall;
+        }
+        inline arma::mat cv_recall_sum(const double until_top = 0.50)
+        {
+            size_t ntune { abc_.control_.lambda_.n_elem };
+            if (ntune == 0) {
+                ntune = abc_.control_.nlambda_;
+            }
+            arma::mat out_recall {
+                arma::zeros(query_vec_.size(), ntune)
+            };
+            for (size_t i {0}; i < query_vec_.size(); ++i) {
+                T_x test_x { query_vec_.at(i).x_ };
+                Query<T_x> test_query { query_vec_.at(i).y_ };
+                arma::vec test_offset { offset_vec_.at(i) };
+                T_x train_x;
+                arma::vec train_y;
+                arma::uvec train_qid;
+                arma::vec train_offset;
+                for (size_t k {0}, ki {0}; k < query_vec_.size(); ++k) {
+                    if (k == i) {
+                        continue;
+                    }
+                    train_x = arma::join_cols(train_x, query_vec_.at(k).x_);
+                    train_y = arma::join_cols(train_y, query_vec_.at(k).y_);
+                    train_offset = arma::join_cols(train_offset,
+                                                   offset_vec_.at(k));
+                    train_qid = arma::join_cols(
+                        train_qid,
+                        arma::uvec(query_vec_.at(k).y_.n_elem,
+                                   arma::fill::value(ki))
+                        );
+                    ++ki;
+                }
+                Control train_ctrl { abc_.control_ };
+                train_ctrl.set_offset(train_offset);
+                Abrank<T_loss, T_x> cv_obj {
+                    train_x, train_y, train_qid, train_ctrl
+                };
+                cv_obj.fit();
+                for (size_t j {0}; j < ntune; ++j) {
+                    arma::vec cv_pred {
+                        mat2vec(cv_obj.predict(cv_obj.abc_.coef_.slice(j),
+                                               test_x, test_offset))
+                    };
+                    out_recall(i, j) =
+                        test_query.delta_recall_sum(cv_pred, until_top);
+                }
+            }
+            return out_recall;
         }
 
     };

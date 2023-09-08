@@ -86,36 +86,39 @@ namespace abclass
         }
 
         // individual setters
-        Control* set_intercept(const bool intercept)
+        inline Control* set_intercept(const bool intercept)
         {
             intercept_ = intercept;
             return this;
         }
-        Control* set_weight(const arma::vec& obs_weight)
+        inline Control* set_weight(const arma::vec& obs_weight)
         {
             obs_weight_ = obs_weight;
             return this;
         }
-        Control* set_offset(const arma::mat& offset)
+        template <typename T=arma::mat>
+        inline Control* set_offset(const T& offset)
         {
-            offset_ = offset;
-            has_offset_ = true;
+            offset_ = arma::mat(offset);
+            if (offset_.n_elem > 0) {
+                has_offset_ = true;
+            }
             return this;
         }
-        Control* set_standardize(const bool standardize)
+        inline Control* set_standardize(const bool standardize)
         {
             standardize_ = standardize;
             return this;
         }
-        Control* set_verbose(const unsigned int verbose)
+        inline Control* set_verbose(const unsigned int verbose)
         {
             verbose_ = verbose;
             return this;
         }
         // regularization
-        Control* reg_path(const unsigned int nlambda,
-                          const double lambda_min_ratio,
-                          const bool varying_active_set)
+        inline Control* reg_path(const unsigned int nlambda,
+                                 const double lambda_min_ratio,
+                                 const bool varying_active_set)
         {
             if (is_le(lambda_min_ratio, 0.0)) {
                 throw std::range_error(
@@ -126,12 +129,12 @@ namespace abclass
             varying_active_set_ = varying_active_set;
             return this;
         }
-        Control* reg_path(const arma::vec& lambda)
+        inline Control* reg_path(const arma::vec& lambda)
         {
             lambda_ = lambda;
             return this;
         }
-        Control* reg_net(const double alpha)
+        inline Control* reg_net(const double alpha)
         {
             // check alpha
             if ((alpha < 0.0) || (alpha > 1.0)) {
@@ -140,8 +143,8 @@ namespace abclass
             alpha_ = alpha;
             return this;
         }
-        Control* reg_group(const arma::vec& group_weight,
-                           const double dgamma = 1.0)
+        inline Control* reg_group(const arma::vec& group_weight,
+                                  const double dgamma = 1.0)
         {
             group_weight_ = group_weight;
             if (dgamma > 0.0) {
@@ -152,24 +155,24 @@ namespace abclass
             return this;
         }
         // tuning
-        Control* tune_cv(const unsigned int nfolds,
-                         const bool stratified = true,
-                         const unsigned int alignment = 0)
+        inline Control* tune_cv(const unsigned int nfolds,
+                                const bool stratified = true,
+                                const unsigned int alignment = 0)
         {
             cv_nfolds_ = nfolds;
             cv_stratified_ = stratified;
             cv_alignment_ = alignment;
             return this;
         }
-        Control* tune_et(const unsigned int nstages)
+        inline Control* tune_et(const unsigned int nstages)
         {
             et_nstages_ = nstages;
             return this;
         }
         // ranking
-        Control* rank(const bool query_weight,
-                      const bool lambda_weight,
-                      const unsigned int delta_max_iter = 10)
+        inline Control* rank(const bool query_weight,
+                             const bool lambda_weight,
+                             const unsigned int delta_max_iter = 1)
         {
             query_weight_ = query_weight;
             delta_weight_ = lambda_weight;

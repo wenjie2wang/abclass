@@ -226,6 +226,20 @@ namespace abclass {
             return arma::accu(tmp_delta - top_props);
         }
 
+        // generate pairwise offsets based on predictions for Abrank
+        inline arma::vec abrank_offset(const arma::vec& pred,
+                                       const bool sorted = true) const
+        {
+            if (pred.n_elem != y_.n_elem) {
+                throw std::range_error(
+                    "The length of predictions must match the data.");
+            }
+            arma::vec out { arma::ones(n_pairs_) };
+            for (size_t i {0}; i < n_pairs_; ++i) {
+                out(i) = pred(pair_i_[i]) - pred(pair_j_[i]);
+            }
+            return out;
+        }
 
     };
 
