@@ -47,7 +47,7 @@ null2mat0 <- function(x) {
     if (is.null(x)) {
         return(matrix(numeric(0)))
     }
-    x
+    as.matrix(x)
 }
 
 ## return 0 if null, x otherwise

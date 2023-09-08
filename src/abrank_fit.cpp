@@ -34,13 +34,13 @@ inline abclass::Control abrank_control(const Rcpp::List& control)
         rank(control["query_weight"],
              control["delta_weight"],
              control["delta_maxit"])->
-        set_offset(control["offset"])->
+        set_offset<arma::vec>(control["offset"])->
         reg_path(control["nlambda"],
                  control["lambda_min_ratio"],
                  control["varying_active_set"])->
         reg_path(control["lambda"])->
         reg_net(control["alpha"])->
-        tune_cv(control["nfolds"])->
+        tune_cv(control["cv_metric"])->
         tune_et(control["nstages"]);
     return ctrl;
 }
@@ -64,9 +64,16 @@ inline Rcpp::List template_abrank_fit(T& object)
             );
     }
     Rcpp::List cv_res;
-    if (object.abc_.control_.cv_nfolds_ > 0) {
+    if (object.abc_.control_.cv_nfolds_ == 1) {
         cv_res = Rcpp::List::create(
-            Rcpp::Named("cv_recall") = object.cv_abrank_recall()
+            Rcpp::Named("cv_metric") = 1,
+            Rcpp::Named("cv_recall") = object.cv_recall()
+            );
+    }
+    if (object.abc_.control_.cv_nfolds_ == 2) {
+        cv_res = Rcpp::List::create(
+            Rcpp::Named("cv_metric") = 2,
+            Rcpp::Named("cv_delta_recall") = object.cv_recall_sum()
             );
     }
     object.fit();
@@ -95,35 +102,25 @@ Rcpp::List rcpp_abrank_fit(
     const Rcpp::List& control
     )
 {
-    std::vector<arma::mat> xs;
-    std::vector<arma::vec> ys;
-    const size_t nquery { qid.max() + 1 };
-    for (size_t i {0}; i < nquery; ++i) {
-        arma::uvec is_i { arma::find(qid == i) };
-        arma::mat x_i { x.rows(is_i) };
-        arma::vec y_i { y.elem(is_i) };
-        xs.push_back(x_i);
-        ys.push_back(y_i);
-    }
-    const size_t loss_id { control["loss_id"] };
     abclass::Control ctrl { abrank_control(control) };
+    const size_t loss_id { control["loss_id"] };
     switch (loss_id) {
         case 1: {
-            abclass::LogisticRank<arma::mat> object { xs, ys, ctrl };
+            abclass::LogisticRank<arma::mat> object { x, y, qid, ctrl };
             return template_abrank_fit(object);
         }
         case 2: {
-            abclass::BoostRank<arma::mat> object { xs, ys, ctrl };
+            abclass::BoostRank<arma::mat> object { x, y, qid, ctrl };
             object.abc_.loss_.set_inner_min(control["boost_umin"]);
             return template_abrank_fit(object);
         }
         case 3: {
-            abclass::HingeBoostRank<arma::mat> object { xs, ys, ctrl };
+            abclass::HingeBoostRank<arma::mat> object { x, y, qid, ctrl };
             object.abc_.loss_.set_c(control["lum_c"]);
             return template_abrank_fit(object);
         }
         case 4: {
-            abclass::LumRank<arma::mat> object { xs, ys, ctrl };
+            abclass::LumRank<arma::mat> object { x, y, qid, ctrl };
             object.abc_.loss_.set_ac(control["lum_a"], control["lum_c"]);
             return template_abrank_fit(object);
         }

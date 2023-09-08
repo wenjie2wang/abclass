@@ -28,11 +28,26 @@ namespace abclass {
     class Query
     {
     protected:
-
-    public:
         arma::uvec desc_idx_;   // order(y, descending = TRUE)
         arma::uvec asc_idx_;    // order(y, descending = FALSE)
 
+        // align predictions with y_
+        inline arma::uvec get_pred_idx(const arma::vec& pred,
+                                       const bool sorted = true) const
+        {
+            arma::uvec pred_idx;
+            if (sorted) {
+                pred_idx = arma::stable_sort_index(pred.elem(asc_idx_),
+                                                   "descend");
+            } else {
+                arma::vec tmp_pred { pred.elem(desc_idx_) };
+                pred_idx = arma::stable_sort_index(tmp_pred.elem(asc_idx_),
+                                                   "descend");
+            }
+            return asc_idx_.elem(pred_idx);
+        }
+
+    public:
         arma::vec y_;           // sorted in a descending order
         T_x x_;                 // sorted corresponding to y
 
@@ -130,12 +145,7 @@ namespace abclass {
                           const unsigned int top_k = 1,
                           const bool sorted = true) const
         {
-            arma::uvec pred_idx;
-            if (! sorted) {
-                pred_idx = arma::sort_index(pred.elem(desc_idx_), "descend");
-            } else {
-                pred_idx = arma::sort_index(pred, "descend");
-            }
+            arma::uvec pred_idx { get_pred_idx(pred, sorted) };
             arma::vec score { y_.elem(pred_idx) };
             unsigned int k { std::min(top_k, y_.n_elem) };
             double out { 0.0 };
@@ -162,7 +172,6 @@ namespace abclass {
                 construct_pairs();
                 compute_max_dcg();
             }
-            double max_dcg_k { max_dcg_(y_.n_elem - 1) };
             arma::uvec pred_drank;
             if (! sorted) {
                 pred_drank = desc_rank(pred.elem(desc_idx_));
@@ -177,6 +186,7 @@ namespace abclass {
                 double d_j { std::log2(2.0 + pred_drank(pair_j_[i])) };
                 out(i) = std::abs((g_i_p1 - g_j_p1) * (1.0 / d_i - 1.0 / d_j));
             }
+            double max_dcg_k { max_dcg_(y_.n_elem - 1) };
             return out / max_dcg_k;
         }
 
@@ -187,16 +197,7 @@ namespace abclass {
         {
             // we sort y in an ascending order to break ties
             // corresponds to the recall of the worst case
-            arma::uvec pred_idx;
-            if (! sorted) {
-                arma::vec tmp_pred { pred.elem(desc_idx_) };
-                pred_idx = arma::stable_sort_index(tmp_pred.elem(asc_idx_),
-                                                   "descend");
-            } else {
-                pred_idx = arma::stable_sort_index(pred.elem(asc_idx_),
-                                                   "descend");
-            }
-            pred_idx = asc_idx_.elem(pred_idx);
+            arma::uvec pred_idx { get_pred_idx(pred) };
             arma::vec out { arma::zeros(top_props.n_elem) };
             for (size_t i {0}; i < top_props.n_elem; ++i) {
                 unsigned int k {
@@ -208,6 +209,21 @@ namespace abclass {
                     static_cast<double>(k);
             }
             return out;
+        }
+        // delta recall compared to expected recall by random
+        inline arma::vec delta_recall(const arma::vec& pred,
+                                      const arma::vec& top_props,
+                                      const bool sorted = true) const
+        {
+            return recall(pred, top_props, sorted) - top_props;
+        }
+        // sum of delta recall up to top k%
+        inline double delta_recall_sum(const arma::vec& pred,
+                                       const double until_top) const
+        {
+            arma::vec top_props { arma::regspace(0.01, 0.01, until_top) };
+            arma::vec tmp_delta { delta_recall(pred, top_props, true) };
+            return arma::accu(tmp_delta - top_props);
         }
 
 

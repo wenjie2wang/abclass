@@ -20,7 +20,7 @@
                     loss = "logistic",
                     control = abrank.control(),
                     ## cv
-                    nfolds = 0L,
+                    cv_metric = 0L,
                     ## et
                     nstages = 0L)
 {
@@ -46,7 +46,7 @@
     ctrl <- c(
         control,
         list(weight = null2num0(weight),
-             nfolds = as.integer(nfolds),
+             cv_metric = as.integer(cv_metric),
              nstages = as.integer(nstages),
              loss_id = loss_id)
     )
@@ -67,12 +67,17 @@
     ## post-process
     res$loss <- loss
     res$control <- control
-    if (call_list$control$nfolds == 0L) {
+    if (call_list$control$cv_metric == 0L) {
         res$cross_validation <- NULL
-    } else {
+    } else if (call_list$control$cv_metric == 1L) {
         ## add mean over queries
         res$cross_validation$cv_recall_mean <- rowMeans(
             res$cross_validation$cv_recall, dims = 2
+        )
+    } else {
+        ## add mean over queries
+        res$cross_validation$cv_delta_recall_mean <- colMeans(
+            res$cross_validation$cv_delta_recall
         )
     }
     ## update regularization
