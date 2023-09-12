@@ -52,6 +52,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// rcpp_query_delta_weight
+Rcpp::List rcpp_query_delta_weight(const arma::vec& y, const arma::vec& pred);
+RcppExport SEXP _abclass_rcpp_query_delta_weight(SEXP ySEXP, SEXP predSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type pred(predSEXP);
+    rcpp_result_gen = Rcpp::wrap(rcpp_query_delta_weight(y, pred));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cv_samples
 Rcpp::List cv_samples(const unsigned int nobs, const unsigned int nfolds, const arma::uvec& strata);
 RcppExport SEXP _abclass_cv_samples(SEXP nobsSEXP, SEXP nfoldsSEXP, SEXP strataSEXP) {
@@ -195,6 +207,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_abclass_rcpp_abclass_fit", (DL_FUNC) &_abclass_rcpp_abclass_fit, 3},
     {"_abclass_rcpp_abclass_fit_sp", (DL_FUNC) &_abclass_rcpp_abclass_fit_sp, 3},
     {"_abclass_rcpp_abrank_fit", (DL_FUNC) &_abclass_rcpp_abrank_fit, 4},
+    {"_abclass_rcpp_query_delta_weight", (DL_FUNC) &_abclass_rcpp_query_delta_weight, 2},
     {"_abclass_cv_samples", (DL_FUNC) &_abclass_cv_samples, 3},
     {"_abclass_rcpp_moml_fit", (DL_FUNC) &_abclass_rcpp_moml_fit, 5},
     {"_abclass_rcpp_moml_fit_sp", (DL_FUNC) &_abclass_rcpp_moml_fit_sp, 5},
