@@ -62,11 +62,15 @@ namespace abclass {
         // constructors
         Query() {};
 
-        explicit Query(const arma::vec& y)
+        explicit Query(const arma::vec& y,
+                       const bool pairs = false)
         {
             desc_idx_ = arma::sort_index(y, "descend");
             asc_idx_ = arma::sort_index(y, "ascend");
             y_ = y.elem(desc_idx_);
+            if (pairs) {
+                construct_pairs(false);
+            }
         }
 
         Query(const T_x& x,
@@ -78,12 +82,12 @@ namespace abclass {
             y_ = y.elem(desc_idx_);
             x_ = x.rows(desc_idx_);
             if (pairs) {
-                construct_pairs();
+                construct_pairs(true);
             }
         }
 
         // methods
-        inline Query* construct_pairs()
+        inline Query* construct_pairs(const bool with_x = true)
         {
             size_t ii {0};
             std::vector<unsigned int> ivec, jvec;
@@ -106,9 +110,11 @@ namespace abclass {
             n_pairs_ = ii;
             pair_i_ = arma::uvec(ivec);
             pair_j_ = arma::uvec(jvec);
-            pair_x_ = arma::zeros(ii, x_.n_cols);
-            for (size_t i {0}; i < ii; ++i) {
-                pair_x_.row(i) = x_.row(ivec[i]) - x_.row(jvec[i]);
+            if (with_x) {
+                pair_x_ = arma::zeros(ii, x_.n_cols);
+                for (size_t i {0}; i < ii; ++i) {
+                    pair_x_.row(i) = x_.row(ivec[i]) - x_.row(jvec[i]);
+                }
             }
             has_pairs_ = true;
             return this;
@@ -169,7 +175,7 @@ namespace abclass {
                                     const bool sorted = true)
         {
             if (! has_pairs_) {
-                construct_pairs();
+                construct_pairs(false);
                 compute_max_dcg();
             }
             arma::uvec pred_drank;
@@ -188,6 +194,10 @@ namespace abclass {
             }
             double max_dcg_k { max_dcg_(y_.n_elem - 1) };
             return out / max_dcg_k;
+        }
+        inline arma::vec delta_ndcg()
+        {
+            return delta_ndcg(y_, true);
         }
 
         // recall
@@ -239,6 +249,11 @@ namespace abclass {
                 out(i) = pred(pair_i_[i]) - pred(pair_j_[i]);
             }
             return out;
+        }
+
+        inline arma::uvec get_rev_idx() const
+        {
+            return arma::sort_index(desc_idx_);
         }
 
     };

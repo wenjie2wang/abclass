@@ -33,6 +33,7 @@ inline abclass::Control abrank_control(const Rcpp::List& control)
         set_weight(control["weight"])->
         rank(control["query_weight"],
              control["delta_weight"],
+             control["delta_adaptive"],
              control["delta_maxit"])->
         set_offset<arma::vec>(control["offset"])->
         reg_path(control["nlambda"],
@@ -140,4 +141,27 @@ Rcpp::List rcpp_abrank_fit(
             break;
     }
     return Rcpp::List();
+}
+
+// [[Rcpp::export]]
+Rcpp::List rcpp_query_delta_weight(const arma::vec& y,
+                                   const arma::vec& pred)
+{
+    abclass::Query<arma::mat> q_obj { y, true };
+    arma::uvec rev_idx { q_obj.get_rev_idx() };
+    arma::uvec i_vec { q_obj.pair_i_.elem(rev_idx) + 1 };
+    arma::uvec j_vec { q_obj.pair_j_.elem(rev_idx) + 1 };
+    q_obj.compute_max_dcg();
+    arma::vec delta_weight;
+    if (pred.is_empty()) {
+        delta_weight = q_obj.delta_ndcg();
+    } else {
+        delta_weight = q_obj.delta_ndcg(pred, false);
+    }
+    delta_weight = delta_weight.elem(rev_idx);
+    return Rcpp::List::create(
+        Rcpp::Named("lambda_weight") = abclass::arma2rvec(delta_weight),
+        Rcpp::Named("i") = abclass::arma2rvec(i_vec),
+        Rcpp::Named("j") = abclass::arma2rvec(j_vec)
+        );
 }

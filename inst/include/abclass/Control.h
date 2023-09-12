@@ -66,6 +66,7 @@ namespace abclass
         // for ranking
         bool query_weight_ { false };
         bool delta_weight_ { false };
+        bool delta_adaptive_ { false };
         unsigned int delta_max_iter_ { 10 };
 
         // default constructor
@@ -171,11 +172,13 @@ namespace abclass
         }
         // ranking
         inline Control* rank(const bool query_weight,
-                             const bool lambda_weight,
-                             const unsigned int delta_max_iter = 1)
+                             const bool delta_weight,
+                             const bool delta_adaptive,
+                             const unsigned int delta_max_iter = 0)
         {
             query_weight_ = query_weight;
-            delta_weight_ = lambda_weight;
+            delta_weight_ = delta_weight;
+            delta_adaptive_ = delta_adaptive;
             delta_max_iter_ = delta_max_iter;
             return this;
         }
