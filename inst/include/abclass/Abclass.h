@@ -256,13 +256,16 @@ namespace abclass
 
         inline Abclass* set_offset(const arma::mat& offset)
         {
-            if (offset.n_rows != n_obs_ || offset.n_cols != km1_) {
+            if (offset.n_elem == 0 || offset.is_zero()) {
                 control_.offset_ = arma::mat();
                 control_.has_offset_ = false;
-            } else {
-                control_.offset_ = offset;
-                control_.has_offset_ = true;
+                return this;
             }
+            if (offset.n_rows != n_obs_ || offset.n_cols != km1_) {
+                throw std::range_error("Incorrect length of offsets.");
+            }
+            control_.offset_ = offset;
+            control_.has_offset_ = true;
             return this;
         }
 
