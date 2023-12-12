@@ -62,7 +62,7 @@ coef.abclass <- function(object,
         return(coef.abclass(tmp, selection = selection, ...))
     }
     if (inherits(object, "et.abclass")) { # refit must be FALSE here
-        return(drop(object$coefficients))
+        return(object$coefficients)
     }
     ## if only one solution
     dim_coef <- dim(object$coefficients)
@@ -83,7 +83,7 @@ coef.abclass <- function(object,
     }
     selection <- match.arg(selection, c("cv_1se", "cv_min", "all"))
     if (! length(object$cross_validation$cv_accuracy) || selection == "all") {
-        return(drop(object$coefficients))
+        return(object$coefficients)
     }
     cv_idx_list <- object$cross_validation
     selection_idx <- cv_idx_list[[selection]]
