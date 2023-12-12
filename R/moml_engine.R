@@ -102,7 +102,7 @@
             if (control$group_penalty == "lasso") {
                 res$regularization[common_pars]
             } else {
-                res$regularization[c(common_pars, "dgamma", "gamma")]
+                res$regularization[c(common_pars, "kappa_ratio", "gamma")]
             }
         } else {
             res$regularization[return_lambda]

@@ -24,12 +24,13 @@ abclass.control(
   group_weight = NULL,
   group_penalty = c("lasso", "scad", "mcp"),
   offset = NULL,
-  dgamma = 1,
+  kappa_ratio = 0.9,
   lum_a = 1,
   lum_c = 1,
   boost_umin = -5,
   maxit = 100000L,
   epsilon = 1e-04,
+  max_grad = -1e-05,
   standardize = TRUE,
   varying_active_set = TRUE,
   verbose = 0L,
@@ -96,8 +97,9 @@ penalty.}
 \item{offset}{An optional numeric matrix for offsets of the decision
 functions.}
 
-\item{dgamma}{A positive number specifying the increment to the minimal
-gamma parameter for group SCAD or group MCP.}
+\item{kappa_ratio}{A positive number within (0, 1) specifying the ratio of
+reciprocal gamma parameter for group SCAD or group MCP.  A close-to-zero
+\code{kappa_ratio} would give a solution close to lasso solution.}
 
 \item{lum_a}{A positive number greater than one representing the parameter
 \emph{a} in LUM, which will be used only if \code{loss = "lum"}.  The
@@ -115,6 +117,9 @@ The default value is \code{10^5}.}
 
 \item{epsilon}{A positive number specifying the relative tolerance that
 determines convergence.  The default value is \code{1e-4}.}
+
+\item{max_grad}{The maximum value of gradients of loss function to avoid
+coefficients diverging.}
 
 \item{standardize}{A logical value indicating if each column of the design
 matrix should be standardized internally to have mean zero and standard

@@ -36,7 +36,7 @@ inline Rcpp::List template_fit(T& object)
                 Rcpp::Named("alpha") = object.control_.alpha_,
                 Rcpp::Named("group_weight") =
                 abclass::arma2rvec(object.control_.group_weight_),
-                Rcpp::Named("dgamma") = object.control_.dgamma_,
+                Rcpp::Named("kappa_ratio") = object.control_.kappa_ratio_,
                 Rcpp::Named("gamma") = object.control_.gamma_
                 )
             );
@@ -71,7 +71,7 @@ inline Rcpp::List template_fit(T& object)
             Rcpp::Named("alpha") = object.control_.alpha_,
             Rcpp::Named("group_weight") =
             abclass::arma2rvec(object.control_.group_weight_),
-            Rcpp::Named("dgamma") = object.control_.dgamma_,
+            Rcpp::Named("kappa_ratio") = object.control_.kappa_ratio_,
             Rcpp::Named("gamma") = object.control_.gamma_
             ),
         Rcpp::Named("loss_wo_penalty") = abclass::arma2rvec(
@@ -84,8 +84,11 @@ inline Rcpp::List template_fit(T& object)
 inline abclass::Control abclass_control(const Rcpp::List& control)
 {
     abclass::Control ctrl {
-        control["maxit"], control["epsilon"],
-        control["standardize"], control["verbose"]
+        control["maxit"],
+        control["epsilon"],
+        control["max_grad"],
+        control["standardize"],
+        control["verbose"]
     };
     ctrl.set_intercept(control["intercept"])->
         set_weight(control["weight"])->
@@ -96,7 +99,7 @@ inline abclass::Control abclass_control(const Rcpp::List& control)
         reg_path(control["lambda"])->
         reg_net(control["alpha"])->
         reg_group(control["group_weight"],
-                  control["dgamma"])->
+                  control["kappa_ratio"])->
         tune_cv(control["nfolds"],
                 control["stratified"],
                 control["alignment"])->

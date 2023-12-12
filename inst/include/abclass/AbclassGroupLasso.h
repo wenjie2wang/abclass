@@ -176,12 +176,6 @@ namespace abclass
             }
             const size_t j1 { j + inter_ };
             const double mj { mm_lowerbound_(j) };
-            // early exit for zero mj from constant columns
-            if (isAlmostEqual(mj, 0.0)) {
-                beta.row(j1).zeros();
-                is_active(j) = 0;
-                continue;
-            }
             const arma::rowvec old_beta_j { beta.row(j1) };
             const arma::rowvec uj {
                 - mm_gradient(inner, j) + mj * old_beta_j
@@ -240,8 +234,8 @@ namespace abclass
         )
     {
         size_t i {0}, num_iter {0};
-        // arma::mat beta0 { beta };
-        double loss0 { objective0(inner) }, loss1 { loss0 };
+        arma::mat beta0 { beta };
+        // double loss0 { objective0(inner) }, loss1 { loss0 };
         // use active-set if p > n ("helps when p >> n")
         if (varying_active_set) {
             arma::uvec is_active_strong { is_active },
@@ -259,15 +253,15 @@ namespace abclass
                     num_iter = ii + 1;
                     run_one_active_cycle(beta, inner, is_active_varying,
                                          lambda, ridge, true, verbose);
-                    // if (rel_diff(beta0, beta) < epsilon) {
-                    //     break;
-                    // }
-                    // beta0 = beta;
-                    loss1 = objective0(inner);
-                    if (std::abs(loss1 - loss0) < epsilon) {
+                    if (rel_diff(beta0, beta) < epsilon) {
                         break;
                     }
-                    loss0 = loss1;
+                    beta0 = beta;
+                    // loss1 = objective0(inner);
+                    // if (std::abs(loss1 - loss0) < epsilon) {
+                    //     break;
+                    // }
+                    // loss0 = loss1;
                     ++ii;
                 }
                 // run a full cycle over the converged beta
@@ -308,15 +302,15 @@ namespace abclass
                 ++num_iter;
                 run_one_active_cycle(beta, inner, is_active,
                                      lambda, ridge, false, verbose);
-                // if (rel_diff(beta0, beta) < epsilon) {
-                //     break;
-                // }
-                // beta0 = beta;
-                loss1 = objective0(inner);
-                if (std::abs(loss1 - loss0) < epsilon) {
+                if (rel_diff(beta0, beta) < epsilon) {
                     break;
                 }
-                loss0 = loss1;
+                beta0 = beta;
+                // loss1 = objective0(inner);
+                // if (std::abs(loss1 - loss0) < epsilon) {
+                //     break;
+                // }
+                // loss0 = loss1;
                 ++i;
             }
             if (verbose > 0) {
@@ -341,7 +335,6 @@ namespace abclass
         // set group weight from the control_
         set_group_weight();
         arma::uvec penalty_group { arma::find(control_.group_weight_ > 0.0) };
-        arma::uvec penalty_free { arma::find(control_.group_weight_ == 0.0) };
         // initialize
         arma::vec one_inner;
         if (control_.has_offset_) {
@@ -387,12 +380,9 @@ namespace abclass
 
         double one_strong_rhs { 0.0 };
         // get the solution (intercepts) of l1_lambda_max for a warm start
-        arma::uvec is_active_strong { arma::zeros<arma::uvec>(p0_) };
+        arma::uvec is_active_strong { arma::ones<arma::uvec>(p0_) };
         // only need to estimate beta not in the penalty group
-        for (arma::uvec::iterator it { penalty_free.begin() };
-             it != penalty_free.end(); ++it) {
-            is_active_strong(*it) = 1;
-        }
+        is_active_strong.elem(penalty_group).zeros();
         double l1_lambda { control_.alpha_ * lambda_max_ };
         double l2_lambda { (1 - control_.alpha_) * lambda_max_ };
         run_gmd_active_cycle(one_beta,
@@ -404,6 +394,9 @@ namespace abclass
                              control_.max_iter_,
                              control_.epsilon_,
                              control_.verbose_);
+        // exclude constant covariates from penalty group
+        // so that they will not be considered as active by strong rule at all
+        penalty_group = penalty_group.elem(arma::find(mm_lowerbound_ > 0.0));
         double old_lambda { l1_lambda }; // for strong rule
         // main loop: for each lambda
         for (size_t li { 0 }; li < control_.lambda_.n_elem; ++li) {

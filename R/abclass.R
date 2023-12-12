@@ -112,8 +112,9 @@ abclass <- function(x, y,
 ##'     penalty.
 ##' @param offset An optional numeric matrix for offsets of the decision
 ##'     functions.
-##' @param dgamma A positive number specifying the increment to the minimal
-##'     gamma parameter for group SCAD or group MCP.
+##' @param kappa_ratio A positive number within (0, 1) specifying the ratio of
+##'     reciprocal gamma parameter for group SCAD or group MCP.  A close-to-zero
+##'     \code{kappa_ratio} would give a solution close to lasso solution.
 ##' @param lum_a A positive number greater than one representing the parameter
 ##'     \emph{a} in LUM, which will be used only if \code{loss = "lum"}.  The
 ##'     default value is \code{1.0}.
@@ -126,6 +127,8 @@ abclass <- function(x, y,
 ##'     The default value is \code{10^5}.
 ##' @param epsilon A positive number specifying the relative tolerance that
 ##'     determines convergence.  The default value is \code{1e-4}.
+##' @param max_grad The maximum value of gradients of loss function to avoid
+##'     coefficients diverging.
 ##' @param standardize A logical value indicating if each column of the design
 ##'     matrix should be standardized internally to have mean zero and standard
 ##'     deviation equal to the sample size.  The default value is \code{TRUE}.
@@ -148,12 +151,13 @@ abclass.control <- function(lambda = NULL,
                             group_weight = NULL,
                             group_penalty = c("lasso", "scad", "mcp"),
                             offset = NULL,
-                            dgamma = 1.0,
+                            kappa_ratio = 0.9,
                             lum_a = 1.0,
                             lum_c = 1.0,
                             boost_umin = - 5.0,
                             maxit = 1e5L,
                             epsilon = 1e-4,
+                            max_grad = -1e-5,
                             standardize = TRUE,
                             varying_active_set = TRUE,
                             verbose = 0L,
@@ -180,11 +184,12 @@ abclass.control <- function(lambda = NULL,
         standardize = standardize,
         maxit = as.integer(maxit),
         epsilon = epsilon,
+        max_grad = max_grad,
         varying_active_set = varying_active_set,
         verbose = as.integer(verbose),
         boost_umin = boost_umin,
         lum_a = lum_a,
         lum_c = lum_c,
-        dgamma = dgamma
+        kappa_ratio = kappa_ratio
     ), class = "abclass.control")
 }

@@ -74,6 +74,9 @@ namespace abclass
                                   const arma::vec& vj_xl) const
         {
             arma::vec inner_grad { loss_derivative(inner) };
+            // avoid coefficients diverging
+            inner_grad.elem(arma::find(inner_grad >
+                                       control_.max_grad_)).zeros();
             return arma::mean(control_.obs_weight_ % vj_xl % inner_grad);
         }
 
@@ -248,8 +251,8 @@ namespace abclass
         )
     {
         size_t i {0};
-        // arma::mat beta0 { beta };
-        double loss0 { objective0(inner) }, loss1 { loss0 };
+        arma::mat beta0 { beta };
+        // double loss0 { objective0(inner) }, loss1 { loss0 };
         // use active-set if p > n ("helps when p >> n")
         if (varying_active_set) {
             arma::umat is_active_strong { is_active },
@@ -267,15 +270,15 @@ namespace abclass
                     Rcpp::checkUserInterrupt();
                     run_one_active_cycle(beta, inner, is_active_varying,
                                          l1_lambda, l2_lambda, true, verbose);
-                    // if (rel_diff(beta0, beta) < epsilon) {
-                    //     break;
-                    // }
-                    // beta0 = beta;
-                    loss1 = objective0(inner);
-                    if (std::abs(loss1 - loss0) < epsilon) {
+                    if (rel_diff(beta0, beta) < epsilon) {
                         break;
                     }
-                    loss0 = loss1;
+                    beta0 = beta;
+                    // loss1 = objective0(inner);
+                    // if (std::abs(loss1 - loss0) < epsilon) {
+                    //     break;
+                    // }
+                    // loss0 = loss1;
                     ii++;
                 }
                 // run a full cycle over the converged beta
@@ -319,15 +322,15 @@ namespace abclass
                 num_iter_ = i + 1;
                 run_one_active_cycle(beta, inner, is_active,
                                      l1_lambda, l2_lambda, false, verbose);
-                // if (rel_diff(beta0, beta) < epsilon) {
-                //     break;
-                // }
-                // beta0 = beta;
-                loss1 = objective0(inner);
-                if (std::abs(loss1 - loss0) < epsilon) {
+                if (rel_diff(beta0, beta) < epsilon) {
                     break;
                 }
-                loss0 = loss1;
+                beta0 = beta;
+                // loss1 = objective0(inner);
+                // if (std::abs(loss1 - loss0) < epsilon) {
+                //     break;
+                // }
+                // loss0 = loss1;
                 i++;
             }
             if (verbose > 0) {
@@ -415,21 +418,21 @@ namespace abclass
         const unsigned int verbose
         )
     {
-        // arma::mat beta0 { beta };
-        double loss0 { objective0(inner) }, loss1 { loss0 };
+        arma::mat beta0 { beta };
+        // double loss0 { objective0(inner) }, loss1 { loss0 };
         for (size_t i {0}; i < max_iter; ++i) {
             Rcpp::checkUserInterrupt();
             num_iter_ = i + 1;
             run_one_full_cycle(beta, inner, l1_lambda, l2_lambda, verbose);
-            // if (rel_diff(beta0, beta) < epsilon) {
-            //     break;
-            // }
-            // beta0 = beta;
-            loss1 = objective0(inner);
-            if (std::abs(loss1 - loss0) < epsilon) {
+            if (rel_diff(beta0, beta) < epsilon) {
                 break;
             }
-            loss0 = loss1;
+            beta0 = beta;
+            // loss1 = objective0(inner);
+            // if (std::abs(loss1 - loss0) < epsilon) {
+            //     break;
+            // }
+            // loss0 = loss1;
         }
         if (verbose > 0) {
             if (num_iter_ < max_iter) {

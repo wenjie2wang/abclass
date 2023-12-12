@@ -27,21 +27,34 @@ namespace abclass
     class Logistic
     {
     public:
-        Logistic() {};
+        Logistic(){}
 
         // loss function
+        inline double loss(const double u) const
+        {
+            return std::log(1.0 + std::exp(- u));
+        }
         inline double loss(const arma::vec& u,
                            const arma::vec& obs_weight) const
         {
-            return arma::mean(obs_weight % arma::log(1.0 + arma::exp(- u)));
+            double res { 0.0 };
+            for (size_t i {0}; i < u.n_elem; ++i) {
+                res += obs_weight(i) * loss(u[i]);
+            }
+            return res / static_cast<double>(u.n_elem);
+            // return arma::mean(obs_weight % arma::log(1.0 + arma::exp(- u)));
         }
 
         // the first derivative of the loss function
+        inline double dloss(const double u) const
+        {
+            return - 1.0 / (1.0 + std::exp(u));
+        }
         inline arma::vec dloss(const arma::vec& u) const
         {
             arma::vec out { arma::zeros(u.n_elem) };
             for (size_t i {0}; i < out.n_elem; ++i) {
-                out[i] = - 1.0 / (1.0 + std::exp(u[i]));
+                out[i] = dloss(u[i]);
             }
             return out;
             // return - 1.0 / (1.0 + arma::exp(u));

@@ -41,6 +41,9 @@ namespace abclass
                                         const unsigned int j) const
         {
             arma::vec inner_grad { loss_derivative(inner) };
+            // avoid coefficients diverging
+            inner_grad.elem(arma::find(inner_grad >
+                                       control_.max_grad_)).zeros();
             arma::vec tmp_vec {
                 x_.col(j) % control_.obs_weight_ % inner_grad
             };

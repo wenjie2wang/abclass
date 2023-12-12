@@ -45,8 +45,8 @@ namespace abclass
         //   group {lasso,scad,mcp}
         arma::vec group_weight_ { arma::vec() }; // adaptive group weights
         //   group {scad,mcp}
-        double dgamma_ { 0.01 }; // delta gamma
-        double gamma_ { - 1.0 }; // gamma for group non-convex penalty
+        double kappa_ratio_ { 0.99 }; // parameter to set gamma
+        double gamma_ { - 1.0 };      // gamma for group non-convex penalty
 
         // tuning
         //   cross-validation
@@ -59,6 +59,7 @@ namespace abclass
         // optimization
         unsigned int max_iter_ { 100000 }; // maximum number of iterations
         double epsilon_ { 1e-3 };          // tolerance to check convergence
+        double max_grad_ { - 1e-5 };       // maximum first gradient of loss
         bool varying_active_set_ { true }; // if active set should be adaptive
         bool standardize_ { true };        // is x_ standardized (column-wise)
         unsigned int verbose_ { 0 };
@@ -74,6 +75,7 @@ namespace abclass
 
         Control(const unsigned int max_iter,
                 const double epsilon,
+                const double max_grad,
                 const bool standardize = true,
                 const unsigned int verbose = 0)
         {
@@ -82,6 +84,7 @@ namespace abclass
             }
             max_iter_ = max_iter;
             epsilon_ = epsilon;
+            max_grad_ = max_grad,
             standardize_ = standardize;
             verbose_ = verbose;
         }
@@ -145,14 +148,14 @@ namespace abclass
             return this;
         }
         inline Control* reg_group(const arma::vec& group_weight,
-                                  const double dgamma = 1.0)
+                                  const double kappa_ratio = 0.99)
         {
-            group_weight_ = group_weight;
-            if (dgamma > 0.0) {
-                dgamma_ = dgamma;
-            } else {
-                throw std::range_error("The 'dgamma' must be positive.");
+            // kappa must be in (0, 1)
+            if (is_le(kappa_ratio, 0.0) || is_ge(kappa_ratio, 1.0)) {
+                throw std::range_error("The 'kappa_ratio' must be in (0, 1).");
             }
+            group_weight_ = group_weight;
+            kappa_ratio_ = kappa_ratio;
             return this;
         }
         // tuning
