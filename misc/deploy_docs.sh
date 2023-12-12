@@ -21,7 +21,7 @@ mkdir -p $target_dir
 cp -r $build_dir/docs/* $target_dir
 git status > $tmp_log
 cat $tmp_log
-if egrep -q "modified:[ ]+static/$pkg/" $tmp_log
+if grep -E -q "modified:[ ]+static/$pkg/" $tmp_log
 then
     git add static/$pkg/
     git commit -m "deploy $pkg $CI_COMMIT_SHORT_SHA by gitlab-runner"
