@@ -89,7 +89,7 @@ et.abclass <- function(x, y,
             control = refit_control,
             ## cv
             nfolds = null0(refit$nfolds),
-            stratified = null0(refit$stratified),
+            stratified = ! isFALSE(refit$straitified),
             alignment = null0(refit$alignment),
             ## et
             nstages = null0(refit$nstages)
