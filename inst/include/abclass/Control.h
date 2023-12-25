@@ -52,6 +52,7 @@ namespace abclass
         //   cross-validation
         unsigned int cv_nfolds_ { 0 };
         bool cv_stratified_ { true };
+        arma::uvec cv_strata_ { arma::uvec() };
         unsigned int cv_alignment_ { 0 };
         //   ET-lasso
         unsigned int et_nstages_ { 0 };

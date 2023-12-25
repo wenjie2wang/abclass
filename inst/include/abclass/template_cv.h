@@ -29,13 +29,19 @@
 
 namespace abclass {
 
-    // cross-validation method for Abclass objects
-    //! @param alignment 0 for alignment by fraction, 1 for alignment by lambda
+    // cross-validation method
+    //! @param obj An Abclass object
     template <typename T>
-    inline void cv_lambda(T& obj, const arma::uvec strata = arma::uvec())
+    inline void cv_lambda(T& obj)
     {
+        // default to use y as the strata if stratified is true
+        // and strata not specified
+        if (obj.control_.cv_stratified_ &&
+            obj.control_.cv_strata_.n_elem != obj.n_obs_) {
+            obj.control_.cv_strata_ = obj.y_;
+        }
         CrossValidation cv_obj {
-            obj.n_obs_, obj.control_.cv_nfolds_, strata
+            obj.n_obs_, obj.control_.cv_nfolds_, obj.control_.cv_strata_
         };
         size_t ntune { obj.control_.lambda_.n_elem };
         if (ntune == 0) {
@@ -65,6 +71,8 @@ namespace abclass {
                 set_k(obj.k_)->
                 set_weight(std::move(train_weight))->
                 set_offset(std::move(train_offset));
+            // alignment: 0 for alignment by fraction
+            //            1 for alignment by lambda
             if (! obj.custom_lambda_ && obj.control_.cv_alignment_ == 0) {
                 // reset lambda
                 new_obj.control_.reg_path(arma::vec());

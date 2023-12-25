@@ -408,8 +408,10 @@ namespace abclass
             if (lambda_li >= lambda_max_) {
                 coef_.slice(li) = rescale_coef(one_beta);
                 this->loss_wo_penalty_(li) = objective0(one_inner);
-                this->penalty_(li) = regularization(
-                    one_beta, l1_lambda, l2_lambda, control_.group_weight_);
+                this->penalty_(li) = regularization(one_beta,
+                                                    l1_lambda,
+                                                    l2_lambda,
+                                                    control_.group_weight_);
                 continue;
             }
             // update active set by strong rule
@@ -492,7 +494,7 @@ namespace abclass
                 if (control_.verbose_ > 0) {
                     msg("[ET] check if any pseudo-predictors was selected.");
                 }
-                // assume the last (permuted ) predictors are inactive
+                // assume the last (permuted) predictors are inactive
                 arma::mat permuted_beta { one_beta.tail_rows(et_npermuted_) };
                 if (! permuted_beta.is_zero(arma::datum::eps)) {
                     if (li == 0) {
@@ -521,8 +523,10 @@ namespace abclass
             }
             coef_.slice(li) = rescale_coef(one_beta);
             this->loss_wo_penalty_(li) = objective0(one_inner);
-            this->penalty_(li) = regularization(
-                one_beta, l1_lambda, l2_lambda, control_.group_weight_);
+            this->penalty_(li) = regularization(one_beta,
+                                                l1_lambda,
+                                                l2_lambda,
+                                                control_.group_weight_);
         }
     }
 

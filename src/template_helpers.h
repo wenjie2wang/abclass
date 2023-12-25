@@ -43,11 +43,7 @@ inline Rcpp::List template_fit(T& object)
     }
     Rcpp::List cv_res;
     if (object.control_.cv_nfolds_ > 0) {
-        arma::uvec strata;
-        if (object.control_.cv_stratified_) {
-            strata = object.y_;
-        }
-        abclass::cv_lambda(object, strata);
+        abclass::cv_lambda(object);
         cv_res = Rcpp::List::create(
             Rcpp::Named("nfolds") = object.control_.cv_nfolds_,
             Rcpp::Named("stratified") = object.control_.cv_stratified_,
