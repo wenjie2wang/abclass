@@ -24,10 +24,13 @@
 #include "AbclassGroupLasso.h"
 #include "AbclassGroupSCAD.h"
 #include "AbclassGroupMCP.h"
+#include "CrossValidation.h"
 #include "utils.h"
 
 namespace abclass {
 
+    // et-lasso procedure for the entire training set
+    //! @param obj An Abclass object
     template <typename T>
     inline void et_lambda(T& obj)
     {
@@ -59,8 +62,8 @@ namespace abclass {
             // update active x
             const unsigned int p1_i { obj.p1_ - p0 };
             const unsigned int p0_i { obj.p0_ - p0 };
-            active_beta = obj.coef_.slice(
-                obj.coef_.n_slices - 1).head_rows(p1_i);
+            const unsigned int et_lambda_idx { obj.coef_.n_slices - 1 };
+            active_beta = obj.coef_.slice(et_lambda_idx).head_rows(p1_i);
             arma::vec l1_beta { arma::zeros(p0_i) };
             // get the indices of the selected predictors
             for (size_t j { 0 }; j < p0_i; ++j) {
@@ -76,6 +79,9 @@ namespace abclass {
                             << obj.et_vs_.n_elem
                             << "\n";
             }
+            // record loss function
+            obj.loss_wo_penalty_ = obj.loss_wo_penalty_(et_lambda_idx);
+            obj.penalty_ = obj.penalty_(et_lambda_idx);
         }
         // update obj
         obj.set_data(std::move(x0), obj.y_);
@@ -89,9 +95,64 @@ namespace abclass {
         } else {
             obj.coef_.slice(0).rows(obj.et_vs_) = active_beta.rows(active_idx0);
         }
+        // reset
         obj.et_npermuted_ = 0;
     }
 
+    // estimate the prediction accuracy by cross-validation
+    // for the model from the et-lasso procedure
+    //! @param obj An Abclass object
+    //! @param strata optional strata indicator variable for stratified
+    //!     sampling in cross validation
+    template <typename T>
+    inline void et_cv_accuracy(T& obj)
+    {
+        // default to use y as the strata if stratified is true
+        // and strata not specified
+        if (obj.control_.cv_stratified_ &&
+            obj.control_.cv_strata_.n_elem != obj.n_obs_) {
+            obj.control_.cv_strata_ = obj.y_;
+        }
+        CrossValidation cv_obj {
+            obj.n_obs_, obj.control_.cv_nfolds_, obj.control_.cv_strata_
+        };
+        obj.cv_accuracy_ = arma::zeros(obj.control_.cv_nfolds_);
+        for (size_t i { 0 }; i < obj.control_.cv_nfolds_; ++i) {
+            auto train_x { subset_rows(obj.x_, cv_obj.train_index_.at(i)) };
+            auto test_x { subset_rows(obj.x_, cv_obj.test_index_.at(i)) };
+            arma::mat train_offset, test_offset;
+            if (obj.control_.has_offset_) {
+                train_offset = subset_rows(obj.control_.offset_,
+                                           cv_obj.train_index_.at(i));
+                test_offset = subset_rows(obj.control_.offset_,
+                                          cv_obj.test_index_.at(i));
+            }
+            arma::uvec train_y { obj.y_.rows(cv_obj.train_index_.at(i)) };
+            arma::uvec test_y { obj.y_.rows(cv_obj.test_index_.at(i)) };
+            arma::vec train_weight {
+                obj.control_.obs_weight_.elem(cv_obj.train_index_.at(i))
+            };
+            // create a new object
+            T new_obj { obj };
+            new_obj.set_standardize(false);
+            new_obj.set_data(std::move(train_x), std::move(train_y))->
+                set_k(obj.k_)->
+                set_weight(std::move(train_weight))->
+                set_offset(std::move(train_offset));
+            // alignment: 0 for alignment by fraction
+            //            1 for alignment by lambda
+            if (! obj.custom_lambda_ && obj.control_.cv_alignment_ == 0) {
+                // reset lambda
+                new_obj.control_.reg_path(arma::vec());
+            }
+            new_obj.control_.set_verbose(0);
+            et_lambda(new_obj);
+            obj.cv_accuracy_(i) = new_obj.accuracy(
+                    new_obj.coef_.slice(0), test_x, test_y, test_offset);
+        }
+        obj.cv_accuracy_mean_ = arma::mean(obj.cv_accuracy_);
+        obj.cv_accuracy_sd_ = arma::stddev(obj.cv_accuracy_);
+    }
 }
 
 #endif

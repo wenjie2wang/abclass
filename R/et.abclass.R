@@ -20,15 +20,20 @@
 ##' Tune the regularization parameter for an angle-based large-margin classifier
 ##' by the ET-Lasso method (Yang, et al., 2019).
 ##'
-##' @inheritParams abclass
+##' The ET-Lasso procedure is intended for tuning the \code{lambda} parameter
+##' solely.  The arguments regarding cross-validation, \code{nfolds},
+##' \code{stratified}, and \code{alignment}, allow one to estimate the
+##' prediction accuracy by cross-validation for the model estimates resulted
+##' from the ET-Lasso procedure, which can be helpful for one to choose other
+##' tuning parameters (e.g., \code{alpha}).
+##'
+##' @inheritParams cv.abclass
 ##'
 ##' @param nstages A positive integer specifying for the number of stages in the
 ##'     ET-Lasso procedure.  By default, two rounds of tuning by random
 ##'     permutations will be performed as suggested in Yang, et al. (2019).
-##' @param refit A logical value indicating if a new classifier should be
-##'     trained using the selected predictors.  This argument can also be a list
-##'     with named elements, which will be passed to \code{abclass.control()} to
-##'     specify how the new classifier should be trained.
+##'
+##' @return An S3 object of class \code{et.abclass} and \code{abclass}.
 ##'
 ##' @references
 ##'
@@ -43,8 +48,11 @@ et.abclass <- function(x, y,
                        weight = NULL,
                        loss = c("logistic", "boost", "hinge-boost", "lum"),
                        control = list(),
-                       nstages = 2,
-                       refit = list(lambda = 1e-6),
+                       nstages = 2L,
+                       nfolds = 0L,
+                       stratified = TRUE,
+                       alignment = c("fraction", "lambda"),
+                       refit = FALSE,
                        ...)
 {
     ## nstages
@@ -66,7 +74,10 @@ et.abclass <- function(x, y,
         weight = null2num0(weight),
         loss = loss,
         control = control,
-        nstages = nstages
+        nstages = nstages,
+        nfolds = nfolds,
+        stratified = stratified,
+        alignment = alignment
     )
     ## refit if needed
     if (! isFALSE(refit) && length(res$et$selected) > 0) {

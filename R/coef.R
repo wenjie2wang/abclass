@@ -45,6 +45,7 @@ coef.abclass <- function(object,
                          selection = c("cv_1se", "cv_min", "all"),
                          ...)
 {
+    ## note: drop the dimension unless 'all' or multiple selected
     if (! (is.null(object$refit) || isFALSE(object$refit))) {
         tmp <- object$refit
         nlambda <- tmp$coefficients
@@ -62,7 +63,7 @@ coef.abclass <- function(object,
         return(coef.abclass(tmp, selection = selection, ...))
     }
     if (inherits(object, "et.abclass")) { # refit must be FALSE here
-        return(object$coefficients)
+        return(object$coefficients[, , 1L, drop = TRUE])
     }
     ## if only one solution
     dim_coef <- dim(object$coefficients)
@@ -77,9 +78,9 @@ coef.abclass <- function(object,
     if (is.numeric(selection)) {
         selection <- as.integer(selection)
         if (any(selection > dk)) {
-            stop(sprintf("The integer 'selection' must <= %d.", dk))
+            stop(sprintf("The 'selection' index must be <= %d.", dk))
         }
-        return(object$coefficients[, , selection])
+        return(object$coefficients[, , selection, drop = TRUE])
     }
     selection <- match.arg(selection, c("cv_1se", "cv_min", "all"))
     if (! length(object$cross_validation$cv_accuracy) || selection == "all") {
@@ -87,7 +88,7 @@ coef.abclass <- function(object,
     }
     cv_idx_list <- object$cross_validation
     selection_idx <- cv_idx_list[[selection]]
-    object$coefficients[, , selection_idx]
+    object$coefficients[, , selection_idx, drop = TRUE]
 }
 
 
@@ -121,6 +122,7 @@ coef.supclass <- function(object,
                           selection = c("cv_1se", "cv_min", "all"),
                           ...)
 {
+    ## note: drop the dimension unless 'all' or multiple selected
     ## if only one solution
     dim_coef <- dim(object$coefficients)
     dk <- dim_coef[3L]
@@ -134,9 +136,9 @@ coef.supclass <- function(object,
     if (is.numeric(selection)) {
         selection <- as.integer(selection)
         if (any(selection > dk)) {
-            stop(sprintf("The integer 'selection' must <= %d.", dk))
+            stop(sprintf("The 'selection' index must be <= %d.", dk))
         }
-        return(object$coefficients[, , selection])
+        return(object$coefficients[, , selection, drop = TRUE])
     }
     selection <- match.arg(selection, c("cv_1se", "cv_min", "all"))
     ## BIC for logistic model
@@ -150,5 +152,5 @@ coef.supclass <- function(object,
     }
     cv_idx_list <- object$cross_validation
     selection_idx <- cv_idx_list[[selection]]
-    object$coefficients[, , selection_idx]
+    object$coefficients[, , selection_idx, drop = TRUE]
 }

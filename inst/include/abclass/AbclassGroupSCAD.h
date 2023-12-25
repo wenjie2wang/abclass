@@ -554,11 +554,18 @@ namespace abclass
                     if (li == 0) {
                         msg("Warning: Fail to tune by ET-lasso; ",
                             "selected pseudo-predictor(s) by ",
-                            "the largest lamabda.\n",
+                            "the largest lamabda specified; ",
+                            "the returned solution may not be sensible.\n",
                             "Suggestion: increase 'lambda', ",
-                            "'lambda_min_ratio' or 'nlambda'?");
+                            "'lambda_min_ratio' or 'nlambda'?\n");
+                        coef_ = coef_.head_slices(1);
+                        this->loss_wo_penalty_ = this->loss_wo_penalty_(0);
+                        this->penalty_ = this->penalty_(0);
                     } else {
                         coef_ = coef_.head_slices(li);
+                        this->loss_wo_penalty_ =
+                            this->loss_wo_penalty_.head(li);
+                        this->penalty_ = this->penalty_.head(li);
                     }
                     if (control_.verbose_ > 0) {
                         msg("[ET] selected pseudo-predictor(s).\n");

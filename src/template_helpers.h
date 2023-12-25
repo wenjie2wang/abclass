@@ -18,48 +18,58 @@
 #include <RcppArmadillo.h>
 #include <abclass.h>
 
+// template returns for et procedure
+template <typename T>
+inline Rcpp::List get_et_res(const T& object)
+{
+    return Rcpp::List::create(
+        Rcpp::Named("nstages") = object.control_.et_nstages_,
+        Rcpp::Named("selected") = abclass::arma2rvec(object.et_vs_)
+        );
+}
+
+// template returns for cv procedure
+template <typename T>
+inline Rcpp::List get_cv_res(const T& object)
+{
+    return Rcpp::List::create(
+        Rcpp::Named("nfolds") = object.control_.cv_nfolds_,
+        Rcpp::Named("stratified") = object.control_.cv_stratified_,
+        Rcpp::Named("alignment") = object.control_.cv_alignment_,
+        Rcpp::Named("cv_accuracy") = object.cv_accuracy_,
+        Rcpp::Named("cv_accuracy_mean") =
+        abclass::arma2rvec(object.cv_accuracy_mean_),
+        Rcpp::Named("cv_accuracy_sd") =
+        abclass::arma2rvec(object.cv_accuracy_sd_)
+        );
+}
+
 // template returns for Abclass objects
 template <typename T>
 inline Rcpp::List template_fit(T& object)
 {
+    Rcpp::List et_res, cv_res;
     if (object.control_.et_nstages_ > 0) {
+        // et procedure
         abclass::et_lambda(object);
-        return Rcpp::List::create(
-            Rcpp::Named("coefficients") = object.coef_.slice(0),
-            Rcpp::Named("weight") =
-            abclass::arma2rvec(object.control_.obs_weight_),
-            Rcpp::Named("et") = Rcpp::List::create(
-                Rcpp::Named("nstages") = object.control_.et_nstages_,
-                Rcpp::Named("selected") = abclass::arma2rvec(object.et_vs_)
-                ),
-            Rcpp::Named("regularization") = Rcpp::List::create(
-                Rcpp::Named("alpha") = object.control_.alpha_,
-                Rcpp::Named("group_weight") =
-                abclass::arma2rvec(object.control_.group_weight_),
-                Rcpp::Named("kappa_ratio") = object.control_.kappa_ratio_,
-                Rcpp::Named("gamma") = object.control_.gamma_
-                )
-            );
+        et_res = get_et_res(object);
+        // add estimates from cv
+        if (object.control_.cv_nfolds_ > 0) {
+            abclass::et_cv_accuracy(object);
+            cv_res = get_cv_res(object);
+        }
+    } else {
+        // main fit
+        object.fit();
+        // add cv results
+        if (object.control_.cv_nfolds_ > 0) {
+            abclass::cv_lambda(object);
+            cv_res = get_cv_res(object);
+        }
     }
-    Rcpp::List cv_res;
-    if (object.control_.cv_nfolds_ > 0) {
-        abclass::cv_lambda(object);
-        cv_res = Rcpp::List::create(
-            Rcpp::Named("nfolds") = object.control_.cv_nfolds_,
-            Rcpp::Named("stratified") = object.control_.cv_stratified_,
-            Rcpp::Named("alignment") = object.control_.cv_alignment_,
-            Rcpp::Named("cv_accuracy") = object.cv_accuracy_,
-            Rcpp::Named("cv_accuracy_mean") =
-            abclass::arma2rvec(object.cv_accuracy_mean_),
-            Rcpp::Named("cv_accuracy_sd") =
-            abclass::arma2rvec(object.cv_accuracy_sd_)
-            );
-    }
-    object.fit();
     return Rcpp::List::create(
         Rcpp::Named("coefficients") = object.coef_,
         Rcpp::Named("weight") = abclass::arma2rvec(object.control_.obs_weight_),
-        Rcpp::Named("cross_validation") = cv_res,
         Rcpp::Named("regularization") = Rcpp::List::create(
             Rcpp::Named("lambda") =
             abclass::arma2rvec(object.control_.lambda_),
@@ -72,7 +82,9 @@ inline Rcpp::List template_fit(T& object)
             ),
         Rcpp::Named("loss_wo_penalty") = abclass::arma2rvec(
             object.loss_wo_penalty_),
-        Rcpp::Named("penalty") = abclass::arma2rvec(object.penalty_)
+        Rcpp::Named("penalty") = abclass::arma2rvec(object.penalty_),
+        Rcpp::Named("cross_validation") = cv_res,
+        Rcpp::Named("et") = et_res
         );
 }
 
