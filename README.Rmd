@@ -40,16 +40,17 @@ A toy example is as follows:
 
 ```{r example-abclass}
 library(abclass)
-set.seed(123)
+packageVersion("abclass")
 
 ## toy examples for demonstration purpose
 ## reference: example 1 in Zhang and Liu (2014)
-ntrain <- 200  # size of training set
+ntrain <- 400  # size of training set
 ntest <- 10000 # size of testing set
-p0 <- 10       # number of actual predictors
-p1 <- 100      # number of random predictors
+p0 <- 5        # number of actual predictors
+p1 <- 45       # number of random predictors
 k <- 5         # number of categories
 
+set.seed(1)
 n <- ntrain + ntest; p <- p0 + p1
 train_idx <- seq_len(ntrain)
 y <- sample(k, size = n, replace = TRUE)         # response
@@ -66,22 +67,23 @@ train_y <- y[train_idx]
 test_y <- y[- train_idx]
 
 ### logistic deviance loss with elastic-net penalty
-model1 <- cv.abclass(train_x, train_y, nlambda = 100, nfolds = 3,
-                     grouped = FALSE, loss = "logistic")
-pred1 <- predict(model1, test_x, selection = "cv_min")
+model1 <- cv.abclass(train_x, train_y, nlambda = 100, nfolds = 5,
+                     loss = "logistic", grouped = FALSE)
+pred1 <- predict(model1, test_x)
 table(test_y, pred1)
 mean(test_y == pred1) # accuracy
 
-### hinge-boost loss with groupwise lasso
-model2 <- cv.abclass(train_x, train_y, nlambda = 100, nfolds = 3,
-                     grouped = TRUE, loss = "hinge-boost")
-pred2 <- predict(model2, test_x, selection = "cv_1se")
+### with groupwise lasso
+model2 <- cv.abclass(train_x, train_y, nlambda = 100, nfolds = 5,
+                     loss = "logistic", grouped = TRUE)
+pred2 <- predict(model2, test_x)
 table(test_y, pred2)
 mean(test_y == pred2) # accuracy
 
 ## tuning by ET-Lasso instead of cross-validation
 model3 <- et.abclass(train_x, train_y, nlambda = 100,
-                     loss = "lum", alpha = 0.5)
+                     loss = "logistic", grouped = TRUE,
+                     nstages = 2, refit = TRUE)
 pred3 <- predict(model3, test_x)
 table(test_y, pred3)
 mean(test_y == pred3) # accuracy

@@ -38,7 +38,7 @@
     }
     cat_y <- cat2z(y)
     if (is.null(control$lambda_min_ratio)) {
-        control$lambda_min_ratio <- if (nrow(x) < ncol(x)) 1e-4 else 1e-2
+        control$lambda_min_ratio <- if (nrow(x) > ncol(x)) 1e-4 else 1e-2
     }
     ## determine the loss and penalty function
     loss_id <- match(loss, c("logistic", "boost", "hinge-boost", "lum"))

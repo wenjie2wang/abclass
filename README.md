@@ -37,16 +37,21 @@ A toy example is as follows:
 
 ``` r
 library(abclass)
-set.seed(123)
+packageVersion("abclass")
+```
 
+    ## [1] '0.5.0.9030'
+
+``` r
 ## toy examples for demonstration purpose
 ## reference: example 1 in Zhang and Liu (2014)
-ntrain <- 200  # size of training set
+ntrain <- 400  # size of training set
 ntest <- 10000 # size of testing set
-p0 <- 10       # number of actual predictors
-p1 <- 100      # number of random predictors
+p0 <- 5        # number of actual predictors
+p1 <- 45       # number of random predictors
 k <- 5         # number of categories
 
+set.seed(1)
 n <- ntrain + ntest; p <- p0 + p1
 train_idx <- seq_len(ntrain)
 y <- sample(k, size = n, replace = TRUE)         # response
@@ -63,69 +68,70 @@ train_y <- y[train_idx]
 test_y <- y[- train_idx]
 
 ### logistic deviance loss with elastic-net penalty
-model1 <- cv.abclass(train_x, train_y, nlambda = 100, nfolds = 3,
-                     grouped = FALSE, loss = "logistic")
-pred1 <- predict(model1, test_x, selection = "cv_min")
+model1 <- cv.abclass(train_x, train_y, nlambda = 100, nfolds = 5,
+                     loss = "logistic", grouped = FALSE)
+pred1 <- predict(model1, test_x)
 table(test_y, pred1)
 ```
 
     ##          pred1
     ## test_y    label_1 label_2 label_3 label_4 label_5
-    ##   label_1    1879      20       0     143      17
-    ##   label_2       8    1638       0       0     409
-    ##   label_3     308      23    1652       0      14
-    ##   label_4     111      10       5    1617     152
-    ##   label_5      33      29       3       5    1924
+    ##   label_1    1368       0       2     633       0
+    ##   label_2       3    1828       4       0     133
+    ##   label_3       3       3    1747       0     199
+    ##   label_4       0       8       0    1898     126
+    ##   label_5       0      63      35       1    1946
 
 ``` r
 mean(test_y == pred1) # accuracy
 ```
 
-    ## [1] 0.871
+    ## [1] 0.8787
 
 ``` r
-### hinge-boost loss with groupwise lasso
-model2 <- cv.abclass(train_x, train_y, nlambda = 100, nfolds = 3,
-                     grouped = TRUE, loss = "hinge-boost")
-pred2 <- predict(model2, test_x, selection = "cv_1se")
+### with groupwise lasso
+model2 <- cv.abclass(train_x, train_y, nlambda = 100, nfolds = 5,
+                     loss = "logistic", grouped = TRUE)
+pred2 <- predict(model2, test_x)
 table(test_y, pred2)
 ```
 
     ##          pred2
     ## test_y    label_1 label_2 label_3 label_4 label_5
-    ##   label_1    2046       4       0       4       5
-    ##   label_2      43    1826       0       1     185
-    ##   label_3      83       0    1887      13      14
-    ##   label_4     476       6       1    1381      31
-    ##   label_5      19      12       3       0    1960
+    ##   label_1    1991       1       3       4       4
+    ##   label_2       0    1775       0       0     193
+    ##   label_3       2       2    1404       0     544
+    ##   label_4       6      26       0    1972      28
+    ##   label_5       0       9       5       0    2031
 
 ``` r
 mean(test_y == pred2) # accuracy
 ```
 
-    ## [1] 0.91
+    ## [1] 0.9173
 
 ``` r
 ## tuning by ET-Lasso instead of cross-validation
 model3 <- et.abclass(train_x, train_y, nlambda = 100,
-                     loss = "lum", alpha = 0.5)
+                     loss = "logistic", grouped = TRUE,
+                     nstages = 2, refit = TRUE)
 pred3 <- predict(model3, test_x)
 table(test_y, pred3)
 ```
 
     ##          pred3
     ## test_y    label_1 label_2 label_3 label_4 label_5
-    ##   label_1    2033       8       4       6       8
-    ##   label_2       7    1993       1       1      53
-    ##   label_3       4       2    1989       0       2
-    ##   label_4     194      22      12    1622      45
-    ##   label_5       6      15       0       2    1971
+    ##   label_1    1973       2      16      11       1
+    ##   label_2       0    1892       2       1      73
+    ##   label_3       2      11    1755       0     184
+    ##   label_4       5      16       0    2004       7
+    ##   label_5       0      40      41       0    1964
 
 ``` r
 mean(test_y == pred3) # accuracy
 ```
 
-    ## [1] 0.9608
+    ## [1] 0.9588
 
 ## References
 

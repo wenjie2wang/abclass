@@ -82,7 +82,7 @@ et.abclass <- function(x, y,
     ## refit if needed
     if (! isFALSE(refit) && length(res$et$selected) > 0) {
         if (isTRUE(refit)) {
-            refit <- list(lambda = 1e-6)
+            refit <- list(lambda = 1e-6, alignment = 1L)
         }
         idx <- res$et$selected
         ## inherit the group weights for those selected predictors
