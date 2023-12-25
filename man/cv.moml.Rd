@@ -67,9 +67,10 @@ the same lambda sequence of the main fit.  The option \code{"lambda"}
 will be applied if a meaningful \code{lambda} is specified.  The default
 value is \code{"fraction"}.}
 
-\item{refit}{A logical value or a named list specifying if and how a refit
-for those selected predictors should be performed.  The default valie is
-\code{FALSE}.}
+\item{refit}{A logical value indicating if a new classifier should be
+trained using the selected predictors or a named list that will be
+passed to \code{abclass.control()} to specify how the new classifier
+should be trained.}
 
 \item{...}{Other arguments passed to the control function, which calls the
 \code{abclass.control()} internally.}

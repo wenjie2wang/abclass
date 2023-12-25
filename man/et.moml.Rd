@@ -56,9 +56,9 @@ ET-Lasso procedure.  By default, two rounds of tuning by random
 permutations will be performed as suggested in Yang, et al. (2019).}
 
 \item{refit}{A logical value indicating if a new classifier should be
-trained using the selected predictors.  This argument can also be a list
-with named elements, which will be passed to \code{abclass.control()} to
-specify how the new classifier should be trained.}
+trained using the selected predictors or a named list that will be
+passed to \code{abclass.control()} to specify how the new classifier
+should be trained.}
 
 \item{...}{Other arguments passed to the control function, which calls the
 \code{abclass.control()} internally.}

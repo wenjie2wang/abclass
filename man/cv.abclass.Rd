@@ -63,14 +63,15 @@ the same lambda sequence of the main fit.  The option \code{"lambda"}
 will be applied if a meaningful \code{lambda} is specified.  The default
 value is \code{"fraction"}.}
 
-\item{refit}{A logical value or a named list specifying if and how a refit
-for those selected predictors should be performed.  The default valie is
-\code{FALSE}.}
+\item{refit}{A logical value indicating if a new classifier should be
+trained using the selected predictors or a named list that will be
+passed to \code{abclass.control()} to specify how the new classifier
+should be trained.}
 
 \item{...}{Other control parameters passed to \code{abclass.control()}.}
 }
 \value{
-An S3 object of class \code{cv.abclass}.
+An S3 object of class \code{cv.abclass} and \code{abclass}.
 }
 \description{
 Tune the regularization parameter for an angle-based large-margin classifier

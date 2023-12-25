@@ -11,8 +11,11 @@ et.abclass(
   weight = NULL,
   loss = c("logistic", "boost", "hinge-boost", "lum"),
   control = list(),
-  nstages = 2,
-  refit = list(lambda = 1e-06),
+  nstages = 2L,
+  nfolds = 0L,
+  stratified = TRUE,
+  alignment = c("fraction", "lambda"),
+  refit = FALSE,
   ...
 )
 }
@@ -47,16 +50,45 @@ for details.}
 ET-Lasso procedure.  By default, two rounds of tuning by random
 permutations will be performed as suggested in Yang, et al. (2019).}
 
+\item{nfolds}{A positive integer specifying the number of folds for
+cross-validation.  Five-folds cross-validation will be used by default.
+An error will be thrown out if the \code{nfolds} is specified to be less
+than 2.}
+
+\item{stratified}{A logical value indicating if the cross-validation
+procedure should be stratified by the response label. The default value
+is \code{TRUE} to ensure the same number of categories be used in
+validation and training.}
+
+\item{alignment}{A character vector specifying how to align the lambda
+sequence used in the main fit with the cross-validation fits.  The
+available options are \code{"fraction"} for allowing cross-validation
+fits to have their own lambda sequences and \code{"lambda"} for using
+the same lambda sequence of the main fit.  The option \code{"lambda"}
+will be applied if a meaningful \code{lambda} is specified.  The default
+value is \code{"fraction"}.}
+
 \item{refit}{A logical value indicating if a new classifier should be
-trained using the selected predictors.  This argument can also be a list
-with named elements, which will be passed to \code{abclass.control()} to
-specify how the new classifier should be trained.}
+trained using the selected predictors or a named list that will be
+passed to \code{abclass.control()} to specify how the new classifier
+should be trained.}
 
 \item{...}{Other control parameters passed to \code{abclass.control()}.}
+}
+\value{
+An S3 object of class \code{et.abclass} and \code{abclass}.
 }
 \description{
 Tune the regularization parameter for an angle-based large-margin classifier
 by the ET-Lasso method (Yang, et al., 2019).
+}
+\details{
+The ET-Lasso procedure is intended for tuning the \code{lambda} parameter
+solely.  The arguments regarding cross-validation, \code{nfolds},
+\code{stratified}, and \code{alignment}, allow one to estimate the
+prediction accuracy by cross-validation for the model estimates resulted
+from the ET-Lasso procedure, which can be helpful for one to choose other
+tuning parameters (e.g., \code{alpha}).
 }
 \references{
 Yang, S., Wen, J., Zhan, X., & Kifer, D. (2019). ET-Lasso: A new efficient
