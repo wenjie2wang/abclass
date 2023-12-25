@@ -37,11 +37,12 @@
 ##'     the same lambda sequence of the main fit.  The option \code{"lambda"}
 ##'     will be applied if a meaningful \code{lambda} is specified.  The default
 ##'     value is \code{"fraction"}.
-##' @param refit A logical value or a named list specifying if and how a refit
-##'     for those selected predictors should be performed.  The default valie is
-##'     \code{FALSE}.
+##' @param refit A logical value indicating if a new classifier should be
+##'     trained using the selected predictors or a named list that will be
+##'     passed to \code{abclass.control()} to specify how the new classifier
+##'     should be trained.
 ##'
-##' @return An S3 object of class \code{cv.abclass}.
+##' @return An S3 object of class \code{cv.abclass} and \code{abclass}.
 ##'
 ##' @export
 cv.abclass <- function(x, y,
@@ -60,26 +61,12 @@ cv.abclass <- function(x, y,
     if (nfolds < 3L) {
         stop("The 'nfolds' must be > 2.")
     }
-    ## alignment
-    if (is.numeric(alignment)) {
-        alignment <- as.integer(alignment[1L])
-    } else {
-        all_alignment <- c("fraction", "lambda")
-        alignment <- match.arg(alignment, choices = all_alignment)
-        alignment <- match(alignment, all_alignment) - 1L
-    }
     ## loss
     all_loss <- c("logistic", "boost", "hinge-boost", "lum")
     loss <- match.arg(loss, choices = all_loss)
     ## controls
     dot_list <- list(...)
     control <- do.call(abclass.control, modify_list(control, dot_list))
-    ## adjust lambda alignment
-    if (alignment == 0L && length(control$lambda) > 0) {
-        warning("Changed to `alignment` = 'lambda'",
-                " for the specified lambda sequence.")
-        alignment <- 1L
-    }
     ## prepare arguments
     res <- .abclass(x = x,
                     y = y,

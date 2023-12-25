@@ -47,6 +47,22 @@
         penalty_id <- 1 + match(control$group_penalty,
                                 c("lasso", "scad", "mcp"))
     }
+    ## process alignment
+    if (is.numeric(alignment)) {
+        alignment <- as.integer(alignment[1L])
+    } else if (is.character(alignment)) {
+        all_alignment <- c("fraction", "lambda")
+        alignment <- match.arg(alignment, choices = all_alignment)
+        alignment <- match(alignment, all_alignment) - 1L
+    } else {
+        stop("Invalid 'alignment'.")
+    }
+    ## adjust lambda alignment
+    if (alignment == 0L && length(control$lambda) > 0) {
+        warning("Changed to `alignment` = 'lambda'",
+                " for the specified lambda sequence.")
+        alignment <- 1L
+    }
     ## prepare arguments
     ctrl <- c(
         control,
@@ -59,10 +75,6 @@
              loss_id = loss_id,
              penalty_id = penalty_id)
     )
-    ## adjust lambda alignment
-    if (ctrl$alignment == 0L && length(ctrl$lambda) > 0) {
-        ctrl$alignment <- 1L
-    }
     ## arguments
     call_list <- c(list(x = x, y = cat_y$y, control = ctrl))
     fun_to_call <- if (is_x_sparse) {
