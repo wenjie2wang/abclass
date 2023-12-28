@@ -40,7 +40,7 @@ library(abclass)
 packageVersion("abclass")
 ```
 
-    ## [1] '0.5.0.9030'
+    ## [1] '0.5.0.9040'
 
 ``` r
 ## toy examples for demonstration purpose
@@ -113,25 +113,24 @@ mean(test_y == pred2) # accuracy
 ``` r
 ## tuning by ET-Lasso instead of cross-validation
 model3 <- et.abclass(train_x, train_y, nlambda = 100,
-                     loss = "logistic", grouped = TRUE,
-                     nstages = 2, refit = TRUE)
+                     loss = "logistic", grouped = TRUE)
 pred3 <- predict(model3, test_x)
 table(test_y, pred3)
 ```
 
     ##          pred3
     ## test_y    label_1 label_2 label_3 label_4 label_5
-    ##   label_1    1973       2      16      11       1
-    ##   label_2       0    1892       2       1      73
-    ##   label_3       2      11    1755       0     184
-    ##   label_4       5      16       0    2004       7
-    ##   label_5       0      40      41       0    1964
+    ##   label_1    1982       1      10       9       1
+    ##   label_2       0    1843       1       0     124
+    ##   label_3       1       5    1733       0     213
+    ##   label_4       2       7       0    2006      17
+    ##   label_5       0      16      20       0    2009
 
 ``` r
 mean(test_y == pred3) # accuracy
 ```
 
-    ## [1] 0.9588
+    ## [1] 0.9573
 
 ## References
 

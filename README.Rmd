@@ -82,8 +82,7 @@ mean(test_y == pred2) # accuracy
 
 ## tuning by ET-Lasso instead of cross-validation
 model3 <- et.abclass(train_x, train_y, nlambda = 100,
-                     loss = "logistic", grouped = TRUE,
-                     nstages = 2, refit = TRUE)
+                     loss = "logistic", grouped = TRUE)
 pred3 <- predict(model3, test_x)
 table(test_y, pred3)
 mean(test_y == pred3) # accuracy
