@@ -68,24 +68,25 @@ namespace abclass
         // transfer coef for standardized data to coef for non-standardized data
         inline arma::mat rescale_coef(const arma::mat& beta) const
         {
+            if (! control_.standardize_) {
+                return beta;
+            }
             arma::mat out { beta };
-            if (control_.standardize_) {
-                if (control_.intercept_) {
-                    arma::rowvec tmp_row { x_center_ / x_scale_ };
-                    // for each columns
-                    for (size_t k { 0 }; k < km1_; ++k) {
-                        arma::vec coef_k { beta.col(k) };
-                        out(0, k) = beta(0, k) -
-                            arma::dot(tmp_row, coef_k.tail_rows(p0_));
-                        for (size_t l { 1 }; l < p1_; ++l) {
-                            out(l, k) = coef_k(l) / x_scale_(l - 1);
-                        }
+            if (control_.intercept_) {
+                arma::rowvec tmp_row { x_center_ / x_scale_ };
+                // for each columns
+                for (size_t k { 0 }; k < km1_; ++k) {
+                    arma::vec beta_k { beta.col(k) };
+                    out(0, k) = beta(0, k) -
+                        arma::as_scalar(tmp_row * beta_k.tail_rows(p0_));
+                    for (size_t l { 1 }; l < p1_; ++l) {
+                        out(l, k) = beta_k(l) / x_scale_(l - 1);
                     }
-                } else {
-                    for (size_t k { 0 }; k < km1_; ++k) {
-                        for (size_t l { 0 }; l < p0_; ++l) {
-                            out(l, k) /= x_scale_(l);
-                        }
+                }
+            } else {
+                for (size_t k { 0 }; k < km1_; ++k) {
+                    for (size_t l { 0 }; l < p0_; ++l) {
+                        out(l, k) /= x_scale_(l);
                     }
                 }
             }
@@ -161,7 +162,7 @@ namespace abclass
         arma::uvec et_vs_;                // indices of selected predictors
 
         // estimates
-        arma::cube coef_;       // p1_ by km1_ for linear learning
+        arma::cube coef_;       // p1_ x km1_ for linear learning in each slice
 
         // loss along the solution path
         arma::vec loss_wo_penalty_;
@@ -192,18 +193,28 @@ namespace abclass
         inline Abclass* set_data(const T_x& x,
                                  const arma::uvec& y)
         {
-            x_ = x;
-            y_ = y;
-            inter_ = static_cast<unsigned int>(control_.intercept_);
-            km1_ = std::max(1U, arma::max(y_)); // assume y in {0, ..., k-1}
+            km1_ = std::max(1U, arma::max(y)); // assume y in {0, ..., k-1}
             // Binary classification will be assumed if y only takes zero/one.
             k_ = km1_ + 1;
-            n_obs_ = x_.n_rows;
+            set_vertex_matrix(k_);
+            y_ = y;
+            set_x(x);
+            set_ex_vertex_matrix(); // requires n_obs_ set by set_x(x);
+            return this;
+        }
+        inline Abclass* set_x(const T_x& x)
+        {
+            // assume y has been set
+            n_obs_ = x.n_rows;
+            if (n_obs_ != y_.n_elem) {
+                throw std::range_error(
+                    "The number of observations in X and y differs.");
+            }
             dn_obs_ = static_cast<double>(n_obs_);
+            x_ = x;
+            inter_ = static_cast<unsigned int>(control_.intercept_);
             p0_ = x_.n_cols;
             p1_ = p0_ + inter_;
-            set_vertex_matrix(k_);
-            set_ex_vertex_matrix();
             if (control_.standardize_) {
                 if (control_.intercept_) {
                     x_center_ = arma::mean(x_);
@@ -270,7 +281,7 @@ namespace abclass
         }
 
         // setter for group weights
-        inline void set_group_weight(
+        inline Abclass* set_group_weight(
             const arma::vec& group_weight = arma::vec()
             )
         {
@@ -280,6 +291,17 @@ namespace abclass
                 control_.group_weight_ = gen_group_weight(
                     control_.group_weight_);
             }
+            return this;
+        }
+
+        // rescale the coefficients
+        inline Abclass* force_rescale_coef()
+        {
+            // must know what you are doing
+            for (size_t i {0}; i < coef_.n_slices; ++i) {
+                coef_.slice(i) = rescale_coef(coef_.slice(i));
+            }
+            return this;
         }
 
         // linear predictor

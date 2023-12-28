@@ -59,8 +59,10 @@
     }
     ## adjust lambda alignment
     if (alignment == 0L && length(control$lambda) > 0) {
-        warning("Changed to `alignment` = 'lambda'",
-                " for the specified lambda sequence.")
+        if (control$verbose) {
+            message("Changed to `alignment` = 'lambda' ",
+                    "for the specified lambda sequence.")
+        }
         alignment <- 1L
     }
     ## prepare arguments

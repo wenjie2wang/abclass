@@ -38,7 +38,15 @@ namespace abclass {
         const unsigned int p0 { obj.p0_ };
         const unsigned int inter { obj.p1_ - obj.p0_ };
         const auto x0 { obj.x_ };
-        obj.set_group_weight();
+        const bool standardize0 { obj.control_.standardize_ };
+        const arma::rowvec x_center0 { obj.x_center_ },
+            x_scale0 { obj.x_scale_ };
+        // 1. set standardize to false to avoid unnessary rescale
+        //    as 1) the location/scale do not depend on permutation
+        //       2) regardless of standaridze, rescale does nothing
+        //          in the following loop
+        // 2. set the optional group weight from the control object
+        obj.set_standardize(false)->set_group_weight();
         const arma::vec gw0 { obj.control_.group_weight_ };
         // initialize
         // (0, 1, ...p0 - 1), assuming p0 > 0
@@ -52,7 +60,7 @@ namespace abclass {
             x_perm = arma::join_rows(x0.cols(obj.et_vs_), std::move(x_perm));
             obj.control_.group_weight_ = arma::join_cols(
                 obj.control_.group_weight_.elem(obj.et_vs_), gw0);
-            obj.set_data(x_perm, obj.y_);
+            obj.set_x(x_perm);
             obj.et_npermuted_ = p0;
             obj.fit();
             // reset lambda if it was internally set
@@ -83,8 +91,8 @@ namespace abclass {
             obj.loss_wo_penalty_ = obj.loss_wo_penalty_(et_lambda_idx);
             obj.penalty_ = obj.penalty_(et_lambda_idx);
         }
-        // update obj
-        obj.set_data(std::move(x0), obj.y_);
+        // reset object
+        obj.set_standardize(standardize0)->set_x(std::move(x0));
         obj.set_group_weight(std::move(gw0));
         obj.coef_ = arma::cube(obj.p1_, obj.k_ - 1, 1, arma::fill::zeros);
         if (obj.control_.intercept_) {
@@ -95,8 +103,13 @@ namespace abclass {
         } else {
             obj.coef_.slice(0).rows(obj.et_vs_) = active_beta.rows(active_idx0);
         }
-        // reset
-        obj.et_npermuted_ = 0;
+        if (standardize0) {
+            // set to the original center and scale
+            obj.x_center_ = x_center0;
+            obj.x_scale_ = x_scale0;
+            obj.force_rescale_coef();
+        }
+        obj.et_npermuted_ = 0;  // necessary for calling regular fit()
     }
 
     // estimate the prediction accuracy by cross-validation

@@ -508,7 +508,7 @@ namespace abclass
                         this->loss_wo_penalty_ = this->loss_wo_penalty_(0);
                         this->penalty_ = this->penalty_(0);
                     } else {
-                        // discard the estimates from the last itaration
+                        // discard the estimates from this itaration
                         coef_ = coef_.head_slices(li);
                         this->loss_wo_penalty_ =
                             this->loss_wo_penalty_.head(li);
