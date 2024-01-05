@@ -47,16 +47,16 @@ namespace abclass
         inline double loss(const arma::vec& u,
                            const arma::vec& obs_weight) const
         {
-            arma::vec tmp { arma::zeros(u.n_elem) };
-            double tmp1 { 1 + inner_min_ };
+            double res { 0.0 };
+            double tmp1 { 1.0 + inner_min_ };
             for (size_t i {0}; i < u.n_elem; ++i) {
                 if (u[i] < inner_min_) {
-                    tmp[i] = (tmp1 - u[i]) * exp_inner_max_;
+                    res += (tmp1 - u[i]) * exp_inner_max_ * obs_weight(i);
                 } else {
-                    tmp[i] = std::exp(- u[i]);
+                    res += std::exp(- u[i]) * obs_weight(i);
                 }
             }
-            return arma::mean(obs_weight % tmp);
+            return res;
         }
 
         // the first derivative of the loss function

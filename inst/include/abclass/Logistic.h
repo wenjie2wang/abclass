@@ -41,8 +41,7 @@ namespace abclass
             for (size_t i {0}; i < u.n_elem; ++i) {
                 res += obs_weight(i) * loss(u[i]);
             }
-            return res / static_cast<double>(u.n_elem);
-            // return arma::mean(obs_weight % arma::log(1.0 + arma::exp(- u)));
+            return res;
         }
 
         // the first derivative of the loss function
