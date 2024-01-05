@@ -1,6 +1,6 @@
 //
 // R package abclass developed by Wenjie Wang <wang@wwenjie.org>
-// Copyright (C) 2021-2023 Eli Lilly and Company
+// Copyright (C) 2021-2024 Eli Lilly and Company
 //
 // This file is part of the R package abclass.
 //
