@@ -96,22 +96,22 @@ namespace abclass
         // loss function
         inline double objective0(const arma::vec& inner) const
         {
-            return loss_.loss(inner, control_.obs_weight_);
+            return loss_fun_.loss(inner, control_.obs_weight_);
         }
         // the first derivative of the loss function
         inline arma::vec loss_derivative(const arma::vec& inner) const
         {
-            return loss_.dloss(inner);
+            return loss_fun_.dloss(inner);
         }
 
         // MM lowerbound used in coordinate-descent algorithm
         inline void set_mm_lowerbound()
         {
             if (control_.intercept_) {
-                mm_lowerbound0_ = loss_.mm_lowerbound(
+                mm_lowerbound0_ = loss_fun_.mm_lowerbound(
                     dn_obs_, control_.obs_weight_);
             }
-            mm_lowerbound_ = loss_.mm_lowerbound(x_, control_.obs_weight_);
+            mm_lowerbound_ = loss_fun_.mm_lowerbound(x_, control_.obs_weight_);
         }
 
         inline arma::vec gen_group_weight(
@@ -150,7 +150,7 @@ namespace abclass
 
         // parameters
         Control control_;       // control parameters
-        T_loss loss_;           // loss funciton class
+        T_loss loss_fun_;       // loss funciton class
 
         // tuning by cross-validation
         arma::mat cv_accuracy_;
@@ -164,9 +164,10 @@ namespace abclass
         // estimates
         arma::cube coef_;       // p1_ x km1_ for linear learning in each slice
 
-        // loss along the solution path
-        arma::vec loss_wo_penalty_;
+        // loss/penalty/objective functions along the solution path
+        arma::vec loss_;
         arma::vec penalty_;
+        arma::vec objective_;
 
         // default constructor
         Abclass() {}

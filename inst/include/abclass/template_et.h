@@ -88,8 +88,9 @@ namespace abclass {
                             << "\n";
             }
             // record loss function
-            obj.loss_wo_penalty_ = obj.loss_wo_penalty_(et_lambda_idx);
+            obj.loss_ = obj.loss_(et_lambda_idx);
             obj.penalty_ = obj.penalty_(et_lambda_idx);
+            obj.objective_ = obj.objective_(et_lambda_idx);
         }
         // reset object
         obj.set_standardize(standardize0)->set_x(std::move(x0));

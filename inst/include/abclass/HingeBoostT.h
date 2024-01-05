@@ -41,7 +41,7 @@ namespace abclass
                     const Control& control) :
             T_class(x, y, control)
         {
-            this->loss_.set_c(0.0);
+            this->loss_fun_.set_c(0.0);
         }
 
     };                          // end of class

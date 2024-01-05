@@ -44,21 +44,21 @@ Rcpp::List template_moml_fit(
             abclass::MomlNet<abclass::Boost, T> object {
                 x, treatment, reward, propensity_score, ctrl
             };
-            object.loss_.set_inner_min(control["boost_umin"]);
+            object.loss_fun_.set_inner_min(control["boost_umin"]);
             return template_fit(object);
         }
         case 103: {
             abclass::MomlNet<abclass::HingeBoost, T> object {
                 x, treatment, reward, propensity_score, ctrl
             };
-            object.loss_.set_c(control["lum_c"]);
+            object.loss_fun_.set_c(control["lum_c"]);
             return template_fit(object);
         }
         case 104: {
             abclass::MomlNet<abclass::Lum, T> object {
                 x, treatment, reward, propensity_score, ctrl
             };
-            object.loss_.set_ac(control["lum_a"], control["lum_c"]);
+            object.loss_fun_.set_ac(control["lum_a"], control["lum_c"]);
             return template_fit(object);
         }
         case 201: {
@@ -71,21 +71,21 @@ Rcpp::List template_moml_fit(
             abclass::MomlGroupLasso<abclass::Boost, T> object {
                 x, treatment, reward, propensity_score, ctrl
             };
-            object.loss_.set_inner_min(control["boost_umin"]);
+            object.loss_fun_.set_inner_min(control["boost_umin"]);
             return template_fit(object);
         }
         case 203: {
             abclass::MomlGroupLasso<abclass::HingeBoost, T> object {
                 x, treatment, reward, propensity_score, ctrl
             };
-            object.loss_.set_c(control["lum_c"]);
+            object.loss_fun_.set_c(control["lum_c"]);
             return template_fit(object);
         }
         case 204: {
             abclass::MomlGroupLasso<abclass::Lum, T> object {
                 x, treatment, reward, propensity_score, ctrl
             };
-            object.loss_.set_ac(control["lum_a"], control["lum_c"]);
+            object.loss_fun_.set_ac(control["lum_a"], control["lum_c"]);
             return template_fit(object);
         }
         case 301: {
@@ -98,21 +98,21 @@ Rcpp::List template_moml_fit(
             abclass::MomlGroupSCAD<abclass::Boost, T> object {
                 x, treatment, reward, propensity_score, ctrl
             };
-            object.loss_.set_inner_min(control["boost_umin"]);
+            object.loss_fun_.set_inner_min(control["boost_umin"]);
             return template_fit(object);
         }
         case 303: {
             abclass::MomlGroupSCAD<abclass::HingeBoost, T> object {
                 x, treatment, reward, propensity_score, ctrl
             };
-            object.loss_.set_c(control["lum_c"]);
+            object.loss_fun_.set_c(control["lum_c"]);
             return template_fit(object);
         }
         case 304: {
             abclass::MomlGroupSCAD<abclass::Lum, T> object {
                 x, treatment, reward, propensity_score, ctrl
             };
-            object.loss_.set_ac(control["lum_a"], control["lum_c"]);
+            object.loss_fun_.set_ac(control["lum_a"], control["lum_c"]);
             return template_fit(object);
         }
         case 401: {
@@ -125,21 +125,21 @@ Rcpp::List template_moml_fit(
             abclass::MomlGroupMCP<abclass::Boost, T> object {
                 x, treatment, reward, propensity_score, ctrl
             };
-            object.loss_.set_inner_min(control["boost_umin"]);
+            object.loss_fun_.set_inner_min(control["boost_umin"]);
             return template_fit(object);
         }
         case 403: {
             abclass::MomlGroupMCP<abclass::HingeBoost, T> object {
                 x, treatment, reward, propensity_score, ctrl
             };
-            object.loss_.set_c(control["lum_c"]);
+            object.loss_fun_.set_c(control["lum_c"]);
             return template_fit(object);
         }
         case 404: {
             abclass::MomlGroupMCP<abclass::Lum, T> object {
                 x, treatment, reward, propensity_score, ctrl
             };
-            object.loss_.set_ac(control["lum_a"], control["lum_c"]);
+            object.loss_fun_.set_ac(control["lum_a"], control["lum_c"]);
             return template_fit(object);
         }
         default:

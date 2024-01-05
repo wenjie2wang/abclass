@@ -36,21 +36,21 @@ arma::mat predict_prob(const T_x& x,
         case 2:
         {
             abclass::Abclass<abclass::Boost, T_x> object { k };
-            object.loss_.set_inner_min(loss_params["boost_umin"]);
+            object.loss_fun_.set_inner_min(loss_params["boost_umin"]);
             object.set_intercept(beta.n_rows > x.n_cols);
             return object.predict_prob(beta, x, offset);
         }
         case 3:
         {
             abclass::Abclass<abclass::HingeBoost, T_x> object { k };
-            object.loss_.set_c(loss_params["lum_c"]);
+            object.loss_fun_.set_c(loss_params["lum_c"]);
             object.set_intercept(beta.n_rows > x.n_cols);
             return object.predict_prob(beta, x, offset);
         }
         case 4:
         {
             abclass::Abclass<abclass::Lum, T_x> object { k };
-            object.loss_.set_ac(loss_params["lum_a"], loss_params["lum_c"]);
+            object.loss_fun_.set_ac(loss_params["lum_a"], loss_params["lum_c"]);
             object.set_intercept(beta.n_rows > x.n_cols);
             return object.predict_prob(beta, x, offset);
         }

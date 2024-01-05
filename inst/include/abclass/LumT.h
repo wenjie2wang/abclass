@@ -40,7 +40,7 @@ namespace abclass
              const Control& control) :
             T_class(x, y, control)
         {
-            this->loss_.set_ac(1.0, 0.0);
+            this->loss_fun_.set_ac(1.0, 0.0);
         }
 
     };                          // end of class

@@ -101,9 +101,9 @@ inline Rcpp::List template_abrank_fit(T& object)
             Rcpp::Named("lambda_max") = object.abc_.lambda_max_,
             Rcpp::Named("alpha") = object.abc_.control_.alpha_
             ),
-        Rcpp::Named("loss_wo_penalty") = abclass::arma2rvec(
-            object.abc_.loss_wo_penalty_),
-        Rcpp::Named("penalty") = abclass::arma2rvec(object.abc_.penalty_)
+        Rcpp::Named("loss") = abclass::arma2rvec(object.abc_.loss_),
+        Rcpp::Named("penalty") = abclass::arma2rvec(object.abc_.penalty_),
+        Rcpp::Named("objective") = abclass::arma2rvec(object.abc_.objective_)
         );
 }
 
@@ -124,17 +124,17 @@ Rcpp::List rcpp_abrank_fit(
         }
         case 2: {
             abclass::BoostRank<arma::mat> object { x, y, qid, ctrl };
-            object.abc_.loss_.set_inner_min(control["boost_umin"]);
+            object.abc_.loss_fun_.set_inner_min(control["boost_umin"]);
             return template_abrank_fit(object);
         }
         case 3: {
             abclass::HingeBoostRank<arma::mat> object { x, y, qid, ctrl };
-            object.abc_.loss_.set_c(control["lum_c"]);
+            object.abc_.loss_fun_.set_c(control["lum_c"]);
             return template_abrank_fit(object);
         }
         case 4: {
             abclass::LumRank<arma::mat> object { x, y, qid, ctrl };
-            object.abc_.loss_.set_ac(control["lum_a"], control["lum_c"]);
+            object.abc_.loss_fun_.set_ac(control["lum_a"], control["lum_c"]);
             return template_abrank_fit(object);
         }
         default:
