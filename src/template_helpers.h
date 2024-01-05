@@ -80,9 +80,11 @@ inline Rcpp::List template_fit(T& object)
             Rcpp::Named("kappa_ratio") = object.control_.kappa_ratio_,
             Rcpp::Named("gamma") = object.control_.gamma_
             ),
-        Rcpp::Named("loss") = abclass::arma2rvec(object.loss_),
-        Rcpp::Named("penalty") = abclass::arma2rvec(object.penalty_),
-        Rcpp::Named("objective") = abclass::arma2rvec(object.objective_),
+        Rcpp::Named("optimization") = Rcpp::List::create(
+            Rcpp::Named("loss") = abclass::arma2rvec(object.loss_),
+            Rcpp::Named("penalty") = abclass::arma2rvec(object.penalty_),
+            Rcpp::Named("objective") = abclass::arma2rvec(object.objective_)
+            ),
         Rcpp::Named("cross_validation") = cv_res,
         Rcpp::Named("et") = et_res
         );
