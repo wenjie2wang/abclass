@@ -318,9 +318,6 @@ namespace abclass
                     }
                     break;
                 }
-                if (verbose > 0) {
-                    msg("Outer loop reached the maximum number of iteratons.");
-                }
             }
         } else {
             // regular coordinate descent
@@ -351,14 +348,14 @@ namespace abclass
                 obj0 = obj1;
                 i++;
             }
-            if (verbose > 0) {
-                if (num_iter_ < max_iter) {
-                    Rcpp::Rcout << "Outer loop converged after "
-                                << num_iter_
-                                << " iteration(s).\n";
-                } else {
-                    msg("Outer loop reached the maximum number of iteratons.");
-                }
+        }
+        if (verbose > 0) {
+            if (num_iter_ < max_iter) {
+                Rcpp::Rcout << "Outer loop converged after "
+                            << num_iter_
+                            << " iteration(s).\n";
+            } else {
+                msg("Outer loop reached the maximum number of iteratons.");
             }
         }
     }
