@@ -41,7 +41,7 @@ namespace abclass
         unsigned int nlambda_ { 20 };
         double lambda_min_ratio_ { 0.01 };
         //   elastic-net
-        double alpha_ { 0.5 };
+        double alpha_ { 1.0 };
         //   group {lasso,scad,mcp}
         arma::vec group_weight_ { arma::vec() }; // adaptive group weights
         //   group {scad,mcp}
@@ -59,7 +59,7 @@ namespace abclass
 
         // optimization
         unsigned int max_iter_ { 100000 }; // maximum number of iterations
-        double epsilon_ { 1e-3 };          // tolerance to check convergence
+        double epsilon_ { 1e-7 };          // tolerance to check convergence
         double max_grad_ { - 1e-5 };       // maximum first gradient of loss
         bool varying_active_set_ { true }; // if active set should be adaptive
         bool standardize_ { true };        // is x_ standardized (column-wise)
