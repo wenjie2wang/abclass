@@ -41,6 +41,7 @@ namespace abclass
         // for the CMD/GMD algorithm
         double mm_lowerbound0_;
         arma::rowvec mm_lowerbound_;
+        double null_loss_;      // loss function for the null model
 
         // prepare the vertex matrix
         inline void set_vertex_matrix(const unsigned int k)

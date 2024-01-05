@@ -178,6 +178,12 @@ namespace abclass {
         msg(m2...);
     }
 
+    // compute a * b for sake of numerical stability
+    inline double exp_log_sum(const double a, const double b)
+    {
+        return std::exp(std::log(a) + std::log(b));
+    }
+
     // FIXME select rows: remedy for sparse matrices
     inline arma::mat subset_rows(const arma::mat& mat,
                                  const arma::uvec& row_index)
