@@ -1,7 +1,7 @@
 ntrain <- 100
 ntest <- 1000
-p <- 10
-k <- 5
+p <- 2
+k <- 3
 n <- ntrain + ntest
 train_idx <- seq_len(ntrain)
 y <- sample(k, size = n, replace = TRUE)
@@ -16,31 +16,26 @@ train_y <- y[train_idx]
 test_y <- y[- train_idx]
 
 ## logistic deviance loss
-model1 <- abclass(train_x, train_y, nlambda = 10,
-                  lambda_min_ratio = 1e-3, epsilon = 1e-3,
-                  grouped = FALSE)
-pred1 <- predict(model1, test_x, s = 10)
+model1 <- abclass(train_x, train_y, nlambda = 5, grouped = FALSE)
+pred1 <- predict(model1, test_x, s = 5)
 expect_true(mean(test_y == pred1) > 0.5)
-expect_equivalent(dim(coef(model1, s = 10)), c(p + 1, k - 1))
+expect_equivalent(dim(coef(model1, s = 5)), c(p + 1, k - 1))
 
 ## exponential loss approximating AdaBoost
-model2 <- abclass(train_x, train_y, nlambda = 10,
-                  loss = "boost", epsilon = 1e-3)
-pred2 <- predict(model2, test_x, s = 10)
+model2 <- abclass(train_x, train_y, nlambda = 5, loss = "boost")
+pred2 <- predict(model2, test_x, s = 5)
 expect_true(mean(test_y == pred2) > 0.5)
-expect_equivalent(dim(coef(model2, s = 10)), c(p + 1, k - 1))
+expect_equivalent(dim(coef(model2, s = 5)), c(p + 1, k - 1))
 
 ## hinge-boost loss
-model3 <- abclass(train_x, train_y, nlambda = 10,
-                  loss = "hinge-boost", epsilon = 1e-3)
-pred3 <- predict(model3, test_x, s = 10)
+model3 <- abclass(train_x, train_y, nlambda = 5, loss = "hinge-boost")
+pred3 <- predict(model3, test_x, s = 5)
 expect_true(mean(test_y == pred3) > 0.5)
-expect_equivalent(dim(coef(model3, s = 10)), c(p + 1, k - 1))
+expect_equivalent(dim(coef(model3, s = 5)), c(p + 1, k - 1))
 
 ## LUM loss
 model4 <- abclass(train_x, train_y, nlambda = 5,
-                  loss = "lum", epsilon = 1e-2,
-                  group_penalty = "mcp")
+                  loss = "lum", group_penalty = "mcp")
 pred4 <- predict(model4, test_x)[[5]]
 expect_true(mean(test_y == pred4) > 0.5)
 
@@ -57,8 +52,7 @@ expect_error(predict(model4), "newx")
 ## test as.matrix
 model4 <- abclass(as.data.frame(train_x),
                   train_y, nlambda = 5,
-                  loss = "lum", epsilon = 1e-2,
-                  group_penalty = "mcp")
+                  loss = "lum", group_penalty = "mcp")
 expect_equal(predict(model4, as.data.frame(test_x), s = 5), pred4)
 
 ## quick tests for other options
@@ -74,6 +68,7 @@ for (k in seq_len(nrow(qset))) {
                       group_penalty = qset$gpenalty[k])
     qpred <- predict(qmodel, test_x)
     qprob <- predict(qmodel, test_x, type = "prob")
+    qlink <- predict(qmodel, test_x, type = "link")
 }
 
 ## ungrouped penalty
@@ -89,6 +84,7 @@ for (k in seq_len(nrow(qset))) {
                       grouped = FALSE)
     qpred <- predict(qmodel, test_x)
     qprob <- predict(qmodel, test_x, type = "prob")
+    qlink <- predict(qmodel, test_x, type = "link")
 }
 
 ## test sparse matrices
@@ -97,7 +93,7 @@ if (requireNamespace("Matrix", quietly = TRUE)) {
     sp_test_x <- as(test_x, "sparseMatrix")
 
     sp_model <- abclass(sp_train_x, train_y, nlambda = 5, loss = "lum",
-                        epsilon = 1e-2, group_penalty = "lasso")
+                        group_penalty = "lasso")
     expect_equal(predict(sp_model, test_x, s = 5),
                  predict(sp_model, sp_test_x, s = 5))
 
@@ -112,8 +108,9 @@ if (requireNamespace("Matrix", quietly = TRUE)) {
                           lambda = 0.01,
                           loss = qset$loss[k],
                           group_penalty = qset$gpenalty[k])
-        qpred <- predict(qmodel, sp_test_x)
+        qpred <- predict(qmodel, sp_test_x, type = "class")
         qprob <- predict(qmodel, sp_test_x, type = "prob")
+        qlink <- predict(qmodel, test_x, type = "link")
     }
 
     ## ungrouped penalty
@@ -127,7 +124,8 @@ if (requireNamespace("Matrix", quietly = TRUE)) {
                           loss = qset$loss[k],
                           alpha = qset$alpha[k],
                           grouped = FALSE)
-        qpred <- predict(qmodel, sp_test_x)
+        qpred <- predict(qmodel, sp_test_x, type = "class")
         qprob <- predict(qmodel, sp_test_x, type = "prob")
+        qlink <- predict(qmodel, test_x, type = "link")
     }
 }

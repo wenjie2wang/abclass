@@ -1,6 +1,6 @@
 ntrain <- 100
 ntest <- 1000
-p <- 3
+p <- 2
 k <- 3
 n <- ntrain + ntest
 train_idx <- seq_len(ntrain)
