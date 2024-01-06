@@ -98,7 +98,6 @@ inline Rcpp::List template_abrank_fit(T& object)
         Rcpp::Named("regularization") = Rcpp::List::create(
             Rcpp::Named("lambda") =
             abclass::arma2rvec(object.abc_.control_.lambda_),
-            Rcpp::Named("lambda_max") = object.abc_.lambda_max_,
             Rcpp::Named("alpha") = object.abc_.control_.alpha_
             ),
         Rcpp::Named("loss") = abclass::arma2rvec(object.abc_.loss_),

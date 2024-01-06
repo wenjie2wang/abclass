@@ -73,7 +73,6 @@ inline Rcpp::List template_fit(T& object)
         Rcpp::Named("regularization") = Rcpp::List::create(
             Rcpp::Named("lambda") =
             abclass::arma2rvec(object.control_.lambda_),
-            Rcpp::Named("lambda_max") = object.lambda_max_,
             Rcpp::Named("alpha") = object.control_.alpha_,
             Rcpp::Named("group_weight") =
             abclass::arma2rvec(object.control_.group_weight_),

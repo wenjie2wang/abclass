@@ -94,10 +94,13 @@
     if (call_list$control$nfolds == 0L) {
         res$cross_validation <- NULL
     }
+    if (call_list$control$nstages == 0L) {
+        res$et <- NULL
+    }
     ## update regularization
     return_lambda <-
         if (call_list$control$nstages == 0L) {
-            c("alpha", "lambda", "lambda_max")
+            c("alpha", "lambda")
         } else {
             ## update the selected index to one-based index
             res$et$selected <- res$et$selected + 1L
