@@ -45,7 +45,7 @@ namespace abclass {
         //    as 1) the location/scale do not depend on permutation
         //       2) regardless of standaridze, rescale does nothing
         //          in the following loop
-        // 2. set the optional group weight from the control object
+        // 2. set the optional penalty factor from the control object
         obj.set_standardize(false)->set_penalty_factor();
         const arma::vec gw0 { obj.control_.penalty_factor_ };
         // initialize

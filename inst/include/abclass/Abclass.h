@@ -280,7 +280,7 @@ namespace abclass
             return this;
         }
 
-        // setter for group weights
+        // setter for penalty factors
         inline Abclass* set_penalty_factor(
             const arma::vec& penalty_factor = arma::vec()
             )

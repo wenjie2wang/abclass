@@ -50,12 +50,12 @@ expect_equivalent(dim(coef(model1, selection = 10)), c(p + 1, k - 1))
 pred1 <- predict(model1, test_x, s = 10)
 expect_true(mean(test_y == pred1) > 0.5)
 
-## incorrect length of group weights
+## incorrect length of penalty factors
 expect_error(
     et.abclass(train_x, train_y, penalty_factor = runif(ncol(train_x) + 1))
 )
 
-## with refit and group weights
+## with refit and penalty factors
 gw <- runif(ncol(train_x))
 model1 <- et.abclass(train_x, train_y, nstages = 2,
                      lambda_min_ratio = 1e-4,

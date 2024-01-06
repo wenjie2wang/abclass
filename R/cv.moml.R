@@ -85,7 +85,7 @@ cv.moml <- function(x,
         ## TODO allow selection of min and 1se
         coef_idx <- res$cross_validation$cv_1se
         idx <- which(apply(res$coefficients[- 1, , coef_idx] > 0, 1, any))
-        ## inherit the group weights for those selected predictors
+        ## inherit the penalty factors for those selected predictors
         if (! is.null(res$regularization$penalty_factor)) {
             refit$penalty_factor <- res$regularization$penalty_factor[idx]
         }

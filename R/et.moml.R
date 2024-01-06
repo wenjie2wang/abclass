@@ -71,7 +71,7 @@ et.moml <- function(x,
             refit <- list(lambda = 1e-6)
         }
         idx <- res$et$selected
-        ## inherit the group weights for those selected predictors
+        ## inherit the penalty factors for those selected predictors
         if (! is.null(res$regularization$penalty_factor)) {
             refit$penalty_factor <- res$regularization$penalty_factor[idx]
         }

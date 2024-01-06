@@ -42,7 +42,6 @@ namespace abclass
 
         // functions
         using Abclass<T_loss, T_x>::loss_derivative;
-        using Abclass<T_loss, T_x>::gen_penalty_factor;
         using Abclass<T_loss, T_x>::objective0;
         using Abclass<T_loss, T_x>::set_mm_lowerbound;
 
@@ -271,7 +270,9 @@ namespace abclass
             const double mj { mm_lowerbound_(j) };
             const arma::rowvec old_beta_j { beta.row(j1) };
             const arma::rowvec uj { - mm_gradient(inner, j) };
-            const double l1_lambda_j { l1_lambda * control_.penalty_factor_(j) };
+            const double l1_lambda_j {
+                l1_lambda * control_.penalty_factor_(j)
+            };
             arma::mat::row_iterator beta_g_it { beta.begin_row(j1) };
             update_beta_g(beta_g_it, uj,
                           l1_lambda_j, l2_lambda, mj);
@@ -445,7 +446,9 @@ namespace abclass
             const double mj { mm_lowerbound_(j) };
             const arma::rowvec old_beta_j { beta.row(j1) };
             const arma::rowvec uj { - mm_gradient(inner, j) };
-            const double l1_lambda_j { l1_lambda * control_.penalty_factor_(j) };
+            const double l1_lambda_j {
+                l1_lambda * control_.penalty_factor_(j)
+            };
             arma::mat::row_iterator beta_g_it { beta.begin_row(j1) };
             update_beta_g(beta_g_it, uj,
                           l1_lambda_j, l2_lambda, mj);
@@ -520,11 +523,11 @@ namespace abclass
     {
         // set the CMD lowerbound
         set_mm_lowerbound();
-        // set group weight from the control_
+        // set penalty factor from the control_
         set_penalty_factor();
         // set gamma
         set_gamma(control_.kappa_ratio_);
-        // penalty for covariates with positive group weights only
+        // penalty for covariates with positive penalty factors only
         arma::uvec penalty_group { arma::find(control_.penalty_factor_ > 0.0) };
         // initialize
         arma::vec one_inner;
