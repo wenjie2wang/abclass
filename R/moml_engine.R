@@ -98,7 +98,7 @@
         }
     res$regularization <-
         if (control$grouped) {
-            common_pars <- c(return_lambda, "group_weight")
+            common_pars <- c(return_lambda, "penalty_factor")
             if (control$group_penalty == "lasso") {
                 res$regularization[common_pars]
             } else {

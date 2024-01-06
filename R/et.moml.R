@@ -72,8 +72,8 @@ et.moml <- function(x,
         }
         idx <- res$et$selected
         ## inherit the group weights for those selected predictors
-        if (! is.null(res$regularization$group_weight)) {
-            refit$group_weight <- res$regularization$group_weight[idx]
+        if (! is.null(res$regularization$penalty_factor)) {
+            refit$penalty_factor <- res$regularization$penalty_factor[idx]
         }
         refit_control <- modify_list(control, refit)
         refit_res <- .moml(

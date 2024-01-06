@@ -42,7 +42,7 @@ namespace abclass
 
         // functions
         using Abclass<T_loss, T_x>::loss_derivative;
-        using Abclass<T_loss, T_x>::gen_group_weight;
+        using Abclass<T_loss, T_x>::gen_penalty_factor;
         using Abclass<T_loss, T_x>::objective0;
         using Abclass<T_loss, T_x>::set_mm_lowerbound;
 
@@ -104,16 +104,16 @@ namespace abclass
         }
 
         // penalty sum (assume all other hyper parameters are fixed) of
-        // l1_lambda * group_weight_j * penalty(l2_norm(beta_j)) +
+        // l1_lambda * penalty_factor_j * penalty(l2_norm(beta_j)) +
         //     l2_lambda * ridge(l2_norm(beta_j))
         inline virtual double regularization(const arma::mat& beta,
                                              const double l1_lambda,
                                              const double l2_lambda) const
         {
             double out { 0.0 };
-            for (size_t g {0}; g < control_.group_weight_.n_elem; ++g) {
+            for (size_t g {0}; g < control_.penalty_factor_.n_elem; ++g) {
                 out += group_penalty(beta.row(g + inter_),
-                                     l1_lambda * control_.group_weight_(g),
+                                     l1_lambda * control_.penalty_factor_(g),
                                      l2_lambda);
             }
             return out;
@@ -227,7 +227,7 @@ namespace abclass
 
         // function members
         using Abclass<T_loss, T_x>::rescale_coef;
-        using Abclass<T_loss, T_x>::set_group_weight;
+        using Abclass<T_loss, T_x>::set_penalty_factor;
 
         // for a sequence of lambda's
         inline void fit();
@@ -271,7 +271,7 @@ namespace abclass
             const double mj { mm_lowerbound_(j) };
             const arma::rowvec old_beta_j { beta.row(j1) };
             const arma::rowvec uj { - mm_gradient(inner, j) };
-            const double l1_lambda_j { l1_lambda * control_.group_weight_(j) };
+            const double l1_lambda_j { l1_lambda * control_.penalty_factor_(j) };
             arma::mat::row_iterator beta_g_it { beta.begin_row(j1) };
             update_beta_g(beta_g_it, uj,
                           l1_lambda_j, l2_lambda, mj);
@@ -445,7 +445,7 @@ namespace abclass
             const double mj { mm_lowerbound_(j) };
             const arma::rowvec old_beta_j { beta.row(j1) };
             const arma::rowvec uj { - mm_gradient(inner, j) };
-            const double l1_lambda_j { l1_lambda * control_.group_weight_(j) };
+            const double l1_lambda_j { l1_lambda * control_.penalty_factor_(j) };
             arma::mat::row_iterator beta_g_it { beta.begin_row(j1) };
             update_beta_g(beta_g_it, uj,
                           l1_lambda_j, l2_lambda, mj);
@@ -521,11 +521,11 @@ namespace abclass
         // set the CMD lowerbound
         set_mm_lowerbound();
         // set group weight from the control_
-        set_group_weight();
+        set_penalty_factor();
         // set gamma
         set_gamma(control_.kappa_ratio_);
         // penalty for covariates with positive group weights only
-        arma::uvec penalty_group { arma::find(control_.group_weight_ > 0.0) };
+        arma::uvec penalty_group { arma::find(control_.penalty_factor_ > 0.0) };
         // initialize
         arma::vec one_inner;
         if (control_.has_offset_) {
@@ -557,7 +557,7 @@ namespace abclass
             for (arma::uvec::iterator it { penalty_group.begin() };
                  it != penalty_group.end(); ++it) {
                 double tmp { l2_norm(one_grad_beta.row(*it)) };
-                tmp /= control_.group_weight_(*it);
+                tmp /= control_.penalty_factor_(*it);
                 if (l1_lambda_max_ < tmp) {
                     l1_lambda_max_ = tmp;
                 }
@@ -646,7 +646,7 @@ namespace abclass
                     continue;
                 }
                 double one_strong_lhs { l2_norm(one_grad_beta.row(*it)) };
-                one_strong_rhs = control_.group_weight_(*it) *
+                one_strong_rhs = control_.penalty_factor_(*it) *
                     strong_rule_rhs(l1_lambda, old_lambda);
                 if (one_strong_lhs >= one_strong_rhs) {
                     is_active_strong(*it) = 1;
@@ -654,7 +654,6 @@ namespace abclass
             }
             old_lambda = l1_lambda; // for next iteration
             bool kkt_failed { true };
-            one_strong_rhs = l1_lambda;
             // eventually, strong rule will guess correctly
             while (kkt_failed) {
                 arma::uvec is_active_strong_old { is_active_strong };
@@ -689,7 +688,7 @@ namespace abclass
                     arma::vec tmp_vec_it { x_.col(*it) % tmp_vec };
                     arma::rowvec tmp_mm_grad { tmp_vec_it.t() * ex_vertex_ };
                     double tmp_l2 { l2_norm(tmp_mm_grad) / dn_obs_ };
-                    if (tmp_l2 > one_strong_rhs * control_.group_weight_(*it)) {
+                    if (tmp_l2 > l1_lambda * control_.penalty_factor_(*it)) {
                         // update active set
                         is_strong_rule_failed(*it) = 1;
                     }

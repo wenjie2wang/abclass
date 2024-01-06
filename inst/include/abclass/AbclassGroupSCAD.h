@@ -39,7 +39,7 @@ namespace abclass
 
         // functions
         using AbclassGroup<T_loss, T_x>::loss_derivative;
-        using AbclassGroup<T_loss, T_x>::gen_group_weight;
+        using AbclassGroup<T_loss, T_x>::gen_penalty_factor;
         using AbclassGroup<T_loss, T_x>::mm_gradient;
         using AbclassGroup<T_loss, T_x>::mm_gradient0;
         using AbclassGroup<T_loss, T_x>::gradient;
@@ -88,7 +88,7 @@ namespace abclass
                                       const double last_lambda) const override
         {
             return control_.gamma_ / (control_.gamma_ - 2.0) *
-                     (next_lambda - last_lambda) + next_lambda;
+                (next_lambda - last_lambda) + next_lambda;
         }
 
         inline void update_beta_g(arma::mat::row_iterator beta_g_it,

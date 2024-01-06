@@ -46,8 +46,8 @@ namespace abclass {
         //       2) regardless of standaridze, rescale does nothing
         //          in the following loop
         // 2. set the optional group weight from the control object
-        obj.set_standardize(false)->set_group_weight();
-        const arma::vec gw0 { obj.control_.group_weight_ };
+        obj.set_standardize(false)->set_penalty_factor();
+        const arma::vec gw0 { obj.control_.penalty_factor_ };
         // initialize
         // (0, 1, ...p0 - 1), assuming p0 > 0
         obj.et_vs_ = arma::regspace<arma::uvec>(0, p0 - 1);
@@ -58,8 +58,8 @@ namespace abclass {
             const arma::uvec perm_idx { arma::randperm(obj.n_obs_) };
             auto x_perm { subset_rows(x0, perm_idx) };
             x_perm = arma::join_rows(x0.cols(obj.et_vs_), std::move(x_perm));
-            obj.control_.group_weight_ = arma::join_cols(
-                obj.control_.group_weight_.elem(obj.et_vs_), gw0);
+            obj.control_.penalty_factor_ = arma::join_cols(
+                obj.control_.penalty_factor_.elem(obj.et_vs_), gw0);
             obj.set_x(x_perm);
             obj.et_npermuted_ = p0;
             obj.fit();
@@ -94,7 +94,7 @@ namespace abclass {
         }
         // reset object
         obj.set_standardize(standardize0)->set_x(std::move(x0));
-        obj.set_group_weight(std::move(gw0));
+        obj.set_penalty_factor(std::move(gw0));
         obj.coef_ = arma::cube(obj.p1_, obj.k_ - 1, 1, arma::fill::zeros);
         if (obj.control_.intercept_) {
             obj.coef_.slice(0).rows(obj.et_vs_ + 1) =
@@ -157,7 +157,7 @@ namespace abclass {
             //            1 for alignment by lambda
             if (! obj.custom_lambda_ && obj.control_.cv_alignment_ == 0) {
                 // reset lambda
-                new_obj.control_.reg_path(arma::vec());
+                new_obj.control_.reg_lambda(arma::vec());
             }
             new_obj.control_.set_verbose(0);
             et_lambda(new_obj);

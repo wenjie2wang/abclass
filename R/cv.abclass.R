@@ -91,8 +91,8 @@ cv.abclass <- function(x, y,
         coef_idx <- res$cross_validation$cv_1se
         idx <- which(apply(res$coefficients[- 1, , coef_idx] > 0, 1, any))
         ## inherit the group weights for those selected predictors
-        if (! is.null(res$regularization$group_weight)) {
-            refit$group_weight <- res$regularization$group_weight[idx]
+        if (! is.null(res$regularization$penalty_factor)) {
+            refit$penalty_factor <- res$regularization$penalty_factor[idx]
         }
         refit_control <- modify_list(control, refit)
         refit_res <- .abclass(

@@ -38,8 +38,9 @@ inline abclass::Control abrank_control(const Rcpp::List& control)
         set_offset<arma::vec>(control["offset"])->
         reg_path(control["nlambda"],
                  control["lambda_min_ratio"],
+                 control["penalty_factor"],
                  control["varying_active_set"])->
-        reg_path(control["lambda"])->
+        reg_lambda(control["lambda"])->
         reg_net(control["alpha"])->
         tune_cv(control["cv_metric"])->
         tune_et(control["nstages"]);

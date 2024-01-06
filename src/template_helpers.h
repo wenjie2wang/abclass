@@ -74,8 +74,8 @@ inline Rcpp::List template_fit(T& object)
             Rcpp::Named("lambda") =
             abclass::arma2rvec(object.control_.lambda_),
             Rcpp::Named("alpha") = object.control_.alpha_,
-            Rcpp::Named("group_weight") =
-            abclass::arma2rvec(object.control_.group_weight_),
+            Rcpp::Named("penalty_factor") =
+            abclass::arma2rvec(object.control_.penalty_factor_),
             Rcpp::Named("kappa_ratio") = object.control_.kappa_ratio_,
             Rcpp::Named("gamma") = object.control_.gamma_
             ),
@@ -104,11 +104,11 @@ inline abclass::Control abclass_control(const Rcpp::List& control)
         set_offset(control["offset"])->
         reg_path(control["nlambda"],
                  control["lambda_min_ratio"],
+                 control["penalty_factor"],
                  control["varying_active_set"])->
-        reg_path(control["lambda"])->
+        reg_lambda(control["lambda"])->
         reg_net(control["alpha"])->
-        reg_group(control["group_weight"],
-                  control["kappa_ratio"])->
+        reg_ncv(control["kappa_ratio"])->
         tune_cv(control["nfolds"],
                 control["stratified"],
                 control["alignment"])->

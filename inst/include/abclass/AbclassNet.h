@@ -570,7 +570,6 @@ namespace abclass
                 }
             }
             bool kkt_failed { true };
-            one_strong_rhs = l1_lambda;
             // eventually, strong rule will guess correctly
             while (kkt_failed) {
                 arma::umat is_active_strong_old { is_active_strong };
@@ -602,7 +601,7 @@ namespace abclass
                         }
                         arma::vec vj_xl { x_l % get_vertex_y(j) };
                         double tmp { arma::mean(vj_xl % inner_grad) };
-                        if (std::abs(tmp) > one_strong_rhs) {
+                        if (std::abs(tmp) > l1_lambda) {
                             // update active set
                             is_strong_rule_failed(l, j) = 1;
                         }

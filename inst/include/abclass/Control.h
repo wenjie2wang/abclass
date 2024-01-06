@@ -40,10 +40,10 @@ namespace abclass
         arma::vec lambda_  { arma::vec() };
         unsigned int nlambda_ { 20 };
         double lambda_min_ratio_ { 0.01 };
+        // adaptive penalty factor for each covariate
+        arma::vec penalty_factor_ { arma::vec() };
         //   elastic-net
         double alpha_ { 1.0 };
-        //   group {lasso,scad,mcp}
-        arma::vec group_weight_ { arma::vec() }; // adaptive group weights
         //   group {scad,mcp}
         double kappa_ratio_ { 0.99 }; // parameter to set gamma
         double gamma_ { - 1.0 };      // gamma for group non-convex penalty
@@ -123,7 +123,8 @@ namespace abclass
         // regularization
         inline Control* reg_path(const unsigned int nlambda,
                                  const double lambda_min_ratio,
-                                 const bool varying_active_set)
+                                 const arma::vec& penalty_factor = arma::vec(),
+                                 const bool varying_active_set = true)
         {
             if (is_le(lambda_min_ratio, 0.0)) {
                 throw std::range_error(
@@ -131,10 +132,11 @@ namespace abclass
             }
             lambda_min_ratio_ = lambda_min_ratio;
             nlambda_ = nlambda;
+            penalty_factor_ = penalty_factor;
             varying_active_set_ = varying_active_set;
             return this;
         }
-        inline Control* reg_path(const arma::vec& lambda)
+        inline Control* reg_lambda(const arma::vec& lambda)
         {
             lambda_ = lambda;
             return this;
@@ -148,14 +150,12 @@ namespace abclass
             alpha_ = alpha;
             return this;
         }
-        inline Control* reg_group(const arma::vec& group_weight,
-                                  const double kappa_ratio = 0.99)
+        inline Control* reg_ncv(const double kappa_ratio = 0.99)
         {
             // kappa must be in (0, 1)
             if (is_le(kappa_ratio, 0.0) || is_ge(kappa_ratio, 1.0)) {
                 throw std::range_error("The 'kappa_ratio' must be in (0, 1).");
             }
-            group_weight_ = group_weight;
             kappa_ratio_ = kappa_ratio;
             return this;
         }

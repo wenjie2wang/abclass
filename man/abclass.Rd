@@ -21,7 +21,7 @@ abclass.control(
   nlambda = 50L,
   lambda_min_ratio = NULL,
   grouped = TRUE,
-  group_weight = NULL,
+  penalty_factor = NULL,
   group_penalty = c("lasso", "scad", "mcp"),
   offset = NULL,
   kappa_ratio = 0.9,
@@ -88,8 +88,9 @@ of predictors, and \code{1e-2} otherwise.}
 \item{grouped}{A logicial value.  Experimental flag to apply group
 penalties.}
 
-\item{group_weight}{A numerical vector with nonnegative values representing
-the adaptive penalty factors for the specified group penalty.}
+\item{penalty_factor}{A numerical vector with nonnegative values specifying
+the adaptive penalty factors for individual predictors (excluding
+intercept).}
 
 \item{group_penalty}{A character vector specifying the name of the group
 penalty.}

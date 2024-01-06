@@ -38,7 +38,7 @@ namespace abclass
 
         // functions
         using AbclassGroup<T_loss, T_x>::loss_derivative;
-        using AbclassGroup<T_loss, T_x>::gen_group_weight;
+        using AbclassGroup<T_loss, T_x>::gen_penalty_factor;
         using AbclassGroup<T_loss, T_x>::mm_gradient;
         using AbclassGroup<T_loss, T_x>::mm_gradient0;
         using AbclassGroup<T_loss, T_x>::gradient;

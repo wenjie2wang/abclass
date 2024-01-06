@@ -115,24 +115,22 @@ namespace abclass
             mm_lowerbound_ = loss_fun_.mm_lowerbound(x_, control_.obs_weight_);
         }
 
-        inline arma::vec gen_group_weight(
-            const arma::vec& group_weight = arma::vec()
+        inline arma::vec gen_penalty_factor(
+            const arma::vec& penalty_factor = arma::vec()
             ) const
         {
-            if (group_weight.n_elem < p0_) {
-                arma::vec out { arma::ones(p0_) };
-                if (group_weight.is_empty()) {
-                    return out;
-                }
-            } else if (group_weight.n_elem == p0_) {
-                if (arma::any(group_weight < 0.0)) {
+            if (penalty_factor.is_empty()) {
+                return arma::ones(p0_);
+            }
+            if (penalty_factor.n_elem == p0_) {
+                if (arma::any(penalty_factor < 0.0)) {
                     throw std::range_error(
-                        "The 'group_weight' cannot be negative.");
+                        "The 'penalty_factor' cannot be negative.");
                 }
-                return group_weight;
+                return penalty_factor;
             }
             // else
-            throw std::range_error("Incorrect length of the 'group_weight'.");
+            throw std::range_error("Incorrect length of the 'penalty_factor'.");
         }
 
     public:
@@ -283,15 +281,15 @@ namespace abclass
         }
 
         // setter for group weights
-        inline Abclass* set_group_weight(
-            const arma::vec& group_weight = arma::vec()
+        inline Abclass* set_penalty_factor(
+            const arma::vec& penalty_factor = arma::vec()
             )
         {
-            if (group_weight.n_elem > 0) {
-                control_.group_weight_ = gen_group_weight(group_weight);
+            if (penalty_factor.n_elem > 0) {
+                control_.penalty_factor_ = gen_penalty_factor(penalty_factor);
             } else {
-                control_.group_weight_ = gen_group_weight(
-                    control_.group_weight_);
+                control_.penalty_factor_ = gen_penalty_factor(
+                    control_.penalty_factor_);
             }
             return this;
         }

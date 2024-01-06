@@ -52,7 +52,7 @@ expect_true(mean(test_y == pred1) > 0.5)
 
 ## incorrect length of group weights
 expect_error(
-    et.abclass(train_x, train_y, group_weight = runif(ncol(train_x) + 1))
+    et.abclass(train_x, train_y, penalty_factor = runif(ncol(train_x) + 1))
 )
 
 ## with refit and group weights
@@ -60,9 +60,9 @@ gw <- runif(ncol(train_x))
 model1 <- et.abclass(train_x, train_y, nstages = 2,
                      lambda_min_ratio = 1e-4,
                      control = list(
-                         group_weight = gw
+                         penalty_factor = gw
                      ))
-expect_equal(gw, model1$regularization$group_weight)
+expect_equal(gw, model1$regularization$penalty_factor)
 expect_equivalent(dim(coef(model1)), c(p + 1, k - 1))
 pred1 <- predict(model1, test_x)
 expect_true(mean(test_y == pred1) > 0.5)

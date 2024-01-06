@@ -75,7 +75,7 @@ namespace abclass {
             //            1 for alignment by lambda
             if (! obj.custom_lambda_ && obj.control_.cv_alignment_ == 0) {
                 // reset lambda
-                new_obj.control_.reg_path(arma::vec());
+                new_obj.control_.reg_lambda(arma::vec());
             }
             new_obj.control_.set_verbose(0);
             new_obj.fit();

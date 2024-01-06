@@ -104,10 +104,11 @@ abclass <- function(x, y,
 ##'     smallest lambda parameter to the largest lambda parameter.  The default
 ##'     value is set to \code{1e-4} if the sample size is larger than the number
 ##'     of predictors, and \code{1e-2} otherwise.
+##' @param penalty_factor A numerical vector with nonnegative values specifying
+##'     the adaptive penalty factors for individual predictors (excluding
+##'     intercept).
 ##' @param grouped A logicial value.  Experimental flag to apply group
 ##'     penalties.
-##' @param group_weight A numerical vector with nonnegative values representing
-##'     the adaptive penalty factors for the specified group penalty.
 ##' @param group_penalty A character vector specifying the name of the group
 ##'     penalty.
 ##' @param offset An optional numeric matrix for offsets of the decision
@@ -148,7 +149,7 @@ abclass.control <- function(lambda = NULL,
                             nlambda = 50L,
                             lambda_min_ratio = NULL,
                             grouped = TRUE,
-                            group_weight = NULL,
+                            penalty_factor = NULL,
                             group_penalty = c("lasso", "scad", "mcp"),
                             offset = NULL,
                             kappa_ratio = 0.9,
@@ -179,7 +180,7 @@ abclass.control <- function(lambda = NULL,
         lambda_min_ratio = lambda_min_ratio,
         grouped = grouped,
         group_penalty = group_penalty,
-        group_weight = null2num0(group_weight),
+        penalty_factor = null2num0(penalty_factor),
         offset = null2mat0(offset),
         standardize = standardize,
         maxit = as.integer(maxit),
