@@ -46,9 +46,6 @@ namespace abclass
         using Abclass<T_loss, T_x>::objective0;
         using Abclass<T_loss, T_x>::loss_derivative;
 
-        // cache
-        unsigned int num_iter_;   // number of CMD cycles till convergence
-
         // common methods
         inline double regularization(const arma::mat& beta,
                                      const double l1_lambda,
@@ -112,15 +109,15 @@ namespace abclass
                                          const unsigned int verbose);
 
         // run complete cycles of CMD for a given active set and given lambda's
-        inline void run_cmd_active_cycle(arma::mat& beta,
-                                         arma::vec& inner,
-                                         arma::umat& is_active,
-                                         const double l1_lambda,
-                                         const double l2_lambda,
-                                         const bool varying_active_set,
-                                         const unsigned int max_iter,
-                                         const double epsilon,
-                                         const unsigned int verbose);
+        inline void run_cmd_active_cycles(arma::mat& beta,
+                                          arma::vec& inner,
+                                          arma::umat& is_active,
+                                          const double l1_lambda,
+                                          const double l2_lambda,
+                                          const bool varying_active_set,
+                                          const unsigned int max_iter,
+                                          const double epsilon,
+                                          const unsigned int verbose);
 
         // one full cycle for coordinate-descent
         inline void run_one_full_cycle(arma::mat& beta,
@@ -130,13 +127,13 @@ namespace abclass
                                        const unsigned int verbose);
 
         // run full cycles of CMD for given lambda's
-        inline void run_cmd_full_cycle(arma::mat& beta,
-                                       arma::vec& inner,
-                                       const double l1_lambda,
-                                       const double l2_lambda,
-                                       const unsigned int max_iter,
-                                       const double epsilon,
-                                       const unsigned int verbose);
+        inline void run_cmd_full_cycles(arma::mat& beta,
+                                        arma::vec& inner,
+                                        const double l1_lambda,
+                                        const double l2_lambda,
+                                        const unsigned int max_iter,
+                                        const double epsilon,
+                                        const unsigned int verbose);
 
     public:
 
@@ -233,7 +230,7 @@ namespace abclass
 
     // run CMD cycles over active sets
     template <typename T_loss, typename T_x>
-    inline void AbclassNet<T_loss, T_x>::run_cmd_active_cycle(
+    inline void AbclassNet<T_loss, T_x>::run_cmd_active_cycles(
         arma::mat& beta,
         arma::vec& inner,
         arma::umat& is_active,
@@ -245,7 +242,7 @@ namespace abclass
         const unsigned int verbose
         )
     {
-        size_t i {0};
+        size_t i {0}, num_iter {0};
         // arma::mat beta0 { beta };
         double obj0 { objective(inner, beta, l1_lambda, l2_lambda) },
             obj1 { obj0 };
@@ -262,7 +259,7 @@ namespace abclass
                 // cycles over the active set
                 size_t ii {0};
                 while (ii < max_iter) {
-                    num_iter_ = ii + 1;
+                    num_iter = ii + 1;
                     Rcpp::checkUserInterrupt();
                     run_one_active_cycle(beta, inner, is_active_varying,
                                          l1_lambda, l2_lambda, true, verbose);
@@ -291,7 +288,7 @@ namespace abclass
                 // run a full cycle over the converged beta
                 run_one_active_cycle(beta, inner, is_active,
                                      l1_lambda, l2_lambda, true, verbose);
-                ++num_iter_;
+                ++num_iter;
                 // check two active sets coincide
                 if (l1_norm(is_active_varying - is_active) > 0) {
                     // if different, repeat this process
@@ -301,7 +298,7 @@ namespace abclass
                                     << " to "
                                     << l1_norm(is_active)
                                     << " after "
-                                    << num_iter_ + 1
+                                    << num_iter + 1
                                     << " iteration(s)\n";
                     }
                     is_active_varying = is_active;
@@ -309,13 +306,6 @@ namespace abclass
                     is_active = is_active_strong;
                     i++;
                 } else {
-                    if (verbose > 0) {
-                        Rcpp::Rcout << "Converged over the active set after "
-                                    << num_iter_
-                                    << " iteration(s)\n";
-                        Rcpp::Rcout << "The size of active set is "
-                                    << l1_norm(is_active) << ".\n";
-                    }
                     break;
                 }
             }
@@ -323,7 +313,7 @@ namespace abclass
             // regular coordinate descent
             while (i < max_iter) {
                 Rcpp::checkUserInterrupt();
-                num_iter_ = i + 1;
+                num_iter = i + 1;
                 run_one_active_cycle(beta, inner, is_active,
                                      l1_lambda, l2_lambda, false, verbose);
                 // if (rel_diff(beta0, beta) < epsilon) {
@@ -350,10 +340,12 @@ namespace abclass
             }
         }
         if (verbose > 0) {
-            if (num_iter_ < max_iter) {
-                Rcpp::Rcout << "Outer loop converged after "
-                            << num_iter_
-                            << " iteration(s).\n";
+            if (num_iter < max_iter) {
+                Rcpp::Rcout << "Outer loop converged over the active set after "
+                            << num_iter
+                            << " iteration(s)\n";
+                Rcpp::Rcout << "The size of active set is "
+                            << l1_norm(is_active) << ".\n";
             } else {
                 msg("Outer loop reached the maximum number of iteratons.");
             }
@@ -408,7 +400,7 @@ namespace abclass
 
     // run full cycles till convergence or reach max number of iterations
     template <typename T_loss, typename T_x>
-    inline void AbclassNet<T_loss, T_x>::run_cmd_full_cycle(
+    inline void AbclassNet<T_loss, T_x>::run_cmd_full_cycles(
         arma::mat& beta,
         arma::vec& inner,
         const double l1_lambda,
@@ -421,9 +413,10 @@ namespace abclass
         // arma::mat beta0 { beta };
         double obj0 { objective(inner, beta, l1_lambda, l2_lambda) },
             obj1 { obj0 };
+        size_t num_iter {0};
         for (size_t i {0}; i < max_iter; ++i) {
             Rcpp::checkUserInterrupt();
-            num_iter_ = i + 1;
+            num_iter = i + 1;
             run_one_full_cycle(beta, inner, l1_lambda, l2_lambda, verbose);
             // if (rel_diff(beta0, beta) < epsilon) {
             //     break;
@@ -447,12 +440,12 @@ namespace abclass
             obj0 = obj1;
         }
         if (verbose > 0) {
-            if (num_iter_ < max_iter) {
-                Rcpp::Rcout << "Converged after "
-                            << num_iter_
+            if (num_iter < max_iter) {
+                Rcpp::Rcout << "Outer loop converged after "
+                            << num_iter
                             << " iteration(s)\n";
             } else {
-                msg("Reached the maximum number of iteratons");
+                msg("Outer loop reached the maximum number of iteratons.");
             }
         }
     }
@@ -464,7 +457,8 @@ namespace abclass
     {
         // set the CMD lowerbound
         set_mm_lowerbound();
-        // TODO: allow groupwise adaptive weights
+        // penalty for covariates with positive penalty factors only
+        arma::uvec penalty_group { arma::find(control_.group_weight_ > 0.0) };
         // initialize
         arma::vec one_inner;
         if (control_.has_offset_) {
@@ -513,15 +507,15 @@ namespace abclass
         arma::umat is_active_strong { arma::zeros<arma::umat>(p0_, km1_) };
         if (control_.intercept_) {
             // only need to estimate intercept
-            run_cmd_active_cycle(one_beta,
-                                 one_inner,
-                                 is_active_strong,
-                                 0, // does not matter
-                                 0, // does not matter
-                                 false,
-                                 control_.max_iter_,
-                                 epsilon0,
-                                 control_.verbose_);
+            run_cmd_active_cycles(one_beta,
+                                  one_inner,
+                                  is_active_strong,
+                                  0, // does not matter
+                                  0, // does not matter
+                                  false,
+                                  control_.max_iter_,
+                                  epsilon0,
+                                  control_.verbose_);
             // update epsilon0
             null_loss_ = objective0(one_inner);
             epsilon0 = exp_log_sum(control_.epsilon_, null_loss_);
@@ -530,13 +524,13 @@ namespace abclass
         if (is_ridge_only) {
             for (size_t li { 0 }; li < control_.lambda_.n_elem; ++li) {
                 l2_lambda = control_.lambda_(li);
-                run_cmd_full_cycle(one_beta,
-                                   one_inner,
-                                   l1_lambda,
-                                   l2_lambda,
-                                   control_.max_iter_,
-                                   epsilon0,
-                                   control_.verbose_);
+                run_cmd_full_cycles(one_beta,
+                                    one_inner,
+                                    l1_lambda,
+                                    l2_lambda,
+                                    control_.max_iter_,
+                                    epsilon0,
+                                    control_.verbose_);
                 coef_.slice(li) = rescale_coef(one_beta);
                 loss_(li) = objective0(one_inner);
                 penalty_(li) = regularization(one_beta, l1_lambda, l2_lambda);
@@ -545,10 +539,8 @@ namespace abclass
             return;             // early exit
         }
         // else, not just ridge penalty with l1_lambda > 0
-        double one_strong_rhs { 0.0 };
-        l2_lambda = lambda_max_ * (1 - control_.alpha_);
-        // optim with varying active set when p > n
-        double old_l1_lambda { l1_lambda_max_ }; // for strong rule
+        // for strong rule
+        double one_strong_rhs { 0.0 }, old_l1_lambda { l1_lambda_max_ };
         // main loop: for each lambda
         for (size_t li { 0 }; li < control_.lambda_.n_elem; ++li) {
             double lambda_li { control_.lambda_(li) };
@@ -586,15 +578,15 @@ namespace abclass
                     arma::zeros<arma::umat>(arma::size(is_active_strong))
                 };
                 // update beta
-                run_cmd_active_cycle(one_beta,
-                                     one_inner,
-                                     is_active_strong,
-                                     l1_lambda,
-                                     l2_lambda,
-                                     control_.varying_active_set_,
-                                     control_.max_iter_,
-                                     epsilon0,
-                                     control_.verbose_);
+                run_cmd_active_cycles(one_beta,
+                                      one_inner,
+                                      is_active_strong,
+                                      l1_lambda,
+                                      l2_lambda,
+                                      control_.varying_active_set_,
+                                      control_.max_iter_,
+                                      epsilon0,
+                                      control_.verbose_);
                 if (control_.verbose_ > 0) {
                     msg("Checking the KKT condition for the null set.");
                 }

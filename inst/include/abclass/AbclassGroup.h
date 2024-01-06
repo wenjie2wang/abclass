@@ -168,13 +168,33 @@ namespace abclass
             );
 
         // run complete cycles of GMD for a given active set and given lambda's
-        inline void run_gmd_active_cycle(
+        inline void run_gmd_active_cycles(
             arma::mat& beta,
             arma::vec& inner,
             arma::uvec& is_active,
             const double l1_lambda,
             const double l2_lambda,
             const bool varying_active_set,
+            const unsigned int max_iter,
+            const double epsilon,
+            const unsigned int verbose
+            );
+
+        // run one full cycle of coordinate descent
+        inline void run_one_full_cycle(
+            arma::mat& beta,
+            arma::vec& inner,
+            const double l1_lambda,
+            const double l2_lambda,
+            const unsigned int verbose
+            );
+
+        // run full cycles of GMD for given lambda's
+        inline void run_gmd_full_cycles(
+            arma::mat& beta,
+            arma::vec& inner,
+            const double l1_lambda,
+            const double l2_lambda,
             const unsigned int max_iter,
             const double epsilon,
             const unsigned int verbose
@@ -200,6 +220,7 @@ namespace abclass
 
         // regularization
         // the "big" enough lambda => zero coef
+        double l1_lambda_max_;
         double lambda_max_;
         // did user specified a customized lambda sequence?
         bool custom_lambda_ = false;
@@ -270,7 +291,7 @@ namespace abclass
 
     // run CMD cycles over active sets
     template <typename T_loss, typename T_x>
-    inline void AbclassGroup<T_loss, T_x>::run_gmd_active_cycle(
+    inline void AbclassGroup<T_loss, T_x>::run_gmd_active_cycles(
         arma::mat& beta,
         arma::vec& inner,
         arma::uvec& is_active,
@@ -350,13 +371,6 @@ namespace abclass
                     is_active = is_active_strong;
                     ++i;
                 } else {
-                    if (verbose > 0) {
-                        Rcpp::Rcout << "Converged over the active set after "
-                                    << num_iter
-                                    << " iteration(s)\n";
-                        Rcpp::Rcout << "The size of active set is "
-                                    << l1_norm(is_active) << ".\n";
-                    }
                     break;
                 }
             }
@@ -392,14 +406,111 @@ namespace abclass
                 obj0 = obj1;
                 ++i;
             }
-            if (verbose > 0) {
-                if (num_iter < max_iter) {
-                    Rcpp::Rcout << "Outer loop converged after "
-                                << num_iter
-                                << " iteration(s).\n";
-                } else {
-                    msg("Reached the maximum number of iteratons.");
+        }
+        if (verbose > 0) {
+            if (num_iter < max_iter) {
+                Rcpp::Rcout << "Outer loop converged over the active set after "
+                            << num_iter
+                            << " iteration(s)\n";
+                Rcpp::Rcout << "The size of active set is "
+                            << l1_norm(is_active) << ".\n";
+            } else {
+                msg("Outer loop reached the maximum number of iteratons.");
+            }
+        }
+    }
+
+    // run one full GMD cycle
+    template <typename T_loss, typename T_x>
+    inline void AbclassGroup<T_loss, T_x>::run_one_full_cycle(
+        arma::mat& beta,
+        arma::vec& inner,
+        const double l1_lambda,
+        const double l2_lambda,
+        const unsigned int verbose
+        )
+    {
+        // for intercept
+        if (control_.intercept_) {
+            arma::rowvec delta_beta0 {
+                - mm_gradient0(inner) / mm_lowerbound0_
+            };
+            beta.row(0) += delta_beta0;
+            arma::vec tmp_du { ex_vertex_ * delta_beta0.t() };
+            inner += tmp_du;
+        }
+        // for predictors
+        for (size_t j {0}; j < p0_; ++j) {
+            const size_t j1 { j + inter_ };
+            const double mj { mm_lowerbound_(j) };
+            const arma::rowvec old_beta_j { beta.row(j1) };
+            const arma::rowvec uj { - mm_gradient(inner, j) };
+            const double l1_lambda_j { l1_lambda * control_.group_weight_(j) };
+            arma::mat::row_iterator beta_g_it { beta.begin_row(j1) };
+            update_beta_g(beta_g_it, uj,
+                          l1_lambda_j, l2_lambda, mj);
+            arma::rowvec delta_beta_j { beta.row(j1) - old_beta_j };
+            arma::vec delta_vj { ex_vertex_ * delta_beta_j.t() };
+            inner += x_.col(j) % delta_vj;
+        }
+    }
+
+    // run full GMD cycles
+    template <typename T_loss, typename T_x>
+    inline void AbclassGroup<T_loss, T_x>::run_gmd_full_cycles(
+        arma::mat& beta,
+        arma::vec& inner,
+        const double l1_lambda,
+        const double l2_lambda,
+        const unsigned int max_iter,
+        const double epsilon,
+        const unsigned int verbose
+        )
+    {
+        size_t i {0}, num_iter {0};
+        // arma::mat beta0 { beta };
+        double loss0 { objective0(inner) };
+        double reg0 { regularization(beta, l1_lambda, l2_lambda) };
+        double obj0 { loss0 / dn_obs_ + reg0 }, obj1 { obj0 };
+
+        // regular coordinate descent
+        while (i < max_iter) {
+            Rcpp::checkUserInterrupt();
+            ++num_iter;
+            run_one_full_cycle(beta, inner,
+                               l1_lambda, l2_lambda, verbose);
+            // if (rel_diff(beta0, beta) < epsilon) {
+            //     break;
+            // }
+            // beta0 = beta;
+            double loss1 { objective0(inner) };
+            double reg1 { regularization(beta, l1_lambda, l2_lambda) };
+            obj1 = loss1 / dn_obs_ + reg1;
+            if (verbose > 1) {
+                Rcpp::Rcout << "The objective function changed\n";
+                Rprintf("  from %7.7f (obj. %7.7f + reg. %7.7f)\n",
+                        obj0, loss0, reg0);
+                Rprintf("    to %7.7f (obj. %7.7f + reg. %7.7f)\n",
+                        obj1, loss1, reg1);
+                if (obj1 > obj0) {
+                    Rcpp::Rcout << "Warning: "
+                                << "the objective function "
+                                << "somehow increased.\n";
                 }
+            }
+            if (std::abs(obj1 - obj0) < epsilon) {
+                break;
+            }
+            obj0 = obj1;
+            ++i;
+        }
+        if (verbose > 0) {
+            if (num_iter < max_iter) {
+                Rcpp::Rcout << "Outer loop converged after "
+                            << num_iter
+                            << " iteration(s)\n";
+            } else {
+                msg("Outer loop reached the maximum number of iteratons.");
             }
         }
     }
@@ -425,62 +536,94 @@ namespace abclass
         }
         arma::mat one_beta { arma::zeros(p1_, km1_) },
             one_grad_beta { one_beta };
-        // need to determine lambda_max
-        one_grad_beta = gradient(one_inner);
-        // get large enough lambda for zero coefs in penalty_group
-        lambda_max_ = 0.0;
-        for (arma::uvec::iterator it { penalty_group.begin() };
-             it != penalty_group.end(); ++it) {
-            double tmp { l2_norm(one_grad_beta.row(*it)) };
-            tmp /= control_.group_weight_(*it);
-            tmp /= std::max(control_.alpha_, 1e-2);
-            if (lambda_max_ < tmp) {
-                lambda_max_ = tmp;
-            }
-        }
+        const bool is_ridge_only { isAlmostEqual(control_.alpha_, 0.0) };
+        double l1_lambda { 0.0 }, l2_lambda { 0.0 };
         // set up lambda sequence
-        if (control_.lambda_.empty()) {
-            double log_lambda_max { std::log(lambda_max_) };
-            control_.lambda_ = arma::exp(
-                arma::linspace(log_lambda_max,
-                               log_lambda_max +
-                               std::log(control_.lambda_min_ratio_),
-                               control_.nlambda_)
-                );
-        } else {
+        if (! control_.lambda_.empty()) {
             control_.lambda_ = arma::reverse(arma::unique(control_.lambda_));
             control_.nlambda_ = control_.lambda_.n_elem;
             custom_lambda_ = true;
+        }
+        // if alpha = 0 and customized lambda, no need to determine lambda_max_
+        if (is_ridge_only && custom_lambda_) {
+            l1_lambda_max_ = - 1.0; // not well defined
+            lambda_max_ = - 1.0;    // not well defined
+        } else {
+            // need to determine lambda_max
+            one_grad_beta = gradient(one_inner);
+            // get large enough lambda for zero coefs in penalty_group
+            l1_lambda_max_ = 0.0;
+            lambda_max_ = 0.0;
+            for (arma::uvec::iterator it { penalty_group.begin() };
+                 it != penalty_group.end(); ++it) {
+                double tmp { l2_norm(one_grad_beta.row(*it)) };
+                tmp /= control_.group_weight_(*it);
+                if (l1_lambda_max_ < tmp) {
+                    l1_lambda_max_ = tmp;
+                }
+            }
+            lambda_max_ = l1_lambda_max_ / std::max(control_.alpha_, 1e-2);
+            if (! custom_lambda_) {
+                double log_lambda_max { std::log(lambda_max_) };
+                control_.lambda_ = arma::exp(
+                    arma::linspace(log_lambda_max,
+                                   log_lambda_max +
+                                   std::log(control_.lambda_min_ratio_),
+                                   control_.nlambda_)
+                    );
+            }
         }
         // initialize the estimate cube
         coef_ = arma::cube(p1_, km1_, control_.lambda_.n_elem,
                            arma::fill::zeros);
         objective_ = penalty_ = loss_ = arma::zeros(control_.lambda_.n_elem);
         // set epsilon from the default null objective, n
-        double epsilon0 { exp_log_sum(control_.epsilon_, dn_obs_) };
-        double one_strong_rhs { 0.0 };
+        null_loss_ = dn_obs_;
+        double epsilon0 { exp_log_sum(control_.epsilon_, null_loss_) };
         // get the solution (intercepts) of l1_lambda_max for a warm start
         arma::uvec is_active_strong { arma::ones<arma::uvec>(p0_) };
-        // only need to estimate beta not in the penalty group
+        // 1) no need to consider possible constant covariates
+        is_active_strong.elem(arma::find(mm_lowerbound_ <= 0.0)).zeros();
+        // 2) only need to estimate beta not in the penalty group
         is_active_strong.elem(penalty_group).zeros();
-        double l1_lambda { control_.alpha_ * lambda_max_ };
-        double l2_lambda { (1 - control_.alpha_) * lambda_max_ };
-        run_gmd_active_cycle(one_beta,
-                             one_inner,
-                             is_active_strong,
-                             l1_lambda,
-                             l2_lambda,
-                             false,
-                             control_.max_iter_,
-                             epsilon0,
-                             control_.verbose_);
-        // update epsilon0
-        null_loss_ = objective0(one_inner);
-        epsilon0 = exp_log_sum(control_.epsilon_, null_loss_);
+        if (control_.intercept_) {
+            run_gmd_active_cycles(one_beta,
+                                  one_inner,
+                                  is_active_strong,
+                                  l1_lambda,
+                                  l2_lambda,
+                                  false,
+                                  control_.max_iter_,
+                                  epsilon0,
+                                  control_.verbose_);
+            // update epsilon0
+            null_loss_ = objective0(one_inner);
+            epsilon0 = exp_log_sum(control_.epsilon_, null_loss_);
+        }
+        // for pure ridge penalty
+        if (is_ridge_only) {
+            for (size_t li { 0 }; li < control_.lambda_.n_elem; ++li) {
+                l2_lambda = control_.lambda_(li);
+                run_gmd_full_cycles(one_beta,
+                                    one_inner,
+                                    l1_lambda,
+                                    l2_lambda,
+                                    control_.max_iter_,
+                                    epsilon0,
+                                    control_.verbose_);
+                coef_.slice(li) = rescale_coef(one_beta);
+                loss_(li) = objective0(one_inner);
+                penalty_(li) = regularization(one_beta, l1_lambda, l2_lambda);
+                objective_(li) = loss_(li) / dn_obs_ + penalty_(li);
+            }
+            return;             // early exit
+        }
+        // else, not just ridge penalty with l1_lambda > 0
         // exclude constant covariates from penalty group
         // so that they will not be considered as active by strong rule at all
         penalty_group = penalty_group.elem(arma::find(mm_lowerbound_ > 0.0));
-        double old_lambda { l1_lambda }; // for strong rule
+        // for strong rule
+        double one_strong_rhs { 0.0 }, old_lambda { l1_lambda_max_ };
         // main loop: for each lambda
         for (size_t li { 0 }; li < control_.lambda_.n_elem; ++li) {
             double lambda_li { control_.lambda_(li) };
@@ -488,7 +631,7 @@ namespace abclass
             l2_lambda = (1 - control_.alpha_) * lambda_li;
             // early exit for lambda greater than lambda_max_
             // note that lambda is sorted
-            if (lambda_li >= lambda_max_) {
+            if (l1_lambda >= l1_lambda_max_) {
                 coef_.slice(li) = rescale_coef(one_beta);
                 loss_(li) = objective0(one_inner);
                 penalty_(li) = regularization(one_beta, l1_lambda, l2_lambda);
@@ -519,15 +662,15 @@ namespace abclass
                     arma::zeros<arma::uvec>(is_active_strong.n_elem)
                 };
                 // update beta
-                run_gmd_active_cycle(one_beta,
-                                     one_inner,
-                                     is_active_strong,
-                                     l1_lambda,
-                                     l2_lambda,
-                                     control_.varying_active_set_,
-                                     control_.max_iter_,
-                                     epsilon0,
-                                     control_.verbose_);
+                run_gmd_active_cycles(one_beta,
+                                      one_inner,
+                                      is_active_strong,
+                                      l1_lambda,
+                                      l2_lambda,
+                                      control_.varying_active_set_,
+                                      control_.max_iter_,
+                                      epsilon0,
+                                      control_.verbose_);
                 if (control_.verbose_ > 0) {
                     msg("Checking the KKT condition for the null set.");
                 }
