@@ -46,18 +46,36 @@ namespace abclass
         using Abclass<T_loss, T_x>::objective0;
         using Abclass<T_loss, T_x>::loss_derivative;
 
-        // common methods
+        // penalty function for beta >= 0 (default: lasso)
+        inline virtual double penalty0(const double beta,
+                                       const double l1_lambda,
+                                       const double l2_lambda) const
+        {
+            return (l1_lambda + 0.5 * l2_lambda * beta) * beta;
+        }
+
+        // penalty for one covariate
+        // l1_lambda * penalty(l2_norm(beta_j)) +
+        //     l2_lambda * ridge(l2_norm(beta_j))
+        inline virtual double cov_penalty(const arma::rowvec& beta,
+                                          const double l1_lambda,
+                                          const double l2_lambda) const
+        {
+            const double l1_beta { l1_norm(beta) };
+            return penalty0(l1_beta, l1_lambda, l2_lambda);
+        }
+
         inline double regularization(const arma::mat& beta,
                                      const double l1_lambda,
                                      const double l2_lambda) const
         {
-            if (control_.intercept_) {
-                arma::mat beta0int { beta.tail_rows(p0_) };
-                return l1_lambda * l1_norm(beta0int) +
-                    0.5 * l2_lambda * l2_norm_square(beta0int);
+            double out { 0.0 };
+            for (size_t g {0}; g < control_.penalty_factor_.n_elem; ++g) {
+                out += cov_penalty(beta.row(g + inter_),
+                                   l1_lambda * control_.penalty_factor_(g),
+                                   l2_lambda);
             }
-            return l1_lambda * l1_norm(beta) +
-                0.5 * l2_lambda * l2_norm_square(beta);
+            return out;
         }
 
         // objective = loss / n + regularization
@@ -155,6 +173,7 @@ namespace abclass
         using Abclass<T_loss, T_x>::objective_;
 
         using Abclass<T_loss, T_x>::set_mm_lowerbound;
+        using Abclass<T_loss, T_x>::set_penalty_factor;
 
         // regularization
         // the "big" enough lambda => zero coef unless alpha = 0
@@ -206,7 +225,7 @@ namespace abclass
                 // if mm_lowerbound = 0 and l1_lambda > 0, numer will be 0
                 double numer {
                     soft_threshold(mm_lowerbound_(l) * beta(l1, j) - dlj,
-                                   l1_lambda)
+                                   l1_lambda * control_.penalty_factor_(l))
                 };
                 // update beta
                 if (isAlmostEqual(numer, 0)) {
@@ -384,7 +403,7 @@ namespace abclass
                 // if cmd_lowerbound = 0 and l1_lambda > 0, numer will be 0
                 double numer {
                     soft_threshold(mm_lowerbound_(l) * tmp - dlj,
-                                   l1_lambda)
+                                   l1_lambda * control_.penalty_factor_(l))
                 };
                 // update beta
                 if (isAlmostEqual(numer, 0)) {
@@ -457,6 +476,8 @@ namespace abclass
     {
         // set the CMD lowerbound
         set_mm_lowerbound();
+        // set penalty factor from the control_
+        set_penalty_factor();
         // penalty for covariates with positive penalty factors only
         arma::uvec penalty_group { arma::find(control_.penalty_factor_ > 0.0) };
         // initialize
@@ -483,7 +504,17 @@ namespace abclass
         } else {
             // need to determine lambda_max
             one_grad_beta = arma::abs(gradient(one_inner));
-            l1_lambda_max_ = one_grad_beta.max();
+            // get large enough lambda for zero coefs in penalty_group
+            l1_lambda_max_ = 0.0;
+            lambda_max_ = 0.0;
+            for (arma::uvec::iterator it { penalty_group.begin() };
+                 it != penalty_group.end(); ++it) {
+                double tmp { one_grad_beta.row(*it).max() };
+                tmp /= control_.penalty_factor_(*it);
+                if (l1_lambda_max_ < tmp) {
+                    l1_lambda_max_ = tmp;
+                }
+            }
             lambda_max_ =  l1_lambda_max_ / std::max(control_.alpha_, 1e-2);
             // set up lambda sequence
             if (! custom_lambda_) {
@@ -539,6 +570,9 @@ namespace abclass
             return;             // early exit
         }
         // else, not just ridge penalty with l1_lambda > 0
+        // exclude constant covariates from penalty group
+        // so that they will not be considered as active by strong rule at all
+        penalty_group = penalty_group.elem(arma::find(mm_lowerbound_ > 0.0));
         // for strong rule
         double one_strong_rhs { 0.0 }, old_l1_lambda { l1_lambda_max_ };
         // main loop: for each lambda
@@ -560,12 +594,14 @@ namespace abclass
             one_strong_rhs = 2 * l1_lambda - old_l1_lambda;
             old_l1_lambda = l1_lambda;
             for (size_t j { 0 }; j < km1_; ++j) {
-                for (size_t l { 0 }; l < p0_; ++l) {
-                    if (is_active_strong(l, j) > 0) {
+                for (arma::uvec::iterator it { penalty_group.begin() };
+                     it != penalty_group.end(); ++it) {
+                    if (is_active_strong(*it, j) > 0) {
                         continue;
                     }
-                    if (one_grad_beta(l, j) >= one_strong_rhs) {
-                        is_active_strong(l, j) = 1;
+                    if (one_grad_beta(*it, j) >=
+                        control_.penalty_factor_(*it) * one_strong_rhs) {
+                        is_active_strong(*it, j) = 1;
                     }
                 }
             }
@@ -593,17 +629,19 @@ namespace abclass
                 const arma::vec inner_grad {
                     control_.obs_weight_ % loss_derivative(one_inner)
                 };
-                for (size_t l { 0 }; l < p0_; ++l) {
-                    arma::vec x_l { x_.col(l) };
+                for (arma::uvec::iterator it { penalty_group.begin() };
+                     it != penalty_group.end(); ++it) {
+                    arma::vec x_l { x_.col(*it) };
                     for (size_t j { 0 }; j < km1_; ++j) {
-                        if (is_active_strong_old(l, j) > 0) {
+                        if (is_active_strong_old(*it, j) > 0) {
                             continue;
                         }
                         arma::vec vj_xl { x_l % get_vertex_y(j) };
                         double tmp { arma::mean(vj_xl % inner_grad) };
-                        if (std::abs(tmp) > l1_lambda) {
+                        if (std::abs(tmp) >
+                            l1_lambda * control_.penalty_factor_(*it)) {
                             // update active set
-                            is_strong_rule_failed(l, j) = 1;
+                            is_strong_rule_failed(*it, j) = 1;
                         }
                     }
                 }
