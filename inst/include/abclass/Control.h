@@ -59,7 +59,7 @@ namespace abclass
 
         // optimization
         unsigned int max_iter_ { 100000 }; // maximum number of iterations
-        double epsilon_ { 1e-7 };          // tolerance to check convergence
+        double epsilon_ { 1e-4 };          // tolerance to check convergence
         double max_grad_ { - 1e-5 };       // maximum first gradient of loss
         bool varying_active_set_ { true }; // if active set should be adaptive
         bool standardize_ { true };        // is x_ standardized (column-wise)

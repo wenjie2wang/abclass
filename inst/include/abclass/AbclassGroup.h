@@ -579,7 +579,7 @@ namespace abclass
         objective_ = penalty_ = loss_ = arma::zeros(control_.lambda_.n_elem);
         // set epsilon from the default null objective, n
         null_loss_ = dn_obs_;
-        double epsilon0 { exp_log_sum(control_.epsilon_, null_loss_) };
+        double epsilon0 { control_.epsilon_ };
         // get the solution (intercepts) of l1_lambda_max for a warm start
         arma::uvec is_active_strong { arma::ones<arma::uvec>(p0_) };
         // 1) no need to consider possible constant covariates
@@ -598,7 +598,7 @@ namespace abclass
                                   control_.verbose_);
             // update epsilon0
             null_loss_ = objective0(one_inner);
-            epsilon0 = exp_log_sum(control_.epsilon_, null_loss_);
+            epsilon0 = exp_log_sum(control_.epsilon_, null_loss_ / dn_obs_);
         }
         // for pure ridge penalty
         if (is_ridge_only) {

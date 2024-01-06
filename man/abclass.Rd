@@ -29,7 +29,7 @@ abclass.control(
   lum_c = 0,
   boost_umin = -5,
   maxit = 100000L,
-  epsilon = 1e-07,
+  epsilon = 1e-04,
   max_grad = -1e-05,
   standardize = TRUE,
   varying_active_set = TRUE,

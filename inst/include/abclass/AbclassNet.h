@@ -458,7 +458,7 @@ namespace abclass
         // set the CMD lowerbound
         set_mm_lowerbound();
         // penalty for covariates with positive penalty factors only
-        arma::uvec penalty_group { arma::find(control_.group_weight_ > 0.0) };
+        arma::uvec penalty_group { arma::find(control_.penalty_factor_ > 0.0) };
         // initialize
         arma::vec one_inner;
         if (control_.has_offset_) {
@@ -502,7 +502,7 @@ namespace abclass
         objective_ = penalty_ = loss_ = arma::zeros(control_.lambda_.n_elem);
         // set epsilon from the default null objective, n
         null_loss_ = dn_obs_;
-        double epsilon0 { exp_log_sum(control_.epsilon_, null_loss_) };
+        double epsilon0 { control_.epsilon_ };
         // get the solution (intercepts) of l1_lambda_max for a warm start
         arma::umat is_active_strong { arma::zeros<arma::umat>(p0_, km1_) };
         if (control_.intercept_) {
@@ -518,7 +518,7 @@ namespace abclass
                                   control_.verbose_);
             // update epsilon0
             null_loss_ = objective0(one_inner);
-            epsilon0 = exp_log_sum(control_.epsilon_, null_loss_);
+            epsilon0 = exp_log_sum(control_.epsilon_, null_loss_ / dn_obs_);
         }
         // for pure ridge penalty
         if (is_ridge_only) {
