@@ -48,10 +48,10 @@
                                 c("lasso", "scad", "mcp"))
     }
     ## process alignment
+    all_alignment <- c("fraction", "lambda")
     if (is.numeric(alignment)) {
         alignment <- as.integer(alignment[1L])
     } else if (is.character(alignment)) {
-        all_alignment <- c("fraction", "lambda")
         alignment <- match.arg(alignment, choices = all_alignment)
         alignment <- match(alignment, all_alignment) - 1L
     } else {
@@ -77,6 +77,9 @@
              loss_id = loss_id,
              penalty_id = penalty_id)
     )
+    ctrl$lambda <- null2num0(ctrl$lambda)
+    ctrl$penalty_factor = null2num0(ctrl$penalty_factor)
+    ctrl$offset = null2mat0(ctrl$offset)
     ## arguments
     call_list <- c(list(x = x, y = cat_y$y, control = ctrl))
     fun_to_call <- if (is_x_sparse) {
@@ -93,6 +96,10 @@
     res$control <- control
     if (call_list$control$nfolds == 0L) {
         res$cross_validation <- NULL
+    } else {
+        res$cross_validation$alignment <- all_alignment[
+            res$cross_validation$alignment
+        ]
     }
     if (call_list$control$nstages == 0L) {
         res$et <- NULL

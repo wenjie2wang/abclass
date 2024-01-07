@@ -16,7 +16,14 @@ train_y <- y[train_idx]
 test_y <- y[- train_idx]
 
 ## logistic deviance loss
-model1 <- abclass(train_x, train_y, nlambda = 5, grouped = FALSE)
+model1 <- abclass(
+    x = train_x,
+    y = train_y,
+    nlambda = 5,
+    grouped = FALSE,
+    control = abclass.control(penalty_factor = runif(ncol(train_x)))
+)
+
 pred1 <- predict(model1, test_x, s = 5)
 expect_true(mean(test_y == pred1) > 0.5)
 expect_equivalent(dim(coef(model1, s = 5)), c(p + 1, k - 1))
