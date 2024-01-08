@@ -63,7 +63,6 @@ namespace abclass
         // optimization
         unsigned int max_iter_ { 100000 }; // maximum number of iterations
         double epsilon_ { 1e-6 };          // tolerance to check convergence
-        double max_grad_ { - 1e-5 };       // maximum first gradient of loss
         bool varying_active_set_ { true }; // if active set should be adaptive
         bool standardize_ { true };        // is x_ standardized (column-wise)
         unsigned int verbose_ { 0 };
@@ -79,7 +78,6 @@ namespace abclass
 
         Control(const unsigned int max_iter,
                 const double epsilon,
-                const double max_grad,
                 const bool standardize = true,
                 const unsigned int verbose = 0)
         {
@@ -88,7 +86,6 @@ namespace abclass
             }
             max_iter_ = max_iter;
             epsilon_ = epsilon;
-            max_grad_ = max_grad,
             standardize_ = standardize;
             verbose_ = verbose;
         }

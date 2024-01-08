@@ -93,9 +93,6 @@ namespace abclass
                                   const arma::vec& vj_xl) const
         {
             arma::vec inner_grad { loss_derivative(inner) };
-            // avoid coefficients diverging
-            inner_grad.elem(arma::find(inner_grad >
-                                       control_.max_grad_)).zeros();
             return arma::mean(control_.obs_weight_ % vj_xl % inner_grad);
         }
 

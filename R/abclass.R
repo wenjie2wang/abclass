@@ -128,8 +128,6 @@ abclass <- function(x, y,
 ##'     The default value is \code{10^5}.
 ##' @param epsilon A positive number specifying the relative tolerance that
 ##'     determines convergence.  The default value is \code{1e-6}.
-##' @param max_grad The maximum value of gradients of loss function to avoid
-##'     coefficients diverging.
 ##' @param standardize A logical value indicating if each column of the design
 ##'     matrix should be standardized internally to have mean zero and standard
 ##'     deviation equal to the sample size.  The default value is \code{TRUE}.
@@ -158,7 +156,6 @@ abclass.control <- function(lambda = NULL,
                             boost_umin = - 5.0,
                             maxit = 1e5L,
                             epsilon = 1e-6,
-                            max_grad = -1e-5,
                             standardize = TRUE,
                             varying_active_set = TRUE,
                             verbose = 0L,
@@ -185,7 +182,6 @@ abclass.control <- function(lambda = NULL,
         standardize = standardize,
         maxit = as.integer(maxit),
         epsilon = epsilon,
-        max_grad = max_grad,
         varying_active_set = varying_active_set,
         verbose = as.integer(verbose),
         boost_umin = boost_umin,

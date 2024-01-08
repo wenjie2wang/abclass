@@ -97,7 +97,6 @@ inline abclass::Control abclass_control(const Rcpp::List& control)
     abclass::Control ctrl {
         control["maxit"],
         control["epsilon"],
-        control["max_grad"],
         control["standardize"],
         control["verbose"]
     };
