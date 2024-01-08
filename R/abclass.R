@@ -127,7 +127,7 @@ abclass <- function(x, y,
 ##' @param maxit A positive integer specifying the maximum number of iteration.
 ##'     The default value is \code{10^5}.
 ##' @param epsilon A positive number specifying the relative tolerance that
-##'     determines convergence.  The default value is \code{1e-4}.
+##'     determines convergence.  The default value is \code{1e-6}.
 ##' @param max_grad The maximum value of gradients of loss function to avoid
 ##'     coefficients diverging.
 ##' @param standardize A logical value indicating if each column of the design
@@ -157,7 +157,7 @@ abclass.control <- function(lambda = NULL,
                             lum_c = 0.0,
                             boost_umin = - 5.0,
                             maxit = 1e5L,
-                            epsilon = 1e-4,
+                            epsilon = 1e-6,
                             max_grad = -1e-5,
                             standardize = TRUE,
                             varying_active_set = TRUE,
