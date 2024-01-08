@@ -98,7 +98,7 @@
         res$cross_validation <- NULL
     } else {
         res$cross_validation$alignment <- all_alignment[
-            res$cross_validation$alignment
+            res$cross_validation$alignment + 1L
         ]
     }
     if (call_list$control$nstages == 0L) {

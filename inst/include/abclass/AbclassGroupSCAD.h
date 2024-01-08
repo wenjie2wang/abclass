@@ -85,9 +85,8 @@ namespace abclass
         inline double strong_rule_rhs(const double next_lambda,
                                       const double last_lambda) const override
         {
-            // return control_.gamma_ / (control_.gamma_ - 2.0) *
-            //     (next_lambda - last_lambda) + next_lambda;
-            return 0;
+            return control_.gamma_ / (control_.gamma_ - 2.0) *
+                (next_lambda - last_lambda) + next_lambda;
         }
 
         inline void update_beta_g(arma::mat::row_iterator beta_g_it,
