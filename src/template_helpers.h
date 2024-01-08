@@ -24,7 +24,9 @@ inline Rcpp::List get_et_res(const T& object)
 {
     return Rcpp::List::create(
         Rcpp::Named("nstages") = object.control_.et_nstages_,
-        Rcpp::Named("selected") = abclass::arma2rvec(object.et_vs_)
+        Rcpp::Named("selected") = abclass::arma2rvec(object.et_vs_),
+        Rcpp::Named("l1_lambda0") = object.et_l1_lambda0_,
+        Rcpp::Named("l1_lambda1") = object.et_l1_lambda1_
         );
 }
 

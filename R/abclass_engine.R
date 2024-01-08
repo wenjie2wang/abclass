@@ -105,14 +105,11 @@
         res$et <- NULL
     }
     ## update regularization
-    return_lambda <-
-        if (call_list$control$nstages == 0L) {
-            c("alpha", "lambda")
-        } else {
-            ## update the selected index to one-based index
-            res$et$selected <- res$et$selected + 1L
-            "alpha"
-        }
+    return_lambda <- c("alpha", "lambda")
+    if (call_list$control$nstages > 0L) {
+        ## update the selected index to one-based index
+        res$et$selected <- res$et$selected + 1L
+    }
     res$regularization <-
         if (control$grouped) {
             common_pars <- c(return_lambda, "penalty_factor")

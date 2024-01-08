@@ -57,7 +57,7 @@ namespace abclass
             return 0.5 * control_.gamma_ * l1_lambda * l1_lambda + ridge_pen;
         }
 
-        inline void set_gamma(const double kappa_ratio = 0.99) override
+        inline void set_gamma(const double kappa_ratio = 0.9) override
         {
             // kappa must be in (0, 1)
             if (is_le(kappa_ratio, 0.0) || is_ge(kappa_ratio, 1.0)) {
@@ -94,11 +94,12 @@ namespace abclass
             const double m_gp { m_g + l2_lambda }; // m_g'
             const double m_g_ratio { m_gp / m_g }; // m_g' / m_g > 1
             if (z_g2 < control_.gamma_ * l1_lambda_g * m_g_ratio) {
-                double tmp { 1 - l1_lambda_g / m_g / z_g2 };
+                const double tmp { 1 - l1_lambda_g / m_g / z_g2 };
                 if (tmp > 0.0) {
-                    double igamma_g { 1.0 / control_.gamma_ / m_g };
+                    const double igamma_g { 1.0 / control_.gamma_ / m_g };
+                    const double rhs { tmp / (m_g_ratio - igamma_g) };
                     for (size_t i {0}; i < z_g.n_elem; ++beta_g_it, ++i) {
-                        *beta_g_it = tmp * z_g[i] / (m_g_ratio - igamma_g);
+                        *beta_g_it = rhs * z_g[i];
                     }
                 } else {
                     for (size_t i {0}; i < z_g.n_elem; ++beta_g_it, ++i) {

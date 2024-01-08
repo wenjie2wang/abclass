@@ -159,6 +159,9 @@ namespace abclass
         // tuning by ET-Lasso
         unsigned int et_npermuted_ { 0 }; // number of permuted predictors
         arma::uvec et_vs_;                // indices of selected predictors
+        // the smallest lambda before selection of any random predictors
+        double et_l1_lambda0_ { -1.0 }; // the last lambda before the cutoff
+        double et_l1_lambda1_ { -1.0 }; // the cutoff point
 
         // estimates
         arma::cube coef_;       // p1_ x km1_ for linear learning in each slice

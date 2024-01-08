@@ -64,8 +64,18 @@ namespace abclass {
             obj.et_npermuted_ = p0;
             obj.fit();
             // reset lambda if it was internally set
-            if (! obj.custom_lambda_) {
-                obj.control_.lambda_.clear();
+            if (! obj.control_.custom_lambda_) {
+                if (i + 1 < obj.control_.et_nstages_) {
+                    // if the last stage has not been done yet
+                    double et_lambda_min {
+                        std::pow(obj.control_.lambda_min_ratio_, 0.25) *
+                        obj.et_l1_lambda1_ / std::max(obj.control_.alpha_, 1e-2)
+                    };
+                    obj.control_.reg_lambda_min(et_lambda_min);
+                } else {
+                    // if the last stage has been done
+                    obj.control_.reg_lambda_min(-1.0);
+                }
             }
             // update active x
             const unsigned int p1_i { obj.p1_ - p0 };
@@ -155,9 +165,10 @@ namespace abclass {
                 set_offset(std::move(train_offset));
             // alignment: 0 for alignment by fraction
             //            1 for alignment by lambda
-            if (! obj.custom_lambda_ && obj.control_.cv_alignment_ == 0) {
+            if (! obj.control_.custom_lambda_ &&
+                obj.control_.cv_alignment_ == 0) {
                 // reset lambda
-                new_obj.control_.reg_lambda(arma::vec());
+                new_obj.control_.reg_lambda();
             }
             new_obj.control_.set_verbose(0);
             et_lambda(new_obj);

@@ -66,7 +66,7 @@ namespace abclass
             return l1_lambda * beta + ridge_pen;
         }
 
-        inline void set_gamma(const double kappa_ratio = 0.99) override
+        inline void set_gamma(const double kappa_ratio = 0.9) override
         {
             // kappa must be in (0, 1)
             if (is_le(kappa_ratio, 0.0) || is_ge(kappa_ratio, 1.0)) {
@@ -77,9 +77,7 @@ namespace abclass
             }
             // exclude zeros lowerbounds from constant columns
             const double min_mg {
-                std::min(mm_lowerbound_.elem(
-                             arma::find(mm_lowerbound_ > 0.0)).min(),
-                         mm_lowerbound0_)
+                mm_lowerbound_.elem(arma::find(mm_lowerbound_ > 0.0)).min()
             };
             control_.gamma_ = (1.0 + 1.0 / min_mg) / kappa_ratio;
         }
@@ -87,8 +85,9 @@ namespace abclass
         inline double strong_rule_rhs(const double next_lambda,
                                       const double last_lambda) const override
         {
-            return control_.gamma_ / (control_.gamma_ - 2.0) *
-                (next_lambda - last_lambda) + next_lambda;
+            // return control_.gamma_ / (control_.gamma_ - 2.0) *
+            //     (next_lambda - last_lambda) + next_lambda;
+            return 0;
         }
 
         inline void update_beta_g(arma::mat::row_iterator beta_g_it,
@@ -111,15 +110,18 @@ namespace abclass
             } else if (z_g2 > (m_gp + 1.0) * l1_lambda_g / m_g) {
                 const double numer { (control_.gamma_ - 1.0) * m_g };
                 const double denom { (control_.gamma_ - 1.0) * m_gp - 1.0 };
+                const double tmp { numer / denom *
+                    (1.0 - control_.gamma_ * l1_lambda_g / numer / z_g2) };
                 for (size_t i {0}; i < z_g.n_elem; ++beta_g_it, ++i) {
-                    *beta_g_it = numer / denom * z_g[i] *
-                        (1.0 - control_.gamma_ * l1_lambda_g / numer / z_g2);
+                    *beta_g_it = tmp * z_g[i];
                 }
             } else {
-                const double tmp { 1.0 - l1_lambda_g / m_g / z_g2 };
+                const double tmp {
+                    (1.0 - l1_lambda_g / m_g / z_g2) / m_g_ratio
+                };
                 if (tmp > 0.0) {
                     for (size_t i {0}; i < z_g.n_elem; ++beta_g_it, ++i) {
-                        *beta_g_it = tmp / m_g_ratio * z_g[i];
+                        *beta_g_it = tmp * z_g[i];
                     }
                 } else {
                     for (size_t i {0}; i < z_g.n_elem; ++beta_g_it, ++i) {

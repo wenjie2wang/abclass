@@ -210,8 +210,12 @@ namespace abclass
         using Abclass<T_loss, T_x>::p1_;
         using Abclass<T_loss, T_x>::x_;
         using Abclass<T_loss, T_x>::y_;
+
         using Abclass<T_loss, T_x>::ex_vertex_;
         using Abclass<T_loss, T_x>::et_npermuted_;
+        using Abclass<T_loss, T_x>::et_l1_lambda0_;
+        using Abclass<T_loss, T_x>::et_l1_lambda1_;
+
         using Abclass<T_loss, T_x>::coef_;
         using Abclass<T_loss, T_x>::loss_;
         using Abclass<T_loss, T_x>::penalty_;
@@ -221,8 +225,6 @@ namespace abclass
         // the "big" enough lambda => zero coef
         double l1_lambda_max_;
         double lambda_max_;
-        // did user specified a customized lambda sequence?
-        bool custom_lambda_ = false;
 
         // function members
         using Abclass<T_loss, T_x>::rescale_coef;
@@ -335,10 +337,10 @@ namespace abclass
                     obj1 = loss1 / dn_obs_ + reg1;
                     if (verbose > 1) {
                         Rcpp::Rcout << "The objective function changed\n";
-                        Rprintf("  from %7.7f (obj. %7.7f + reg. %7.7f)\n",
-                                obj0, loss0, reg0);
-                        Rprintf("    to %7.7f (obj. %7.7f + reg. %7.7f)\n",
-                                obj1, loss1, reg1);
+                        Rprintf("  from %7.7f (loss: %7.7f + penalty: %7.7f)\n",
+                                obj0, loss0 / dn_obs_, reg0);
+                        Rprintf("    to %7.7f (loss: %7.7f + penalty: %7.7f)\n",
+                                obj1, loss1 / dn_obs_, reg1);
                         if (obj1 > obj0) {
                             Rcpp::Rcout << "Warning: "
                                         << "the objective function "
@@ -349,6 +351,7 @@ namespace abclass
                         break;
                     }
                     obj0 = obj1;
+                    loss0 = loss1;
                     ++ii;
                 }
                 // run a full cycle over the converged beta
@@ -391,10 +394,10 @@ namespace abclass
                 obj1 = loss1 / dn_obs_ + reg1;
                 if (verbose > 1) {
                     Rcpp::Rcout << "The objective function changed\n";
-                    Rprintf("  from %7.7f (obj. %7.7f + reg. %7.7f)\n",
-                            obj0, loss0, reg0);
-                    Rprintf("    to %7.7f (obj. %7.7f + reg. %7.7f)\n",
-                            obj1, loss1, reg1);
+                    Rprintf("  from %7.7f (loss: %7.7f + penalty: %7.7f)\n",
+                            obj0, loss0 / dn_obs_, reg0);
+                    Rprintf("    to %7.7f (loss: %7.7f + penalty: %7.7f)\n",
+                            obj1, loss1 / dn_obs_, reg1);
                     if (obj1 > obj0) {
                         Rcpp::Rcout << "Warning: "
                                     << "the objective function "
@@ -405,6 +408,7 @@ namespace abclass
                     break;
                 }
                 obj0 = obj1;
+                loss0 = loss1;
                 ++i;
             }
         }
@@ -491,10 +495,10 @@ namespace abclass
             obj1 = loss1 / dn_obs_ + reg1;
             if (verbose > 1) {
                 Rcpp::Rcout << "The objective function changed\n";
-                Rprintf("  from %7.7f (obj. %7.7f + reg. %7.7f)\n",
-                        obj0, loss0, reg0);
-                Rprintf("    to %7.7f (obj. %7.7f + reg. %7.7f)\n",
-                        obj1, loss1, reg1);
+                Rprintf("  from %7.7f (loss: %7.7f + penalty: %7.7f)\n",
+                        obj0, loss0 / dn_obs_, reg0);
+                Rprintf("    to %7.7f (loss: %7.7f + penalty: %7.7f)\n",
+                        obj1, loss1 / dn_obs_, reg1);
                 if (obj1 > obj0) {
                     Rcpp::Rcout << "Warning: "
                                 << "the objective function "
@@ -505,6 +509,7 @@ namespace abclass
                 break;
             }
             obj0 = obj1;
+            loss0 = loss1;
             ++i;
         }
         if (verbose > 0) {
@@ -541,14 +546,8 @@ namespace abclass
             one_grad_beta { one_beta };
         const bool is_ridge_only { isAlmostEqual(control_.alpha_, 0.0) };
         double l1_lambda { 0.0 }, l2_lambda { 0.0 };
-        // set up lambda sequence
-        if (! control_.lambda_.empty()) {
-            control_.lambda_ = arma::reverse(arma::unique(control_.lambda_));
-            control_.nlambda_ = control_.lambda_.n_elem;
-            custom_lambda_ = true;
-        }
         // if alpha = 0 and customized lambda, no need to determine lambda_max_
-        if (is_ridge_only && custom_lambda_) {
+        if (is_ridge_only && control_.custom_lambda_) {
             l1_lambda_max_ = - 1.0; // not well defined
             lambda_max_ = - 1.0;    // not well defined
         } else {
@@ -566,14 +565,18 @@ namespace abclass
                 }
             }
             lambda_max_ = l1_lambda_max_ / std::max(control_.alpha_, 1e-2);
-            if (! custom_lambda_) {
+            if (! control_.custom_lambda_) {
                 double log_lambda_max { std::log(lambda_max_) };
+                double log_lambda_min { 0.0 };
+                if (control_.lambda_min_ < 0.0) {
+                    log_lambda_min = log_lambda_max +
+                        std::log(control_.lambda_min_ratio_);
+                } else {
+                    log_lambda_min = std::log(control_.lambda_min_);
+                }
                 control_.lambda_ = arma::exp(
-                    arma::linspace(log_lambda_max,
-                                   log_lambda_max +
-                                   std::log(control_.lambda_min_ratio_),
-                                   control_.nlambda_)
-                    );
+                    arma::linspace(log_lambda_max, log_lambda_min,
+                                   control_.nlambda_));
             }
         }
         // initialize the estimate cube
@@ -582,7 +585,7 @@ namespace abclass
         objective_ = penalty_ = loss_ = arma::zeros(control_.lambda_.n_elem);
         // set epsilon from the default null objective, n
         null_loss_ = dn_obs_;
-        double epsilon0 { control_.epsilon_ };
+        double epsilon0 { exp_log_sum(control_.epsilon_, dn_obs_) };
         // get the solution (intercepts) of l1_lambda_max for a warm start
         arma::uvec is_active_strong { arma::ones<arma::uvec>(p0_) };
         // 1) no need to consider possible constant covariates
@@ -601,7 +604,7 @@ namespace abclass
                                   control_.verbose_);
             // update epsilon0
             null_loss_ = objective0(one_inner);
-            epsilon0 = exp_log_sum(control_.epsilon_, null_loss_ / dn_obs_);
+            epsilon0 = exp_log_sum(control_.epsilon_, null_loss_);
         }
         // for pure ridge penalty
         if (is_ridge_only) {
@@ -626,7 +629,7 @@ namespace abclass
         // so that they will not be considered as active by strong rule at all
         penalty_group = penalty_group.elem(arma::find(mm_lowerbound_ > 0.0));
         // for strong rule
-        double one_strong_rhs { 0.0 }, old_lambda { l1_lambda_max_ };
+        double one_strong_rhs { 0.0 }, old_l1_lambda { l1_lambda_max_ };
         // main loop: for each lambda
         for (size_t li { 0 }; li < control_.lambda_.n_elem; ++li) {
             double lambda_li { control_.lambda_(li) };
@@ -650,12 +653,11 @@ namespace abclass
                 }
                 double one_strong_lhs { l2_norm(one_grad_beta.row(*it)) };
                 one_strong_rhs = control_.penalty_factor_(*it) *
-                    strong_rule_rhs(l1_lambda, old_lambda);
+                    strong_rule_rhs(l1_lambda, old_l1_lambda);
                 if (one_strong_lhs >= one_strong_rhs) {
                     is_active_strong(*it) = 1;
                 }
             }
-            old_lambda = l1_lambda; // for next iteration
             bool kkt_failed { true };
             // eventually, strong rule will guess correctly
             while (kkt_failed) {
@@ -741,6 +743,8 @@ namespace abclass
                         penalty_ = penalty_.head(li);
                         objective_ = objective_.head(li);
                     }
+                    et_l1_lambda0_ = old_l1_lambda;
+                    et_l1_lambda1_ = l1_lambda;
                     if (control_.verbose_ > 0) {
                         msg("[ET] selected pseudo-predictor(s).\n");
                     }
@@ -754,12 +758,15 @@ namespace abclass
                         "no pseudo-predictors selected ",
                         "by the smallest lambda.\n",
                         "Suggestion: decrease 'lambda' or 'lambda_min_ratio'?");
+                    et_l1_lambda0_ = l1_lambda;
+                    // et_l1_lambda1_ = - 1.0; // do not set/update
                 }
             }
             coef_.slice(li) = rescale_coef(one_beta);
             loss_(li) = objective0(one_inner);
             penalty_(li) = regularization(one_beta, l1_lambda, l2_lambda);
             objective_(li) = loss_(li) / dn_obs_ + penalty_(li);
+            old_l1_lambda = l1_lambda; // for next iteration
         }
     }
 

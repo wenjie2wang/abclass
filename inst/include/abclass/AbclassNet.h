@@ -166,6 +166,8 @@ namespace abclass
         using Abclass<T_loss, T_x>::n_obs_;
         using Abclass<T_loss, T_x>::ex_vertex_;
         using Abclass<T_loss, T_x>::et_npermuted_;
+        using Abclass<T_loss, T_x>::et_l1_lambda0_;
+        using Abclass<T_loss, T_x>::et_l1_lambda1_;
 
         using Abclass<T_loss, T_x>::coef_;
         using Abclass<T_loss, T_x>::loss_;
@@ -179,8 +181,6 @@ namespace abclass
         // the "big" enough lambda => zero coef unless alpha = 0
         double l1_lambda_max_;
         double lambda_max_;
-        // did user specified a customized lambda sequence?
-        bool custom_lambda_ = false;
 
         // for a sequence of lambda's
         inline void fit();
@@ -492,13 +492,8 @@ namespace abclass
             one_grad_beta { one_beta };
         const bool is_ridge_only { isAlmostEqual(control_.alpha_, 0.0) };
         double l1_lambda { 0.0 }, l2_lambda { 0.0 };
-        if (! control_.lambda_.empty()) {
-            control_.lambda_ = arma::reverse(arma::unique(control_.lambda_));
-            control_.nlambda_ = control_.lambda_.n_elem;
-            custom_lambda_ = true;
-        }
         // if alpha = 0 and customized lambda
-        if (is_ridge_only && custom_lambda_) {
+        if (is_ridge_only && control_.custom_lambda_) {
             l1_lambda_max_ = - 1.0; // not well defined
             lambda_max_ = - 1.0;    // not well defined
         } else {
@@ -517,14 +512,18 @@ namespace abclass
             }
             lambda_max_ =  l1_lambda_max_ / std::max(control_.alpha_, 1e-2);
             // set up lambda sequence
-            if (! custom_lambda_) {
+            if (! control_.custom_lambda_) {
                 double log_lambda_max { std::log(lambda_max_) };
+                double log_lambda_min { 0.0 };
+                if (control_.lambda_min_ < 0.0) {
+                    log_lambda_min = log_lambda_max +
+                        std::log(control_.lambda_min_ratio_);
+                } else {
+                    log_lambda_min = std::log(control_.lambda_min_);
+                }
                 control_.lambda_ = arma::exp(
-                    arma::linspace(log_lambda_max,
-                                   log_lambda_max +
-                                   std::log(control_.lambda_min_ratio_),
-                                   control_.nlambda_)
-                    );
+                    arma::linspace(log_lambda_max, log_lambda_min,
+                                   control_.nlambda_));
             }
         }
         // initialize the estimate cube
@@ -533,7 +532,7 @@ namespace abclass
         objective_ = penalty_ = loss_ = arma::zeros(control_.lambda_.n_elem);
         // set epsilon from the default null objective, n
         null_loss_ = dn_obs_;
-        double epsilon0 { control_.epsilon_ };
+        double epsilon0 { exp_log_sum(control_.epsilon_, dn_obs_) };
         // get the solution (intercepts) of l1_lambda_max for a warm start
         arma::umat is_active_strong { arma::zeros<arma::umat>(p0_, km1_) };
         if (control_.intercept_) {
@@ -549,7 +548,7 @@ namespace abclass
                                   control_.verbose_);
             // update epsilon0
             null_loss_ = objective0(one_inner);
-            epsilon0 = exp_log_sum(control_.epsilon_, null_loss_ / dn_obs_);
+            epsilon0 = exp_log_sum(control_.epsilon_, null_loss_);
         }
         // for pure ridge penalty
         if (is_ridge_only) {
@@ -592,7 +591,6 @@ namespace abclass
             // update active set by strong rule
             one_grad_beta = arma::abs(gradient(one_inner));
             one_strong_rhs = 2 * l1_lambda - old_l1_lambda;
-            old_l1_lambda = l1_lambda;
             for (size_t j { 0 }; j < km1_; ++j) {
                 for (arma::uvec::iterator it { penalty_group.begin() };
                      it != penalty_group.end(); ++it) {
@@ -687,6 +685,8 @@ namespace abclass
                         penalty_ = penalty_.head(li);
                         objective_ = objective_.head(li);
                     }
+                    et_l1_lambda0_ = old_l1_lambda;
+                    et_l1_lambda1_ = l1_lambda;
                     if (control_.verbose_ > 0) {
                         msg("[ET] selected pseudo-predictor(s).\n");
                     }
@@ -700,12 +700,15 @@ namespace abclass
                         "no pseudo-predictors selected ",
                         "by the smallest lambda.\n",
                         "Suggestion: decrease 'lambda' or 'lambda_min_ratio'?");
+                    et_l1_lambda0_ = l1_lambda;
+                    // et_l1_lambda1_ = - 1.0; // do not set/update
                 }
             }
             coef_.slice(li) = rescale_coef(one_beta);
             loss_(li) = objective0(one_inner);
             penalty_(li) = regularization(one_beta, l1_lambda, l2_lambda);
             objective_(li) = loss_(li) / dn_obs_ + penalty_(li);
+            old_l1_lambda = l1_lambda;
         }
     }
 

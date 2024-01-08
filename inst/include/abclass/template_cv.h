@@ -73,9 +73,10 @@ namespace abclass {
                 set_offset(std::move(train_offset));
             // alignment: 0 for alignment by fraction
             //            1 for alignment by lambda
-            if (! obj.custom_lambda_ && obj.control_.cv_alignment_ == 0) {
-                // reset lambda
-                new_obj.control_.reg_lambda(arma::vec());
+            if (! obj.control_.custom_lambda_ &&
+                obj.control_.cv_alignment_ == 0) {
+                // reset lambda and set custom lambda to false
+                new_obj.control_.reg_lambda();
             }
             new_obj.control_.set_verbose(0);
             new_obj.fit();

@@ -37,9 +37,12 @@ namespace abclass
         arma::mat offset_ { arma::mat() }; // for the decision functions
 
         // regularization
+        // did user specified a customized lambda sequence?
+        bool custom_lambda_ { false };
         arma::vec lambda_  { arma::vec() };
         unsigned int nlambda_ { 20 };
         double lambda_min_ratio_ { 0.01 };
+        double lambda_min_ { - 1.0 };
         // adaptive penalty factor for each covariate
         arma::vec penalty_factor_ { arma::vec() };
         //   elastic-net
@@ -136,9 +139,22 @@ namespace abclass
             varying_active_set_ = varying_active_set;
             return this;
         }
-        inline Control* reg_lambda(const arma::vec& lambda)
+        inline Control* reg_lambda(const arma::vec& lambda = arma::vec())
         {
             lambda_ = lambda;
+            if (! lambda_.empty()) {
+                custom_lambda_ = true;
+                lambda_ = arma::reverse(arma::unique(lambda));
+                nlambda_ = lambda_.n_elem;
+            } else {
+                custom_lambda_ = false;
+                lambda_.clear();
+            }
+            return this;
+        }
+        inline Control* reg_lambda_min(const double lambda_min = - 1.0)
+        {
+            lambda_min_ = lambda_min;
             return this;
         }
         inline Control* reg_net(const double alpha)
