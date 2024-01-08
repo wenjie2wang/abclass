@@ -79,7 +79,7 @@ the SCAD penalty.}
 The default value is \code{50} as suggested in Li & Zhang (2021).}
 
 \item{epsilon}{A positive number specifying the relative tolerance that
-determines convergence.  The default value is \code{1e-6}.}
+determines convergence.  The default value is \code{1e-7}.}
 
 \item{shrinkage}{A nonnegative tolerance to shrink estimates with sup-norm
 close enough to zero (within the specified tolerance) to zeros.  The

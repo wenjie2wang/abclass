@@ -48,8 +48,8 @@ namespace abclass
         //   elastic-net
         double alpha_ { 1.0 };
         //   group {scad,mcp}
-        double kappa_ratio_ { 0.99 }; // parameter to set gamma
-        double gamma_ { - 1.0 };      // gamma for group non-convex penalty
+        double kappa_ratio_ { 0.9 }; // parameter to set gamma
+        double gamma_ { - 1.0 };     // gamma for group non-convex penalty
 
         // tuning
         //   cross-validation
@@ -61,8 +61,8 @@ namespace abclass
         unsigned int et_nstages_ { 0 };
 
         // optimization
-        unsigned int max_iter_ { 100000 }; // maximum number of iterations
-        double epsilon_ { 1e-6 };          // tolerance to check convergence
+        unsigned int max_iter_ { 10000 };  // maximum number of iterations
+        double epsilon_ { 1e-7 };          // tolerance to check convergence
         bool varying_active_set_ { true }; // if active set should be adaptive
         bool standardize_ { true };        // is x_ standardized (column-wise)
         unsigned int verbose_ { 0 };

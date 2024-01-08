@@ -28,8 +28,8 @@ abclass.control(
   lum_a = 1,
   lum_c = 0,
   boost_umin = -5,
-  maxit = 100000L,
-  epsilon = 1e-06,
+  maxit = 10000L,
+  epsilon = 1e-07,
   standardize = TRUE,
   varying_active_set = TRUE,
   verbose = 0L,
@@ -113,10 +113,10 @@ which will be used only if \code{loss = "hinge-boost"} or \code{loss =
 internal majorization procedure.}
 
 \item{maxit}{A positive integer specifying the maximum number of iteration.
-The default value is \code{10^5}.}
+The default value is \code{10^4}.}
 
 \item{epsilon}{A positive number specifying the relative tolerance that
-determines convergence.  The default value is \code{1e-6}.}
+determines convergence.  The default value is \code{1e-7}.}
 
 \item{standardize}{A logical value indicating if each column of the design
 matrix should be standardized internally to have mean zero and standard
