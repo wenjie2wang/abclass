@@ -101,9 +101,11 @@ inline Rcpp::List template_abrank_fit(T& object)
             abclass::arma2rvec(object.abc_.control_.lambda_),
             Rcpp::Named("alpha") = object.abc_.control_.alpha_
             ),
-        Rcpp::Named("loss") = abclass::arma2rvec(object.abc_.loss_),
-        Rcpp::Named("penalty") = abclass::arma2rvec(object.abc_.penalty_),
-        Rcpp::Named("objective") = abclass::arma2rvec(object.abc_.objective_)
+        Rcpp::Named("optimization") = Rcpp::List::create(
+            Rcpp::Named("loss") = abclass::arma2rvec(object.abc_.loss_),
+            Rcpp::Named("penalty") = abclass::arma2rvec(object.abc_.penalty_),
+            Rcpp::Named("objective") = abclass::arma2rvec(object.abc_.objective_)
+            )
         );
 }
 

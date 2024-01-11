@@ -50,6 +50,9 @@
              nstages = as.integer(nstages),
              loss_id = loss_id)
     )
+    ctrl$lambda <- null2num0(ctrl$lambda)
+    ctrl$penalty_factor = null2num0(ctrl$penalty_factor)
+    ctrl$offset = null2mat0(ctrl$offset)
     ## arguments
     call_list <- list(
         x = x,
@@ -80,15 +83,12 @@
             res$cross_validation$cv_delta_recall
         )
     }
+    if (call_list$control$nstages > 0L) {
+        ## update the selected index to one-based index
+        res$et$selected <- res$et$selected + 1L
+    }
     ## update regularization
-    return_lambda <-
-        if (call_list$control$nstages == 0L) {
-            c("alpha", "lambda", "lambda_max")
-        } else {
-            ## update the selected index to one-based index
-            res$et$selected <- res$et$selected + 1L
-            "alpha"
-        }
+    return_lambda <- c("alpha", "lambda")
     res$regularization <- res$regularization[return_lambda]
     ## return
     res
