@@ -138,10 +138,10 @@ namespace abclass
         }
 
         // optional set gamma for scad and mcp
-        inline virtual void set_gamma(const double kappa_ratio)
+        inline virtual void set_gamma(const double kappa)
         {
             if (false) {
-                control_.kappa_ratio_ = kappa_ratio;
+                control_.ncv_kappa_ = kappa;
             }
         }
 
@@ -528,7 +528,7 @@ namespace abclass
         // set penalty factor from the control_
         set_penalty_factor();
         // set gamma
-        set_gamma(control_.kappa_ratio_);
+        set_gamma(control_.ncv_kappa_);
         // penalty for covariates with positive penalty factors only
         arma::uvec penalty_group { arma::find(control_.penalty_factor_ > 0.0) };
         // initialize
@@ -541,7 +541,9 @@ namespace abclass
         }
         arma::mat one_beta { arma::zeros(p1_, km1_) },
             one_grad_beta { one_beta };
-        const bool is_ridge_only { isAlmostEqual(control_.alpha_, 0.0) };
+        const bool is_ridge_only {
+            isAlmostEqual(control_.ridge_alpha_, 0.0)
+        };
         double l1_lambda { 0.0 }, l2_lambda { 0.0 };
         // if alpha = 0 and customized lambda, no need to determine lambda_max_
         if (is_ridge_only && control_.custom_lambda_) {
@@ -561,7 +563,8 @@ namespace abclass
                     l1_lambda_max_ = tmp;
                 }
             }
-            lambda_max_ = l1_lambda_max_ / std::max(control_.alpha_, 1e-2);
+            lambda_max_ = l1_lambda_max_ /
+                std::max(control_.ridge_alpha_, 1e-2);
             if (! control_.custom_lambda_) {
                 double log_lambda_max { std::log(lambda_max_) };
                 double log_lambda_min { 0.0 };
@@ -630,8 +633,8 @@ namespace abclass
         // main loop: for each lambda
         for (size_t li { 0 }; li < control_.lambda_.n_elem; ++li) {
             double lambda_li { control_.lambda_(li) };
-            l1_lambda = control_.alpha_ * lambda_li;
-            l2_lambda = (1 - control_.alpha_) * lambda_li;
+            l1_lambda = control_.ridge_alpha_ * lambda_li;
+            l2_lambda = (1 - control_.ridge_alpha_) * lambda_li;
             // early exit for lambda greater than lambda_max_
             // note that lambda is sorted
             if (l1_lambda >= l1_lambda_max_) {

@@ -54,10 +54,10 @@ namespace abclass
             return (l1_lambda + 0.5 * l2_lambda * beta) * beta;
         }
 
-        // penalty for one covariate
+        // penalty function for one covariate (e.g., elastic-net)
         // l1_lambda * penalty(l2_norm(beta_j)) +
         //     l2_lambda * ridge(l2_norm(beta_j))
-        inline virtual double cov_penalty(const arma::rowvec& beta,
+        inline virtual double one_penalty(const arma::rowvec& beta,
                                           const double l1_lambda,
                                           const double l2_lambda) const
         {
@@ -71,7 +71,7 @@ namespace abclass
         {
             double out { 0.0 };
             for (size_t g {0}; g < control_.penalty_factor_.n_elem; ++g) {
-                out += cov_penalty(beta.row(g + inter_),
+                out += one_penalty(beta.row(g + inter_),
                                    l1_lambda * control_.penalty_factor_(g),
                                    l2_lambda);
             }
@@ -225,16 +225,16 @@ namespace abclass
                                    l1_lambda * control_.penalty_factor_(l))
                 };
                 // update beta
-                if (isAlmostEqual(numer, 0)) {
-                    beta(l1, j) = 0;
-                } else {
+                if (std::abs(numer) > 0.0) {
                     double denom { mm_lowerbound_(l) + l2_lambda };
                     beta(l1, j) = numer / denom;
+                } else {
+                    beta(l1, j) = 0;
                 }
                 inner += (beta(l1, j) - tmp) * vj_xl;
                 if (update_active) {
                     // check if it has been shrinkaged to zero
-                    if (isAlmostEqual(beta(l1, j), 0)) {
+                    if (std::abs(beta(l1, j)) > 0.0) {
                         is_active(l, j) = 0;
                     } else {
                         is_active(l, j) = 1;
@@ -487,7 +487,9 @@ namespace abclass
         }
         arma::mat one_beta { arma::zeros(p1_, km1_) },
             one_grad_beta { one_beta };
-        const bool is_ridge_only { isAlmostEqual(control_.alpha_, 0.0) };
+        const bool is_ridge_only {
+            isAlmostEqual(control_.ridge_alpha_, 0.0)
+        };
         double l1_lambda { 0.0 }, l2_lambda { 0.0 };
         // if alpha = 0 and customized lambda
         if (is_ridge_only && control_.custom_lambda_) {
@@ -507,7 +509,8 @@ namespace abclass
                     l1_lambda_max_ = tmp;
                 }
             }
-            lambda_max_ =  l1_lambda_max_ / std::max(control_.alpha_, 1e-2);
+            lambda_max_ =  l1_lambda_max_ /
+                std::max(control_.ridge_alpha_, 1e-2);
             // set up lambda sequence
             if (! control_.custom_lambda_) {
                 double log_lambda_max { std::log(lambda_max_) };
@@ -574,8 +577,8 @@ namespace abclass
         // main loop: for each lambda
         for (size_t li { 0 }; li < control_.lambda_.n_elem; ++li) {
             double lambda_li { control_.lambda_(li) };
-            l1_lambda = lambda_li * control_.alpha_;
-            l2_lambda = lambda_li * (1 - control_.alpha_);
+            l1_lambda = lambda_li * control_.ridge_alpha_;
+            l2_lambda = lambda_li * (1 - control_.ridge_alpha_);
             // early exit for lambda greater than lambda_max_
             // note that lambda is sorted
             if (l1_lambda >= l1_lambda_max_) {

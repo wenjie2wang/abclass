@@ -37,19 +37,19 @@ namespace abclass
         arma::mat offset_ { arma::mat() }; // for the decision functions
 
         // regularization
-        // did user specified a customized lambda sequence?
+        //   did user specified a customized lambda sequence?
         bool custom_lambda_ { false };
         arma::vec lambda_  { arma::vec() };
         unsigned int nlambda_ { 20 };
         double lambda_min_ratio_ { 0.01 };
         double lambda_min_ { - 1.0 };
-        // adaptive penalty factor for each covariate
+        //   adaptive penalty factor for each covariate
         arma::vec penalty_factor_ { arma::vec() };
-        //   elastic-net
-        double alpha_ { 1.0 };
-        //   group {scad,mcp}
-        double kappa_ratio_ { 0.9 }; // parameter to set gamma
-        double gamma_ { - 1.0 };     // gamma for group non-convex penalty
+        //   ridge
+        double ridge_alpha_ { 1.0 };
+        //   scad, mcp
+        double ncv_kappa_ { 0.9 };   // parameter to set gamma
+        double ncv_gamma_ { - 1.0 }; // gamma for group non-convex penalty
 
         // tuning
         //   cross-validation
@@ -154,22 +154,22 @@ namespace abclass
             lambda_min_ = lambda_min;
             return this;
         }
-        inline Control* reg_net(const double alpha)
+        inline Control* reg_ridge(const double alpha)
         {
             // check alpha
             if ((alpha < 0.0) || (alpha > 1.0)) {
                 throw std::range_error("The 'alpha' must be between 0 and 1.");
             }
-            alpha_ = alpha;
+            ridge_alpha_ = alpha;
             return this;
         }
-        inline Control* reg_ncv(const double kappa_ratio = 0.99)
+        inline Control* reg_ncv(const double kappa = 0.9)
         {
             // kappa must be in (0, 1)
-            if (is_le(kappa_ratio, 0.0) || is_ge(kappa_ratio, 1.0)) {
-                throw std::range_error("The 'kappa_ratio' must be in (0, 1).");
+            if (is_le(kappa, 0.0) || is_ge(kappa, 1.0)) {
+                throw std::range_error("The 'kappa' must be in (0, 1).");
             }
-            kappa_ratio_ = kappa_ratio;
+            ncv_kappa_ = kappa;
             return this;
         }
         // tuning

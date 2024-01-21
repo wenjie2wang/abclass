@@ -42,7 +42,7 @@ expect_equivalent(dim(coef(model3, s = 5)), c(p + 1, k - 1))
 
 ## LUM loss
 model4 <- abclass(train_x, train_y, nlambda = 5,
-                  loss = "lum", group_penalty = "mcp")
+                  loss = "lum", penalty = "mcp")
 pred4 <- predict(model4, test_x)[[5]]
 expect_true(mean(test_y == pred4) > 0.5)
 
@@ -59,7 +59,7 @@ expect_error(predict(model4), "newx")
 ## test as.matrix
 model4 <- abclass(as.data.frame(train_x),
                   train_y, nlambda = 5,
-                  loss = "lum", group_penalty = "mcp")
+                  loss = "lum", penalty = "mcp")
 expect_equal(predict(model4, as.data.frame(test_x), s = 5), pred4)
 
 ## quick tests for other options
@@ -72,7 +72,7 @@ for (k in seq_len(nrow(qset))) {
     qmodel <- abclass(train_x, train_y,
                       lambda = 0.01,
                       loss = qset$loss[k],
-                      group_penalty = qset$gpenalty[k])
+                      penalty = qset$gpenalty[k])
     qpred <- predict(qmodel, test_x)
     qprob <- predict(qmodel, test_x, type = "prob")
     qlink <- predict(qmodel, test_x, type = "link")
@@ -100,7 +100,7 @@ if (requireNamespace("Matrix", quietly = TRUE)) {
     sp_test_x <- as(test_x, "sparseMatrix")
 
     sp_model <- abclass(sp_train_x, train_y, nlambda = 5, loss = "lum",
-                        group_penalty = "lasso")
+                        penalty = "lasso")
     expect_equal(predict(sp_model, test_x, s = 5),
                  predict(sp_model, sp_test_x, s = 5))
 
@@ -114,7 +114,7 @@ if (requireNamespace("Matrix", quietly = TRUE)) {
         qmodel <- abclass(sp_train_x, train_y,
                           lambda = 0.01,
                           loss = qset$loss[k],
-                          group_penalty = qset$gpenalty[k])
+                          penalty = qset$gpenalty[k])
         qpred <- predict(qmodel, sp_test_x, type = "class")
         qprob <- predict(qmodel, sp_test_x, type = "prob")
         qlink <- predict(qmodel, test_x, type = "link")

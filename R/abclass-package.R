@@ -33,7 +33,5 @@
 ##' @importFrom Rcpp sourceCpp
 ##' @useDynLib abclass
 ##'
-##' @docType package
-##' @name abclass-package
-##' @aliases abclass-package
-NULL
+##' @keywords internal
+"_PACKAGE"

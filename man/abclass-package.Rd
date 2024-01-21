@@ -17,3 +17,22 @@ Liu, Y., Zhang, H. H., & Wu, Y. (2011). Hard or soft classification?
 large-margin unified machines. \emph{Journal of the American Statistical
 Association}, 106(493), 166--177.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://wwenjie.org/abclass}
+  \item \url{https://github.com/wenjie2wang/abclass}
+  \item Report bugs at \url{https://github.com/wenjie2wang/abclass/issues}
+}
+
+}
+\author{
+\strong{Maintainer}: Wenjie Wang \email{wang@wwenjie.org} (\href{https://orcid.org/0000-0003-0363-3180}{ORCID})
+
+Other contributors:
+\itemize{
+  \item  Eli Lilly and Company [copyright holder]
+}
+
+}
+\keyword{internal}

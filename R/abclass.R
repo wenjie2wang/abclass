@@ -89,12 +89,6 @@ abclass <- function(x, y,
 
 ##' @rdname abclass
 ##'
-##' @param lambda A numeric vector specifying the tuning parameter
-##'     \emph{lambda}.  A data-driven \emph{lambda} sequence will be generated
-##'     and used according to specified \code{alpha}, \code{nlambda} and
-##'     \code{lambda_min_ratio} if this argument is left as \code{NULL} by
-##'     default.  The specified \code{lambda} will be sorted in decreasing order
-##'     internally and only the unique values will be kept.
 ##' @param alpha A numeric value in [0, 1] representing the mixing parameter
 ##'     \emph{alpha}.  The default value is \code{1.0}.
 ##' @param nlambda A positive integer specifying the length of the internally
@@ -104,18 +98,23 @@ abclass <- function(x, y,
 ##'     smallest lambda parameter to the largest lambda parameter.  The default
 ##'     value is set to \code{1e-4} if the sample size is larger than the number
 ##'     of predictors, and \code{1e-2} otherwise.
+##' @param lambda A numeric vector specifying the tuning parameter
+##'     \emph{lambda}.  A data-driven \emph{lambda} sequence will be generated
+##'     and used according to specified \code{alpha}, \code{nlambda} and
+##'     \code{lambda_min_ratio} if this argument is left as \code{NULL} by
+##'     default.  The specified \code{lambda} will be sorted in decreasing order
+##'     internally and only the unique values will be kept.
 ##' @param penalty_factor A numerical vector with nonnegative values specifying
 ##'     the adaptive penalty factors for individual predictors (excluding
 ##'     intercept).
 ##' @param grouped A logicial value.  Experimental flag to apply group
 ##'     penalties.
-##' @param group_penalty A character vector specifying the name of the group
-##'     penalty.
+##' @param penalty A character vector specifying the name of the penalty.
 ##' @param offset An optional numeric matrix for offsets of the decision
 ##'     functions.
-##' @param kappa_ratio A positive number within (0, 1) specifying the ratio of
+##' @param ncv_kappa A positive number within (0, 1) specifying the ratio of
 ##'     reciprocal gamma parameter for group SCAD or group MCP.  A close-to-zero
-##'     \code{kappa_ratio} would give a solution close to lasso solution.
+##'     \code{ncv_kappa} would give a solution close to lasso solution.
 ##' @param lum_a A positive number greater than one representing the parameter
 ##'     \emph{a} in LUM, which will be used only if \code{loss = "lum"}.  The
 ##'     default value is \code{1.0}.
@@ -142,18 +141,18 @@ abclass <- function(x, y,
 ##'     is \code{0} for silent estimation procedure.
 ##'
 ##' @export
-abclass.control <- function(lambda = NULL,
-                            alpha = 1.0,
+abclass.control <- function(alpha = 1.0,
                             nlambda = 50L,
                             lambda_min_ratio = NULL,
+                            lambda = NULL,
                             penalty_factor = NULL,
                             grouped = TRUE,
-                            group_penalty = c("lasso", "scad", "mcp"),
+                            penalty = c("lasso", "scad", "mcp"),
+                            ncv_kappa = 0.9,
                             offset = NULL,
-                            kappa_ratio = 0.9,
                             lum_a = 1.0,
                             lum_c = 0.0,
-                            boost_umin = - 5.0,
+                            boost_umin = -5.0,
                             maxit = 1e4L,
                             epsilon = 1e-7,
                             standardize = TRUE,
@@ -161,23 +160,16 @@ abclass.control <- function(lambda = NULL,
                             verbose = 0L,
                             ...)
 {
-    group_penalty <-
-        if (grouped) {
-            match.arg(
-                as.character(group_penalty),
-                choices = c("lasso", "scad", "mcp")
-            )
-        } else {
-            NULL
-        }
+    penalty <- match.arg(as.character(penalty),
+                         choices = c("lasso", "scad", "mcp"))
     structure(list(
         alpha = alpha,
         lambda = lambda,
         nlambda = as.integer(nlambda),
         lambda_min_ratio = lambda_min_ratio,
         penalty_factor = penalty_factor,
+        penalty = penalty,
         grouped = grouped,
-        group_penalty = group_penalty,
         offset = offset,
         standardize = standardize,
         maxit = as.integer(maxit),
@@ -187,6 +179,6 @@ abclass.control <- function(lambda = NULL,
         boost_umin = boost_umin,
         lum_a = lum_a,
         lum_c = lum_c,
-        kappa_ratio = kappa_ratio
+        ncv_kappa = ncv_kappa
     ), class = "abclass.control")
 }

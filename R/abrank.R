@@ -39,10 +39,10 @@ abrank <- function(x, y, qid,
     res
 }
 
-abrank.control <- function(lambda = NULL,
-                           alpha = 1.0,
+abrank.control <- function(alpha = 1.0,
                            nlambda = 50L,
                            lambda_min_ratio = NULL,
+                           lambda = NULL,
                            penalty_factor = NULL,
                            offset = NULL,
                            query_weight = FALSE,
@@ -61,9 +61,9 @@ abrank.control <- function(lambda = NULL,
 {
     structure(list(
         alpha = alpha,
-        lambda = lambda,
         nlambda = as.integer(nlambda),
         lambda_min_ratio = lambda_min_ratio,
+        lambda = lambda,
         penalty_factor = penalty_factor,
         offset = offset,
         query_weight = query_weight,

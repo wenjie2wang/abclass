@@ -99,7 +99,7 @@ namespace abclass
             }
             lum_c_ = lum_c;
             lum_cp1_ = lum_c + 1.0;
-            lum_c_cp1_ = lum_c_ / lum_cp1_;
+            lum_c_cp1_ = 1.0 - 1.0 / lum_cp1_;
             return this;
         }
 

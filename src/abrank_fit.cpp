@@ -41,7 +41,7 @@ inline abclass::Control abrank_control(const Rcpp::List& control)
                  control["penalty_factor"],
                  control["varying_active_set"])->
         reg_lambda(control["lambda"])->
-        reg_net(control["alpha"])->
+        reg_ridge(control["alpha"])->
         tune_cv(control["cv_metric"])->
         tune_et(control["nstages"]);
     return ctrl;
@@ -61,7 +61,7 @@ inline Rcpp::List template_abrank_fit(T& object)
                 Rcpp::Named("selected") = abclass::arma2rvec(object.abc_.et_vs_)
                 ),
             Rcpp::Named("regularization") = Rcpp::List::create(
-                Rcpp::Named("alpha") = object.abc_.control_.alpha_
+                Rcpp::Named("alpha") = object.abc_.control_.ridge_alpha_
                 )
             );
     }
@@ -99,12 +99,13 @@ inline Rcpp::List template_abrank_fit(T& object)
         Rcpp::Named("regularization") = Rcpp::List::create(
             Rcpp::Named("lambda") =
             abclass::arma2rvec(object.abc_.control_.lambda_),
-            Rcpp::Named("alpha") = object.abc_.control_.alpha_
+            Rcpp::Named("alpha") = object.abc_.control_.ridge_alpha_
             ),
         Rcpp::Named("optimization") = Rcpp::List::create(
             Rcpp::Named("loss") = abclass::arma2rvec(object.abc_.loss_),
             Rcpp::Named("penalty") = abclass::arma2rvec(object.abc_.penalty_),
-            Rcpp::Named("objective") = abclass::arma2rvec(object.abc_.objective_)
+            Rcpp::Named("objective") =
+            abclass::arma2rvec(object.abc_.objective_)
             )
         );
 }

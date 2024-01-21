@@ -39,7 +39,6 @@ namespace abclass
 
         // functions
         using AbclassGroup<T_loss, T_x>::loss_derivative;
-        using AbclassGroup<T_loss, T_x>::gen_penalty_factor;
         using AbclassGroup<T_loss, T_x>::mm_gradient;
         using AbclassGroup<T_loss, T_x>::mm_gradient0;
         using AbclassGroup<T_loss, T_x>::gradient;
@@ -54,23 +53,23 @@ namespace abclass
         {
             // assume beta >= 0.0
             const double ridge_pen { 0.5 * l2_lambda * beta * beta };
-            if (beta > control_.gamma_ * l1_lambda) {
-                return 0.5 * l1_lambda * l1_lambda * (control_.gamma_ + 1) +
+            if (beta > control_.ncv_gamma_ * l1_lambda) {
+                return 0.5 * l1_lambda * l1_lambda * (control_.ncv_gamma_ + 1) +
                     ridge_pen;
             }
             if (beta > l1_lambda) {
-                return (control_.gamma_ * l1_lambda * beta -
+                return (control_.ncv_gamma_ * l1_lambda * beta -
                         0.5 * (beta * beta + l1_lambda * l1_lambda)) /
-                    (control_.gamma_ - 1) + ridge_pen;
+                    (control_.ncv_gamma_ - 1) + ridge_pen;
             }
             return l1_lambda * beta + ridge_pen;
         }
 
-        inline void set_gamma(const double kappa_ratio = 0.9) override
+        inline void set_gamma(const double kappa = 0.9) override
         {
             // kappa must be in (0, 1)
-            if (is_le(kappa_ratio, 0.0) || is_ge(kappa_ratio, 1.0)) {
-                throw std::range_error("The 'kappa_ratio' must be in (0, 1).");
+            if (is_le(kappa, 0.0) || is_ge(kappa, 1.0)) {
+                throw std::range_error("The 'kappa' must be in (0, 1).");
             }
             if (mm_lowerbound_.empty()) {
                 set_mm_lowerbound();
@@ -79,13 +78,13 @@ namespace abclass
             const double min_mg {
                 mm_lowerbound_.elem(arma::find(mm_lowerbound_ > 0.0)).min()
             };
-            control_.gamma_ = (1.0 + 1.0 / min_mg) / kappa_ratio;
+            control_.ncv_gamma_ = (1.0 + 1.0 / min_mg) / kappa;
         }
 
         inline double strong_rule_rhs(const double next_lambda,
                                       const double last_lambda) const override
         {
-            return control_.gamma_ / (control_.gamma_ - 2.0) *
+            return control_.ncv_gamma_ / (control_.ncv_gamma_ - 2.0) *
                 (next_lambda - last_lambda) + next_lambda;
         }
 
@@ -102,15 +101,15 @@ namespace abclass
             const double z_g2 { l2_norm(z_g) };
             const double m_gp { m_g + l2_lambda }; // m_g'
             const double m_g_ratio { m_gp / m_g }; // m_g' / m_g > 1
-            if (z_g2 > m_g_ratio * control_.gamma_ * l1_lambda_g) {
+            if (z_g2 > m_g_ratio * control_.ncv_gamma_ * l1_lambda_g) {
                 for (size_t i {0}; i < z_g.n_elem; ++beta_g_it, ++i) {
                     *beta_g_it = z_g[i] / m_g_ratio;
                 }
             } else if (z_g2 > (m_gp + 1.0) * l1_lambda_g / m_g) {
-                const double numer { (control_.gamma_ - 1.0) * m_g };
-                const double denom { (control_.gamma_ - 1.0) * m_gp - 1.0 };
+                const double numer { (control_.ncv_gamma_ - 1.0) * m_g };
+                const double denom { (control_.ncv_gamma_ - 1.0) * m_gp - 1.0 };
                 const double tmp { numer / denom *
-                    (1.0 - control_.gamma_ * l1_lambda_g / numer / z_g2) };
+                    (1.0 - control_.ncv_gamma_ * l1_lambda_g / numer / z_g2) };
                 for (size_t i {0}; i < z_g.n_elem; ++beta_g_it, ++i) {
                     *beta_g_it = tmp * z_g[i];
                 }

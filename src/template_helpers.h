@@ -75,11 +75,11 @@ inline Rcpp::List template_fit(T& object)
         Rcpp::Named("regularization") = Rcpp::List::create(
             Rcpp::Named("lambda") =
             abclass::arma2rvec(object.control_.lambda_),
-            Rcpp::Named("alpha") = object.control_.alpha_,
+            Rcpp::Named("alpha") = object.control_.ridge_alpha_,
             Rcpp::Named("penalty_factor") =
             abclass::arma2rvec(object.control_.penalty_factor_),
-            Rcpp::Named("kappa_ratio") = object.control_.kappa_ratio_,
-            Rcpp::Named("gamma") = object.control_.gamma_
+            Rcpp::Named("ncv_kappa") = object.control_.ncv_kappa_,
+            Rcpp::Named("ncv_gamma") = object.control_.ncv_gamma_
             ),
         Rcpp::Named("optimization") = Rcpp::List::create(
             Rcpp::Named("loss") = abclass::arma2rvec(object.loss_),
@@ -108,8 +108,8 @@ inline abclass::Control abclass_control(const Rcpp::List& control)
                  control["penalty_factor"],
                  control["varying_active_set"])->
         reg_lambda(control["lambda"])->
-        reg_net(control["alpha"])->
-        reg_ncv(control["kappa_ratio"])->
+        reg_ridge(control["alpha"])->
+        reg_ncv(control["ncv_kappa"])->
         tune_cv(control["nfolds"],
                 control["stratified"],
                 control["alignment"])->

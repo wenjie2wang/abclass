@@ -419,16 +419,18 @@ supclass_mlog <- function(x, y, penalty, start, control)
                             )
                 }, error = function(e) e)
                 beta1 <- if (inherits(qres, "error")) {
-                             warning(qres,
-                                     "\nRevert to the solution from last step.")
+                             warning(
+                                 qres,
+                                 "\nReverted to the solution from last step."
+                             )
                              outer_beta0
                          } else {
                              get_beta(qres$solution)
                          }
                 if (anyNA(beta1)) {
-                    warning("Found NA in the beta estimates.",
+                    warning("Found NA in the beta estimates. ",
                             "The specified lambda was probably too small.",
-                            "\nRevert to the solution from last step.")
+                            "\nReverted to the solution from last step.")
                     beta1 <- outer_beta0
                 }
             } else {
@@ -453,7 +455,7 @@ supclass_mlog <- function(x, y, penalty, start, control)
                     if (inherits(qres, "error")) {
                         warning(
                             qres,
-                            "\nRevert to the soltion from last step."
+                            "\nReverted to the soltion from last step."
                         )
                         beta1 <- inner_beta0
                     } else {
@@ -461,9 +463,9 @@ supclass_mlog <- function(x, y, penalty, start, control)
                         eta <- get_eta(qres$solution)
                     }
                     if (anyNA(beta1)) {
-                        warning("Found NA in the beta estimates.",
-                                "The specified lambda was probably too small.",
-                                "\nRevert to the solution from last step.")
+                        warning("Found NA in the beta estimates. ",
+                                "The specified lambda was probably too small. ",
+                                "\nReverted to the solution from last step.")
                         beta1 <- inner_beta0
                     }
                     inner_diff <- rowL2sums(beta1 - inner_beta0)
@@ -576,15 +578,15 @@ supclass_mpsvm <- function(x, y, penalty, start, control)
             }, error = function(e) e)
             beta1 <- if (inherits(qres, "error")) {
                          warning(qres,
-                                 "\nRevert to the solution from last step.")
+                                 "\nReverted to the solution from last step.")
                          beta0
                      } else {
                          get_beta(qres$solution)
                      }
             if (anyNA(beta1)) {
-                warning("Found NA in the beta estimates.",
+                warning("Found NA in the beta estimates. ",
                         "The specified lambda was probably too small.",
-                        "\nRevert to the solution from last step.")
+                        "\nReverted to the solution from last step.")
                 beta1 <- beta0
             }
         } else {
@@ -610,16 +612,16 @@ supclass_mpsvm <- function(x, y, penalty, start, control)
                             )
                 }, error = function(e) e)
                 if (inherits(qres, "error")) {
-                    warning(qres, "\nRevert to the solution from last step.")
+                    warning(qres, "\nReverted to the solution from last step.")
                     beta1 <- beta0
                 } else {
                     beta1 <- get_beta(qres$solution)
                     eta <- get_eta(qres$solution)
                 }
                 if (anyNA(beta1)) {
-                    warning("Found NA in the beta estimates.",
+                    warning("Found NA in the beta estimates. ",
                             "The specified lambda was probably too small.",
-                            "\nRevert to the solution from last step.")
+                            "\nReverted to the solution from last step.")
                     beta1 <- beta0
                 }
                 tol <- rowL2sums(beta1 - beta0)
@@ -772,7 +774,7 @@ supclass_msvm <- function(x, y, penalty, start, control)
             }, error = function(e) e)
             beta1 <- if (inherits(lres, "error")) {
                          warning(lres,
-                                 "\nRevert to the solution from last step.")
+                                 "\nReverted to the solution from last step.")
                          beta0
                      } else {
                          get_beta(lres$solution)
@@ -800,7 +802,7 @@ supclass_msvm <- function(x, y, penalty, start, control)
                     error = function(e) e
                 )
                 if (inherits(lres, "error")) {
-                    warning(lres, "\nRevert to the solution from last step.")
+                    warning(lres, "\nReverted to the solution from last step.")
                     beta1 <- beta0
                 } else {
                     eta <- get_eta(lres$solution)

@@ -47,7 +47,7 @@
     loss_id <- match(loss, c("logistic", "boost", "hinge-boost", "lum"))
     penalty_id <- 1
     if (control$grouped) {
-        penalty_id <- 1 + match(control$group_penalty,
+        penalty_id <- 1 + match(control$penalty,
                                 c("lasso", "scad", "mcp"))
     }
     ## prepare arguments
@@ -99,10 +99,10 @@
     res$regularization <-
         if (control$grouped) {
             common_pars <- c(return_lambda, "penalty_factor")
-            if (control$group_penalty == "lasso") {
+            if (control$penalty == "lasso") {
                 res$regularization[common_pars]
             } else {
-                res$regularization[c(common_pars, "kappa_ratio", "gamma")]
+                res$regularization[c(common_pars, "ncv_kappa", "ncv_gamma")]
             }
         } else {
             res$regularization[return_lambda]

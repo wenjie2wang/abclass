@@ -69,7 +69,8 @@ namespace abclass {
                     // if the last stage has not been done yet
                     double et_lambda_min {
                         std::pow(obj.control_.lambda_min_ratio_, 0.25) *
-                        obj.et_l1_lambda1_ / std::max(obj.control_.alpha_, 1e-2)
+                        obj.et_l1_lambda1_ /
+                        std::max(obj.control_.ridge_alpha_, 1e-2)
                     };
                     obj.control_.reg_lambda_min(et_lambda_min);
                 } else {
