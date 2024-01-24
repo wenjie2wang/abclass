@@ -62,6 +62,9 @@
              loss_id = loss_id,
              penalty_id = penalty_id)
     )
+    ctrl$lambda <- null2num0(ctrl$lambda)
+    ctrl$penalty_factor = null2num0(ctrl$penalty_factor)
+    ctrl$offset = null2mat0(ctrl$offset)
     ## adjust lambda alignment
     if (ctrl$alignment == 0L && length(ctrl$lambda) > 0) {
         ctrl$alignment <- 1L
