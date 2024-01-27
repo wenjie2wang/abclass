@@ -50,6 +50,7 @@ namespace abclass
             vertex_ = sim.get_vertex();
             t_vertex_ = vertex_.t();
         }
+
         inline virtual void set_ex_vertex_matrix() // be virtual for Moml
         {
             ex_vertex_ = arma::mat(n_obs_, km1_);
@@ -66,71 +67,16 @@ namespace abclass
             return ex_vertex_.col(j);
         }
 
-        // transfer coef for standardized data to coef for non-standardized data
-        inline arma::mat rescale_coef(const arma::mat& beta) const
-        {
-            if (! control_.standardize_) {
-                return beta;
-            }
-            arma::mat out { beta };
-            if (control_.intercept_) {
-                arma::rowvec tmp_row { x_center_ / x_scale_ };
-                // for each columns
-                for (size_t k { 0 }; k < km1_; ++k) {
-                    arma::vec beta_k { beta.col(k) };
-                    out(0, k) = beta(0, k) -
-                        arma::as_scalar(tmp_row * beta_k.tail_rows(p0_));
-                    for (size_t l { 1 }; l < p1_; ++l) {
-                        out(l, k) = beta_k(l) / x_scale_(l - 1);
-                    }
-                }
-            } else {
-                for (size_t k { 0 }; k < km1_; ++k) {
-                    for (size_t l { 0 }; l < p0_; ++l) {
-                        out(l, k) /= x_scale_(l);
-                    }
-                }
-            }
-            return out;
-        }
-
         // loss function
         inline double objective0(const arma::vec& inner) const
         {
             return loss_fun_.loss(inner, control_.obs_weight_);
         }
+
         // the first derivative of the loss function
         inline arma::vec loss_derivative(const arma::vec& inner) const
         {
             return loss_fun_.dloss(inner);
-        }
-
-        // MM lowerbound used in coordinate-descent algorithm
-        inline void set_mm_lowerbound()
-        {
-            if (control_.intercept_) {
-                mm_lowerbound0_ = loss_fun_.mm_lowerbound(
-                    dn_obs_, control_.obs_weight_);
-            }
-            mm_lowerbound_ = loss_fun_.mm_lowerbound(x_, control_.obs_weight_);
-        }
-
-        inline arma::vec gen_penalty_factor(
-            const arma::vec& penalty_factor = arma::vec()
-            ) const
-        {
-            if (penalty_factor.is_empty()) {
-                return arma::ones(p0_);
-            }
-            if (penalty_factor.n_elem == p0_) {
-                if (arma::any(penalty_factor < 0.0)) {
-                    throw std::range_error(
-                        "The 'penalty_factor' cannot be negative.");
-                }
-                return penalty_factor;
-            }
-            // else
-            throw std::range_error("Incorrect length of the 'penalty_factor'.");
         }
 
     public:
@@ -150,21 +96,6 @@ namespace abclass
         // parameters
         Control control_;       // control parameters
         T_loss loss_fun_;       // loss funciton class
-
-        // tuning by cross-validation
-        arma::mat cv_accuracy_;
-        arma::vec cv_accuracy_mean_;
-        arma::vec cv_accuracy_sd_;
-
-        // tuning by ET-Lasso
-        unsigned int et_npermuted_ { 0 }; // number of permuted predictors
-        arma::uvec et_vs_;                // indices of selected predictors
-        // the smallest lambda before selection of any random predictors
-        double et_l1_lambda0_ { -1.0 }; // the last lambda before the cutoff
-        double et_l1_lambda1_ { -1.0 }; // the cutoff point
-
-        // estimates
-        arma::cube coef_;       // p1_ x km1_ for linear learning in each slice
 
         // loss/penalty/objective functions along the solution path
         arma::vec loss_;
@@ -205,6 +136,7 @@ namespace abclass
             set_ex_vertex_matrix(); // requires n_obs_ set by set_x(x);
             return this;
         }
+
         inline Abclass* set_x(const T_x& x)
         {
             // assume y has been set
@@ -283,49 +215,6 @@ namespace abclass
             return this;
         }
 
-        // setter for penalty factors
-        inline Abclass* set_penalty_factor(
-            const arma::vec& penalty_factor = arma::vec()
-            )
-        {
-            if (penalty_factor.n_elem > 0) {
-                control_.penalty_factor_ = gen_penalty_factor(penalty_factor);
-            } else {
-                control_.penalty_factor_ = gen_penalty_factor(
-                    control_.penalty_factor_);
-            }
-            return this;
-        }
-
-        // rescale the coefficients
-        inline Abclass* force_rescale_coef()
-        {
-            // must know what you are doing
-            for (size_t i {0}; i < coef_.n_slices; ++i) {
-                coef_.slice(i) = rescale_coef(coef_.slice(i));
-            }
-            return this;
-        }
-
-        // linear predictor
-        inline arma::mat linear_score(
-            const arma::mat& beta,
-            const T_x& x,
-            const arma::mat& offset = arma::vec()
-            ) const
-        {
-            arma::mat pred_mat;
-            if (control_.intercept_) {
-                pred_mat = x * beta.tail_rows(x.n_cols);
-                pred_mat.each_row() += beta.row(0);
-            } else {
-                pred_mat = x * beta;
-            }
-            if (offset.n_rows == x.n_rows && offset.n_cols == beta.n_cols) {
-                pred_mat += offset;
-            }
-            return pred_mat;
-        }
         // class conditional probability
         inline arma::mat predict_prob(const arma::mat& pred_f) const
         {
@@ -339,6 +228,7 @@ namespace abclass
             out.each_col() /= row_sums;
             return out;
         }
+
         // predict categories for predicted classification functions
         inline arma::uvec predict_y(const arma::mat& pred_f) const
         {
@@ -361,39 +251,9 @@ namespace abclass
             // note that y can be of length different than dn_obs_
             return arma::sum(is_correct) / static_cast<double>(y.n_elem);
         }
-        // class conditional probability
-        inline arma::mat predict_prob(
-            const arma::mat& beta,
-            const T_x& x,
-            const arma::mat& offset = arma::vec()
-            ) const
-        {
-            return predict_prob(linear_score(beta, x, offset));
-        }
-        // prediction based on the inner products
-        inline arma::uvec predict_y(
-            const arma::mat& beta,
-            const T_x& x,
-            const arma::mat& offset = arma::vec()
-            ) const
-        {
-            return predict_y(linear_score(beta, x, offset));
-        }
-        // accuracy for tuning
-        inline double accuracy(
-            const arma::mat& beta,
-            const T_x& x,
-            const arma::uvec& y,
-            const arma::mat& offset = arma::vec()
-            ) const
-        {
-            return accuracy(linear_score(beta, x, offset), y);
-        }
 
     };
 
 }
-
-
 
 #endif /* ABCLASS_ABCLASS_H */
