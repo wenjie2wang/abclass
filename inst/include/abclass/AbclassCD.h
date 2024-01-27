@@ -22,9 +22,8 @@
 
 #include <RcppArmadillo.h>
 
-#include "Control.h"
-#include "Abclass.h"
 #include "AbclassLinear.h"
+#include "Control.h"
 #include "utils.h"
 
 namespace abclass
@@ -49,6 +48,12 @@ namespace abclass
         using AbclassLinear<T_loss, T_x>::objective0;
         using AbclassLinear<T_loss, T_x>::rescale_coef;
 
+        // specifying if a blockwise CD should be used
+        inline virtual size_t get_active_ncol() const
+        {
+            return km1_;
+        }
+
         // penalty function for theta >= 0 (default: lasso)
         inline virtual double penalty0(const double theta,
                                        const double l1_lambda,
@@ -68,8 +73,12 @@ namespace abclass
                                        const double l1_lambda,
                                        const double l2_lambda) const
         {
-            const double l1_beta { l1_norm(beta) };
-            return penalty0(l1_beta, l1_lambda, l2_lambda);
+            double out { 0.0 };
+            for (size_t k {0}; k < beta.n_elem; ++k) {
+                out += penalty0(std::abs(beta(k)),
+                                l1_lambda, l2_lambda);
+            }
+            return out;
         }
 
         // regularization for the coefficient matrix
@@ -161,109 +170,6 @@ namespace abclass
             return out;
         }
 
-        // individual update step for beta
-        inline virtual void update_beta_gk(arma::mat& beta,
-                                           arma::vec& inner,
-                                           const size_t k,
-                                           const size_t g,
-                                           const size_t g1,
-                                           const double l1_lambda,
-                                           const double l2_lambda)
-        {
-            const double old_beta_g1k { beta(g1, k) };
-            const arma::vec v_k { get_vertex_y(k) };
-            const arma::vec vk_xg { x_.col(g) % v_k };
-            const double d_gk { mm_gradient(inner, vk_xg) };
-            // if mm_lowerbound = 0 and l1_lambda > 0, numer will be 0
-            const double beta_part { mm_lowerbound_(g) * beta(g1, k) - d_gk };
-            const double tmp {
-                std::abs(beta_part) - l1_lambda * control_.penalty_factor_(g)
-            };
-            if (tmp < 0.0) {
-                beta(g1, k) = 0.0;
-                return;
-            }
-            const double numer { tmp * sign(beta_part) };
-            const double denom { mm_lowerbound_(g) + l2_lambda };
-            // update beta
-            beta(g1, k) = numer / denom;
-            // update inner
-            inner += (beta(g1, k) - old_beta_g1k) * vk_xg;
-        }
-
-        // group-wise update step for beta
-        inline virtual void update_beta_g(arma::mat& beta,
-                                          arma::vec& inner,
-                                          const size_t g,
-                                          const size_t g1,
-                                          const double l1_lambda,
-                                          const double l2_lambda)
-        {
-            const arma::rowvec old_beta_g1 { beta.row(g1) };
-            const double mg { mm_lowerbound_(g) };
-            const arma::rowvec ug { - mm_gradient(inner, g) };
-            const double l1_lambda_g {
-                l1_lambda * control_.penalty_factor_(g)
-            };
-            const arma::rowvec z_mg { ug + mg * beta.row(g1) };
-            const double pos_part { 1.0 - l1_lambda_g / l2_norm(z_mg) };
-            if (pos_part > 0.0) {
-                beta.row(g1) = z_mg * (pos_part / (mg + l2_lambda));
-            } else {
-                beta.row(g1) = arma::zeros<arma::rowvec>(ug.n_elem);
-            }
-            // update inner
-            const arma::rowvec delta_beta_j { beta.row(g1) - old_beta_g1 };
-            const arma::vec delta_vj { ex_vertex_ * delta_beta_j.t() };
-            inner += x_.col(g) % delta_vj;
-        }
-
-        // run one cycle of coordinate descent over a given active set
-        // for individual or bi-level regularization
-        inline virtual void run_one_active_cycle(arma::mat& beta,
-                                                 arma::vec& inner,
-                                                 arma::umat& is_active,
-                                                 const double l1_lambda,
-                                                 const double l2_lambda,
-                                                 const bool update_active,
-                                                 const unsigned int verbose);
-        // for group-wise regularization
-        inline virtual void run_one_active_cycle(arma::mat& beta,
-                                                 arma::vec& inner,
-                                                 arma::uvec& is_active,
-                                                 const double l1_lambda,
-                                                 const double l2_lambda,
-                                                 const bool update_active,
-                                                 const unsigned int verbose);
-
-        // run cycles a given active set and given lambda's until convergence
-        template<typename T_active = arma::umat>
-        inline void run_active_cycles(arma::mat& beta,
-                                      arma::vec& inner,
-                                      T_active& is_active,
-                                      const double l1_lambda,
-                                      const double l2_lambda,
-                                      const bool varying_active_set,
-                                      const unsigned int max_iter,
-                                      const double epsilon,
-                                      const unsigned int verbose);
-
-        // one full cycle for coordinate-descent
-        inline virtual void run_one_full_cycle(arma::mat& beta,
-                                               arma::vec& inner,
-                                               const double l1_lambda,
-                                               const double l2_lambda,
-                                               const unsigned int verbose);
-
-        // run full cycles of CMD for given lambda's until convergence
-        inline void run_full_cycles(arma::mat& beta,
-                                    arma::vec& inner,
-                                    const double l1_lambda,
-                                    const double l2_lambda,
-                                    const unsigned int max_iter,
-                                    const double epsilon,
-                                    const unsigned int verbose);
-
         // determine the large-enough l1 lambda that results in zero coef's
         inline virtual void set_lambda_max(const arma::vec& inner,
                                            const arma::uvec& positive_penalty)
@@ -302,13 +208,83 @@ namespace abclass
             return 0.0;
         }
 
+        // default: individual update step for beta
+        inline virtual void update_beta_gk(arma::mat& beta,
+                                           arma::vec& inner,
+                                           const size_t k,
+                                           const size_t g,
+                                           const size_t g1,
+                                           const double l1_lambda,
+                                           const double l2_lambda)
+        {
+            const double old_beta_g1k { beta(g1, k) };
+            const arma::vec v_k { get_vertex_y(k) };
+            const arma::vec vk_xg { x_.col(g) % v_k };
+            const double d_gk { mm_gradient(inner, vk_xg) };
+            // if mm_lowerbound = 0 and l1_lambda > 0, numer will be 0
+            const double beta_part { mm_lowerbound_(g) * beta(g1, k) - d_gk };
+            const double tmp {
+                std::abs(beta_part) - l1_lambda * control_.penalty_factor_(g)
+            };
+            if (tmp < 0.0) {
+                beta(g1, k) = 0.0;
+                return;
+            }
+            const double numer { tmp * sign(beta_part) };
+            const double denom { mm_lowerbound_(g) + l2_lambda };
+            // update beta
+            beta(g1, k) = numer / denom;
+            // update inner
+            inner += (beta(g1, k) - old_beta_g1k) * vk_xg;
+        }
+
+        // for 1) individual or bi-level regularization (default)
+        //  or 2) group-wise regularization (needs overriding)
+        // run one cycle of coordinate descent over a given active set
+        inline virtual void run_one_active_cycle(
+            arma::mat& beta,
+            arma::vec& inner,
+            arma::umat& is_active,
+            const double l1_lambda,
+            const double l2_lambda,
+            const bool update_active,
+            const unsigned int verbose);
+
+        // one full cycle for coordinate-descent
+        inline virtual void run_one_full_cycle(
+            arma::mat& beta,
+            arma::vec& inner,
+            const double l1_lambda,
+            const double l2_lambda,
+            const unsigned int verbose);
+
+        // run cycles a given active set and given lambda's until convergence
+        inline void run_active_cycles(arma::mat& beta,
+                                      arma::vec& inner,
+                                      arma::umat& is_active,
+                                      const double l1_lambda,
+                                      const double l2_lambda,
+                                      const bool varying_active_set,
+                                      const unsigned int max_iter,
+                                      const double epsilon,
+                                      const unsigned int verbose);
+
+        // run full cycles of CMD for given lambda's until convergence
+        inline void run_full_cycles(arma::mat& beta,
+                                    arma::vec& inner,
+                                    const double l1_lambda,
+                                    const double l2_lambda,
+                                    const unsigned int max_iter,
+                                    const double epsilon,
+                                    const unsigned int verbose);
+
     public:
 
         // inherit constructors
         using AbclassLinear<T_loss, T_x>::AbclassLinear;
 
         // specifics for template inheritance
-        // Abclass
+        // from Abclass
         using AbclassLinear<T_loss, T_x>::control_;
         using AbclassLinear<T_loss, T_x>::ex_vertex_;
         using AbclassLinear<T_loss, T_x>::loss_;
@@ -319,7 +295,7 @@ namespace abclass
         using AbclassLinear<T_loss, T_x>::penalty_;
         using AbclassLinear<T_loss, T_x>::x_;
 
-        // AbclassLinear
+        // from AbclassLinear
         using AbclassLinear<T_loss, T_x>::coef_;
         using AbclassLinear<T_loss, T_x>::set_mm_lowerbound;
 
@@ -358,6 +334,39 @@ namespace abclass
         inline void fit();
 
     };
+
+    // one full cycle for coordinate-descent
+    template <typename T_loss, typename T_x>
+    inline void AbclassCD<T_loss, T_x>::run_one_full_cycle(
+        arma::mat& beta,
+        arma::vec& inner,
+        const double l1_lambda,
+        const double l2_lambda,
+        const unsigned int verbose
+        )
+    {
+        if (verbose > 2) {
+            Rcpp::Rcout << "\nStarting values of beta:\n";
+            Rcpp::Rcout << beta << "\n";
+        };
+        // for intercept
+        if (control_.intercept_) {
+            arma::rowvec delta_beta0 {
+                - mm_gradient0(inner) / mm_lowerbound0_
+            };
+            beta.row(0) += delta_beta0;
+            arma::vec tmp_du { ex_vertex_ * delta_beta0.t() };
+            inner += tmp_du;
+        }
+        // predictors
+        for (size_t g { 0 }; g < p0_; ++g) {
+            for (size_t k {0}; k < km1_; ++k) {
+                const size_t g1 { g + inter_ };
+                // update beta and inner
+                update_beta_gk(beta, inner, k, g, g1, l1_lambda, l2_lambda);
+            }
+        }
+    }
 
     // run one update step over active sets
     template <typename T_loss, typename T_x>
@@ -408,61 +417,12 @@ namespace abclass
         }
     }
 
-    // run one group-wise update step over active sets
-    template <typename T_loss, typename T_x>
-    inline void AbclassCD<T_loss, T_x>::run_one_active_cycle(
-        arma::mat& beta,
-        arma::vec& inner,
-        arma::uvec& is_active,
-        const double l1_lambda,
-        const double l2_lambda,
-        const bool update_active,
-        const unsigned int verbose
-        )
-    {
-        if (verbose > 2) {
-            Rcpp::Rcout << "\nStarting values of beta:\n"
-                        << beta << "\n"
-                        << "\nThe active set of beta:\n"
-                        << arma2rvec(is_active)
-                        << "\n";
-        };
-        // for intercept
-        if (control_.intercept_) {
-            const arma::rowvec delta_beta0 {
-                - mm_gradient0(inner) / mm_lowerbound0_
-            };
-            beta.row(0) += delta_beta0;
-            const arma::vec tmp_du { ex_vertex_ * delta_beta0.t() };
-            inner += tmp_du;
-        }
-        // for predictors
-        for (size_t g {0}; g < p0_; ++g) {
-            if (is_active(g) == 0) {
-                continue;
-            }
-            const size_t g1 { g + inter_ };
-            // update beta and inner
-            update_beta_g(beta, inner, g, g1, l1_lambda, l2_lambda);
-            // update active
-            if (update_active) {
-                // check if it has been shrinkaged to zero
-                if (l1_norm(beta.row(g1)) > 0.0) {
-                    is_active(g) = 1;
-                } else {
-                    is_active(g) = 0;
-                }
-            }
-        }
-    }
-
     // run CMD cycles over active sets
     template <typename T_loss, typename T_x>
-    template <typename T_active>
     inline void AbclassCD<T_loss, T_x>::run_active_cycles(
         arma::mat& beta,
         arma::vec& inner,
-        T_active& is_active,
+        arma::umat& is_active,
         const double l1_lambda,
         const double l2_lambda,
         const bool varying_active_set,
@@ -581,38 +541,6 @@ namespace abclass
         }
     }
 
-    // one full cycle for coordinate-descent
-    template <typename T_loss, typename T_x>
-    inline void AbclassCD<T_loss, T_x>::run_one_full_cycle(
-        arma::mat& beta,
-        arma::vec& inner,
-        const double l1_lambda,
-        const double l2_lambda,
-        const unsigned int verbose
-        )
-    {
-        if (verbose > 2) {
-            Rcpp::Rcout << "\nStarting values of beta:\n";
-            Rcpp::Rcout << beta << "\n";
-        };
-        // for intercept
-        if (control_.intercept_) {
-            arma::rowvec delta_beta0 {
-                - mm_gradient0(inner) / mm_lowerbound0_
-            };
-            beta.row(0) += delta_beta0;
-            arma::vec tmp_du { ex_vertex_ * delta_beta0.t() };
-            inner += tmp_du;
-        }
-        // predictors
-        for (size_t g { 0 }; g < p0_; ++g) {
-            for (size_t k {0}; k < km1_; ++k) {
-                const size_t g1 { g + inter_ };
-                update_beta_gk(beta, inner, k, g, g1, l1_lambda, l2_lambda);
-            }
-        }
-    }
-
     // run full cycles till convergence or reach max number of iterations
     template <typename T_loss, typename T_x>
     inline void AbclassCD<T_loss, T_x>::run_full_cycles(
@@ -724,7 +652,10 @@ namespace abclass
         null_loss_ = dn_obs_;
         double epsilon0 { exp_log_sum(control_.epsilon_, dn_obs_) };
         // get the solution (intercepts) of l1_lambda_max for a warm start
-        arma::umat is_active_strong { arma::zeros<arma::umat>(p0_, km1_) };
+        size_t active_ncol { get_active_ncol() };
+        arma::umat is_active_strong {
+            arma::zeros<arma::umat>(p0_, active_ncol)
+        };
         if (control_.intercept_) {
             // only need to estimate intercept
             run_active_cycles(one_beta,
@@ -782,7 +713,7 @@ namespace abclass
             // update active set by strong rule
             one_grad_beta = arma::abs(gradient(one_inner));
             one_strong_rhs = strong_rule_rhs(l1_lambda, old_l1_lambda);
-            for (size_t j { 0 }; j < km1_; ++j) {
+            for (size_t j { 0 }; j < active_ncol; ++j) {
                 for (arma::uvec::iterator it { positive_penalty.begin() };
                      it != positive_penalty.end(); ++it) {
                     if (is_active_strong(*it, j) > 0) {
@@ -821,7 +752,7 @@ namespace abclass
                 for (arma::uvec::iterator it { positive_penalty.begin() };
                      it != positive_penalty.end(); ++it) {
                     arma::vec x_l { x_.col(*it) };
-                    for (size_t j { 0 }; j < km1_; ++j) {
+                    for (size_t j { 0 }; j < active_ncol; ++j) {
                         if (is_active_strong_old(*it, j) > 0) {
                             continue;
                         }

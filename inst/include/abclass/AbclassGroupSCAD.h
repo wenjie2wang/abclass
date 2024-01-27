@@ -19,31 +19,31 @@
 #define ABCLASS_ABCLASS_GROUP_SCAD_H
 
 #include <RcppArmadillo.h>
-#include "AbclassGroup.h"
+#include "AbclassBlockCD.h"
 #include "Control.h"
 #include "utils.h"
 
 namespace abclass
 {
     template <typename T_loss, typename T_x>
-    class AbclassGroupSCAD : public AbclassGroup<T_loss, T_x>
+    class AbclassGroupSCAD : public AbclassBlockCD<T_loss, T_x>
     {
     protected:
         // data
-        using AbclassGroup<T_loss, T_x>::dn_obs_;
-        using AbclassGroup<T_loss, T_x>::km1_;
-        using AbclassGroup<T_loss, T_x>::inter_;
-        using AbclassGroup<T_loss, T_x>::mm_lowerbound_;
-        using AbclassGroup<T_loss, T_x>::mm_lowerbound0_;
-        using AbclassGroup<T_loss, T_x>::null_loss_;
+        using AbclassBlockCD<T_loss, T_x>::dn_obs_;
+        using AbclassBlockCD<T_loss, T_x>::km1_;
+        using AbclassBlockCD<T_loss, T_x>::inter_;
+        using AbclassBlockCD<T_loss, T_x>::mm_lowerbound_;
+        using AbclassBlockCD<T_loss, T_x>::mm_lowerbound0_;
+        using AbclassBlockCD<T_loss, T_x>::null_loss_;
 
         // functions
-        using AbclassGroup<T_loss, T_x>::loss_derivative;
-        using AbclassGroup<T_loss, T_x>::mm_gradient;
-        using AbclassGroup<T_loss, T_x>::mm_gradient0;
-        using AbclassGroup<T_loss, T_x>::gradient;
-        using AbclassGroup<T_loss, T_x>::objective0;
-        using AbclassGroup<T_loss, T_x>::set_mm_lowerbound;
+        using AbclassBlockCD<T_loss, T_x>::loss_derivative;
+        using AbclassBlockCD<T_loss, T_x>::mm_gradient;
+        using AbclassBlockCD<T_loss, T_x>::mm_gradient0;
+        using AbclassBlockCD<T_loss, T_x>::gradient;
+        using AbclassBlockCD<T_loss, T_x>::objective0;
+        using AbclassBlockCD<T_loss, T_x>::set_mm_lowerbound;
 
         // l1_lambda = alpha * lambda
         // l2_lambda = (1 - alpha) * lambda
@@ -88,51 +88,55 @@ namespace abclass
                 (next_lambda - last_lambda) + next_lambda;
         }
 
-        inline void update_beta_g(arma::mat::row_iterator beta_g_it,
-                                  const arma::rowvec& u_g,
-                                  const double l1_lambda_g,
-                                  const double l2_lambda,
-                                  const double m_g) override
+        inline void update_beta_g(arma::mat& beta,
+                                  arma::vec& inner,
+                                  const size_t g,
+                                  const size_t g1,
+                                  const double l1_lambda,
+                                  const double l2_lambda) override
         {
-            arma::rowvec z_g { u_g / m_g };
-            for (size_t i {0}; i < z_g.n_elem; ++i) {
-                z_g[i] += *(std::next(beta_g_it, i));
-            }
+            const arma::rowvec old_beta_g1 { beta.row(g1) };
+            const double m_g { mm_lowerbound_(g) };
+            const arma::rowvec u_g { - mm_gradient(inner, g) };
+            const double l1_lambda_g {
+                l1_lambda * control_.penalty_factor_(g)
+            };
+            arma::rowvec z_g { u_g / m_g + beta.row(g1) };
             const double z_g2 { l2_norm(z_g) };
             const double m_gp { m_g + l2_lambda }; // m_g'
             const double m_g_ratio { m_gp / m_g }; // m_g' / m_g > 1
             if (z_g2 > m_g_ratio * control_.ncv_gamma_ * l1_lambda_g) {
-                for (size_t i {0}; i < z_g.n_elem; ++beta_g_it, ++i) {
-                    *beta_g_it = z_g[i] / m_g_ratio;
-                }
+                beta.row(g1) = z_g / m_g_ratio;
             } else if (z_g2 > (m_gp + 1.0) * l1_lambda_g / m_g) {
                 const double numer { (control_.ncv_gamma_ - 1.0) * m_g };
                 const double denom { (control_.ncv_gamma_ - 1.0) * m_gp - 1.0 };
                 const double tmp { numer / denom *
                     (1.0 - control_.ncv_gamma_ * l1_lambda_g / numer / z_g2) };
-                for (size_t i {0}; i < z_g.n_elem; ++beta_g_it, ++i) {
-                    *beta_g_it = tmp * z_g[i];
-                }
+                beta.row(g1) = tmp * z_g;
             } else {
                 const double tmp {
                     (1.0 - l1_lambda_g / m_g / z_g2) / m_g_ratio
                 };
                 if (tmp > 0.0) {
-                    for (size_t i {0}; i < z_g.n_elem; ++beta_g_it, ++i) {
-                        *beta_g_it = tmp * z_g[i];
-                    }
+                    beta.row(g1) = tmp * z_g;
                 } else {
-                    for (size_t i {0}; i < z_g.n_elem; ++beta_g_it, ++i) {
-                        *beta_g_it = 0.0;
-                    }
+                    beta.row(g1).zeros();
                 }
             }
+            // update inner
+            const arma::rowvec delta_beta_j { beta.row(g1) - old_beta_g1 };
+            const arma::vec delta_vj { ex_vertex_ * delta_beta_j.t() };
+            inner += x_.col(g) % delta_vj;
         }
 
     public:
         // inherit
-        using AbclassGroup<T_loss, T_x>::AbclassGroup;
-        using AbclassGroup<T_loss, T_x>::control_;
+        using AbclassBlockCD<T_loss, T_x>::AbclassBlockCD;
+
+        // data members
+        using AbclassBlockCD<T_loss, T_x>::control_;
+        using AbclassBlockCD<T_loss, T_x>::ex_vertex_;
+        using AbclassBlockCD<T_loss, T_x>::x_;
 
     };
 

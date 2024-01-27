@@ -48,16 +48,20 @@ namespace abclass
 
     // alias templates
     template<typename T_x>
-    using HingeBoostNet = HingeBoostT<AbclassNet<HingeBoost, T_x>, T_x>;
+    using HingeBoostNet =
+        HingeBoostT<AbclassNet<HingeBoost, T_x>, T_x>;
 
     template<typename T_x>
-    using HingeBoostGroupLasso = HingeBoostT<AbclassGroupLasso<HingeBoost, T_x>, T_x>;
+    using HingeBoostGroupLasso =
+        HingeBoostT<AbclassGroupLasso<HingeBoost, T_x>, T_x>;
 
     template<typename T_x>
-    using HingeBoostGroupSCAD = HingeBoostT<AbclassGroupSCAD<HingeBoost, T_x>, T_x>;
+    using HingeBoostGroupSCAD =
+        HingeBoostT<AbclassGroupSCAD<HingeBoost, T_x>, T_x>;
 
     template<typename T_x>
-    using HingeBoostGroupMCP = HingeBoostT<AbclassGroupMCP<HingeBoost, T_x>, T_x>;
+    using HingeBoostGroupMCP =
+        HingeBoostT<AbclassGroupMCP<HingeBoost, T_x>, T_x>;
 
 }
 

@@ -22,28 +22,30 @@
 #define ARMA_NO_DEBUG
 #endif
 
-// class
+// classes
 #include "abclass/Abclass.h"
-#include "abclass/AbclassGroup.h"
+#include "abclass/AbclassLinear.h"
+#include "abclass/AbclassCD.h"
+#include "abclass/AbclassBlockCD.h"
 #include "abclass/Control.h"
 #include "abclass/Simplex.h"
 #include "abclass/Moml.h"
 #include "abclass/Query.h"
 #include "abclass/Abrank.h"
 
-// loss
+// losses
 #include "abclass/Boost.h"
 #include "abclass/Logistic.h"
 #include "abclass/HingeBoost.h"
 #include "abclass/Lum.h"
 
-// penalty
+// penalties
 #include "abclass/AbclassNet.h"
 #include "abclass/AbclassGroupLasso.h"
 #include "abclass/AbclassGroupSCAD.h"
 #include "abclass/AbclassGroupMCP.h"
 
-// combination
+// combinations
 #include "abclass/LogisticT.h"
 #include "abclass/BoostT.h"
 #include "abclass/HingeBoostT.h"
