@@ -51,7 +51,7 @@ namespace abclass
         // specifying if a blockwise CD should be used
         inline virtual size_t get_active_ncol() const
         {
-            return km1_;
+            return static_cast<size_t>(km1_);
         }
 
         // penalty function for theta >= 0 (default: lasso)
@@ -174,7 +174,7 @@ namespace abclass
         inline virtual void set_lambda_max(const arma::vec& inner,
                                            const arma::uvec& positive_penalty)
         {
-            arma::vec one_grad_beta { arma::abs(gradient(inner)) };
+            arma::mat one_grad_beta { arma::abs(gradient(inner)) };
             // get large enough lambda for zero coefs in penalty_group
             l1_lambda_max_ = 0.0;
             lambda_max_ = 0.0;

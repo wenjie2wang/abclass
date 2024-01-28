@@ -69,7 +69,7 @@ namespace abclass
         inline void set_lambda_max(const arma::vec& inner,
                                    const arma::uvec& positive_penalty) override
         {
-            arma::vec one_grad_beta { gradient(inner) };
+            arma::mat one_grad_beta { gradient(inner) };
             // get large enough lambda for zero coefs in penalty_group
             l1_lambda_max_ = 0.0;
             lambda_max_ = 0.0;
@@ -105,7 +105,7 @@ namespace abclass
             if (pos_part > 0.0) {
                 beta.row(g1) = z_mg * (pos_part / (mg + l2_lambda));
             } else {
-                beta.row(g1) = arma::zeros<arma::rowvec>(ug.n_elem);
+                beta.row(g1).zeros();
             }
             // update inner
             const arma::rowvec delta_beta_j { beta.row(g1) - old_beta_g1 };
