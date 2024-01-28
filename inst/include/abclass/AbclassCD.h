@@ -48,10 +48,13 @@ namespace abclass
         using AbclassLinear<T_loss, T_x>::objective0;
         using AbclassLinear<T_loss, T_x>::rescale_coef;
 
+        // cache
+        size_t active_ncol_;
+
         // specifying if a blockwise CD should be used
-        inline virtual size_t get_active_ncol() const
+        inline virtual void set_active_ncol()
         {
-            return static_cast<size_t>(km1_);
+            active_ncol_ = static_cast<size_t>(km1_);
         }
 
         // penalty function for theta >= 0 (default: lasso)
@@ -175,7 +178,7 @@ namespace abclass
                                            const arma::uvec& positive_penalty)
         {
             arma::mat one_grad_beta { arma::abs(gradient(inner)) };
-            // get large enough lambda for zero coefs in penalty_group
+            // get large enough lambda for zero coefs in positive_penalty
             l1_lambda_max_ = 0.0;
             lambda_max_ = 0.0;
             for (arma::uvec::const_iterator it { positive_penalty.begin() };
@@ -198,6 +201,15 @@ namespace abclass
         }
 
         // optional strong rule
+        inline virtual double strong_rule_lhs(const double beta_gk) const
+        {
+            return std::abs(beta_gk);
+        }
+        inline virtual double strong_rule_lhs(const arma::rowvec& beta_g) const
+        {
+            return l2_norm(beta_g);
+        }
+
         inline virtual double strong_rule_rhs(const double next_lambda,
                                               const double last_lambda) const
         {
@@ -206,6 +218,38 @@ namespace abclass
                 return 2 * next_lambda - last_lambda;
             }
             return 0.0;
+        }
+
+        // kkt condition
+        inline virtual arma::umat is_kkt_failed(
+            const arma::umat& is_active_strong,
+            const arma::vec& inner,
+            const arma::uvec& positive_penalty,
+            const double l1_lambda) const
+        {
+            arma::umat is_strong_rule_failed {
+                arma::zeros<arma::umat>(arma::size(is_active_strong))
+            };
+            arma::vec inner_grad;
+            if (positive_penalty.n_elem > 0) {
+                inner_grad = control_.obs_weight_ % loss_derivative(inner);
+            }
+            for (arma::uvec::const_iterator it { positive_penalty.begin() };
+                 it != positive_penalty.end(); ++it) {
+                for (size_t j { 0 }; j < active_ncol_; ++j) {
+                    if (is_active_strong(*it, j) > 0) {
+                        continue;
+                    }
+                    arma::vec vj_xl { x_.col(*it) % get_vertex_y(j) };
+                    double tmp { arma::mean(vj_xl % inner_grad) };
+                    if (std::abs(tmp) > l1_lambda *
+                        control_.penalty_factor_(*it)) {
+                        // update active set
+                        is_strong_rule_failed(*it, j) = 1;
+                    }
+                }
+            }
+            return is_strong_rule_failed;
         }
 
         // default: individual update step for beta
@@ -461,13 +505,13 @@ namespace abclass
                         Rcpp::Rcout << "The objective function changed\n";
                         Rprintf("  from %15.15f\n", obj0);
                         Rprintf("    to %15.15f\n", obj1);
-                        if (obj0 > obj1) {
+                        if (obj1 > obj0) {
                             Rcpp::Rcout << "Warning: "
-                                        << "the function objective "
+                                        << "the objective function"
                                         << "somehow increased.\n";
                         }
                     }
-                    if (std::abs(obj1 - obj0) < epsilon) {
+                    if (std::abs(obj0 - obj1) < epsilon) {
                         break;
                     }
                     obj0 = obj1;
@@ -514,13 +558,13 @@ namespace abclass
                     Rcpp::Rcout << "The objective function changed\n";
                     Rprintf("  from %15.15f\n", obj0);
                     Rprintf("    to %15.15f\n", obj1);
-                    if (obj0 > obj1) {
+                    if (obj1 > obj0) {
                         Rcpp::Rcout << "Warning: "
                                     << "the function objective "
                                     << "somehow increased.\n";
                     }
                 }
-                if (std::abs(obj1 - obj0) < epsilon) {
+                if (std::abs(obj0 - obj1) < epsilon) {
                     break;
                 }
                 obj0 = obj1;
@@ -570,13 +614,13 @@ namespace abclass
                 Rcpp::Rcout << "The objective function changed\n";
                 Rprintf("  from %15.15f\n", obj0);
                 Rprintf("    to %15.15f\n", obj1);
-                if (obj0 > obj1) {
+                if (obj1 > obj0) {
                     Rcpp::Rcout << "Warning: "
                                 << "the function objective "
                                 << "somehow increased.\n";
                 }
             }
-            if (std::abs(obj1 - obj0) < epsilon) {
+            if (std::abs(obj0 - obj1) < epsilon) {
                 break;
             }
             obj0 = obj1;
@@ -603,6 +647,8 @@ namespace abclass
         set_penalty_factor();
         // set gamma
         set_gamma(control_.ncv_kappa_);
+        // set cache to help determine update steps
+        set_active_ncol();
         // penalty for covariates with positive penalty factors only
         arma::uvec positive_penalty {
             arma::find(control_.penalty_factor_ > 0.0)
@@ -651,10 +697,14 @@ namespace abclass
         null_loss_ = dn_obs_;
         double epsilon0 { exp_log_sum(control_.epsilon_, dn_obs_) };
         // get the solution (intercepts) of l1_lambda_max for a warm start
-        size_t active_ncol { get_active_ncol() };
+
         arma::umat is_active_strong {
-            arma::zeros<arma::umat>(p0_, active_ncol)
+            arma::zeros<arma::umat>(p0_, active_ncol_)
         };
+        // 1) no need to consider possible constant covariates
+        is_active_strong.rows(arma::find(mm_lowerbound_ <= 0.0)).zeros();
+        // 2) only need to estimate beta not in the penalty group
+        is_active_strong.rows(positive_penalty).zeros();
         if (control_.intercept_) {
             // only need to estimate intercept
             run_active_cycles(one_beta,
@@ -710,16 +760,22 @@ namespace abclass
                 continue;
             }
             // update active set by strong rule
-            one_grad_beta = arma::abs(gradient(one_inner));
+            one_grad_beta = gradient(one_inner);
             one_strong_rhs = strong_rule_rhs(l1_lambda, old_l1_lambda);
-            for (size_t j { 0 }; j < active_ncol; ++j) {
+            for (size_t j { 0 }; j < active_ncol_; ++j) {
                 for (arma::uvec::iterator it { positive_penalty.begin() };
                      it != positive_penalty.end(); ++it) {
                     if (is_active_strong(*it, j) > 0) {
                         continue;
                     }
-                    if (one_grad_beta(*it, j) >=
-                        control_.penalty_factor_(*it) * one_strong_rhs) {
+                    double sr_lhs { 0.0 };
+                    if (active_ncol_ == 1) {
+                        sr_lhs = strong_rule_lhs(one_grad_beta.row(*it));
+                    } else {
+                        sr_lhs = strong_rule_lhs(one_grad_beta(*it, j));
+                    }
+                    if (sr_lhs >= control_.penalty_factor_(*it) *
+                        one_strong_rhs) {
                         is_active_strong(*it, j) = 1;
                     }
                 }
@@ -728,9 +784,6 @@ namespace abclass
             // eventually, strong rule will guess correctly
             while (kkt_failed) {
                 arma::umat is_active_strong_old { is_active_strong };
-                arma::umat is_strong_rule_failed {
-                    arma::zeros<arma::umat>(arma::size(is_active_strong))
-                };
                 // update beta
                 run_active_cycles(one_beta,
                                   one_inner,
@@ -745,25 +798,10 @@ namespace abclass
                     msg("Checking the KKT condition for the null set.");
                 }
                 // check kkt condition
-                const arma::vec inner_grad {
-                    control_.obs_weight_ % loss_derivative(one_inner)
+                arma::umat is_strong_rule_failed {
+                    is_kkt_failed(is_active_strong_old, one_inner,
+                                  positive_penalty, l1_lambda)
                 };
-                for (arma::uvec::iterator it { positive_penalty.begin() };
-                     it != positive_penalty.end(); ++it) {
-                    arma::vec x_l { x_.col(*it) };
-                    for (size_t j { 0 }; j < active_ncol; ++j) {
-                        if (is_active_strong_old(*it, j) > 0) {
-                            continue;
-                        }
-                        arma::vec vj_xl { x_l % get_vertex_y(j) };
-                        double tmp { arma::mean(vj_xl % inner_grad) };
-                        if (std::abs(tmp) >
-                            l1_lambda * control_.penalty_factor_(*it)) {
-                            // update active set
-                            is_strong_rule_failed(*it, j) = 1;
-                        }
-                    }
-                }
                 if (arma::accu(is_strong_rule_failed) > 0) {
                     is_active_strong = is_active_strong_old ||
                         is_strong_rule_failed;
