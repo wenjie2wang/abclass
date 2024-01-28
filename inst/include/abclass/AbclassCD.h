@@ -70,7 +70,7 @@ namespace abclass
         //   l1_lambda * l1_norm(beta_j) +
         //     0.5 * l2_lambda * l2_norm^2(beta_j),
         //   where
-        //     l1_lambda = alpha * lambda,
+        //     l1_lambda = alpha * lambda (* optional penalty factor),
         //     l2_lambda = (1-alpha) * lambda
         inline virtual double penalty1(const arma::rowvec& beta,
                                        const double l1_lambda,
@@ -272,12 +272,12 @@ namespace abclass
             };
             if (tmp < 0.0) {
                 beta(g1, k) = 0.0;
-                return;
+            } else {
+                const double numer { tmp * sign(beta_part) };
+                const double denom { mm_lowerbound_(g) + l2_lambda };
+                // update beta
+                beta(g1, k) = numer / denom;
             }
-            const double numer { tmp * sign(beta_part) };
-            const double denom { mm_lowerbound_(g) + l2_lambda };
-            // update beta
-            beta(g1, k) = numer / denom;
             // update inner
             inner += (beta(g1, k) - old_beta_g1k) * vk_xg;
         }
@@ -426,10 +426,10 @@ namespace abclass
         )
     {
         if (verbose > 2) {
-            Rcpp::Rcout << "\nStarting values of beta:\n";
-            Rcpp::Rcout << beta << "\n";
-            Rcpp::Rcout << "The active set of beta:\n";
-            Rcpp::Rcout << is_active << "\n";
+            Rcpp::Rcout << "\nStarting values of beta:\n"
+                        << beta << "\n"
+                        << "\nThe active set of beta:\n"
+                        << is_active << "\n";
         };
         // for intercept
         if (control_.intercept_) {
@@ -478,8 +478,9 @@ namespace abclass
     {
         size_t i {0}, num_iter {0};
         // arma::mat beta0 { beta };
-        double obj0 { objective(inner, beta, l1_lambda, l2_lambda) },
-            obj1 { obj0 };
+        double loss0 { loss(inner) };
+        double reg0 { regularization(beta, l1_lambda, l2_lambda) };
+        double obj0 { loss0 / dn_obs_ + reg0 }, obj1 { obj0 };
         // use active-set if p > n ("helps when p >> n")
         if (varying_active_set) {
             arma::umat is_active_strong { is_active },
@@ -493,7 +494,7 @@ namespace abclass
                 // cycles over the active set
                 size_t ii {0};
                 while (ii < max_iter) {
-                    num_iter = ii + 1;
+                    ++num_iter;
                     Rcpp::checkUserInterrupt();
                     run_one_active_cycle(beta, inner, is_active_varying,
                                          l1_lambda, l2_lambda, true, verbose);
@@ -501,12 +502,16 @@ namespace abclass
                     //     break;
                     // }
                     // beta0 = beta;
-                    obj1 = objective(inner, beta, l1_lambda, l2_lambda);
+                    double loss1 { loss(inner) };
+                    double reg1 { regularization(beta, l1_lambda, l2_lambda) };
+                    obj1 = loss1 / dn_obs_ + reg1;
                     // optional: throw warning if objective function increases
                     if (verbose > 1) {
                         Rcpp::Rcout << "The objective function changed\n";
-                        Rprintf("  from %15.15f\n", obj0);
-                        Rprintf("    to %15.15f\n", obj1);
+                        Rprintf("  from %7.7f (loss: %7.7f + penalty: %7.7f)\n",
+                                obj0, loss0 / dn_obs_, reg0);
+                        Rprintf("    to %7.7f (loss: %7.7f + penalty: %7.7f)\n",
+                                obj1, loss1 / dn_obs_, reg1);
                         if (obj1 > obj0) {
                             Rcpp::Rcout << "Warning: "
                                         << "the objective function"
@@ -517,6 +522,7 @@ namespace abclass
                         break;
                     }
                     obj0 = obj1;
+                    loss0 = loss1;
                     ii++;
                 }
                 // run a full cycle over the converged beta
@@ -532,13 +538,13 @@ namespace abclass
                                     << " to "
                                     << l1_norm(is_active)
                                     << " after "
-                                    << num_iter + 1
+                                    << num_iter
                                     << " iteration(s)\n";
                     }
                     is_active_varying = is_active;
                     // recover the active set
                     is_active = is_active_strong;
-                    i++;
+                    ++i;
                 } else {
                     break;
                 }
@@ -547,19 +553,23 @@ namespace abclass
             // regular coordinate descent
             while (i < max_iter) {
                 Rcpp::checkUserInterrupt();
-                num_iter = i + 1;
+                ++num_iter;
                 run_one_active_cycle(beta, inner, is_active,
                                      l1_lambda, l2_lambda, false, verbose);
                 // if (rel_diff(beta0, beta) < epsilon) {
                 //     break;
                 // }
                 // beta0 = beta;
-                obj1 = objective(inner, beta, l1_lambda, l2_lambda);
+                double loss1 { loss(inner) };
+                double reg1 { regularization(beta, l1_lambda, l2_lambda) };
+                obj1 = loss1 / dn_obs_ + reg1;
                 // optional: throw warning if objective function increases
                 if (verbose > 1) {
                     Rcpp::Rcout << "The objective function changed\n";
-                    Rprintf("  from %15.15f\n", obj0);
-                    Rprintf("    to %15.15f\n", obj1);
+                    Rprintf("  from %7.7f (loss: %7.7f + penalty: %7.7f)\n",
+                            obj0, loss0 / dn_obs_, reg0);
+                    Rprintf("    to %7.7f (loss: %7.7f + penalty: %7.7f)\n",
+                            obj1, loss1 / dn_obs_, reg1);
                     if (obj1 > obj0) {
                         Rcpp::Rcout << "Warning: "
                                     << "the function objective "
@@ -570,7 +580,8 @@ namespace abclass
                     break;
                 }
                 obj0 = obj1;
-                i++;
+                loss0 = loss1;
+                ++i;
             }
         }
         if (verbose > 0) {
@@ -599,23 +610,28 @@ namespace abclass
         )
     {
         // arma::mat beta0 { beta };
-        double obj0 { objective(inner, beta, l1_lambda, l2_lambda) },
-            obj1 { obj0 };
+        double loss0 { loss(inner) };
+        double reg0 { regularization(beta, l1_lambda, l2_lambda) };
+        double obj0 { loss0 / dn_obs_ + reg0 }, obj1 { obj0 };
         size_t num_iter {0};
         for (size_t i {0}; i < max_iter; ++i) {
             Rcpp::checkUserInterrupt();
-            num_iter = i + 1;
+            ++num_iter;
             run_one_full_cycle(beta, inner, l1_lambda, l2_lambda, verbose);
             // if (rel_diff(beta0, beta) < epsilon) {
             //     break;
             // }
             // beta0 = beta;
-            obj1 = objective(inner, beta, l1_lambda, l2_lambda);
+            double loss1 { loss(inner) };
+            double reg1 { regularization(beta, l1_lambda, l2_lambda) };
+            obj1 = loss1 / dn_obs_ + reg1;
             // optional: throw warning if objective function increases
             if (verbose > 1) {
                 Rcpp::Rcout << "The objective function changed\n";
-                Rprintf("  from %15.15f\n", obj0);
-                Rprintf("    to %15.15f\n", obj1);
+                Rprintf("  from %7.7f (loss: %7.7f + penalty: %7.7f)\n",
+                        obj0, loss0 / dn_obs_, reg0);
+                Rprintf("    to %7.7f (loss: %7.7f + penalty: %7.7f)\n",
+                        obj1, loss1 / dn_obs_, reg1);
                 if (obj1 > obj0) {
                     Rcpp::Rcout << "Warning: "
                                 << "the function objective "
@@ -626,6 +642,7 @@ namespace abclass
                 break;
             }
             obj0 = obj1;
+            loss0 = loss1;
         }
         if (verbose > 0) {
             if (num_iter < max_iter) {
@@ -699,7 +716,6 @@ namespace abclass
         null_loss_ = dn_obs_;
         double epsilon0 { exp_log_sum(control_.epsilon_, dn_obs_) };
         // get the solution (intercepts) of l1_lambda_max for a warm start
-
         arma::umat is_active_strong {
             arma::zeros<arma::umat>(p0_, active_ncol_)
         };
@@ -809,9 +825,10 @@ namespace abclass
                         is_strong_rule_failed;
                     if (control_.verbose_ > 0) {
                         Rcpp::Rcout << "The strong rule failed.\n"
-                                    << "The size of old active set: "
+                                    << "Expended the active set;"
+                                    << "\n  The size of old active set: "
                                     << l1_norm(is_active_strong_old)
-                                    << "\nThe size of new active set: "
+                                    << "\n  The size of new active set: "
                                     << l1_norm(is_active_strong)
                                     << "\n";
                     }
@@ -830,7 +847,7 @@ namespace abclass
                 arma::mat permuted_beta { one_beta.tail_rows(et_npermuted_) };
                 if (! permuted_beta.is_zero(arma::datum::eps)) {
                     if (li == 0) {
-                        msg("Warning: Fail to tune by ET-lasso; ",
+                        msg("Warning: Failed to tune by ET-lasso; ",
                             "selected pseudo-predictor(s) by ",
                             "the largest lamabda specified; ",
                             "the returned solution may not be sensible.\n",
@@ -841,6 +858,7 @@ namespace abclass
                         penalty_ = penalty_(0);
                         objective_(0) = loss_(0) / dn_obs_ + penalty_(0);
                     } else {
+                        // discard the estimates from this itaration
                         coef_ = coef_.head_slices(li);
                         loss_ = loss_.head(li);
                         penalty_ = penalty_.head(li);
@@ -857,7 +875,7 @@ namespace abclass
                     msg("[ET] none of pseudo-predictors was selected.\n");
                 }
                 if (li == control_.lambda_.n_elem - 1) {
-                    msg("Warning: Fail to tune by ET-lasso; ",
+                    msg("Warning: Failed to tune by ET-lasso; ",
                         "no pseudo-predictors selected ",
                         "by the smallest lambda.\n",
                         "Suggestion: decrease 'lambda' or 'lambda_min_ratio'?");
@@ -869,7 +887,7 @@ namespace abclass
             loss_(li) = loss(one_inner);
             penalty_(li) = regularization(one_beta, l1_lambda, l2_lambda);
             objective_(li) = loss_(li) / dn_obs_ + penalty_(li);
-            old_l1_lambda = l1_lambda;
+            old_l1_lambda = l1_lambda; // for next iteration
         }
     }
 

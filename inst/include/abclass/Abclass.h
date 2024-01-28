@@ -62,13 +62,14 @@ namespace abclass
             return ex_vertex_.col(j);
         }
 
-        // loss function (no scaling of 1/n)
+        // loss function (with observational weights but no scaling of 1/n)
         inline double loss(const arma::vec& inner) const
         {
             return loss_fun_.loss(inner, control_.obs_weight_);
         }
 
-        // the first derivative of the loss function (no scaling of 1/n)
+        // the first derivative of the loss function
+        // (neither the observational weights nor scaling of 1/n)
         inline arma::vec loss_derivative(const arma::vec& inner) const
         {
             return loss_fun_.dloss(inner);

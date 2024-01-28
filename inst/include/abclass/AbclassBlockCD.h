@@ -38,14 +38,12 @@ namespace abclass
         using AbclassCD<T_loss, T_x>::active_ncol_;
         using AbclassCD<T_loss, T_x>::dn_obs_;
         using AbclassCD<T_loss, T_x>::inter_;
-        using AbclassCD<T_loss, T_x>::km1_;
         using AbclassCD<T_loss, T_x>::l1_lambda_max_;
         using AbclassCD<T_loss, T_x>::lambda_max_;
         using AbclassCD<T_loss, T_x>::mm_lowerbound0_;
         using AbclassCD<T_loss, T_x>::mm_lowerbound_;
 
         // function members
-        using AbclassCD<T_loss, T_x>::get_vertex_y;
         using AbclassCD<T_loss, T_x>::gradient;
         using AbclassCD<T_loss, T_x>::loss_derivative;
         using AbclassCD<T_loss, T_x>::mm_gradient0;
@@ -96,25 +94,23 @@ namespace abclass
         {
             arma::umat is_strong_rule_failed {
                 arma::zeros<arma::umat>(arma::size(is_active_strong))
-            };
+                    };
             arma::vec inner_grad;
             if (positive_penalty.n_elem > 0) {
                 inner_grad = control_.obs_weight_ % loss_derivative(inner);
             }
             for (arma::uvec::const_iterator it { positive_penalty.begin() };
                  it != positive_penalty.end(); ++it) {
-                for (size_t j { 0 }; j < active_ncol_; ++j) {
-                    if (is_active_strong(*it, j) > 0) {
-                        continue;
-                    }
-                    arma::vec tmp_vec_it { x_.col(*it) % inner_grad };
-                    arma::rowvec tmp_mm_grad { tmp_vec_it.t() * ex_vertex_ };
-                    double tmp_l2 { l2_norm(tmp_mm_grad) / dn_obs_ };
-                    if (tmp_l2 > l1_lambda *
-                        control_.penalty_factor_(*it)) {
-                        // update active set
-                        is_strong_rule_failed(*it, j) = 1;
-                    }
+                if (is_active_strong(*it, 0) > 0) {
+                    continue;
+                }
+                arma::vec tmp_vec_it { x_.col(*it) % inner_grad };
+                arma::rowvec tmp_mm_grad { tmp_vec_it.t() * ex_vertex_ };
+                double tmp_l2 { l2_norm(tmp_mm_grad) / dn_obs_ };
+                if (tmp_l2 > l1_lambda *
+                    control_.penalty_factor_(*it)) {
+                    // update active set
+                    is_strong_rule_failed(*it, 0) = 1;
                 }
             }
             return is_strong_rule_failed;
@@ -171,21 +167,11 @@ namespace abclass
         // inherit constructors
         using AbclassCD<T_loss, T_x>::AbclassCD;
 
-        // specifics for template inheritance
-        // from Abclass
+        // specified for template inheritance
         using AbclassCD<T_loss, T_x>::control_;
         using AbclassCD<T_loss, T_x>::ex_vertex_;
-        using AbclassCD<T_loss, T_x>::loss_;
-        using AbclassCD<T_loss, T_x>::n_obs_;
-        using AbclassCD<T_loss, T_x>::objective_;
         using AbclassCD<T_loss, T_x>::p0_;
-        using AbclassCD<T_loss, T_x>::p1_;
-        using AbclassCD<T_loss, T_x>::penalty_;
         using AbclassCD<T_loss, T_x>::x_;
-
-        // from AbclassLinear
-        using AbclassCD<T_loss, T_x>::coef_;
-        using AbclassCD<T_loss, T_x>::set_mm_lowerbound;
 
     };
 
