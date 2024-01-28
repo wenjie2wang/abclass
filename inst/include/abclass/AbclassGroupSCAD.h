@@ -30,19 +30,10 @@ namespace abclass
     {
     protected:
         // data
-        using AbclassBlockCD<T_loss, T_x>::dn_obs_;
-        using AbclassBlockCD<T_loss, T_x>::km1_;
-        using AbclassBlockCD<T_loss, T_x>::inter_;
         using AbclassBlockCD<T_loss, T_x>::mm_lowerbound_;
-        using AbclassBlockCD<T_loss, T_x>::mm_lowerbound0_;
-        using AbclassBlockCD<T_loss, T_x>::null_loss_;
 
         // functions
-        using AbclassBlockCD<T_loss, T_x>::loss_derivative;
         using AbclassBlockCD<T_loss, T_x>::mm_gradient;
-        using AbclassBlockCD<T_loss, T_x>::mm_gradient0;
-        using AbclassBlockCD<T_loss, T_x>::gradient;
-        using AbclassBlockCD<T_loss, T_x>::objective0;
         using AbclassBlockCD<T_loss, T_x>::set_mm_lowerbound;
 
         // l1_lambda = alpha * lambda

@@ -44,8 +44,8 @@ namespace abclass
 
         // function members
         using AbclassLinear<T_loss, T_x>::get_vertex_y;
+        using AbclassLinear<T_loss, T_x>::loss;
         using AbclassLinear<T_loss, T_x>::loss_derivative;
-        using AbclassLinear<T_loss, T_x>::objective0;
         using AbclassLinear<T_loss, T_x>::rescale_coef;
 
         // cache
@@ -104,7 +104,7 @@ namespace abclass
                                         const double l1_lambda,
                                         const double l2_lambda) const
         {
-            return objective0(inner) / dn_obs_ +
+            return loss(inner) / dn_obs_ +
                 regularization(beta, l1_lambda, l2_lambda);
         }
 
@@ -329,19 +329,21 @@ namespace abclass
 
         // specifics for template inheritance
         // from Abclass
-        using AbclassLinear<T_loss, T_x>::control_;
+        using AbclassLinear<T_loss, T_x>::x_;
         using AbclassLinear<T_loss, T_x>::ex_vertex_;
-        using AbclassLinear<T_loss, T_x>::loss_;
         using AbclassLinear<T_loss, T_x>::n_obs_;
-        using AbclassLinear<T_loss, T_x>::objective_;
         using AbclassLinear<T_loss, T_x>::p0_;
         using AbclassLinear<T_loss, T_x>::p1_;
-        using AbclassLinear<T_loss, T_x>::penalty_;
-        using AbclassLinear<T_loss, T_x>::x_;
+        using AbclassLinear<T_loss, T_x>::control_;
 
         // from AbclassLinear
         using AbclassLinear<T_loss, T_x>::coef_;
+        using AbclassLinear<T_loss, T_x>::loss_;
+        using AbclassLinear<T_loss, T_x>::objective_;
         using AbclassLinear<T_loss, T_x>::set_mm_lowerbound;
+
+        // along the solution path
+        arma::vec penalty_;
 
         // tuning by cross-validation
         arma::mat cv_accuracy_;
@@ -717,7 +719,7 @@ namespace abclass
                               epsilon0,
                               control_.verbose_);
             // update epsilon0
-            null_loss_ = objective0(one_inner);
+            null_loss_ = loss(one_inner);
             epsilon0 = exp_log_sum(control_.epsilon_, null_loss_);
         }
         // for pure ridge penalty
@@ -732,7 +734,7 @@ namespace abclass
                                 epsilon0,
                                 control_.verbose_);
                 coef_.slice(li) = rescale_coef(one_beta);
-                loss_(li) = objective0(one_inner);
+                loss_(li) = loss(one_inner);
                 penalty_(li) = regularization(one_beta, l1_lambda, l2_lambda);
                 objective_(li) = loss_(li) / dn_obs_ + penalty_(li);
             }
@@ -864,7 +866,7 @@ namespace abclass
                 }
             }
             coef_.slice(li) = rescale_coef(one_beta);
-            loss_(li) = objective0(one_inner);
+            loss_(li) = loss(one_inner);
             penalty_(li) = regularization(one_beta, l1_lambda, l2_lambda);
             objective_(li) = loss_(li) / dn_obs_ + penalty_(li);
             old_l1_lambda = l1_lambda;

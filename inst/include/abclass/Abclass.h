@@ -38,11 +38,6 @@ namespace abclass
         unsigned int inter_;         // integer version of intercept_
         arma::mat t_vertex_;         // transpose of vertex_
 
-        // for the CMD/GMD algorithm
-        double mm_lowerbound0_;
-        arma::rowvec mm_lowerbound_;
-        double null_loss_;      // loss function for the null model
-
         // prepare the vertex matrix
         inline void set_vertex_matrix(const unsigned int k)
         {
@@ -67,16 +62,22 @@ namespace abclass
             return ex_vertex_.col(j);
         }
 
-        // loss function
-        inline double objective0(const arma::vec& inner) const
+        // loss function (no scaling of 1/n)
+        inline double loss(const arma::vec& inner) const
         {
             return loss_fun_.loss(inner, control_.obs_weight_);
         }
 
-        // the first derivative of the loss function
+        // the first derivative of the loss function (no scaling of 1/n)
         inline arma::vec loss_derivative(const arma::vec& inner) const
         {
             return loss_fun_.dloss(inner);
+        }
+
+        // default: objective = loss / n
+        inline virtual double objective(const arma::vec& inner) const
+        {
+            return loss(inner) / dn_obs_;
         }
 
     public:
@@ -96,11 +97,6 @@ namespace abclass
         // parameters
         Control control_;       // control parameters
         T_loss loss_fun_;       // loss funciton class
-
-        // loss/penalty/objective functions along the solution path
-        arma::vec loss_;
-        arma::vec penalty_;
-        arma::vec objective_;
 
         // default constructor
         Abclass() {}

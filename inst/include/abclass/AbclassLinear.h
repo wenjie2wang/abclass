@@ -98,9 +98,12 @@ namespace abclass
         using Abclass<T_loss, T_x>::predict_prob;
         using Abclass<T_loss, T_x>::predict_y;
 
-
         // estimates
         arma::cube coef_;       // p1_ x km1_ for linear learning in each slice
+
+        // loss/penalty/objective functions along the solution path
+        arma::vec loss_;
+        arma::vec objective_;
 
         // rescale the coefficients
         inline void force_rescale_coef()
