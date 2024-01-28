@@ -67,10 +67,10 @@ namespace abclass {
             // create a new object
             T new_obj { obj };
             new_obj.set_standardize(false);
-            new_obj.set_data(std::move(train_x), std::move(train_y))->
-                set_k(obj.k_)->
-                set_weight(std::move(train_weight))->
-                set_offset(std::move(train_offset));
+            new_obj.set_data(std::move(train_x), std::move(train_y));
+            new_obj.set_k(obj.k_);
+            new_obj.set_weight(std::move(train_weight));
+            new_obj.set_offset(std::move(train_offset));
             // alignment: 0 for alignment by fraction
             //            1 for alignment by lambda
             if (! obj.control_.custom_lambda_ &&

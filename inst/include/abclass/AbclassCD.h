@@ -317,7 +317,7 @@ namespace abclass
         double lambda_max_;
 
         // setter for penalty factors
-        inline AbclassCD* set_penalty_factor(
+        inline void set_penalty_factor(
             const arma::vec& penalty_factor = arma::vec()
             )
         {
@@ -327,7 +327,6 @@ namespace abclass
                 control_.penalty_factor_ = gen_penalty_factor(
                     control_.penalty_factor_);
             }
-            return this;
         }
 
         // for a sequence of lambda's

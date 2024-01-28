@@ -46,7 +46,8 @@ namespace abclass {
         //       2) regardless of standaridze, rescale does nothing
         //          in the following loop
         // 2. set the optional penalty factor from the control object
-        obj.set_standardize(false)->set_penalty_factor();
+        obj.set_standardize(false);
+        obj.set_penalty_factor();
         const arma::vec gw0 { obj.control_.penalty_factor_ };
         // initialize
         // (0, 1, ...p0 - 1), assuming p0 > 0
@@ -104,7 +105,8 @@ namespace abclass {
             obj.objective_ = obj.objective_(et_lambda_idx);
         }
         // reset object
-        obj.set_standardize(standardize0)->set_x(std::move(x0));
+        obj.set_standardize(standardize0);
+        obj.set_x(std::move(x0));
         obj.set_penalty_factor(std::move(gw0));
         obj.coef_ = arma::cube(obj.p1_, obj.k_ - 1, 1, arma::fill::zeros);
         if (obj.control_.intercept_) {
@@ -160,10 +162,10 @@ namespace abclass {
             // create a new object
             T new_obj { obj };
             new_obj.set_standardize(false);
-            new_obj.set_data(std::move(train_x), std::move(train_y))->
-                set_k(obj.k_)->
-                set_weight(std::move(train_weight))->
-                set_offset(std::move(train_offset));
+            new_obj.set_data(std::move(train_x), std::move(train_y));
+            new_obj.set_k(obj.k_);
+            new_obj.set_weight(std::move(train_weight));
+            new_obj.set_offset(std::move(train_offset));
             // alignment: 0 for alignment by fraction
             //            1 for alignment by lambda
             if (! obj.control_.custom_lambda_ &&

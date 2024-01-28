@@ -33,8 +33,8 @@ namespace abclass
     {
     protected:
         // inherits
-        using Abclass<T_x, T_loss>::dn_obs_;
-        using Abclass<T_x, T_loss>::km1_;
+        using Abclass<T_loss, T_x>::dn_obs_;
+        using Abclass<T_loss, T_x>::km1_;
 
         // for the majorization-based algorithms
         double mm_lowerbound0_;
@@ -80,27 +80,35 @@ namespace abclass
         }
 
     public:
-
         // inherits
+        // constructors
+        using Abclass<T_loss, T_x>::Abclass;
+
+        // data members
         using Abclass<T_loss, T_x>::control_;
         using Abclass<T_loss, T_x>::loss_fun_;
-        using Abclass<T_x, T_loss>::p0_;
-        using Abclass<T_x, T_loss>::p1_;
-        using Abclass<T_x, T_loss>::x_;
-        using Abclass<T_x, T_loss>::x_center_;
-        using Abclass<T_x, T_loss>::x_scale_;
+        using Abclass<T_loss, T_x>::p0_;
+        using Abclass<T_loss, T_x>::p1_;
+        using Abclass<T_loss, T_x>::x_;
+        using Abclass<T_loss, T_x>::x_center_;
+        using Abclass<T_loss, T_x>::x_scale_;
+
+        // function members
+        using Abclass<T_loss, T_x>::accuracy;
+        using Abclass<T_loss, T_x>::predict_prob;
+        using Abclass<T_loss, T_x>::predict_y;
+
 
         // estimates
         arma::cube coef_;       // p1_ x km1_ for linear learning in each slice
 
         // rescale the coefficients
-        inline AbclassLinear* force_rescale_coef()
+        inline void force_rescale_coef()
         {
             // must know what you are doing
             for (size_t i {0}; i < coef_.n_slices; ++i) {
                 coef_.slice(i) = rescale_coef(coef_.slice(i));
             }
-            return this;
         }
 
         // linear predictor

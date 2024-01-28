@@ -29,27 +29,27 @@ arma::mat predict_prob(const T_x& x,
     switch (loss_id) {
         case 1:
         {
-            abclass::Abclass<abclass::Logistic, T_x> object { k };
+            abclass::AbclassLinear<abclass::Logistic, T_x> object { k };
             object.set_intercept(beta.n_rows > x.n_cols);
             return object.predict_prob(beta, x, offset);
         }
         case 2:
         {
-            abclass::Abclass<abclass::Boost, T_x> object { k };
+            abclass::AbclassLinear<abclass::Boost, T_x> object { k };
             object.loss_fun_.set_inner_min(loss_params["boost_umin"]);
             object.set_intercept(beta.n_rows > x.n_cols);
             return object.predict_prob(beta, x, offset);
         }
         case 3:
         {
-            abclass::Abclass<abclass::HingeBoost, T_x> object { k };
+            abclass::AbclassLinear<abclass::HingeBoost, T_x> object { k };
             object.loss_fun_.set_c(loss_params["lum_c"]);
             object.set_intercept(beta.n_rows > x.n_cols);
             return object.predict_prob(beta, x, offset);
         }
         case 4:
         {
-            abclass::Abclass<abclass::Lum, T_x> object { k };
+            abclass::AbclassLinear<abclass::Lum, T_x> object { k };
             object.loss_fun_.set_ac(loss_params["lum_a"], loss_params["lum_c"]);
             object.set_intercept(beta.n_rows > x.n_cols);
             return object.predict_prob(beta, x, offset);
@@ -70,25 +70,25 @@ arma::uvec predict_y(const T_x& x,
     switch (loss_id) {
         case 1:
         {
-            abclass::Abclass<abclass::Logistic, T_x> object { k };
+            abclass::AbclassLinear<abclass::Logistic, T_x> object { k };
             object.set_intercept(beta.n_rows > x.n_cols);
             return object.predict_y(beta, x, offset);
         }
         case 2:
         {
-            abclass::Abclass<abclass::Boost, T_x> object { k };
+            abclass::AbclassLinear<abclass::Boost, T_x> object { k };
             object.set_intercept(beta.n_rows > x.n_cols);
             return object.predict_y(beta, x, offset);
         }
         case 3:
         {
-            abclass::Abclass<abclass::HingeBoost, T_x> object { k };
+            abclass::AbclassLinear<abclass::HingeBoost, T_x> object { k };
             object.set_intercept(beta.n_rows > x.n_cols);
             return object.predict_y(beta, x, offset);
         }
         case 4:
         {
-            abclass::Abclass<abclass::Lum, T_x> object { k };
+            abclass::AbclassLinear<abclass::Lum, T_x> object { k };
             object.set_intercept(beta.n_rows > x.n_cols);
             return object.predict_y(beta, x, offset);
         }
@@ -104,7 +104,7 @@ arma::mat predict_link(const T_x& x,
                        const arma::mat& offset)
 {
     const unsigned int k { beta.n_cols + 1 };
-    abclass::Abclass<abclass::Logistic, T_x> object { k };
+    abclass::AbclassLinear<abclass::Logistic, T_x> object { k };
     object.set_intercept(beta.n_rows > x.n_cols);
     return object.linear_score(beta, x, offset);
 }

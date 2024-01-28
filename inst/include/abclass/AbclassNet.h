@@ -42,9 +42,9 @@ namespace abclass
             return 2 * next_lambda - last_lambda;
         }
 
-
-
     public:
+        // inherits constructors
+        using AbclassCD<T_loss, T_x>::AbclassCD;
 
     };
 

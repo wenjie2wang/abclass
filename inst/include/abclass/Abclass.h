@@ -124,8 +124,8 @@ namespace abclass
         }
 
         // setter
-        inline Abclass* set_data(const T_x& x,
-                                 const arma::uvec& y)
+        inline void set_data(const T_x& x,
+                             const arma::uvec& y)
         {
             km1_ = std::max(1U, arma::max(y)); // assume y in {0, ..., k-1}
             // Binary classification will be assumed if y only takes zero/one.
@@ -134,10 +134,9 @@ namespace abclass
             y_ = y;
             set_x(x);
             set_ex_vertex_matrix(); // requires n_obs_ set by set_x(x);
-            return this;
         }
 
-        inline Abclass* set_x(const T_x& x)
+        inline void set_x(const T_x& x)
         {
             // assume y has been set
             n_obs_ = x.n_rows;
@@ -167,52 +166,46 @@ namespace abclass
                     }
                 }
             }
-            return this;
         }
 
-        inline Abclass* set_k(const unsigned int k)
+        inline void set_k(const unsigned int k)
         {
             k_ = k;
             km1_ = k - 1;
             set_vertex_matrix(k);
-            return this;
         }
 
-        inline Abclass* set_intercept(const bool intercept)
+        inline void set_intercept(const bool intercept)
         {
             control_.intercept_ = intercept;
-            return this;
         }
 
-        inline Abclass* set_standardize(const bool standardize)
+        inline void set_standardize(const bool standardize)
         {
             control_.standardize_ = standardize;
-            return this;
         }
 
-        inline Abclass* set_weight(const arma::vec& weight)
+        inline void set_weight(const arma::vec& weight)
         {
             if (weight.n_elem != n_obs_) {
                 control_.obs_weight_ = arma::ones(n_obs_);
             } else {
                 control_.obs_weight_ = weight / arma::sum(weight) * dn_obs_;
             }
-            return this;
         }
 
-        inline Abclass* set_offset(const arma::mat& offset)
+        inline void set_offset(const arma::mat& offset)
         {
             if (offset.n_elem == 0 || offset.is_zero()) {
                 control_.offset_ = arma::mat();
                 control_.has_offset_ = false;
-                return this;
+                return;
             }
             if (offset.n_rows != n_obs_ || offset.n_cols != km1_) {
                 throw std::range_error("Incorrect length of offsets.");
             }
             control_.offset_ = offset;
             control_.has_offset_ = true;
-            return this;
         }
 
         // class conditional probability
@@ -248,7 +241,7 @@ namespace abclass
             }
             arma::uvec max_idx { predict_y(pred_f) };
             arma::uvec is_correct { max_idx == y };
-            // note that y can be of length different than dn_obs_
+            // note that y can be of length different than n_obs_
             return arma::sum(is_correct) / static_cast<double>(y.n_elem);
         }
 
