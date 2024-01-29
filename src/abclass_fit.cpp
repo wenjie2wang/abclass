@@ -15,6 +15,7 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //
 
+#include <stdexcept>
 #include <RcppArmadillo.h>
 #include <abclass.h>
 #include "template_helpers.h"
@@ -29,88 +30,142 @@ Rcpp::List template_abclass_fit(
 {
     const size_t loss_id { control["loss_id"] };
     const size_t penalty_id { control["penalty_id"] };
-    const size_t method_id { penalty_id * 100 + loss_id };
     abclass::Control ctrl { abclass_control(control) };
-    switch (method_id) {
-        case 101: {
-            abclass::LogisticNet<T> object {x, y, ctrl};
-            return template_fit(object);
+    switch (loss_id) {
+        case 1: {               // logistic
+            switch (penalty_id) {
+                case 1: {       // lasso
+                    abclass::LogisticNet<T> object {x, y, ctrl};
+                    return template_fit(object);
+                }
+                case 2: {       // scad
+                    abclass::LogisticSCAD<T> object {x, y, ctrl};
+                    return template_fit(object);
+                }
+                case 3: {       // mcp
+                    abclass::LogisticMCP<T> object {x, y, ctrl};
+                    return template_fit(object);
+                }
+                case 4: {       // group lasso
+                    abclass::LogisticGroupLasso<T> object {x, y, ctrl};
+                    return template_fit(object);
+                }
+                case 5: {       // group scad
+                    abclass::LogisticGroupSCAD<T> object {x, y, ctrl};
+                    return template_fit(object);
+                }
+                case 6: {       // group mcp
+                    abclass::LogisticGroupMCP<T> object {x, y, ctrl};
+                    return template_fit(object);
+                }
+            }
         }
-        case 102: {
-            abclass::BoostNet<T> object {x, y, ctrl};
-            object.loss_fun_.set_inner_min(control["boost_umin"]);
-            return template_fit(object);
+        case 2: {               // boost
+            switch (penalty_id) {
+                case 1: {       // lasso
+                    abclass::BoostNet<T> object {x, y, ctrl};
+                    object.loss_fun_.set_inner_min(control["boost_umin"]);
+                    return template_fit(object);
+                }
+                case 2: {       // scad
+                    abclass::BoostSCAD<T> object {x, y, ctrl};
+                    object.loss_fun_.set_inner_min(control["boost_umin"]);
+                    return template_fit(object);
+                }
+                case 3: {       // mcp
+                    abclass::BoostMCP<T> object {x, y, ctrl};
+                    object.loss_fun_.set_inner_min(control["boost_umin"]);
+                    return template_fit(object);
+                }
+                case 4: {       // group lasso
+                    abclass::BoostGroupLasso<T> object {x, y, ctrl};
+                    object.loss_fun_.set_inner_min(control["boost_umin"]);
+                    return template_fit(object);
+                }
+                case 5: {       // group scad
+                    abclass::BoostGroupSCAD<T> object {x, y, ctrl};
+                    object.loss_fun_.set_inner_min(control["boost_umin"]);
+                    return template_fit(object);
+                }
+                case 6: {       // group mcp
+                    abclass::BoostGroupMCP<T> object {x, y, ctrl};
+                    object.loss_fun_.set_inner_min(control["boost_umin"]);
+                    return template_fit(object);
+                }
+            }
         }
-        case 103: {
-            abclass::HingeBoostNet<T> object {x, y, ctrl};
-            object.loss_fun_.set_c(control["lum_c"]);
-            return template_fit(object);
+        case 3: {               // hinge-boost
+            switch (penalty_id) {
+                case 1: {       // lasso
+                    abclass::HingeBoostNet<T> object {x, y, ctrl};
+                    object.loss_fun_.set_c(control["lum_c"]);
+                    return template_fit(object);
+                }
+                case 2: {       // scad
+                    abclass::HingeBoostSCAD<T> object {x, y, ctrl};
+                    object.loss_fun_.set_c(control["lum_c"]);
+                    return template_fit(object);
+                }
+                case 3: {       // mcp
+                    abclass::HingeBoostMCP<T> object {x, y, ctrl};
+                    object.loss_fun_.set_c(control["lum_c"]);
+                    return template_fit(object);
+                }
+                case 4: {       // group lasso
+                    abclass::HingeBoostGroupLasso<T> object {x, y, ctrl};
+                    object.loss_fun_.set_c(control["lum_c"]);
+                    return template_fit(object);
+                }
+                case 5: {       // group scad
+                    abclass::HingeBoostGroupSCAD<T> object {x, y, ctrl};
+                    object.loss_fun_.set_c(control["lum_c"]);
+                    return template_fit(object);
+                }
+                case 6: {       // group mcp
+                    abclass::HingeBoostGroupMCP<T> object {x, y, ctrl};
+                    object.loss_fun_.set_c(control["lum_c"]);
+                    return template_fit(object);
+                }
+            }
         }
-        case 104: {
-            abclass::LumNet<T> object {x, y, ctrl};
-            object.loss_fun_.set_ac(control["lum_a"], control["lum_c"]);
-            return template_fit(object);
-        }
-        case 201: {
-            abclass::LogisticGroupLasso<T> object {x, y, ctrl};
-            return template_fit(object);
-        }
-        case 202: {
-            abclass::BoostGroupLasso<T> object {x, y, ctrl};
-            object.loss_fun_.set_inner_min(control["boost_umin"]);
-            return template_fit(object);
-        }
-        case 203: {
-            abclass::HingeBoostGroupLasso<T> object {x, y, ctrl};
-            object.loss_fun_.set_c(control["lum_c"]);
-            return template_fit(object);
-        }
-        case 204: {
-            abclass::LumGroupLasso<T> object {x, y, ctrl};
-            object.loss_fun_.set_ac(control["lum_a"], control["lum_c"]);
-            return template_fit(object);
-        }
-        case 301: {
-            abclass::LogisticGroupSCAD<T> object {x, y, ctrl};
-            return template_fit(object);
-        }
-        case 302: {
-            abclass::BoostGroupSCAD<T> object {x, y, ctrl};
-            object.loss_fun_.set_inner_min(control["boost_umin"]);
-            return template_fit(object);
-        }
-        case 303: {
-            abclass::HingeBoostGroupSCAD<T> object {x, y, ctrl};
-            object.loss_fun_.set_c(control["lum_c"]);
-            return template_fit(object);
-        }
-        case 304: {
-            abclass::LumGroupSCAD<T> object {x, y, ctrl};
-            object.loss_fun_.set_ac(control["lum_a"], control["lum_c"]);
-            return template_fit(object);
-        }
-        case 401: {
-            abclass::LogisticGroupMCP<T> object {x, y, ctrl};
-            return template_fit(object);
-        }
-        case 402: {
-            abclass::BoostGroupMCP<T> object {x, y, ctrl};
-            object.loss_fun_.set_inner_min(control["boost_umin"]);
-            return template_fit(object);
-        }
-        case 403: {
-            abclass::HingeBoostGroupMCP<T> object {x, y, ctrl};
-            object.loss_fun_.set_c(control["lum_c"]);
-            return template_fit(object);
-        }
-        case 404: {
-            abclass::LumGroupMCP<T> object {x, y, ctrl};
-            object.loss_fun_.set_ac(control["lum_a"], control["lum_c"]);
-            return template_fit(object);
+        case 4: {               // lum
+            switch (penalty_id) {
+                case 1: {       // lasso
+                    abclass::LumNet<T> object {x, y, ctrl};
+                    object.loss_fun_.set_ac(control["lum_a"], control["lum_c"]);
+                    return template_fit(object);
+                }
+                case 2: {       // scad
+                    abclass::LumSCAD<T> object {x, y, ctrl};
+                    object.loss_fun_.set_ac(control["lum_a"], control["lum_c"]);
+                    return template_fit(object);
+                }
+                case 3: {       // mcp
+                    abclass::LumMCP<T> object {x, y, ctrl};
+                    object.loss_fun_.set_ac(control["lum_a"], control["lum_c"]);
+                    return template_fit(object);
+                }
+                case 4: {       // group lasso
+                    abclass::LumGroupLasso<T> object {x, y, ctrl};
+                    object.loss_fun_.set_ac(control["lum_a"], control["lum_c"]);
+                    return template_fit(object);
+                }
+                case 5: {       // group scad
+                    abclass::LumGroupSCAD<T> object {x, y, ctrl};
+                    object.loss_fun_.set_ac(control["lum_a"], control["lum_c"]);
+                    return template_fit(object);
+                }
+                case 6: {       // group mcp
+                    abclass::LumGroupMCP<T> object {x, y, ctrl};
+                    object.loss_fun_.set_ac(control["lum_a"], control["lum_c"]);
+                    return template_fit(object);
+                }
+            }
         }
         default:
             break;
     }
+    throw std::range_error("Invalid choice of loss or penalty.");
     return Rcpp::List();
 }
 

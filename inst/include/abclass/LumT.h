@@ -20,6 +20,8 @@
 
 #include <RcppArmadillo.h>
 #include "AbclassNet.h"
+#include "AbclassSCAD.h"
+#include "AbclassMCP.h"
 #include "AbclassGroupLasso.h"
 #include "AbclassGroupSCAD.h"
 #include "AbclassGroupMCP.h"
@@ -48,6 +50,12 @@ namespace abclass
     // alias templates
     template<typename T_x>
     using LumNet = LumT<AbclassNet<Lum, T_x>, T_x>;
+
+    template<typename T_x>
+    using LumSCAD = LumT<AbclassSCAD<Lum, T_x>, T_x>;
+
+    template<typename T_x>
+    using LumMCP = LumT<AbclassMCP<Lum, T_x>, T_x>;
 
     template<typename T_x>
     using LumGroupLasso = LumT<AbclassGroupLasso<Lum, T_x>, T_x>;

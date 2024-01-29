@@ -41,10 +41,13 @@
         control$lambda_min_ratio <- if (nrow(x) > ncol(x)) 1e-4 else 1e-2
     }
     ## determine the loss and penalty function
-    loss_id <- match(loss, c("logistic", "boost", "hinge-boost", "lum"))
-    penalty_id <- 1
+    ## better to append new options to the existing ones
+    all_losses <- c("logistic", "boost", "hinge-boost", "lum")
+    all_penalties <- c("lasso", "scad", "mcp")
+    loss_id <- match(loss, all_losses)
+    penalty_id <- match(control$penalty, all_penalties)
     if (control$grouped) {
-        penalty_id <- 1 + match(control$penalty, c("lasso", "scad", "mcp"))
+        penalty_id <- 3L + penalty_id
     }
     ## process alignment
     all_alignment <- c("fraction", "lambda")

@@ -20,6 +20,8 @@
 
 #include <RcppArmadillo.h>
 #include "AbclassNet.h"
+#include "AbclassSCAD.h"
+#include "AbclassMCP.h"
 #include "AbclassGroupLasso.h"
 #include "AbclassGroupSCAD.h"
 #include "AbclassGroupMCP.h"
@@ -50,6 +52,14 @@ namespace abclass
     template<typename T_x>
     using HingeBoostNet =
         HingeBoostT<AbclassNet<HingeBoost, T_x>, T_x>;
+
+    template<typename T_x>
+    using HingeBoostSCAD =
+        HingeBoostT<AbclassSCAD<HingeBoost, T_x>, T_x>;
+
+    template<typename T_x>
+    using HingeBoostMCP =
+        HingeBoostT<AbclassMCP<HingeBoost, T_x>, T_x>;
 
     template<typename T_x>
     using HingeBoostGroupLasso =

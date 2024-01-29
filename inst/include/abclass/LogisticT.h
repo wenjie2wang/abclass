@@ -20,6 +20,8 @@
 
 #include <RcppArmadillo.h>
 #include "AbclassNet.h"
+#include "AbclassSCAD.h"
+#include "AbclassMCP.h"
 #include "AbclassGroupLasso.h"
 #include "AbclassGroupSCAD.h"
 #include "AbclassGroupMCP.h"
@@ -39,6 +41,12 @@ namespace abclass
     // alias templates
     template<typename T_x>
     using LogisticNet = LogisticT<AbclassNet<Logistic, T_x>, T_x>;
+
+    template<typename T_x>
+    using LogisticSCAD = LogisticT<AbclassSCAD<Logistic, T_x>, T_x>;
+
+    template<typename T_x>
+    using LogisticMCP = LogisticT<AbclassMCP<Logistic, T_x>, T_x>;
 
     template<typename T_x>
     using LogisticGroupLasso = LogisticT<AbclassGroupLasso<Logistic, T_x>, T_x>;

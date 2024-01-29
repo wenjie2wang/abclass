@@ -75,12 +75,6 @@ namespace abclass
             return loss_fun_.dloss(inner);
         }
 
-        // default: objective = loss / n
-        inline virtual double objective(const arma::vec& inner) const
-        {
-            return loss(inner) / dn_obs_;
-        }
-
     public:
 
         // from the data

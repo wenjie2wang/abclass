@@ -135,23 +135,23 @@ namespace abclass
             return out / dn_obs_;
         }
 
-        // define gradient function at (l, j) for the given inner product
+        // define gradient function at (g, k) for the given inner product
         inline double mm_gradient(const arma::vec& inner,
-                                  const arma::vec& vj_xl) const
+                                  const arma::vec& vk_xg) const
         {
-            arma::vec inner_grad { loss_derivative(inner) };
-            return arma::mean(control_.obs_weight_ % vj_xl % inner_grad);
+            const arma::vec inner_grad { loss_derivative(inner) };
+            return arma::mean(control_.obs_weight_ % vk_xg % inner_grad);
         }
 
         // define gradient function for j-th predictor
         inline arma::rowvec mm_gradient(const arma::vec& inner,
                                         const unsigned int j) const
         {
-            arma::vec inner_grad { loss_derivative(inner) };
-            arma::vec tmp_vec {
+            const arma::vec inner_grad { loss_derivative(inner) };
+            const arma::vec tmp_vec {
                 x_.col(j) % control_.obs_weight_ % inner_grad
             };
-            arma::rowvec out { tmp_vec.t() * ex_vertex_ };
+            const arma::rowvec out { tmp_vec.t() * ex_vertex_ };
             return out / dn_obs_;
         }
 
@@ -270,7 +270,7 @@ namespace abclass
             const double tmp {
                 std::abs(beta_part) - l1_lambda * control_.penalty_factor_(g)
             };
-            if (tmp < 0.0) {
+            if (tmp <= 0.0) {
                 beta(g1, k) = 0.0;
             } else {
                 const double numer { tmp * sign(beta_part) };

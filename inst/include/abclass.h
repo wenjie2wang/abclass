@@ -41,6 +41,8 @@
 
 // penalties
 #include "abclass/AbclassNet.h"
+#include "abclass/AbclassSCAD.h"
+#include "abclass/AbclassMCP.h"
 #include "abclass/AbclassGroupLasso.h"
 #include "abclass/AbclassGroupSCAD.h"
 #include "abclass/AbclassGroupMCP.h"

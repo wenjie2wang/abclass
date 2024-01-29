@@ -20,6 +20,8 @@
 
 #include <RcppArmadillo.h>
 #include "AbclassNet.h"
+#include "AbclassSCAD.h"
+#include "AbclassMCP.h"
 #include "AbclassGroupLasso.h"
 #include "AbclassGroupSCAD.h"
 #include "AbclassGroupMCP.h"
@@ -49,6 +51,12 @@ namespace abclass
     // alias templates
     template<typename T_x>
     using BoostNet = BoostT<AbclassNet<Boost, T_x>, T_x>;
+
+    template<typename T_x>
+    using BoostSCAD = BoostT<AbclassSCAD<Boost, T_x>, T_x>;
+
+    template<typename T_x>
+    using BoostMCP = BoostT<AbclassMCP<Boost, T_x>, T_x>;
 
     template<typename T_x>
     using BoostGroupLasso = BoostT<AbclassGroupLasso<Boost, T_x>, T_x>;

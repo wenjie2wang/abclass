@@ -15,26 +15,31 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //
 
-#ifndef ABCLASS_ABCLASS_GROUP_MCP_H
-#define ABCLASS_ABCLASS_GROUP_MCP_H
+#ifndef ABCLASS_ABCLASS_MCP_H
+#define ABCLASS_ABCLASS_MCP_H
+
+#include <utility>
 
 #include <RcppArmadillo.h>
-#include "AbclassBlockCD.h"
+
+#include "AbclassCD.h"
 #include "Control.h"
 #include "utils.h"
 
 namespace abclass
 {
+    // the angle-based classifier with MCP penalty
+    // estimation by coordinate-majorization-descent algorithm
     template <typename T_loss, typename T_x>
-    class AbclassGroupMCP : public AbclassBlockCD<T_loss, T_x>
+    class AbclassMCP : public AbclassCD<T_loss, T_x>
     {
     protected:
         // data
-        using AbclassBlockCD<T_loss, T_x>::mm_lowerbound_;
+        using AbclassCD<T_loss, T_x>::mm_lowerbound_;
 
         // functions
-        using AbclassBlockCD<T_loss, T_x>::mm_gradient;
-        using AbclassBlockCD<T_loss, T_x>::set_mm_lowerbound;
+        using AbclassCD<T_loss, T_x>::mm_gradient;
+        using AbclassCD<T_loss, T_x>::set_mm_lowerbound;
 
         inline double penalty0(const double beta,
                                const double l1_lambda,
@@ -73,53 +78,59 @@ namespace abclass
                     (next_lambda - last_lambda) + next_lambda);
         }
 
-        inline void update_beta_g(arma::mat& beta,
-                                  arma::vec& inner,
-                                  const size_t g,
-                                  const size_t g1,
-                                  const double l1_lambda,
-                                  const double l2_lambda) override
+        inline void update_beta_gk(arma::mat& beta,
+                                   arma::vec& inner,
+                                   const size_t k,
+                                   const size_t g,
+                                   const size_t g1,
+                                   const double l1_lambda,
+                                   const double l2_lambda) override
         {
-            const arma::rowvec old_beta_g1 { beta.row(g1) };
-            const double m_g { mm_lowerbound_(g) };
-            const arma::rowvec u_g { - mm_gradient(inner, g) };
+            const double old_beta_g1k { beta(g1, k) };
+            const arma::vec v_k { get_vertex_y(k) };
+            const arma::vec vk_xg { x_.col(g) % v_k };
+            const double d_gk { mm_gradient(inner, vk_xg) };
             const double l1_lambda_g {
                 l1_lambda * control_.penalty_factor_(g)
             };
-            const arma::rowvec z_g { u_g / m_g + beta.row(g1)};
-            const double z_g2 { l2_norm(z_g) };
+            // if mm_lowerbound = 0 and l1_lambda > 0, numer will be 0
+            const double m_g { mm_lowerbound_(g) };
             const double m_gp { m_g + l2_lambda }; // m_g'
-            const double m_g_ratio { m_gp / m_g }; // m_g' / m_g > 1
-            if (z_g2 < control_.ncv_gamma_ * l1_lambda_g * m_g_ratio) {
-                const double tmp { 1.0 - l1_lambda_g / m_g / z_g2 };
+            const double m_g_ratio { m_gp / m_g }; // m_g' / m_g >= 1
+            const double beta_part { beta(g1, k) - d_gk / m_g };
+            const double abeta { std::abs(beta_part) };
+            if (abeta < m_g_ratio * control_.ncv_gamma_ * l1_lambda_g) {
+                // core part
+                const double tmp { 1.0 - l1_lambda_g / m_g / abeta };
                 if (tmp >= 0.0) {
                     const double igamma_g { 1.0 / control_.ncv_gamma_ / m_g };
                     const double rhs { tmp / (m_g_ratio - igamma_g) };
-                    beta.row(g1) = rhs * z_g;
+                    beta(g1, k) = rhs * beta_part;
                 } else {
-                    beta.row(g1).zeros();
+                    beta(g1, k) = 0.0;
                 }
             } else {
-                beta.row(g1) = z_g / m_g_ratio;
+                // zero derivative from the penalty function
+                beta(g1, k) = abeta / m_g_ratio;
             }
             // update inner
-            const arma::rowvec delta_beta_j { beta.row(g1) - old_beta_g1 };
-            const arma::vec delta_vj { ex_vertex_ * delta_beta_j.t() };
-            inner += x_.col(g) % delta_vj;
+            inner += (beta(g1, k) - old_beta_g1k) * vk_xg;
         }
 
     public:
-        // inherit
-        using AbclassBlockCD<T_loss, T_x>::AbclassBlockCD;
+        // inherits constructors
+        using AbclassCD<T_loss, T_x>::AbclassCD;
 
         // data members
-        using AbclassBlockCD<T_loss, T_x>::control_;
-        using AbclassBlockCD<T_loss, T_x>::ex_vertex_;
-        using AbclassBlockCD<T_loss, T_x>::x_;
+        using AbclassCD<T_loss, T_x>::control_;
+        using AbclassCD<T_loss, T_x>::x_;
+
+        // function members
+        using AbclassCD<T_loss, T_x>::get_vertex_y;
 
     };
 
 }  // abclass
 
 
-#endif /* ABCLASS_ABCLASS_GROUP_MCP_H */
+#endif /* ABCLASS_ABCLASS_MCP_H */

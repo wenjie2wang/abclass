@@ -15,26 +15,31 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //
 
-#ifndef ABCLASS_ABCLASS_GROUP_SCAD_H
-#define ABCLASS_ABCLASS_GROUP_SCAD_H
+#ifndef ABCLASS_ABCLASS_SCAD_H
+#define ABCLASS_ABCLASS_SCAD_H
+
+#include <utility>
 
 #include <RcppArmadillo.h>
-#include "AbclassBlockCD.h"
+
+#include "AbclassCD.h"
 #include "Control.h"
 #include "utils.h"
 
 namespace abclass
 {
+    // the angle-based classifier with SCAD penalty
+    // estimation by coordinate-majorization-descent algorithm
     template <typename T_loss, typename T_x>
-    class AbclassGroupSCAD : public AbclassBlockCD<T_loss, T_x>
+    class AbclassSCAD : public AbclassCD<T_loss, T_x>
     {
     protected:
         // data
-        using AbclassBlockCD<T_loss, T_x>::mm_lowerbound_;
+        using AbclassCD<T_loss, T_x>::mm_lowerbound_;
 
         // functions
-        using AbclassBlockCD<T_loss, T_x>::mm_gradient;
-        using AbclassBlockCD<T_loss, T_x>::set_mm_lowerbound;
+        using AbclassCD<T_loss, T_x>::mm_gradient;
+        using AbclassCD<T_loss, T_x>::set_mm_lowerbound;
 
         // l1_lambda = alpha * lambda
         // l2_lambda = (1 - alpha) * lambda
@@ -79,59 +84,66 @@ namespace abclass
                 (next_lambda - last_lambda) + next_lambda;
         }
 
-        inline void update_beta_g(arma::mat& beta,
-                                  arma::vec& inner,
-                                  const size_t g,
-                                  const size_t g1,
-                                  const double l1_lambda,
-                                  const double l2_lambda) override
+        inline void update_beta_gk(arma::mat& beta,
+                                   arma::vec& inner,
+                                   const size_t k,
+                                   const size_t g,
+                                   const size_t g1,
+                                   const double l1_lambda,
+                                   const double l2_lambda) override
         {
-            const arma::rowvec old_beta_g1 { beta.row(g1) };
-            const double m_g { mm_lowerbound_(g) };
-            const arma::rowvec u_g { - mm_gradient(inner, g) };
+            const double old_beta_g1k { beta(g1, k) };
+            const arma::vec v_k { get_vertex_y(k) };
+            const arma::vec vk_xg { x_.col(g) % v_k };
+            const double d_gk { mm_gradient(inner, vk_xg) };
             const double l1_lambda_g {
                 l1_lambda * control_.penalty_factor_(g)
             };
-            const arma::rowvec z_g { u_g / m_g + beta.row(g1) };
-            const double z_g2 { l2_norm(z_g) };
+            // if mm_lowerbound = 0 and l1_lambda > 0, numer will be 0
+            const double m_g { mm_lowerbound_(g) };
             const double m_gp { m_g + l2_lambda }; // m_g'
             const double m_g_ratio { m_gp / m_g }; // m_g' / m_g >= 1
-            if (z_g2 >= m_g_ratio * control_.ncv_gamma_ * l1_lambda_g) {
-                beta.row(g1) = z_g / m_g_ratio;
-            } else if (z_g2 > (m_gp + 1.0) * l1_lambda_g / m_g) {
+            const double beta_part { beta(g1, k) - d_gk / m_g };
+            const double abeta { std::abs(beta_part) };
+            if (abeta >= m_g_ratio * control_.ncv_gamma_ * l1_lambda_g) {
+                // zero derivative from the penalty function
+                beta(g1, k) = abeta / m_g_ratio;
+            } else if (abeta > (m_gp + 1.0) * l1_lambda_g / m_g) {
+                // core part
                 const double numer { (control_.ncv_gamma_ - 1.0) * m_g };
                 const double denom { (control_.ncv_gamma_ - 1.0) * m_gp - 1.0 };
                 const double tmp { numer / denom *
-                    (1.0 - control_.ncv_gamma_ * l1_lambda_g / numer / z_g2) };
-                beta.row(g1) = tmp * z_g;
+                    (1.0 - control_.ncv_gamma_ * l1_lambda_g / numer / abeta) };
+                beta(g1, k) = tmp * beta_part;
             } else {
+                // lasso part
                 const double tmp {
-                    (1.0 - l1_lambda_g / m_g / z_g2) / m_g_ratio
+                    (1.0 - l1_lambda_g / m_g / abeta) / m_g_ratio
                 };
                 if (tmp > 0.0) {
-                    beta.row(g1) = tmp * z_g;
+                    beta(g1, k) = tmp * beta_part;
                 } else {
-                    beta.row(g1).zeros();
+                    beta(g1, k) = 0.0;
                 }
             }
             // update inner
-            const arma::rowvec delta_beta_j { beta.row(g1) - old_beta_g1 };
-            const arma::vec delta_vj { ex_vertex_ * delta_beta_j.t() };
-            inner += x_.col(g) % delta_vj;
+            inner += (beta(g1, k) - old_beta_g1k) * vk_xg;
         }
 
     public:
-        // inherit
-        using AbclassBlockCD<T_loss, T_x>::AbclassBlockCD;
+        // inherits constructors
+        using AbclassCD<T_loss, T_x>::AbclassCD;
 
         // data members
-        using AbclassBlockCD<T_loss, T_x>::control_;
-        using AbclassBlockCD<T_loss, T_x>::ex_vertex_;
-        using AbclassBlockCD<T_loss, T_x>::x_;
+        using AbclassCD<T_loss, T_x>::control_;
+        using AbclassCD<T_loss, T_x>::x_;
+
+        // function members
+        using AbclassCD<T_loss, T_x>::get_vertex_y;
 
     };
 
 }  // abclass
 
 
-#endif /* ABCLASS_ABCLASS_GROUP_SCAD_H */
+#endif /* ABCLASS_ABCLASS_SCAD_H */
