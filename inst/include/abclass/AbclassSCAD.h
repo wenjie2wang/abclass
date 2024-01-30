@@ -102,26 +102,26 @@ namespace abclass
             // if mm_lowerbound = 0 and l1_lambda > 0, numer will be 0
             const double m_g { mm_lowerbound_(g) };
             const double m_gp { m_g + l2_lambda }; // m_g'
-            const double m_g_ratio { m_gp / m_g }; // m_g' / m_g >= 1
-            const double beta_part { beta(g1, k) - d_gk / m_g };
-            const double abeta { std::abs(beta_part) };
-            if (abeta >= m_g_ratio * control_.ncv_gamma_ * l1_lambda_g) {
+            const double u_g { m_g * beta(g1, k) - d_gk };
+            const double u_g1 { std::abs(u_g) };
+            if (u_g1 >= control_.ncv_gamma_ * l1_lambda_g * m_gp) {
                 // zero derivative from the penalty function
-                beta(g1, k) = abeta / m_g_ratio;
-            } else if (abeta > (m_gp + 1.0) * l1_lambda_g / m_g) {
+                beta(g1, k) = u_g / m_gp;
+            } else if (u_g1 > (m_gp + 1.0) * l1_lambda_g) {
                 // core part
-                const double numer { (control_.ncv_gamma_ - 1.0) * m_g };
+                const double tmp {
+                    (control_.ncv_gamma_ - 1.0) * u_g1 -
+                    control_.ncv_gamma_ * l1_lambda_g
+                };
+                const double numer { tmp * sign(u_g) };
                 const double denom { (control_.ncv_gamma_ - 1.0) * m_gp - 1.0 };
-                const double tmp { numer / denom *
-                    (1.0 - control_.ncv_gamma_ * l1_lambda_g / numer / abeta) };
-                beta(g1, k) = tmp * beta_part;
+                beta(g1, k) = numer / denom;
             } else {
                 // lasso part
-                const double tmp {
-                    (1.0 - l1_lambda_g / m_g / abeta) / m_g_ratio
-                };
+                const double tmp { u_g1 - l1_lambda_g };
+                const double numer { tmp * sign(u_g) };
                 if (tmp > 0.0) {
-                    beta(g1, k) = tmp * beta_part;
+                    beta(g1, k) = numer / m_gp;
                 } else {
                     beta(g1, k) = 0.0;
                 }

@@ -105,24 +105,16 @@
     }
     if (call_list$control$nstages == 0L) {
         res$et <- NULL
-    }
-    ## update regularization
-    return_lambda <- c("alpha", "lambda")
-    if (call_list$control$nstages > 0L) {
+    } else {
         ## update the selected index to one-based index
         res$et$selected <- res$et$selected + 1L
     }
-    res$regularization <-
-        if (control$grouped) {
-            common_pars <- c(return_lambda, "penalty_factor")
-            if (control$penalty == "lasso") {
-                res$regularization[common_pars]
-            } else {
-                res$regularization[c(common_pars, "ncv_kappa", "ncv_gamma")]
-            }
-        } else {
-            res$regularization[return_lambda]
-        }
+    ## update regularization
+    return_lambda <- c("alpha", "lambda", "penalty_factor")
+    if (control$penalty %in% c("scad", "mcp")) {
+        return_lambda <- c(return_lambda, "ncv_kappa", "ncv_gamma")
+    }
+    res$regularization <- res$regularization[return_lambda]
     ## return
     res
 }

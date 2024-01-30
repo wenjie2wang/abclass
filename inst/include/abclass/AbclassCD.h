@@ -266,14 +266,14 @@ namespace abclass
             const arma::vec vk_xg { x_.col(g) % v_k };
             const double d_gk { mm_gradient(inner, vk_xg) };
             // if mm_lowerbound = 0 and l1_lambda > 0, numer will be 0
-            const double beta_part { mm_lowerbound_(g) * beta(g1, k) - d_gk };
+            const double u_g { mm_lowerbound_(g) * beta(g1, k) - d_gk };
             const double tmp {
-                std::abs(beta_part) - l1_lambda * control_.penalty_factor_(g)
+                std::abs(u_g) - l1_lambda * control_.penalty_factor_(g)
             };
             if (tmp <= 0.0) {
                 beta(g1, k) = 0.0;
             } else {
-                const double numer { tmp * sign(beta_part) };
+                const double numer { tmp * sign(u_g) };
                 const double denom { mm_lowerbound_(g) + l2_lambda };
                 // update beta
                 beta(g1, k) = numer / denom;
@@ -453,9 +453,9 @@ namespace abclass
                 if (update_active) {
                     // check if it has been shrinkaged to zero
                     if (std::abs(beta(g1, k)) > 0.0) {
-                        is_active(g, k) = 0;
-                    } else {
                         is_active(g, k) = 1;
+                    } else {
+                        is_active(g, k) = 0;
                     }
                 }
             }
@@ -530,7 +530,7 @@ namespace abclass
                                      l1_lambda, l2_lambda, true, verbose);
                 ++num_iter;
                 // check two active sets coincide
-                if (l1_norm(is_active_varying - is_active) > 0) {
+                if (arma::accu(arma::any(is_active_varying != is_active))) {
                     // if different, repeat this process
                     if (verbose > 0) {
                         Rcpp::Rcout << "Changed the active set from "
@@ -588,9 +588,9 @@ namespace abclass
             if (num_iter < max_iter) {
                 Rcpp::Rcout << "Outer loop converged over the active set after "
                             << num_iter
-                            << " iteration(s)\n";
-                Rcpp::Rcout << "The size of active set is "
-                            << l1_norm(is_active) << ".\n";
+                            << " iteration(s);\n";
+                Rcpp::Rcout << "The size of active set after convergence is "
+                            << l1_norm(is_active) << ".\n\n";
             } else {
                 msg("Outer loop reached the maximum number of iteratons.");
             }
