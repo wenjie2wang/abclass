@@ -18,10 +18,7 @@
 #ifndef ABCLASS_ABCLASS_SCAD_H
 #define ABCLASS_ABCLASS_SCAD_H
 
-#include <utility>
-
 #include <RcppArmadillo.h>
-
 #include "AbclassCD.h"
 #include "Control.h"
 #include "utils.h"

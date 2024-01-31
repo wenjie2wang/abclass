@@ -18,8 +18,6 @@
 #ifndef ABCLASS_ABCLASS_BLOCKCD_H
 #define ABCLASS_ABCLASS_BLOCKCD_H
 
-#include <utility>
-
 #include <RcppArmadillo.h>
 
 #include "AbclassCD.h"

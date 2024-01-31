@@ -18,8 +18,6 @@
 #ifndef ABCLASS_ABCLASS_CD_H
 #define ABCLASS_ABCLASS_CD_H
 
-#include <utility>
-
 #include <RcppArmadillo.h>
 
 #include "AbclassLinear.h"

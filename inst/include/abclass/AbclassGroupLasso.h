@@ -19,7 +19,6 @@
 #define ABCLASS_ABCLASS_GROUP_LASSO_H
 
 #include <RcppArmadillo.h>
-
 #include "AbclassBlockCD.h"
 #include "Control.h"
 #include "utils.h"
