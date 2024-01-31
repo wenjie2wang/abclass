@@ -25,6 +25,7 @@
 #include "AbclassGroupLasso.h"
 #include "AbclassGroupSCAD.h"
 #include "AbclassGroupMCP.h"
+#include "AbclassCompMCP.h"
 #include "Lum.h"
 #include "Control.h"
 
@@ -65,6 +66,9 @@ namespace abclass
 
     template<typename T_x>
     using LumGroupMCP = LumT<AbclassGroupMCP<Lum, T_x>, T_x>;
+
+    template<typename T_x>
+    using LumCompMCP = LumT<AbclassCompMCP<Lum, T_x>, T_x>;
 
 }
 

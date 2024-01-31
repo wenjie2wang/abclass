@@ -58,6 +58,10 @@ Rcpp::List template_abclass_fit(
                     abclass::LogisticGroupMCP<T> object {x, y, ctrl};
                     return template_fit(object);
                 }
+                case 7: {       // composite mcp
+                    abclass::LogisticCompMCP<T> object {x, y, ctrl};
+                    return template_fit(object);
+                }
             }
         }
         case 2: {               // boost
@@ -89,6 +93,11 @@ Rcpp::List template_abclass_fit(
                 }
                 case 6: {       // group mcp
                     abclass::BoostGroupMCP<T> object {x, y, ctrl};
+                    object.loss_fun_.set_inner_min(control["boost_umin"]);
+                    return template_fit(object);
+                }
+                case 7: {       // composite mcp
+                    abclass::BoostCompMCP<T> object {x, y, ctrl};
                     object.loss_fun_.set_inner_min(control["boost_umin"]);
                     return template_fit(object);
                 }
@@ -126,6 +135,11 @@ Rcpp::List template_abclass_fit(
                     object.loss_fun_.set_c(control["lum_c"]);
                     return template_fit(object);
                 }
+                case 7: {       // composite mcp
+                    abclass::HingeBoostCompMCP<T> object {x, y, ctrl};
+                    object.loss_fun_.set_c(control["lum_c"]);
+                    return template_fit(object);
+                }
             }
         }
         case 4: {               // lum
@@ -157,6 +171,11 @@ Rcpp::List template_abclass_fit(
                 }
                 case 6: {       // group mcp
                     abclass::LumGroupMCP<T> object {x, y, ctrl};
+                    object.loss_fun_.set_ac(control["lum_a"], control["lum_c"]);
+                    return template_fit(object);
+                }
+                case 7: {       // composite mcp
+                    abclass::LumCompMCP<T> object {x, y, ctrl};
                     object.loss_fun_.set_ac(control["lum_a"], control["lum_c"]);
                     return template_fit(object);
                 }

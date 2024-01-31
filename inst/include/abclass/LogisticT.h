@@ -25,6 +25,7 @@
 #include "AbclassGroupLasso.h"
 #include "AbclassGroupSCAD.h"
 #include "AbclassGroupMCP.h"
+#include "AbclassCompMCP.h"
 #include "Logistic.h"
 #include "Control.h"
 
@@ -56,6 +57,9 @@ namespace abclass
 
     template<typename T_x>
     using LogisticGroupMCP = LogisticT<AbclassGroupMCP<Logistic, T_x>, T_x>;
+
+    template<typename T_x>
+    using LogisticCompMCP = LogisticT<AbclassCompMCP<Logistic, T_x>, T_x>;
 
 }
 

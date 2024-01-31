@@ -46,6 +46,7 @@
 #include "abclass/AbclassGroupLasso.h"
 #include "abclass/AbclassGroupSCAD.h"
 #include "abclass/AbclassGroupMCP.h"
+#include "abclass/AbclassCompMCP.h"
 
 // combinations
 #include "abclass/LogisticT.h"

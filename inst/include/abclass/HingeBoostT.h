@@ -25,6 +25,7 @@
 #include "AbclassGroupLasso.h"
 #include "AbclassGroupSCAD.h"
 #include "AbclassGroupMCP.h"
+#include "AbclassCompMCP.h"
 #include "HingeBoost.h"
 #include "Control.h"
 
@@ -72,6 +73,10 @@ namespace abclass
     template<typename T_x>
     using HingeBoostGroupMCP =
         HingeBoostT<AbclassGroupMCP<HingeBoost, T_x>, T_x>;
+
+    template<typename T_x>
+    using HingeBoostCompMCP =
+        HingeBoostT<AbclassCompMCP<HingeBoost, T_x>, T_x>;
 
 }
 
