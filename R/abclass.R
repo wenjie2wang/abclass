@@ -154,7 +154,8 @@ abclass.control <- function(offset = NULL,
                             penalty_factor = NULL,
                             penalty = c("lasso", "scad", "mcp",
                                         "glasso", "gscad", "gmcp",
-                                        "cmcp", "gel", "mellowmax"),
+                                        "cmcp", "gel",
+                                        "mellowmax", "mellowmcp"),
                             ncv_kappa = 0.9,
                             gel_tau = 0.33,
                             mellowmax_omega = 10,
@@ -166,10 +167,7 @@ abclass.control <- function(offset = NULL,
                             verbose = 0L,
                             ...)
 {
-    penalty <- match.arg(as.character(penalty),
-                         choices = c("lasso", "scad", "mcp",
-                                     "glasso", "gscad", "gmcp",
-                                     "cmcp", "gel", "mellowmax"))
+    penalty <- match.arg(penalty)
     structure(list(
         offset = offset,
         lum_a = lum_a,

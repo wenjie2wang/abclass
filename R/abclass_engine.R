@@ -45,7 +45,8 @@
     all_losses <- c("logistic", "boost", "hinge-boost", "lum")
     all_penalties <- c("lasso", "scad", "mcp",
                        "glasso", "gscad", "gmcp",
-                       "cmcp", "gel", "mellowmax", "mmcp")
+                       "cmcp", "gel",
+                       "mellowmax", "mellowmcp")
     loss_id <- match(loss, all_losses)
     penalty_id <- match(control$penalty, all_penalties)
     ## process alignment
