@@ -43,12 +43,11 @@
     ## determine the loss and penalty function
     ## better to append new options to the existing ones
     all_losses <- c("logistic", "boost", "hinge-boost", "lum")
-    all_penalties <- c("lasso", "scad", "mcp")
+    all_penalties <- c("lasso", "scad", "mcp",
+                       "glasso", "gscad", "gmcp",
+                       "cmcp", "gel", "mellowmax", "mmcp")
     loss_id <- match(loss, all_losses)
     penalty_id <- match(control$penalty, all_penalties)
-    if (control$grouped) {
-        penalty_id <- 3L + penalty_id
-    }
     ## process alignment
     all_alignment <- c("fraction", "lambda")
     if (is.numeric(alignment)) {

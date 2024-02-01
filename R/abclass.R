@@ -107,14 +107,9 @@ abclass <- function(x, y,
 ##' @param penalty_factor A numerical vector with nonnegative values specifying
 ##'     the adaptive penalty factors for individual predictors (excluding
 ##'     intercept).
-##' @param grouped A logicial value.  Experimental flag to apply group
-##'     penalties.
 ##' @param penalty A character vector specifying the name of the penalty.
 ##' @param offset An optional numeric matrix for offsets of the decision
 ##'     functions.
-##' @param ncv_kappa A positive number within (0, 1) specifying the ratio of
-##'     reciprocal gamma parameter for group SCAD or group MCP.  A close-to-zero
-##'     \code{ncv_kappa} would give a solution close to lasso solution.
 ##' @param lum_a A positive number greater than one representing the parameter
 ##'     \emph{a} in LUM, which will be used only if \code{loss = "lum"}.  The
 ##'     default value is \code{1.0}.
@@ -123,6 +118,11 @@ abclass <- function(x, y,
 ##'     "lum"}.  The default value is \code{1.0}.
 ##' @param boost_umin A negative number for adjusting the boosting loss for the
 ##'     internal majorization procedure.
+##' @param ncv_kappa A positive number within (0, 1) specifying the ratio of
+##'     reciprocal gamma parameter for group SCAD or group MCP.  A close-to-zero
+##'     \code{ncv_kappa} would give a solution close to lasso solution.
+##' @param gel_tau A positive parameter tau for group exponential lasso penalty.
+##' @param mellowmax_omega A positive parameter omega for Mellowmax penalty.
 ##' @param maxit A positive integer specifying the maximum number of iteration.
 ##'     The default value is \code{10^4}.
 ##' @param epsilon A positive number specifying the relative tolerance that
@@ -141,44 +141,53 @@ abclass <- function(x, y,
 ##'     is \code{0} for silent estimation procedure.
 ##'
 ##' @export
-abclass.control <- function(alpha = 1.0,
+abclass.control <- function(offset = NULL,
+                            ## loss
+                            lum_a = 1.0,
+                            lum_c = 0.0,
+                            boost_umin = -5.0,
+                            ## penalty
+                            alpha = 1.0,
                             nlambda = 50L,
                             lambda_min_ratio = NULL,
                             lambda = NULL,
                             penalty_factor = NULL,
-                            grouped = TRUE,
-                            penalty = c("lasso", "scad", "mcp"),
+                            penalty = c("lasso", "scad", "mcp",
+                                        "glasso", "gscad", "gmcp",
+                                        "cmcp", "gel", "mellowmax"),
                             ncv_kappa = 0.9,
-                            offset = NULL,
-                            lum_a = 1.0,
-                            lum_c = 0.0,
-                            boost_umin = -5.0,
-                            maxit = 1e4L,
+                            gel_tau = 0.33,
+                            mellowmax_omega = 10,
+                            ## optim
                             epsilon = 1e-7,
+                            maxit = 1e4L,
                             standardize = TRUE,
                             varying_active_set = TRUE,
                             verbose = 0L,
                             ...)
 {
     penalty <- match.arg(as.character(penalty),
-                         choices = c("lasso", "scad", "mcp"))
+                         choices = c("lasso", "scad", "mcp",
+                                     "glasso", "gscad", "gmcp",
+                                     "cmcp", "gel", "mellowmax"))
     structure(list(
+        offset = offset,
+        lum_a = lum_a,
+        lum_c = lum_c,
+        boost_umin = boost_umin,
         alpha = alpha,
         lambda = lambda,
         nlambda = as.integer(nlambda),
         lambda_min_ratio = lambda_min_ratio,
         penalty_factor = penalty_factor,
         penalty = penalty,
-        grouped = grouped,
-        offset = offset,
-        standardize = standardize,
-        maxit = as.integer(maxit),
+        ncv_kappa = ncv_kappa,
+        gel_tau = gel_tau,
+        mellowmax_omega = mellowmax_omega,
         epsilon = epsilon,
+        maxit = as.integer(maxit),
+        standardize = standardize,
         varying_active_set = varying_active_set,
-        verbose = as.integer(verbose),
-        boost_umin = boost_umin,
-        lum_a = lum_a,
-        lum_c = lum_c,
-        ncv_kappa = ncv_kappa
+        verbose = as.integer(verbose)
     ), class = "abclass.control")
 }
