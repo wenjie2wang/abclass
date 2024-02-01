@@ -19,6 +19,8 @@
 #define ABCLASS_BOOST_T_H
 
 #include <RcppArmadillo.h>
+#include "Boost.h"
+#include "Control.h"
 #include "AbclassNet.h"
 #include "AbclassSCAD.h"
 #include "AbclassMCP.h"
@@ -26,8 +28,9 @@
 #include "AbclassGroupSCAD.h"
 #include "AbclassGroupMCP.h"
 #include "AbclassCompMCP.h"
-#include "Boost.h"
-#include "Control.h"
+#include "AbclassGEL.h"
+#include "AbclassMellowmax.h"
+#include "AbclassMellowMCP.h"
 
 namespace abclass
 {
@@ -70,6 +73,15 @@ namespace abclass
 
     template<typename T_x>
     using BoostCompMCP = BoostT<AbclassCompMCP<Boost, T_x>, T_x>;
+
+    template<typename T_x>
+    using BoostGEL = BoostT<AbclassGEL<Boost, T_x>, T_x>;
+
+    template<typename T_x>
+    using BoostMellowmax = BoostT<AbclassMellowmax<Boost, T_x>, T_x>;
+
+    template<typename T_x>
+    using BoostMellowMCP = BoostT<AbclassMellowMCP<Boost, T_x>, T_x>;
 
 }
 

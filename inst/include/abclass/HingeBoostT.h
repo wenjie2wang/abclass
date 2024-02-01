@@ -19,6 +19,8 @@
 #define ABCLASS_HINGE_BOOST_T_H
 
 #include <RcppArmadillo.h>
+#include "HingeBoost.h"
+#include "Control.h"
 #include "AbclassNet.h"
 #include "AbclassSCAD.h"
 #include "AbclassMCP.h"
@@ -26,8 +28,9 @@
 #include "AbclassGroupSCAD.h"
 #include "AbclassGroupMCP.h"
 #include "AbclassCompMCP.h"
-#include "HingeBoost.h"
-#include "Control.h"
+#include "AbclassGEL.h"
+#include "AbclassMellowmax.h"
+#include "AbclassMellowMCP.h"
 
 namespace abclass
 {
@@ -77,6 +80,18 @@ namespace abclass
     template<typename T_x>
     using HingeBoostCompMCP =
         HingeBoostT<AbclassCompMCP<HingeBoost, T_x>, T_x>;
+
+    template<typename T_x>
+    using HingeBoostGEL =
+        HingeBoostT<AbclassGEL<HingeBoost, T_x>, T_x>;
+
+    template<typename T_x>
+    using HingeBoostMellowmax =
+        HingeBoostT<AbclassMellowmax<HingeBoost, T_x>, T_x>;
+
+    template<typename T_x>
+    using HingeBoostMellowMCP =
+        HingeBoostT<AbclassMellowMCP<HingeBoost, T_x>, T_x>;
 
 }
 

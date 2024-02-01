@@ -37,8 +37,8 @@ namespace abclass
         arma::rowvec exp_x_max_; // exp(x - max(x))
 
     public:
-        Mellowmax();
-        virtual ~Mellowmax();
+        // Mellowmax();
+        // virtual ~Mellowmax();
 
         // omega != 0
         Mellowmax(const arma::rowvec& theta, const double omega)

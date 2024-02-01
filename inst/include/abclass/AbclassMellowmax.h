@@ -33,19 +33,17 @@ namespace abclass
     {
     protected:
         // data
-        using AbclassCD<T_loss, T_x>::km1_;
         using AbclassCD<T_loss, T_x>::mm_lowerbound_;
 
         // functions
         using AbclassCD<T_loss, T_x>::mm_gradient;
-        using AbclassCD<T_loss, T_x>::set_mm_lowerbound;
 
         // Mellowmax with optional ridge penalty
         inline double penalty1(const arma::rowvec& beta,
                                const double l1_lambda,
                                const double l2_lambda) const override
         {
-            const Mellowmax mlm { beta, control_.omega_ };
+            const Mellowmax mlm { beta, control_.mellowmax_omega_ };
             double ridge_pen { 0.0 };
             // optional ridge penalty
             if (l2_lambda > 0) {
@@ -74,7 +72,7 @@ namespace abclass
             const arma::vec vk_xg { x_.col(g) % v_k };
             const double d_gk { mm_gradient(inner, vk_xg) };
             // local approximation
-            const Mellowmax mlm { beta, control_.omega_ };
+            const Mellowmax mlm { beta, control_.mellowmax_omega_ };
             const arma::rowvec dvec { mlm.grad() };
             const double l1_lambda_g {
                 l1_lambda * control_.penalty_factor_(g) * dvec(k)

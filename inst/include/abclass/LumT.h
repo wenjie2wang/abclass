@@ -19,6 +19,8 @@
 #define ABCLASS_LUM_T_H
 
 #include <RcppArmadillo.h>
+#include "Lum.h"
+#include "Control.h"
 #include "AbclassNet.h"
 #include "AbclassSCAD.h"
 #include "AbclassMCP.h"
@@ -26,8 +28,9 @@
 #include "AbclassGroupSCAD.h"
 #include "AbclassGroupMCP.h"
 #include "AbclassCompMCP.h"
-#include "Lum.h"
-#include "Control.h"
+#include "AbclassGEL.h"
+#include "AbclassMellowmax.h"
+#include "AbclassMellowMCP.h"
 
 namespace abclass
 {
@@ -69,6 +72,15 @@ namespace abclass
 
     template<typename T_x>
     using LumCompMCP = LumT<AbclassCompMCP<Lum, T_x>, T_x>;
+
+    template<typename T_x>
+    using LumGEL = LumT<AbclassGEL<Lum, T_x>, T_x>;
+
+    template<typename T_x>
+    using LumMellowmax = LumT<AbclassMellowmax<Lum, T_x>, T_x>;
+
+    template<typename T_x>
+    using LumMellowMCP = LumT<AbclassMellowMCP<Lum, T_x>, T_x>;
 
 }
 

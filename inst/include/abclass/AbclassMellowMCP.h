@@ -33,7 +33,6 @@ namespace abclass
     {
     protected:
         // data
-        using AbclassCD<T_loss, T_x>::km1_;
         using AbclassCD<T_loss, T_x>::mm_lowerbound_;
 
         // functions
@@ -46,10 +45,10 @@ namespace abclass
                                const double l1_lambda,
                                const double l2_lambda) const override
         {
-            const Mellowmax mlm { beta, control_.omega_ };
+            const Mellowmax mlm { beta, control_.mellowmax_omega_ };
             const double inner_pen { mlm.value() };
             const double outer_pen {
-                mcp_penalty(inner_pen, l1_lambda, control_.gamma_)
+                mcp_penalty(inner_pen, l1_lambda, control_.ncv_gamma_)
             };
             double ridge_pen { 0.0 };
             // optional ridge penalty
@@ -59,11 +58,29 @@ namespace abclass
             return outer_pen + ridge_pen;
         }
 
+        inline void set_gamma(const double kappa = 0.9) override
+        {
+            // kappa must be in (0, 1)
+            if (is_le(kappa, 0.0) || is_ge(kappa, 1.0)) {
+                throw std::range_error("The 'kappa' must be in (0, 1).");
+            }
+            control_.ncv_kappa_ = kappa;
+            if (mm_lowerbound_.empty()) {
+                set_mm_lowerbound();
+            }
+            // exclude zeros lowerbounds from constant columns
+            const double min_mg {
+                mm_lowerbound_.elem(arma::find(mm_lowerbound_ > 0.0)).min()
+            };
+            control_.ncv_gamma_ = 1.0 / min_mg / kappa;
+        }
+
         // experimental
         inline double strong_rule_rhs(const double next_lambda,
                                       const double last_lambda) const override
         {
-            return 2.0 * next_lambda - last_lambda;
+            return (control_.ncv_gamma_ / (control_.ncv_gamma_ - 1) *
+                    (next_lambda - last_lambda) + next_lambda);
         }
 
         inline void update_beta_gk(arma::mat& beta,
@@ -79,12 +96,12 @@ namespace abclass
             const arma::vec vk_xg { x_.col(g) % v_k };
             const double d_gk { mm_gradient(inner, vk_xg) };
             // local approximation
-            const Mellowmax mlm { beta, control_.omega_ };
+            const Mellowmax mlm { beta, control_.mellowmax_omega_ };
             const double inner_pen { mlm.value() };
             const arma::rowvec dvec { mlm.grad() };
             const double local_factor {
-                dmcp_penalty(inner_pen, l1_lambda, control_.gamma_) *
-                dvec(k)
+                dmcp_penalty(inner_pen, l1_lambda,
+                             control_.ncv_gamma_) * dvec(k)
             };
             const double l1_lambda_g {
                 l1_lambda * control_.penalty_factor_(g) * local_factor

@@ -19,6 +19,8 @@
 #define ABCLASS_LOGISTIC_T_H
 
 #include <RcppArmadillo.h>
+#include "Logistic.h"
+#include "Control.h"
 #include "AbclassNet.h"
 #include "AbclassSCAD.h"
 #include "AbclassMCP.h"
@@ -26,8 +28,9 @@
 #include "AbclassGroupSCAD.h"
 #include "AbclassGroupMCP.h"
 #include "AbclassCompMCP.h"
-#include "Logistic.h"
-#include "Control.h"
+#include "AbclassGEL.h"
+#include "AbclassMellowmax.h"
+#include "AbclassMellowMCP.h"
 
 namespace abclass
 {
@@ -60,6 +63,15 @@ namespace abclass
 
     template<typename T_x>
     using LogisticCompMCP = LogisticT<AbclassCompMCP<Logistic, T_x>, T_x>;
+
+    template<typename T_x>
+    using LogisticGEL = LogisticT<AbclassGEL<Logistic, T_x>, T_x>;
+
+    template<typename T_x>
+    using LogisticMellowmax = LogisticT<AbclassMellowmax<Logistic, T_x>, T_x>;
+
+    template<typename T_x>
+    using LogisticMellowMCP = LogisticT<AbclassMellowMCP<Logistic, T_x>, T_x>;
 
 }
 

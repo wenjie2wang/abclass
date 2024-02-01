@@ -62,6 +62,18 @@ Rcpp::List template_abclass_fit(
                     abclass::LogisticCompMCP<T> object {x, y, ctrl};
                     return template_fit(object);
                 }
+                case 8: {       // gel
+                    abclass::LogisticGEL<T> object {x, y, ctrl};
+                    return template_fit(object);
+                }
+                case 9: {       // mellowmax
+                    abclass::LogisticMellowmax<T> object {x, y, ctrl};
+                    return template_fit(object);
+                }
+                case 10: {      // mellowmax mcp
+                    abclass::LogisticMellowMCP<T> object {x, y, ctrl};
+                    return template_fit(object);
+                }
             }
         }
         case 2: {               // boost
@@ -98,6 +110,21 @@ Rcpp::List template_abclass_fit(
                 }
                 case 7: {       // composite mcp
                     abclass::BoostCompMCP<T> object {x, y, ctrl};
+                    object.loss_fun_.set_inner_min(control["boost_umin"]);
+                    return template_fit(object);
+                }
+                case 8: {       // gel
+                    abclass::BoostGEL<T> object {x, y, ctrl};
+                    object.loss_fun_.set_inner_min(control["boost_umin"]);
+                    return template_fit(object);
+                }
+                case 9: {       // mellowmax
+                    abclass::BoostMellowmax<T> object {x, y, ctrl};
+                    object.loss_fun_.set_inner_min(control["boost_umin"]);
+                    return template_fit(object);
+                }
+                case 10: {       // mellowmax mcp
+                    abclass::BoostMellowMCP<T> object {x, y, ctrl};
                     object.loss_fun_.set_inner_min(control["boost_umin"]);
                     return template_fit(object);
                 }
@@ -140,6 +167,21 @@ Rcpp::List template_abclass_fit(
                     object.loss_fun_.set_c(control["lum_c"]);
                     return template_fit(object);
                 }
+                case 8: {       // gel
+                    abclass::HingeBoostGEL<T> object {x, y, ctrl};
+                    object.loss_fun_.set_c(control["lum_c"]);
+                    return template_fit(object);
+                }
+                case 9: {       // mellowmax
+                    abclass::HingeBoostMellowmax<T> object {x, y, ctrl};
+                    object.loss_fun_.set_c(control["lum_c"]);
+                    return template_fit(object);
+                }
+                case 10: {       // mellowmax mcp
+                    abclass::HingeBoostMellowMCP<T> object {x, y, ctrl};
+                    object.loss_fun_.set_c(control["lum_c"]);
+                    return template_fit(object);
+                }
             }
         }
         case 4: {               // lum
@@ -176,6 +218,21 @@ Rcpp::List template_abclass_fit(
                 }
                 case 7: {       // composite mcp
                     abclass::LumCompMCP<T> object {x, y, ctrl};
+                    object.loss_fun_.set_ac(control["lum_a"], control["lum_c"]);
+                    return template_fit(object);
+                }
+                case 8: {       // gel
+                    abclass::LumGEL<T> object {x, y, ctrl};
+                    object.loss_fun_.set_ac(control["lum_a"], control["lum_c"]);
+                    return template_fit(object);
+                }
+                case 9: {       // mellowmax
+                    abclass::LumMellowmax<T> object {x, y, ctrl};
+                    object.loss_fun_.set_ac(control["lum_a"], control["lum_c"]);
+                    return template_fit(object);
+                }
+                case 10: {       // mellowmax mcp
+                    abclass::LumMellowMCP<T> object {x, y, ctrl};
                     object.loss_fun_.set_ac(control["lum_a"], control["lum_c"]);
                     return template_fit(object);
                 }
