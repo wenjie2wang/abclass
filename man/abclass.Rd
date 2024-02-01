@@ -16,20 +16,22 @@ abclass(
 )
 
 abclass.control(
+  offset = NULL,
+  lum_a = 1,
+  lum_c = 0,
+  boost_umin = -5,
   alpha = 1,
   nlambda = 50L,
   lambda_min_ratio = NULL,
   lambda = NULL,
   penalty_factor = NULL,
-  grouped = TRUE,
-  penalty = c("lasso", "scad", "mcp"),
+  penalty = c("lasso", "scad", "mcp", "glasso", "gscad", "gmcp", "cmcp", "gel",
+    "mellowmax"),
   ncv_kappa = 0.9,
-  offset = NULL,
-  lum_a = 1,
-  lum_c = 0,
-  boost_umin = -5,
-  maxit = 10000L,
+  gel_tau = 0.33,
+  mellowmax_omega = 10,
   epsilon = 1e-07,
+  maxit = 10000L,
   standardize = TRUE,
   varying_active_set = TRUE,
   verbose = 0L,
@@ -65,6 +67,20 @@ for details.}
 
 \item{...}{Other control parameters passed to \code{abclass.control()}.}
 
+\item{offset}{An optional numeric matrix for offsets of the decision
+functions.}
+
+\item{lum_a}{A positive number greater than one representing the parameter
+\emph{a} in LUM, which will be used only if \code{loss = "lum"}.  The
+default value is \code{1.0}.}
+
+\item{lum_c}{A nonnegative number specifying the parameter \emph{c} in LUM,
+which will be used only if \code{loss = "hinge-boost"} or \code{loss =
+"lum"}.  The default value is \code{1.0}.}
+
+\item{boost_umin}{A negative number for adjusting the boosting loss for the
+internal majorization procedure.}
+
 \item{alpha}{A numeric value in [0, 1] representing the mixing parameter
 \emph{alpha}.  The default value is \code{1.0}.}
 
@@ -88,34 +104,21 @@ internally and only the unique values will be kept.}
 the adaptive penalty factors for individual predictors (excluding
 intercept).}
 
-\item{grouped}{A logicial value.  Experimental flag to apply group
-penalties.}
-
 \item{penalty}{A character vector specifying the name of the penalty.}
 
 \item{ncv_kappa}{A positive number within (0, 1) specifying the ratio of
 reciprocal gamma parameter for group SCAD or group MCP.  A close-to-zero
 \code{ncv_kappa} would give a solution close to lasso solution.}
 
-\item{offset}{An optional numeric matrix for offsets of the decision
-functions.}
+\item{gel_tau}{A positive parameter tau for group exponential lasso penalty.}
 
-\item{lum_a}{A positive number greater than one representing the parameter
-\emph{a} in LUM, which will be used only if \code{loss = "lum"}.  The
-default value is \code{1.0}.}
-
-\item{lum_c}{A nonnegative number specifying the parameter \emph{c} in LUM,
-which will be used only if \code{loss = "hinge-boost"} or \code{loss =
-"lum"}.  The default value is \code{1.0}.}
-
-\item{boost_umin}{A negative number for adjusting the boosting loss for the
-internal majorization procedure.}
-
-\item{maxit}{A positive integer specifying the maximum number of iteration.
-The default value is \code{10^4}.}
+\item{mellowmax_omega}{A positive parameter omega for Mellowmax penalty.}
 
 \item{epsilon}{A positive number specifying the relative tolerance that
 determines convergence.  The default value is \code{1e-7}.}
+
+\item{maxit}{A positive integer specifying the maximum number of iteration.
+The default value is \code{10^4}.}
 
 \item{standardize}{A logical value indicating if each column of the design
 matrix should be standardized internally to have mean zero and standard

@@ -20,10 +20,6 @@
 
 #include <utility>
 #include <RcppArmadillo.h>
-#include "AbclassNet.h"
-#include "AbclassGroupLasso.h"
-#include "AbclassGroupSCAD.h"
-#include "AbclassGroupMCP.h"
 #include "CrossValidation.h"
 #include "utils.h"
 
