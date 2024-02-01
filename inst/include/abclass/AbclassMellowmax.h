@@ -49,15 +49,15 @@ namespace abclass
             if (l2_lambda > 0) {
                 ridge_pen = 0.5 * l2_lambda * l2_norm_square(beta);
             }
-            return mlm.value() + ridge_pen;
+            return l1_lambda * mlm.value() + ridge_pen;
         }
 
         // experimental
-        inline double strong_rule_rhs(const double next_lambda,
-                                      const double last_lambda) const override
-        {
-            return 2.0 * next_lambda - last_lambda;
-        }
+        // inline double strong_rule_rhs(const double next_lambda,
+        //                               const double last_lambda) const override
+        // {
+        //     return 2.0 * next_lambda - last_lambda;
+        // }
 
         inline void update_beta_gk(arma::mat& beta,
                                    arma::vec& inner,
@@ -72,7 +72,9 @@ namespace abclass
             const arma::vec vk_xg { x_.col(g) % v_k };
             const double d_gk { mm_gradient(inner, vk_xg) };
             // local approximation
-            const Mellowmax mlm { beta, control_.mellowmax_omega_ };
+            const Mellowmax mlm {
+                beta.row(g1), control_.mellowmax_omega_
+            };
             const arma::rowvec dvec { mlm.grad() };
             const double l1_lambda_g {
                 l1_lambda * control_.penalty_factor_(g) * dvec(k)

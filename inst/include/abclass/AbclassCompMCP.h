@@ -86,12 +86,12 @@ namespace abclass
         }
 
         // experimental
-        inline double strong_rule_rhs(const double next_lambda,
-                                      const double last_lambda) const override
-        {
-            return (control_.ncv_gamma_ / (control_.ncv_gamma_ - 1) *
-                    (next_lambda - last_lambda) + next_lambda);
-        }
+        // inline double strong_rule_rhs(const double next_lambda,
+        //                               const double last_lambda) const override
+        // {
+        //     return (control_.ncv_gamma_ / (control_.ncv_gamma_ - 1) *
+        //             (next_lambda - last_lambda) + next_lambda);
+        // }
 
         inline void update_beta_gk(arma::mat& beta,
                                    arma::vec& inner,

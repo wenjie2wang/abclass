@@ -110,6 +110,8 @@ inline abclass::Control abclass_control(const Rcpp::List& control)
         reg_lambda(control["lambda"])->
         reg_ridge(control["alpha"])->
         reg_ncv(control["ncv_kappa"])->
+        reg_gel(control["gel_tau"])->
+        reg_mellowmax(control["mellowmax_omega"])->
         tune_cv(control["nfolds"],
                 control["stratified"],
                 control["alignment"])->

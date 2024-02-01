@@ -76,12 +76,12 @@ namespace abclass
         }
 
         // experimental
-        inline double strong_rule_rhs(const double next_lambda,
-                                      const double last_lambda) const override
-        {
-            return (control_.ncv_gamma_ / (control_.ncv_gamma_ - 1) *
-                    (next_lambda - last_lambda) + next_lambda);
-        }
+        // inline double strong_rule_rhs(const double next_lambda,
+        //                               const double last_lambda) const override
+        // {
+        //     return (control_.ncv_gamma_ / (control_.ncv_gamma_ - 1) *
+        //             (next_lambda - last_lambda) + next_lambda);
+        // }
 
         inline void update_beta_gk(arma::mat& beta,
                                    arma::vec& inner,
@@ -96,7 +96,9 @@ namespace abclass
             const arma::vec vk_xg { x_.col(g) % v_k };
             const double d_gk { mm_gradient(inner, vk_xg) };
             // local approximation
-            const Mellowmax mlm { beta, control_.mellowmax_omega_ };
+            const Mellowmax mlm {
+                beta.row(g1), control_.mellowmax_omega_
+            };
             const double inner_pen { mlm.value() };
             const arma::rowvec dvec { mlm.grad() };
             const double local_factor {

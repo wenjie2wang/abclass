@@ -64,11 +64,11 @@ namespace abclass
         }
 
         // experimental
-        inline double strong_rule_rhs(const double next_lambda,
-                                      const double last_lambda) const override
-        {
-            return 2.0 * next_lambda - last_lambda;
-        }
+        // inline double strong_rule_rhs(const double next_lambda,
+        //                               const double last_lambda) const override
+        // {
+        //     return 2.0 * next_lambda - last_lambda;
+        // }
 
         inline void update_beta_gk(arma::mat& beta,
                                    arma::vec& inner,
