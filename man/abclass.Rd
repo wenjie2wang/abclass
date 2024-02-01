@@ -26,7 +26,7 @@ abclass.control(
   lambda = NULL,
   penalty_factor = NULL,
   penalty = c("lasso", "scad", "mcp", "glasso", "gscad", "gmcp", "cmcp", "gel",
-    "mellowmax"),
+    "mellowmax", "mellowmcp"),
   ncv_kappa = 0.9,
   gel_tau = 0.33,
   mellowmax_omega = 10,

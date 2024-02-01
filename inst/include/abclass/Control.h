@@ -53,7 +53,7 @@ namespace abclass
         //   group exponential penalty
         double gel_tau_ { 0.33 };
         //   mellowmax penalty
-        double mellowmax_omega_ { 10 };
+        double mellowmax_omega_ { 1 };
 
         // tuning
         //   cross-validation

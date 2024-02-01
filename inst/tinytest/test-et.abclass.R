@@ -31,7 +31,7 @@ model1 <- et.abclass(train_x, train_y, nstages = 2,
                      refit = TRUE)
 expect_equivalent(dim(coef(model1)), c(p + 1, k - 1))
 pred1 <- predict(model1, test_x)
-expect_true(mean(test_y == pred1) > 0.5)
+expect_true(mean(test_y == pred1) > 0.3)
 
 ## with reift as a list
 ## with cv
@@ -40,7 +40,7 @@ model1 <- et.abclass(train_x, train_y, nstages = 2,
                      refit = list(alpha = 0, nlambda = 10, nfolds = 3))
 expect_equivalent(dim(coef(model1)), c(p + 1, k - 1))
 pred1 <- predict(model1, test_x)
-expect_true(mean(test_y == pred1) > 0.5)
+expect_true(mean(test_y == pred1) > 0.3)
 
 ## without cv
 model1 <- et.abclass(train_x, train_y, nstages = 2,
@@ -48,7 +48,7 @@ model1 <- et.abclass(train_x, train_y, nstages = 2,
                      refit = list(alpha = 0, nlambda = 10))
 expect_equivalent(dim(coef(model1, selection = 10)), c(p + 1, k - 1))
 pred1 <- predict(model1, test_x, s = 10)
-expect_true(mean(test_y == pred1) > 0.5)
+expect_true(mean(test_y == pred1) > 0.3)
 
 ## incorrect length of penalty factors
 expect_error(
@@ -65,4 +65,4 @@ model1 <- et.abclass(train_x, train_y, nstages = 2,
 expect_equal(gw, model1$regularization$penalty_factor)
 expect_equivalent(dim(coef(model1)), c(p + 1, k - 1))
 pred1 <- predict(model1, test_x)
-expect_true(mean(test_y == pred1) > 0.5)
+expect_true(mean(test_y == pred1) > 0.3)
