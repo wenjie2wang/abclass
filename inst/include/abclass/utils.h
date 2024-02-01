@@ -205,6 +205,47 @@ namespace abclass {
         return arma::sqrt(out);
     }
 
+    // MCP penalty function for theta >= 0
+    inline double mcp_penalty(const double theta,
+                              const double lambda,
+                              const double gamma)
+    {
+        if (theta < gamma * lambda) {
+            return theta * (lambda - 0.5 * theta / gamma);
+        }
+        return 0.5 * gamma * lambda * lambda;
+    }
+    // first derivative of MCP (wrt theta) for theta >= 0
+    inline double dmcp_penalty(const double theta,
+                               const double lambda,
+                               const double gamma)
+    {
+        // const double numer { gamam * lambda - theta};
+        const double numer { lambda - theta / gamma };
+        if (numer > 0) {
+            // return numer / gamma;
+            return numer;
+        }
+        return 0.0;
+    }
+
+    // exponential penalty function (for theta >= 0)
+    inline double exp_penalty(const double theta,
+                              const double lambda,
+                              const double tau)
+    {
+        return std::pow(lambda, 2) / tau *
+            (1 - std::exp(- tau * theta / lambda));
+    }
+    // first derivative of exponential penalty (wrt theta)
+    // assume lambda > 0
+    inline double dexp_penalty(const double theta,
+                               const double lambda,
+                               const double tau)
+    {
+        return lambda * std::exp(- theta * tau / lambda);
+    }
+
 }
 
 

@@ -32,6 +32,7 @@
 #include "abclass/Moml.h"
 #include "abclass/Query.h"
 #include "abclass/Abrank.h"
+#include "abclass/Mellowmax.h"
 
 // losses
 #include "abclass/Boost.h"
@@ -47,6 +48,9 @@
 #include "abclass/AbclassGroupSCAD.h"
 #include "abclass/AbclassGroupMCP.h"
 #include "abclass/AbclassCompMCP.h"
+#include "abclass/AbclassGEL.h"
+#include "abclass/AbclassMellowmax.h"
+#include "abclass/AbclassMellowMCP.h"
 
 // combinations
 #include "abclass/LogisticT.h"

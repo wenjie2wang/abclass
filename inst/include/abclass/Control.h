@@ -50,6 +50,10 @@ namespace abclass
         //   scad, mcp
         double ncv_kappa_ { 0.9 };   // parameter to set gamma
         double ncv_gamma_ { - 1.0 }; // gamma for group non-convex penalty
+        //   group exponential penalty
+        double gel_tau_ { 0.33 };
+        //   mellowmax penalty
+        double mellowmax_omega_ { 10 };
 
         // tuning
         //   cross-validation
@@ -172,6 +176,23 @@ namespace abclass
             ncv_kappa_ = kappa;
             return this;
         }
+        inline Control* reg_gel(const double tau = 0.33)
+        {
+            if (is_le(tau, 0.0)) {
+                throw std::range_error("The 'tau' must be positive.");
+            }
+            gel_tau_ = tau;
+            return this;
+        }
+        inline Control* reg_mellowmax(const double omega = 10.0)
+        {
+            if (is_le(omega, 0.0)) {
+                throw std::range_error("The 'omega' must be positive.");
+            }
+            mellowmax_omega_ = omega;
+            return this;
+        }
+
         // tuning
         inline Control* tune_cv(const unsigned int nfolds,
                                 const bool stratified = true,
