@@ -351,9 +351,15 @@ namespace abclass
         // tuning by ET-Lasso
         unsigned int et_npermuted_ { 0 }; // number of permuted predictors
         arma::uvec et_vs_;                // indices of selected predictors
+
+        // one time value for one stage
         // the smallest lambda before selection of any random predictors
-        double et_l1_lambda0_ { -1.0 }; // the last lambda before the cutoff
-        double et_l1_lambda1_ { -1.0 }; // the cutoff point
+        double et_l1_lambda0_; // the last lambda before the cutoff
+        double et_l1_lambda1_; // the cutoff point
+
+        // to save values from all the stages for output
+        arma::vec et_l1_lambda0_vec_;
+        arma::vec et_l1_lambda1_vec_;
 
         // regularization
         // the "big" enough lambda => zero coef unless alpha = 0
@@ -878,7 +884,7 @@ namespace abclass
                         "by the smallest lambda.\n",
                         "Suggestion: decrease 'lambda' or 'lambda_min_ratio'?");
                     et_l1_lambda0_ = l1_lambda;
-                    // et_l1_lambda1_ = - 1.0; // do not set/update
+                    et_l1_lambda1_ = - 1.0; // tell fit() to ignore
                 }
             }
             coef_.slice(li) = rescale_coef(one_beta);

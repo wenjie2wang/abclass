@@ -25,8 +25,10 @@ inline Rcpp::List get_et_res(const T& object)
     return Rcpp::List::create(
         Rcpp::Named("nstages") = object.control_.et_nstages_,
         Rcpp::Named("selected") = abclass::arma2rvec(object.et_vs_),
-        Rcpp::Named("l1_lambda0") = object.et_l1_lambda0_,
-        Rcpp::Named("l1_lambda1") = object.et_l1_lambda1_
+        Rcpp::Named("l1_lambda0") =
+        abclass::arma2rvec(object.et_l1_lambda0_vec_),
+        Rcpp::Named("l1_lambda1") =
+        abclass::arma2rvec(object.et_l1_lambda1_vec_)
         );
 }
 
@@ -78,8 +80,12 @@ inline Rcpp::List template_fit(T& object)
             Rcpp::Named("alpha") = object.control_.ridge_alpha_,
             Rcpp::Named("penalty_factor") =
             abclass::arma2rvec(object.control_.penalty_factor_),
+            Rcpp::Named("lambda_max") = object.lambda_max_,
+            Rcpp::Named("l1_lambda_max") = object.l1_lambda_max_,
             Rcpp::Named("ncv_kappa") = object.control_.ncv_kappa_,
-            Rcpp::Named("ncv_gamma") = object.control_.ncv_gamma_
+            Rcpp::Named("ncv_gamma") = object.control_.ncv_gamma_,
+            Rcpp::Named("gel_tau") = object.control_.gel_tau_,
+            Rcpp::Named("mellowmax_omega") = object.control_.mellowmax_omega_
             ),
         Rcpp::Named("optimization") = Rcpp::List::create(
             Rcpp::Named("loss") = abclass::arma2rvec(object.loss_),

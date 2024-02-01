@@ -111,8 +111,13 @@
     }
     ## update regularization
     return_lambda <- c("alpha", "lambda", "penalty_factor")
-    if (control$penalty %in% c("scad", "mcp")) {
+    if (control$penalty %in% c("scad", "mcp", "gscad", "gmcp",
+                               "cmcp", "mellowmcp")) {
         return_lambda <- c(return_lambda, "ncv_kappa", "ncv_gamma")
+    } else if (control$penalty == "gel") {
+        return_lambda <- c(return_lambda, "gel_tau")
+    } else if (grepl("^mellow", control$penalty)) {
+        return_lambda <- c(return_lambda, "mellowmax_omega")
     }
     res$regularization <- res$regularization[return_lambda]
     ## return

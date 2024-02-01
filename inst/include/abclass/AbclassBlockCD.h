@@ -36,8 +36,6 @@ namespace abclass
         using AbclassCD<T_loss, T_x>::active_ncol_;
         using AbclassCD<T_loss, T_x>::dn_obs_;
         using AbclassCD<T_loss, T_x>::inter_;
-        using AbclassCD<T_loss, T_x>::l1_lambda_max_;
-        using AbclassCD<T_loss, T_x>::lambda_max_;
         using AbclassCD<T_loss, T_x>::mm_lowerbound0_;
         using AbclassCD<T_loss, T_x>::mm_lowerbound_;
 
@@ -170,6 +168,8 @@ namespace abclass
         using AbclassCD<T_loss, T_x>::ex_vertex_;
         using AbclassCD<T_loss, T_x>::p0_;
         using AbclassCD<T_loss, T_x>::x_;
+        using AbclassCD<T_loss, T_x>::l1_lambda_max_;
+        using AbclassCD<T_loss, T_x>::lambda_max_;
 
     };
 

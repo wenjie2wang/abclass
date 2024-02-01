@@ -50,6 +50,10 @@ namespace abclass {
         obj.et_vs_ = arma::regspace<arma::uvec>(0, p0 - 1);
         arma::mat active_beta;
         arma::uvec active_idx0;
+        // record lambda's
+        arma::vec l1_lambda0 {
+            arma::zeros(obj.control_.et_nstages_)
+        }, l1_lambda1 { l1_lambda0 };
         for (size_t i { 0 }; i < obj.control_.et_nstages_; ++i) {
             // create pseudo-features
             const arma::uvec perm_idx { arma::randperm(obj.n_obs_) };
@@ -75,6 +79,8 @@ namespace abclass {
                     obj.control_.reg_lambda_min(-1.0);
                 }
             }
+            l1_lambda0(i) = obj.et_l1_lambda0_;
+            l1_lambda1(i) = obj.et_l1_lambda1_;
             // update active x
             const unsigned int p1_i { obj.p1_ - p0 };
             const unsigned int p0_i { obj.p0_ - p0 };
@@ -120,6 +126,8 @@ namespace abclass {
             obj.force_rescale_coef();
         }
         obj.et_npermuted_ = 0;  // necessary for calling regular fit()
+        obj.et_l1_lambda0_vec_ = l1_lambda0;
+        obj.et_l1_lambda1_vec_ = l1_lambda1;
     }
 
     // estimate the prediction accuracy by cross-validation
