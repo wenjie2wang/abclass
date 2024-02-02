@@ -33,9 +33,11 @@ namespace abclass
     {
     protected:
         // data
+        using AbclassCD<T_loss, T_x>::km1_;
         using AbclassCD<T_loss, T_x>::mm_lowerbound_;
 
         // functions
+        using AbclassCD<T_loss, T_x>::gradient;
         using AbclassCD<T_loss, T_x>::mm_gradient;
         using AbclassCD<T_loss, T_x>::set_mm_lowerbound;
 
@@ -75,6 +77,27 @@ namespace abclass
             control_.ncv_gamma_ = 1.0 / min_mg / kappa;
         }
 
+        // determine the large-enough l1 lambda that results in zero coef's
+        inline void set_lambda_max(const arma::vec& inner,
+                                   const arma::uvec& positive_penalty) override
+        {
+            arma::mat one_grad_beta { arma::abs(gradient(inner)) };
+            // get large enough lambda for zero coefs in positive_penalty
+            l1_lambda_max_ = 0.0;
+            lambda_max_ = 0.0;
+            for (arma::uvec::const_iterator it { positive_penalty.begin() };
+                 it != positive_penalty.end(); ++it) {
+                double tmp { one_grad_beta.row(*it).max() };
+                tmp /= control_.penalty_factor_(*it);
+                tmp *= km1_;
+                if (l1_lambda_max_ < tmp) {
+                    l1_lambda_max_ = tmp;
+                }
+            }
+            lambda_max_ =  l1_lambda_max_ /
+                std::max(control_.ridge_alpha_, 1e-2);
+        }
+
         // experimental
         // inline double strong_rule_rhs(const double next_lambda,
         //                               const double last_lambda) const override
@@ -106,7 +129,7 @@ namespace abclass
                              control_.ncv_gamma_) * dvec(k)
             };
             const double l1_lambda_g {
-                l1_lambda * control_.penalty_factor_(g) * local_factor
+                control_.penalty_factor_(g) * local_factor
             };
             const double u_g { mm_lowerbound_(g) * beta(g1, k) - d_gk };
             const double tmp { std::abs(u_g) - l1_lambda_g };
@@ -129,6 +152,8 @@ namespace abclass
         // data members
         using AbclassCD<T_loss, T_x>::control_;
         using AbclassCD<T_loss, T_x>::x_;
+        using AbclassCD<T_loss, T_x>::lambda_max_;
+        using AbclassCD<T_loss, T_x>::l1_lambda_max_;
 
         // function members
         using AbclassCD<T_loss, T_x>::get_vertex_y;
