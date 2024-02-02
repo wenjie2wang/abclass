@@ -48,7 +48,7 @@ namespace abclass
         //   ridge
         double ridge_alpha_ { 1.0 };
         //   scad, mcp
-        double ncv_kappa_ { 0.9 };   // parameter to set gamma
+        double ncv_kappa_ { 0.1 };   // parameter to set gamma
         double ncv_gamma_ { - 1.0 }; // gamma for group non-convex penalty
         //   group exponential penalty
         double gel_tau_ { 0.33 };

@@ -110,7 +110,8 @@
         res$et$selected <- res$et$selected + 1L
     }
     ## update regularization
-    return_lambda <- c("alpha", "lambda", "penalty_factor")
+    return_lambda <- c("alpha", "lambda", "penalty_factor",
+                       "lambda_max", "l1_lambda_max")
     if (control$penalty %in% c("scad", "mcp", "gscad", "gmcp",
                                "cmcp", "mellowmcp")) {
         return_lambda <- c(return_lambda, "ncv_kappa", "ncv_gamma")
