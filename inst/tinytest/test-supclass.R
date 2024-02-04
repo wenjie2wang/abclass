@@ -25,7 +25,7 @@ expect_true(mean(test_y == pred) > 0.5)
 pred2 <- predict(model, as.data.frame(test_x), s = 1)
 expect_equal(pred, pred2)
 
-prob <- predict(model, test_x, type = "prob")
+prob <- predict(model, test_x, type = "prob", s = 1)
 expect_equal(dim(prob), c(ntest, k))
 expect_equivalent(dim(coef(model, s = 1)), c(p + 1, k))
 expect_error(predict(model), "newx")

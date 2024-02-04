@@ -175,7 +175,7 @@ supclass <- function(x, y,
         regularization = control[regus],
         start = start,
         control = control[ctrls]
-    ), class = c(sprintf("%s_sup%s", model, penalty), "supclass"))
+    ), class = c(sprintf("supclass_%s_%s", model, penalty), "supclass"))
 }
 
 

@@ -111,7 +111,7 @@ cv.supclass <- function(x, y,
                     select_lambda(cv_accuracy_mean, cv_accuracy_sd))
     res$cross_validation <- c(res$cross_validation, cv_res0)
     ## add class
-    class(res) <- c(sprintf("%s_sup%s", model, penalty),
+    class(res) <- c(sprintf("supclass_%s_%s", model, penalty),
                     "cv.supclass", "supclass")
     ## return
     res

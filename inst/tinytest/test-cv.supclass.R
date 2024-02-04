@@ -21,7 +21,7 @@ model <- cv.supclass(train_x,
                      model = "psvm",
                      penalty = "lasso",
                      nfolds = 3,
-                     lambda = c(0.01, 0.02))
+                     lambda = c(0.01, 0.1))
 pred <- predict(model, test_x)
 expect_true(mean(test_y == pred) > 0.5)
 expect_equivalent(dim(coef(model)), c(p + 1, k))
