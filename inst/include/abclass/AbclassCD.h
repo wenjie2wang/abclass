@@ -133,6 +133,15 @@ namespace abclass
             return out / dn_obs_;
         }
 
+        inline double mm_gradient0(const arma::vec& inner,
+                                   const unsigned int k) const
+        {
+            arma::vec inner_grad { loss_derivative(inner) };
+            arma::vec tmp_vec { control_.obs_weight_ % inner_grad };
+            double out { arma::accu(tmp_vec % ex_vertex_.col(k)) };
+            return out / dn_obs_;
+        }
+
         // define gradient function at (g, k) for the given inner product
         inline double mm_gradient(const arma::vec& inner,
                                   const arma::vec& vk_xg) const
@@ -437,12 +446,14 @@ namespace abclass
         };
         // for intercept
         if (control_.intercept_) {
-            arma::rowvec delta_beta0 {
-                - mm_gradient0(inner) / mm_lowerbound0_
-            };
-            beta.row(0) += delta_beta0;
-            arma::vec tmp_du { ex_vertex_ * delta_beta0.t() };
-            inner += tmp_du;
+            for (size_t k {0}; k < km1_; ++k) {
+                double delta_beta0_k {
+                    - mm_gradient0(inner, k) / mm_lowerbound0_
+                };
+                beta(0, k) += delta_beta0_k;
+                arma::vec tmp_du { ex_vertex_.col(k) * delta_beta0_k };
+                inner += tmp_du;
+            }
         }
         // for predictors
         for (size_t g { 0 }; g < p0_; ++g) {
@@ -464,6 +475,12 @@ namespace abclass
                 }
             }
         }
+        if (verbose > 2) {
+            Rcpp::Rcout << "\nUpdated beta after one cycle:\n"
+                        << beta << "\n"
+                        << "\nThe active set of updated beta:\n"
+                        << is_active << "\n";
+        };
     }
 
     // run CMD cycles over active sets
@@ -481,7 +498,7 @@ namespace abclass
         )
     {
         size_t i {0}, num_iter {0};
-        // arma::mat beta0 { beta };
+        arma::mat beta0 { beta };
         double loss0 { loss(inner) };
         double reg0 { regularization(beta, l1_lambda, l2_lambda) };
         double obj0 { loss0 / dn_obs_ + reg0 }, obj1 { obj0 };
@@ -495,17 +512,14 @@ namespace abclass
                             << "\n";
             }
             while (i < max_iter) {
+                num_iter = 0;
                 // cycles over the active set
-                size_t ii {0};
-                while (ii < max_iter) {
+                while (num_iter < max_iter) {
                     ++num_iter;
                     Rcpp::checkUserInterrupt();
                     run_one_active_cycle(beta, inner, is_active_varying,
                                          l1_lambda, l2_lambda, true, verbose);
-                    // if (rel_diff(beta0, beta) < epsilon) {
-                    //     break;
-                    // }
-                    // beta0 = beta;
+
                     double loss1 { loss(inner) };
                     double reg1 { regularization(beta, l1_lambda, l2_lambda) };
                     obj1 = loss1 / dn_obs_ + reg1;
@@ -517,22 +531,20 @@ namespace abclass
                         Rprintf("    to %7.7f (loss: %7.7f + penalty: %7.7f)\n",
                                 obj1, loss1 / dn_obs_, reg1);
                         if (obj1 > obj0) {
-                            Rcpp::Rcout << "Warning: "
-                                        << "the objective function"
-                                        << "somehow increased.\n";
+                            Rcpp::Rcout << "Notice: the objective increased.\n";
                         }
                     }
-                    if (std::abs(obj0 - obj1) < epsilon) {
+                    if (std::abs(obj0 - obj1) < epsilon &&
+                        rel_diff(beta0, beta) < epsilon) {
                         break;
                     }
                     obj0 = obj1;
                     loss0 = loss1;
-                    ii++;
+                    beta0 = beta;
                 }
                 // run a full cycle over the converged beta
                 run_one_active_cycle(beta, inner, is_active,
                                      l1_lambda, l2_lambda, true, verbose);
-                ++num_iter;
                 // check two active sets coincide
                 if (arma::accu(arma::any(is_active_varying != is_active))) {
                     // if different, repeat this process
@@ -546,9 +558,9 @@ namespace abclass
                                     << " iteration(s)\n";
                     }
                     is_active_varying = is_active;
-                    // recover the active set
                     is_active = is_active_strong;
-                    ++i;
+                    // recover the active set
+                    i += num_iter;
                 } else {
                     break;
                 }
@@ -560,10 +572,7 @@ namespace abclass
                 ++num_iter;
                 run_one_active_cycle(beta, inner, is_active,
                                      l1_lambda, l2_lambda, false, verbose);
-                // if (rel_diff(beta0, beta) < epsilon) {
-                //     break;
-                // }
-                // beta0 = beta;
+
                 double loss1 { loss(inner) };
                 double reg1 { regularization(beta, l1_lambda, l2_lambda) };
                 obj1 = loss1 / dn_obs_ + reg1;
@@ -580,11 +589,13 @@ namespace abclass
                                     << "somehow increased.\n";
                     }
                 }
-                if (std::abs(obj0 - obj1) < epsilon) {
+                if (std::abs(obj0 - obj1) < epsilon &&
+                    rel_diff(beta0, beta) < epsilon) {
                     break;
                 }
                 obj0 = obj1;
                 loss0 = loss1;
+                beta0 = beta;
                 ++i;
             }
         }
@@ -613,7 +624,7 @@ namespace abclass
         const unsigned int verbose
         )
     {
-        // arma::mat beta0 { beta };
+        arma::mat beta0 { beta };
         double loss0 { loss(inner) };
         double reg0 { regularization(beta, l1_lambda, l2_lambda) };
         double obj0 { loss0 / dn_obs_ + reg0 }, obj1 { obj0 };
@@ -622,10 +633,6 @@ namespace abclass
             Rcpp::checkUserInterrupt();
             ++num_iter;
             run_one_full_cycle(beta, inner, l1_lambda, l2_lambda, verbose);
-            // if (rel_diff(beta0, beta) < epsilon) {
-            //     break;
-            // }
-            // beta0 = beta;
             double loss1 { loss(inner) };
             double reg1 { regularization(beta, l1_lambda, l2_lambda) };
             obj1 = loss1 / dn_obs_ + reg1;
@@ -642,11 +649,13 @@ namespace abclass
                                 << "somehow increased.\n";
                 }
             }
-            if (std::abs(obj0 - obj1) < epsilon) {
+            if (std::abs(obj0 - obj1) < epsilon &&
+                rel_diff(beta0, beta) < epsilon) {
                 break;
             }
             obj0 = obj1;
             loss0 = loss1;
+            beta0 = beta;
         }
         if (verbose > 0) {
             if (num_iter < max_iter) {
@@ -721,7 +730,7 @@ namespace abclass
         double epsilon0 { exp_log_sum(control_.epsilon_, dn_obs_) };
         // get the solution (intercepts) of l1_lambda_max for a warm start
         arma::umat is_active_strong {
-            arma::zeros<arma::umat>(p0_, active_ncol_)
+            arma::ones<arma::umat>(p0_, active_ncol_)
         };
         // 1) no need to consider possible constant covariates
         is_active_strong.rows(arma::find(mm_lowerbound_ <= 0.0)).zeros();

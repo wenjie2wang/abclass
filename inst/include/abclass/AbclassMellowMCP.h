@@ -124,13 +124,11 @@ namespace abclass
             };
             const double inner_pen { mlm.value() };
             const arma::rowvec dvec { mlm.grad() };
-            const double local_factor {
-                dmcp_penalty(inner_pen, l1_lambda,
-                             control_.ncv_gamma_) * dvec(k)
+            double l1_lambda_g {
+                control_.penalty_factor_(g) * l1_lambda
             };
-            const double l1_lambda_g {
-                control_.penalty_factor_(g) * local_factor
-            };
+            l1_lambda_g = dmcp_penalty(inner_pen, l1_lambda_g,
+                                       control_.ncv_gamma_) * dvec(k);
             const double u_g { mm_lowerbound_(g) * beta(g1, k) - d_gk };
             const double tmp { std::abs(u_g) - l1_lambda_g };
             if (tmp <= 0.0) {

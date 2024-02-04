@@ -94,21 +94,34 @@ namespace abclass
             const arma::vec v_k { get_vertex_y(k) };
             const arma::vec vk_xg { x_.col(g) % v_k };
             const double d_gk { mm_gradient(inner, vk_xg) };
+            const double u_g { mm_lowerbound_(g) * old_beta_g1k - d_gk };
+            const double l1_lambda_g0 {
+                l1_lambda * control_.penalty_factor_(g)
+            };
             // local approximation
             const Mellowmax mlm {
                 beta.row(g1), control_.mellowmax_omega_
             };
-            const arma::rowvec dvec { mlm.grad() };
-            const double l1_lambda_g {
-                l1_lambda * control_.penalty_factor_(g) * dvec(k)
+            const arma::rowvec mlm_d { mlm.grad() };
+            const double mlm_dk { mlm_d(k) };
+            // const double mlm_d2k {
+            //     control_.mellowmax_omega_ * mlm_dk * (1 - mlm_dk)
+            // };
+            const double mlm_d2k {
+                control_.mellowmax_omega_ * 0.25
             };
-            const double u_g { mm_lowerbound_(g) * beta(g1, k) - d_gk };
+            const double l1_lambda_g {
+                l1_lambda_g0 * (mlm_dk - mlm_d2k * std::abs(old_beta_g1k))
+            };
             const double tmp { std::abs(u_g) - l1_lambda_g };
             if (tmp <= 0.0) {
                 beta(g1, k) = 0.0;
             } else {
                 const double numer { tmp * sign(u_g) };
-                const double denom { mm_lowerbound_(g) + l2_lambda };
+                const double denom {
+                    mm_lowerbound_(g) + l2_lambda +
+                    l1_lambda_g0 * mlm_d2k
+                };
                 // update beta
                 beta(g1, k) = numer / denom;
             }
