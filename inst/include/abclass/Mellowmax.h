@@ -37,6 +37,7 @@ namespace abclass
         arma::rowvec exp_x_max_; // exp(x - max(x))
 
     public:
+        double mm_lb_;
 
         // omega != 0
         Mellowmax(const arma::rowvec& theta, const double omega)
@@ -47,6 +48,7 @@ namespace abclass
             max_x_ = x_.max();
             dn_x_ = static_cast<double>(x_.n_elem);
             exp_x_max_ = arma::zeros<arma::rowvec>(x_.n_elem);
+            mm_lb_ = omega_ * 0.25;
             // For IEEE-compatible type double,
             // overflow is guaranteed if 709.8 < num,
             // and underflow is guaranteed if num < -708.4.
