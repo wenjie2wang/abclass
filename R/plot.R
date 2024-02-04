@@ -48,9 +48,11 @@ plot.abclass_path <- function(x, y, ...)
              label = "0", cex = 0.5, pos = 2, offset = 0.5)
     }
     ncov <- sapply(seq_along(log_lambda), function(k) {
-        sum(beta_l2norm[k, - inter] > 0)
+        sum(beta_l2norm[k, - inter] > 0.0)
     })
-    first_ncov <- which(! duplicated(ncov))
-    ncov_x <- log_lambda[first_ncov]
-    axis(3, at = ncov_x, labels = ncov[first_ncov], tck = -0.01)
+    show_ncov <- c(1, which(diff(ncov) != 0) + 1L)
+    ncov_x <- log_lambda[show_ncov]
+    ## axis(1, at = ncov_x, tck = 0.01, labels = NA)
+    axis(3, at = ncov_x, labels = ncov[show_ncov], tck = -0.01,
+         cex.axis = 0.5, gap.axis = 0.01)
 }
