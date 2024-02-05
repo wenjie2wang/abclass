@@ -21,7 +21,7 @@
                   reward,
                   propensity_score,
                   intercept = TRUE,
-                  ## weight = NULL,
+                  weight = NULL,
                   loss = "logistic",
                   ## control
                   control = moml.control(),
@@ -54,7 +54,7 @@
     ctrl <- c(
         control,
         list(intercept = intercept,
-             weight = numeric(0),
+             weight = null2num0(weight),
              nfolds = as.integer(nfolds),
              stratified = stratified,
              alignment = as.integer(alignment),

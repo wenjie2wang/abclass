@@ -49,10 +49,13 @@ namespace abclass
         }
 
     public:
+        // data
         using T_class::ex_vertex_;
         using T_class::n_obs_;
-        using T_class::y_; // treatment A
+        using T_class::y_;      // treatment A
         using T_class::control_;
+
+        // function
         using T_class::set_data;
         using T_class::set_weight;
 
@@ -70,8 +73,9 @@ namespace abclass
         {
             control_ = control;
             set_data(x, treatment);
-            // ignore control_.obs_weight_ for now
-            set_weight(arma::abs(reward_) / propensity_score_);
+            set_weight(control_.weight); // initialize weights
+            set_weight(control_.weight %
+                       arma::abs(reward_) / propensity_score_);
         }
 
     };                          // end of class

@@ -29,7 +29,8 @@ plot.abclass_path <- function(x, y, ...)
         lty = 1,
         type = "l",
         xlab = expression(log(lambda)),
-        ylab = expression(paste(L[2], "(", beta, ")"))
+        ylab = expression(paste(L[2], "(", beta, ")")),
+        ylim = c(0, max(beta_l2norm))
     )
     ctrl <- modify_list(default_ctrl, dot_list)
     ctrl$x <- log_lambda
