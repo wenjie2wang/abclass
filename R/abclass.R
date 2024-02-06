@@ -176,8 +176,7 @@ abclass.control <- function(## loss
                             varying_active_set = TRUE,
                             ## misc
                             save_call = FALSE,
-                            verbose = 0L,
-                            ...)
+                            verbose = 0L)
 {
     structure(list(
         lum_a = lum_a,

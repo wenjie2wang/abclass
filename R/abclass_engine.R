@@ -23,10 +23,12 @@
 }
 .id_penalty <- function(penalty)
 {
-    all_penalties <- c("glasso", "gscad", "gmcp",
-                       "lasso", "scad", "mcp",
-                       "cmcp", "gel",
-                       "mellowmax", "mellowmcp")
+    all_penalties <- c(
+        "lasso", "scad", "mcp",
+        "glasso", "gscad", "gmcp",
+        "cmcp", "gel",
+        "mellowmax", "mellowmcp"
+    )
     match(penalty, all_penalties)
 }
 
