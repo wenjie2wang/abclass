@@ -77,36 +77,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// rcpp_moml_fit
-Rcpp::List rcpp_moml_fit(const arma::mat& x, const arma::uvec& treatment, const arma::vec& reward, const arma::vec& propensity_score, const Rcpp::List& control);
-RcppExport SEXP _abclass_rcpp_moml_fit(SEXP xSEXP, SEXP treatmentSEXP, SEXP rewardSEXP, SEXP propensity_scoreSEXP, SEXP controlSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const arma::uvec& >::type treatment(treatmentSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type reward(rewardSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type propensity_score(propensity_scoreSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::List& >::type control(controlSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpp_moml_fit(x, treatment, reward, propensity_score, control));
-    return rcpp_result_gen;
-END_RCPP
-}
-// rcpp_moml_fit_sp
-Rcpp::List rcpp_moml_fit_sp(const arma::sp_mat& x, const arma::uvec& treatment, const arma::vec& reward, const arma::vec& propensity_score, const Rcpp::List& control);
-RcppExport SEXP _abclass_rcpp_moml_fit_sp(SEXP xSEXP, SEXP treatmentSEXP, SEXP rewardSEXP, SEXP propensity_scoreSEXP, SEXP controlSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::sp_mat& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const arma::uvec& >::type treatment(treatmentSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type reward(rewardSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type propensity_score(propensity_scoreSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::List& >::type control(controlSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpp_moml_fit_sp(x, treatment, reward, propensity_score, control));
-    return rcpp_result_gen;
-END_RCPP
-}
 // rcpp_pred_prob
 arma::mat rcpp_pred_prob(const arma::mat& beta, const arma::mat& x, const arma::mat& offset, const size_t loss_id, const Rcpp::List& loss_params);
 RcppExport SEXP _abclass_rcpp_pred_prob(SEXP betaSEXP, SEXP xSEXP, SEXP offsetSEXP, SEXP loss_idSEXP, SEXP loss_paramsSEXP) {
@@ -209,8 +179,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_abclass_rcpp_abrank_fit", (DL_FUNC) &_abclass_rcpp_abrank_fit, 4},
     {"_abclass_rcpp_query_delta_weight", (DL_FUNC) &_abclass_rcpp_query_delta_weight, 2},
     {"_abclass_cv_samples", (DL_FUNC) &_abclass_cv_samples, 3},
-    {"_abclass_rcpp_moml_fit", (DL_FUNC) &_abclass_rcpp_moml_fit, 5},
-    {"_abclass_rcpp_moml_fit_sp", (DL_FUNC) &_abclass_rcpp_moml_fit_sp, 5},
     {"_abclass_rcpp_pred_prob", (DL_FUNC) &_abclass_rcpp_pred_prob, 5},
     {"_abclass_rcpp_pred_prob_sp", (DL_FUNC) &_abclass_rcpp_pred_prob_sp, 5},
     {"_abclass_rcpp_pred_y", (DL_FUNC) &_abclass_rcpp_pred_y, 4},

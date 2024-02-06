@@ -49,8 +49,20 @@ namespace abclass
         inline virtual void set_ex_vertex_matrix() // be virtual for Moml
         {
             ex_vertex_ = arma::mat(n_obs_, km1_);
+            if (control_.owl_reward_.is_empty()) {
+                // regular classification
+                for (size_t i {0}; i < n_obs_; ++i) {
+                    ex_vertex_.row(i) = t_vertex_.row(y_[i]);
+                }
+                return;
+            }
+            // outcome-weighted learning
+            if (control_.owl_reward_.n_elem != n_obs_) {
+                throw std::range_error("Incorrect length of reward.");
+            }
             for (size_t i {0}; i < n_obs_; ++i) {
-                ex_vertex_.row(i) = t_vertex_.row(y_[i]);
+                ex_vertex_.row(i) = t_vertex_.row(y_[i]) *
+                    sign(control_.owl_reward_(i));
             }
         }
 

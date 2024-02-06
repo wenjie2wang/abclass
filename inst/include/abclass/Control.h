@@ -29,12 +29,15 @@ namespace abclass
     {
     public:
         // model
-        bool intercept_ { true };              // if to contrain intercepts
         arma::vec obs_weight_ { arma::vec() }; // observational weights
+        bool intercept_ { true };              // if to contrain intercepts
 
         // offset
         bool has_offset_ { false };        // to avoid some computation
         arma::mat offset_ { arma::mat() }; // for the decision functions
+
+        // reward for the outcome-weighted learning
+        arma::vec owl_reward_ { arma::vec() };
 
         // regularization
         //   did user specified a customized lambda sequence?
@@ -124,6 +127,17 @@ namespace abclass
             verbose_ = verbose;
             return this;
         }
+        // for outcome-weighted learning
+        inline Control* set_owl_reward(const arma::vec& reward)
+        {
+            if (reward.n_elem == 0 || reward.is_zero()) {
+                owl_reward_ = arma::vec();
+                return this;
+            }
+            owl_reward_ = reward;
+            return this;
+        }
+
         // regularization
         inline Control* reg_path(const unsigned int nlambda,
                                  const double lambda_min_ratio,

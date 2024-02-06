@@ -84,37 +84,35 @@
     ## prepare arguments
     ctrl <- c(
         control,
-        list(weights = null2num0(weights),
+        list(loss_id = loss_id,
+             penalty_id = penalty_id,
+             weights = null2num0(weights),
              offset = null2mat0(offset),
              intercept = intercept,
              nfolds = as.integer(nfolds),
              stratified = stratified,
              alignment = as.integer(alignment),
              nstages = as.integer(nstages),
-             loss_id = loss_id,
-             penalty_id = penalty_id)
+             owl_reward = null2num0(moml_args$reward))
     )
     ctrl$lambda <- null2num0(ctrl$lambda)
     ctrl$penalty_factor = null2num0(ctrl$penalty_factor)
-    ## moml
+    ## set up weights in the outcome-weighted learning
     if (length(moml_args) > 0) {
-        ## moml
-        call_list <- c(list(x = x, treatment = cat_y$y, control = ctrl),
-                       moml_args)
-        fun_to_call <- if (is_x_sparse) {
-                           rcpp_moml_fit_sp
-                       } else {
-                           rcpp_moml_fit
-                       }
-    } else {
-        ## abclass
-        call_list <- list(x = x, y = cat_y$y, control = ctrl)
-        fun_to_call <- if (is_x_sparse) {
-                           rcpp_abclass_fit_sp
-                       } else {
-                           rcpp_abclass_fit
-                       }
+        owl_weight <- abs(moml_args$reward) / moml_args$propensity_score
+        if (length(ctrl$weights) > 0) {
+            ctrl$weights <- ctrl$weights * owl_weight
+        } else {
+            ctrl$weights <- owl_weight
+        }
     }
+    ## main
+    call_list <- list(x = x, y = cat_y$y, control = ctrl)
+    fun_to_call <- if (is_x_sparse) {
+                       rcpp_abclass_fit_sp
+                   } else {
+                       rcpp_abclass_fit
+                   }
     res <- do.call(fun_to_call, call_list)
     ## post-process
     res$category <- cat_y
