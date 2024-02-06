@@ -80,7 +80,9 @@ coef.abclass <- function(object,
         if (any(selection > dk)) {
             stop(sprintf("The 'selection' index must be <= %d.", dk))
         }
-        return(object$coefficients[, , selection, drop = TRUE])
+        ## do not drop dimension if multiple idx for binary classification
+        return(object$coefficients[, , selection,
+                                   drop = length(selection) == 1])
     }
     selection <- match.arg(selection, c("cv_1se", "cv_min", "all"))
     if (! length(object$cross_validation$cv_accuracy) || selection == "all") {
