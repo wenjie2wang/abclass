@@ -8,32 +8,33 @@
 abclass(
   x,
   y,
-  intercept = TRUE,
-  weight = NULL,
   loss = c("logistic", "boost", "hinge-boost", "lum"),
+  penalty = c("glasso", "gscad", "gmcp", "lasso", "scad", "mcp", "cmcp", "gel",
+    "mellowmax", "mellowmcp"),
+  weights = NULL,
+  offset = NULL,
+  intercept = TRUE,
   control = list(),
   ...
 )
 
 abclass.control(
-  offset = NULL,
   lum_a = 1,
   lum_c = 0,
   boost_umin = -5,
   alpha = 1,
+  lambda = NULL,
   nlambda = 50L,
   lambda_min_ratio = NULL,
-  lambda = NULL,
   penalty_factor = NULL,
-  penalty = c("lasso", "scad", "mcp", "glasso", "gscad", "gmcp", "cmcp", "gel",
-    "mellowmax", "mellowmcp"),
   ncv_kappa = 0.1,
   gel_tau = 0.33,
   mellowmax_omega = 1,
   epsilon = 1e-07,
-  maxit = 10000L,
+  maxit = 100000L,
   standardize = TRUE,
   varying_active_set = TRUE,
+  save_call = FALSE,
   verbose = 0L,
   ...
 )
@@ -48,13 +49,6 @@ to include an intercept term instead of adding an all-one column to
 \item{y}{An integer vector, a character vector, or a factor vector
 representing the response label.}
 
-\item{intercept}{A logical value indicating if an intercept should be
-considered in the model.  The default value is \code{TRUE} and the
-intercept is excluded from regularization.}
-
-\item{weight}{A numeric vector for nonnegative observation weights. Equal
-observation weights are used by default.}
-
 \item{loss}{A character value specifying the loss function.  The available
 options are \code{"logistic"} for the logistic deviance loss,
 \code{"boost"} for the exponential loss approximating Boosting machines,
@@ -62,13 +56,22 @@ options are \code{"logistic"} for the logistic deviance loss,
 \code{"lum"} for largin-margin unified machines (LUM).  See Liu, et
 al. (2011) for details.}
 
+\item{penalty}{A character vector specifying the name of the penalty.}
+
+\item{weights}{A numeric vector for nonnegative observation weights. Equal
+observation weights are used by default.}
+
+\item{offset}{An optional numeric matrix for offsets of the decision
+functions.}
+
+\item{intercept}{A logical value indicating if an intercept should be
+considered in the model.  The default value is \code{TRUE} and the
+intercept is excluded from regularization.}
+
 \item{control}{A list of control parameters. See \code{abclass.control()}
 for details.}
 
 \item{...}{Other control parameters passed to \code{abclass.control()}.}
-
-\item{offset}{An optional numeric matrix for offsets of the decision
-functions.}
 
 \item{lum_a}{A positive number greater than one representing the parameter
 \emph{a} in LUM, which will be used only if \code{loss = "lum"}.  The
@@ -84,6 +87,13 @@ internal majorization procedure.}
 \item{alpha}{A numeric value in [0, 1] representing the mixing parameter
 \emph{alpha}.  The default value is \code{1.0}.}
 
+\item{lambda}{A numeric vector specifying the tuning parameter
+\emph{lambda}.  A data-driven \emph{lambda} sequence will be generated
+and used according to specified \code{alpha}, \code{nlambda} and
+\code{lambda_min_ratio} if this argument is left as \code{NULL} by
+default.  The specified \code{lambda} will be sorted in decreasing order
+internally and only the unique values will be kept.}
+
 \item{nlambda}{A positive integer specifying the length of the internally
 generated \emph{lambda} sequence.  This argument will be ignored if a
 valid \code{lambda} is specified.  The default value is \code{50}.}
@@ -93,18 +103,9 @@ smallest lambda parameter to the largest lambda parameter.  The default
 value is set to \code{1e-4} if the sample size is larger than the number
 of predictors, and \code{1e-2} otherwise.}
 
-\item{lambda}{A numeric vector specifying the tuning parameter
-\emph{lambda}.  A data-driven \emph{lambda} sequence will be generated
-and used according to specified \code{alpha}, \code{nlambda} and
-\code{lambda_min_ratio} if this argument is left as \code{NULL} by
-default.  The specified \code{lambda} will be sorted in decreasing order
-internally and only the unique values will be kept.}
-
 \item{penalty_factor}{A numerical vector with nonnegative values specifying
 the adaptive penalty factors for individual predictors (excluding
 intercept).}
-
-\item{penalty}{A character vector specifying the name of the penalty.}
 
 \item{ncv_kappa}{A positive number within (0, 1) specifying the ratio of
 reciprocal gamma parameter for group SCAD or group MCP.  A close-to-zero
@@ -115,10 +116,9 @@ reciprocal gamma parameter for group SCAD or group MCP.  A close-to-zero
 \item{mellowmax_omega}{A positive parameter omega for Mellowmax penalty.}
 
 \item{epsilon}{A positive number specifying the relative tolerance that
-determines convergence.  The default value is \code{1e-7}.}
+determines convergence.}
 
-\item{maxit}{A positive integer specifying the maximum number of iteration.
-The default value is \code{10^4}.}
+\item{maxit}{A positive integer specifying the maximum number of iteration.}
 
 \item{standardize}{A logical value indicating if each column of the design
 matrix should be standardized internally to have mean zero and standard
@@ -127,9 +127,15 @@ Notice that the coefficient estimates are always returned on the
 original scale.}
 
 \item{varying_active_set}{A logical value indicating if the active set
-should be updated after each cycle of coordinate-majorization-descent
-algorithm.  The default value is \code{TRUE} for usually more efficient
-estimation procedure.}
+should be updated after each cycle of coordinate-descent algorithm.  The
+default value is \code{TRUE} for usually more efficient estimation
+procedure.}
+
+\item{save_call}{A logical value indicating if the function call of the
+model fitting should be saved.  If \code{TRUE}, the function call will
+be saved in the \code{abclass} object so that one can utilize
+\code{stats::update()} to update the argument specifications
+conveniently.}
 
 \item{verbose}{A nonnegative integer specifying if the estimation procedure
 is allowed to print out intermediate steps/results.  The default value
@@ -152,10 +158,10 @@ set.seed(123)
 ## toy examples for demonstration purpose
 ## reference: example 1 in Zhang and Liu (2014)
 ntrain <- 100 # size of training set
-ntest <- 100  # size of testing set
-p0 <- 5       # number of actual predictors
-p1 <- 5       # number of random predictors
-k <- 5        # number of categories
+ntest <- 1000 # size of testing set
+p0 <- 2       # number of actual predictors
+p1 <- 2       # number of random predictors
+k <- 3        # number of categories
 
 n <- ntrain + ntest; p <- p0 + p1
 train_idx <- seq_len(ntrain)
@@ -172,21 +178,15 @@ y <- factor(paste0("label_", y))
 train_y <- y[train_idx]
 test_y <- y[- train_idx]
 
-## Regularization through ridge penalty
-control1 <- abclass.control(nlambda = 5, lambda_min_ratio = 1e-3,
-                            alpha = 0, grouped = FALSE)
-model1 <- abclass(train_x, train_y, loss = "logistic",
-                  control = control1)
-pred1 <- predict(model1, test_x, s = 5)
-table(test_y, pred1)
-mean(test_y == pred1) # accuracy
-
-## groupwise regularization via group lasso
-model2 <- abclass(train_x, train_y, loss = "boost",
-                  grouped = TRUE, nlambda = 5)
-pred2 <- predict(model2, test_x, s = 5)
-table(test_y, pred2)
-mean(test_y == pred2) # accuracy
+## regularization through ridge penalty
+model <- abclass(
+    x = train_x,
+    y = train_y,
+    control = abclass.control(nlambda = 5, alpha = 0)
+)
+pred <- predict(model, test_x, s = 5)
+mean(test_y == pred) # accuracy
+table(test_y, pred)
 }
 \references{
 Zhang, C., & Liu, Y. (2014). Multicategory Angle-Based Large-Margin

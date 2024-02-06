@@ -7,11 +7,14 @@
 abclass_propscore(
   x,
   treatment,
-  intercept = TRUE,
-  weight = NULL,
   loss = c("logistic", "boost", "hinge-boost", "lum"),
+  penalty = c("glasso", "gscad", "gmcp", "lasso", "scad", "mcp", "cmcp", "gel",
+    "mellowmax", "mellowmcp"),
+  weights = NULL,
+  offset = NULL,
+  intercept = TRUE,
   control = list(),
-  tuning = c("et", "cv"),
+  tuning = c("et", "cv_1se", "cv_min"),
   ...
 )
 }
@@ -25,19 +28,24 @@ to include an intercept term instead of adding an all-one column to
 \item{treatment}{The assigned treatments represented by a character,
 integer, numeric, or factor vector.}
 
-\item{intercept}{A logical value indicating if an intercept should be
-considered in the model.  The default value is \code{TRUE} and the
-intercept is excluded from regularization.}
-
-\item{weight}{A numeric vector for nonnegative observation weights. Equal
-observation weights are used by default.}
-
 \item{loss}{A character value specifying the loss function.  The available
 options are \code{"logistic"} for the logistic deviance loss,
 \code{"boost"} for the exponential loss approximating Boosting machines,
 \code{"hinge-boost"} for hybrid of SVM and AdaBoost machine, and
 \code{"lum"} for largin-margin unified machines (LUM).  See Liu, et
 al. (2011) for details.}
+
+\item{penalty}{A character vector specifying the name of the penalty.}
+
+\item{weights}{A numeric vector for nonnegative observation weights. Equal
+observation weights are used by default.}
+
+\item{offset}{An optional numeric matrix for offsets of the decision
+functions.}
+
+\item{intercept}{A logical value indicating if an intercept should be
+considered in the model.  The default value is \code{TRUE} and the
+intercept is excluded from regularization.}
 
 \item{control}{A list of control parameters. See \code{abclass.control()}
 for details.}

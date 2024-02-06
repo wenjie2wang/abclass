@@ -9,8 +9,12 @@ cv.moml(
   treatment,
   reward,
   propensity_score,
-  intercept = TRUE,
   loss = c("logistic", "boost", "hinge-boost", "lum"),
+  penalty = c("glasso", "gscad", "gmcp", "lasso", "scad", "mcp", "cmcp", "gel",
+    "mellowmax", "mellowmcp"),
+  weights = NULL,
+  offset = NULL,
+  intercept = TRUE,
   control = moml.control(),
   nfolds = 5L,
   stratified = TRUE,
@@ -35,16 +39,24 @@ a larger reward is more desirable.}
 \item{propensity_score}{A numeric vector taking values between 0 and 1
 representing the propensity score.}
 
-\item{intercept}{A logical value indicating if an intercept should be
-considered in the model.  The default value is \code{TRUE} and the
-intercept is excluded from regularization.}
-
 \item{loss}{A character value specifying the loss function.  The available
 options are \code{"logistic"} for the logistic deviance loss,
 \code{"boost"} for the exponential loss approximating Boosting machines,
 \code{"hinge-boost"} for hybrid of SVM and AdaBoost machine, and
 \code{"lum"} for largin-margin unified machines (LUM).  See Liu, et
 al. (2011) for details.}
+
+\item{penalty}{A character vector specifying the name of the penalty.}
+
+\item{weights}{A numeric vector for nonnegative observation weights. Equal
+observation weights are used by default.}
+
+\item{offset}{An optional numeric matrix for offsets of the decision
+functions.}
+
+\item{intercept}{A logical value indicating if an intercept should be
+considered in the model.  The default value is \code{TRUE} and the
+intercept is excluded from regularization.}
 
 \item{control}{A list of control parameters. See \code{abclass.control()}
 for details.}

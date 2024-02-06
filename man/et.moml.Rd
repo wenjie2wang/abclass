@@ -9,12 +9,18 @@ et.moml(
   treatment,
   reward,
   propensity_score,
-  intercept = TRUE,
-  weight = NULL,
   loss = c("logistic", "boost", "hinge-boost", "lum"),
+  penalty = c("glasso", "gscad", "gmcp", "lasso", "scad", "mcp", "cmcp", "gel",
+    "mellowmax", "mellowmcp"),
+  weights = NULL,
+  offset = NULL,
+  intercept = TRUE,
   control = list(),
   nstages = 2,
-  refit = list(lambda = 1e-06),
+  nfolds = 0L,
+  stratified = TRUE,
+  alignment = c("fraction", "lambda"),
+  refit = FALSE,
   ...
 )
 }
@@ -34,13 +40,6 @@ a larger reward is more desirable.}
 \item{propensity_score}{A numeric vector taking values between 0 and 1
 representing the propensity score.}
 
-\item{intercept}{A logical value indicating if an intercept should be
-considered in the model.  The default value is \code{TRUE} and the
-intercept is excluded from regularization.}
-
-\item{weight}{A numeric vector for nonnegative observation weights. Equal
-observation weights are used by default.}
-
 \item{loss}{A character value specifying the loss function.  The available
 options are \code{"logistic"} for the logistic deviance loss,
 \code{"boost"} for the exponential loss approximating Boosting machines,
@@ -48,12 +47,42 @@ options are \code{"logistic"} for the logistic deviance loss,
 \code{"lum"} for largin-margin unified machines (LUM).  See Liu, et
 al. (2011) for details.}
 
+\item{penalty}{A character vector specifying the name of the penalty.}
+
+\item{weights}{A numeric vector for nonnegative observation weights. Equal
+observation weights are used by default.}
+
+\item{offset}{An optional numeric matrix for offsets of the decision
+functions.}
+
+\item{intercept}{A logical value indicating if an intercept should be
+considered in the model.  The default value is \code{TRUE} and the
+intercept is excluded from regularization.}
+
 \item{control}{A list of control parameters. See \code{abclass.control()}
 for details.}
 
 \item{nstages}{A positive integer specifying for the number of stages in the
 ET-Lasso procedure.  By default, two rounds of tuning by random
 permutations will be performed as suggested in Yang, et al. (2019).}
+
+\item{nfolds}{A positive integer specifying the number of folds for
+cross-validation.  Five-folds cross-validation will be used by default.
+An error will be thrown out if the \code{nfolds} is specified to be less
+than 2.}
+
+\item{stratified}{A logical value indicating if the cross-validation
+procedure should be stratified by the response label. The default value
+is \code{TRUE} to ensure the same number of categories be used in
+validation and training.}
+
+\item{alignment}{A character vector specifying how to align the lambda
+sequence used in the main fit with the cross-validation fits.  The
+available options are \code{"fraction"} for allowing cross-validation
+fits to have their own lambda sequences and \code{"lambda"} for using
+the same lambda sequence of the main fit.  The option \code{"lambda"}
+will be applied if a meaningful \code{lambda} is specified.  The default
+value is \code{"fraction"}.}
 
 \item{refit}{A logical value indicating if a new classifier should be
 trained using the selected predictors or a named list that will be
