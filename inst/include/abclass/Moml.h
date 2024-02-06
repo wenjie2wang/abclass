@@ -73,25 +73,12 @@ namespace abclass
         {
             control_ = control;
             set_data(x, treatment);
-            set_weight(control_.weight); // initialize weights
-            set_weight(control_.weight %
+            set_weight(control_.obs_weight_); // initialize weights
+            set_weight(control_.obs_weight_ %
                        arma::abs(reward_) / propensity_score_);
         }
 
     };                          // end of class
-
-    // alias template
-    template <typename T_loss, typename T_x>
-    using MomlNet = Moml<AbclassNet<T_loss, T_x>, T_x>;
-
-    template <typename T_loss, typename T_x>
-    using MomlGroupLasso = Moml<AbclassGroupLasso<T_loss, T_x>, T_x>;
-
-    template <typename T_loss, typename T_x>
-    using MomlGroupSCAD = Moml<AbclassGroupSCAD<T_loss, T_x>, T_x>;
-
-    template <typename T_loss, typename T_x>
-    using MomlGroupMCP = Moml<AbclassGroupMCP<T_loss, T_x>, T_x>;
 
 }  // abclass
 

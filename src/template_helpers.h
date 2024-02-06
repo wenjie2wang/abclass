@@ -73,7 +73,11 @@ inline Rcpp::List template_fit(T& object)
     }
     return Rcpp::List::create(
         Rcpp::Named("coefficients") = object.coef_,
-        Rcpp::Named("weight") = abclass::arma2rvec(object.control_.obs_weight_),
+        Rcpp::Named("optimization") = Rcpp::List::create(
+            Rcpp::Named("loss") = abclass::arma2rvec(object.loss_),
+            Rcpp::Named("penalty") = abclass::arma2rvec(object.penalty_),
+            Rcpp::Named("objective") = abclass::arma2rvec(object.objective_)
+            ),
         Rcpp::Named("regularization") = Rcpp::List::create(
             Rcpp::Named("lambda") =
             abclass::arma2rvec(object.control_.lambda_),
@@ -87,11 +91,9 @@ inline Rcpp::List template_fit(T& object)
             Rcpp::Named("gel_tau") = object.control_.gel_tau_,
             Rcpp::Named("mellowmax_omega") = object.control_.mellowmax_omega_
             ),
-        Rcpp::Named("optimization") = Rcpp::List::create(
-            Rcpp::Named("loss") = abclass::arma2rvec(object.loss_),
-            Rcpp::Named("penalty") = abclass::arma2rvec(object.penalty_),
-            Rcpp::Named("objective") = abclass::arma2rvec(object.objective_)
-            ),
+        Rcpp::Named("weights") =
+        abclass::arma2rvec(object.control_.obs_weight_),
+        Rcpp::Named("offset") = abclass::arma2rvec(object.control_.offset_),
         Rcpp::Named("cross_validation") = cv_res,
         Rcpp::Named("et") = et_res
         );
@@ -107,7 +109,7 @@ inline abclass::Control abclass_control(const Rcpp::List& control)
         control["verbose"]
     };
     ctrl.set_intercept(control["intercept"])->
-        set_weight(control["weight"])->
+        set_weight(control["weights"])->
         set_offset(control["offset"])->
         reg_path(control["nlambda"],
                  control["lambda_min_ratio"],

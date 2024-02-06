@@ -16,7 +16,7 @@
 ##
 
 .abrank <- function(x, y, qid,
-                    weight = NULL,
+                    weights = NULL,
                     loss = "logistic",
                     control = abrank.control(),
                     ## cv
@@ -45,7 +45,7 @@
     ## prepare arguments
     ctrl <- c(
         control,
-        list(weight = null2num0(weight),
+        list(weights = null2num0(weights),
              cv_metric = as.integer(cv_metric),
              nstages = as.integer(nstages),
              loss_id = loss_id)

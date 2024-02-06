@@ -17,8 +17,7 @@ test_y <- y[- train_idx]
 
 ## logistic deviance loss
 model1 <- cv.abclass(train_x, train_y, nlambda = 5,
-                     lambda_min_ratio = 1e-3,
-                     grouped = FALSE, nfolds = 3)
+                     lambda_min_ratio = 1e-3, nfolds = 3)
 pred1 <- predict(model1, test_x)
 expect_true(mean(test_y == pred1) > 0.5)
 expect_equivalent(dim(coef(model1, s = "cv_1se")), c(p + 1, k - 1))
@@ -38,7 +37,7 @@ expect_equivalent(dim(coef(model3, s = 3)), c(p + 1, k - 1))
 
 ## LUM loss
 model4 <- cv.abclass(train_x, train_y, nlambda = 5,
-                     loss = "lum", penalty = "mcp")
+                     loss = "lum", penalty = "glasso")
 pred4 <- predict(model4, test_x, s = "cv_1se")
 expect_true(mean(test_y == pred4) > 0.5)
 expect_equivalent(dim(coef(model4, s = 5)), c(p + 1, k - 1))

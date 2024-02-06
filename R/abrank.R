@@ -16,7 +16,7 @@
 ##
 
 abrank <- function(x, y, qid,
-                   weight = NULL,
+                   weights = NULL,
                    loss = c("logistic", "boost", "hinge-boost", "lum"),
                    control = list(),
                    ...)
@@ -30,7 +30,7 @@ abrank <- function(x, y, qid,
         x = x,
         y = y,
         qid = qid,
-        weight = null2num0(weight),
+        weights = null2num0(weights),
         loss = loss,
         control = control
     )

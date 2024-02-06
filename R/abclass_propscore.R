@@ -30,27 +30,35 @@
 ##' @param ... Other arguments passed to the corresponding methods.
 ##'
 ##' @export
-abclass_propscore <-
-    function(x,
-             treatment,
-             intercept = TRUE,
-             weight = NULL,
-             loss = c("logistic", "boost", "hinge-boost", "lum"),
-             control = list(),
-             tuning = c("et", "cv"),
-             ...)
+abclass_propscore <- function(x,
+                              treatment,
+                              loss = c("logistic", "boost",
+                                       "hinge-boost", "lum"),
+                              penalty = c(
+                                  "glasso", "gscad", "gmcp",
+                                  "lasso", "scad", "mcp",
+                                  "cmcp", "gel", "mellowmax", "mellowmcp"
+                              ),
+                              weights = NULL,
+                              offset = NULL,
+                              intercept = TRUE,
+                              control = list(),
+                              tuning = c("et", "cv_1se", "cv_min"),
+                              ...)
 {
-    all_loss <- c("logistic", "boost", "hinge-boost", "lum")
-    loss <- match.arg(as.character(loss), choices = all_loss)
-    tuning <- match.arg(as.character(tuning), choices = c("et", "cv"))
+    loss <- match.arg(loss)
+    penalty <- match.arg(penalty)
+    tuning <- match.arg(tuning)
     dot_list <- list(...)
     control <- do.call(abclass.control, modify_list(control, dot_list))
     call_list <- list(
         x = x,
         y = treatment,
-        intercept = intercept,
-        weight = weight,
         loss = loss,
+        penalty = penalty,
+        intercept = intercept,
+        weights = weights,
+        offset = offset,
         control = control,
         ...
     )
@@ -62,7 +70,12 @@ abclass_propscore <-
                do.call(cv.abclass, call_list)
            }
     idx_mat <- cbind(seq_along(treatment), res$category$y + 1L)
-    prob_est <- predict(res, newx = x, type = "probability")
+    prob_est <- if (grepl("^cv_", tuning)) {
+                    predict(res, newx = x, type = "probability",
+                            selection = tuning)
+                } else {
+                    predict(res, newx = x, type = "probability")
+                }
     prob_est <- prob_est[idx_mat]
     attr(prob_est, "model") <- res
     prob_est

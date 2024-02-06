@@ -66,7 +66,7 @@ predict.abclass <- function(object,
     }
     type <- match.arg(type, c("class", "probability", "link"))
     res_coef <- coef(object, selection = selection)
-    loss_id <- match(object$loss, c("logistic", "boost", "hinge-boost", "lum"))
+    loss_id <- .id_loss(object$specs$loss)
     loss_params <- object$control[c("boost_umin", "lum_a", "lum_c")]
     predict_prob_fun <- "rcpp_pred_prob"
     predict_class_fun <- "rcpp_pred_y"

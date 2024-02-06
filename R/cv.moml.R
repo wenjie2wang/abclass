@@ -27,8 +27,15 @@ cv.moml <- function(x,
                     treatment,
                     reward,
                     propensity_score,
-                    intercept = TRUE,
                     loss = c("logistic", "boost", "hinge-boost", "lum"),
+                    penalty = c(
+                        "glasso", "gscad", "gmcp",
+                        "lasso", "scad", "mcp",
+                        "cmcp", "gel", "mellowmax", "mellowmcp"
+                    ),
+                    weights = NULL,
+                    offset = NULL,
+                    intercept = TRUE,
                     control = moml.control(),
                     nfolds = 5L,
                     stratified = TRUE,
@@ -50,8 +57,8 @@ cv.moml <- function(x,
         alignment <- match(alignment, all_alignment) - 1L
     }
     ## loss
-    all_loss <- c("logistic", "boost", "hinge-boost", "lum")
-    loss <- match.arg(loss, choices = all_loss)
+    loss <- match.arg(loss)
+    penalty <- match.arg(penalty)
     ## controls
     dot_list <- list(...)
     control <- do.call(moml.control, modify_list(control, dot_list))
@@ -61,17 +68,24 @@ cv.moml <- function(x,
                 " for the specified lambda sequence.")
         alignment <- 1L
     }
-    ## prepare arguments
-    res <- .moml(x = x,
-                 treatment = treatment,
-                 reward = reward,
-                 propensity_score = propensity_score,
-                 intercept = intercept,
-                 loss = loss,
-                 control = control,
-                 nfolds = nfolds,
-                 stratified = stratified,
-                 alignment = alignment)
+    ## main
+    res <- .abclass(
+        x = x,
+        y = treatment,
+        loss = loss,
+        penalty = penalty,
+        weights = weights,
+        offset = offset,
+        intercept = intercept,
+        control = control,
+        nfolds = nfolds,
+        stratified = stratified,
+        alignment = alignment,
+        moml_args = list(
+            reward = reward,
+            propensity_score = propensity_score
+        )
+    )
     ## add cv idx
     cv_idx_list <- with(res$cross_validation,
                         select_lambda(cv_accuracy_mean, cv_accuracy_sd))
@@ -80,7 +94,7 @@ cv.moml <- function(x,
     if (! isFALSE(refit)) {
         if (isTRUE(refit)) {
             ## default controls
-            refit <- list(lambda = 1e-6)
+            refit <- list(lambda = 1e-4, alignment = 1L)
         }
         ## TODO allow selection of min and 1se
         coef_idx <- res$cross_validation$cv_1se
@@ -90,18 +104,25 @@ cv.moml <- function(x,
             refit$penalty_factor <- res$regularization$penalty_factor[idx]
         }
         refit_control <- modify_list(control, refit)
-        refit_res <- .moml(
+        refit_res <- .abclass(
             x = x[, idx, drop = FALSE],
-            treatment = treatment,
-            reward = reward,
-            propensity_score = propensity_score,
-            ## assume intercept, weight, loss are the same with
-            intercept = intercept,
+            y = treatment,
+            ## assume intercept, weight, loss are the same
             loss = loss,
+            penalty = penalty,
+            weights = weights,
+            offset = offset,
+            intercept = intercept,
             control = refit_control,
+            ## cv
             nfolds = null0(refit$nfolds),
             stratified = ! isFALSE(refit$straitified),
-            nstages = null0(refit$nstages)
+            alignment = null0(refit$alignment),
+            ## moml
+            moml_args = list(
+                reward = reward,
+                propensity_score = propensity_score
+            )
         )
         if (! is.null(refit_res$cross_validation)) {
             ## add cv idx
@@ -110,9 +131,7 @@ cv.moml <- function(x,
             refit_res$cross_validation <- c(refit_res$cross_validation,
                                             cv_idx_list)
         }
-        res$refit <- refit_res[
-            ! names(refit_res) %in% c("intercept", "loss", "category")
-        ]
+        res$refit <- refit_res[! names(refit_res) %in% c("specs", "category")]
         res$refit$selected_coef <- idx
     } else {
         res$refit <- FALSE

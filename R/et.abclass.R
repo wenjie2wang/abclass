@@ -44,9 +44,15 @@
 ##'
 ##' @export
 et.abclass <- function(x, y,
-                       intercept = TRUE,
-                       weight = NULL,
                        loss = c("logistic", "boost", "hinge-boost", "lum"),
+                       penalty = c(
+                           "glasso", "gscad", "gmcp",
+                           "lasso", "scad", "mcp",
+                           "cmcp", "gel", "mellowmax", "mellowmcp"
+                       ),
+                       weights = NULL,
+                       offset = NULL,
+                       intercept = TRUE,
                        control = list(),
                        nstages = 2L,
                        nfolds = 0L,
@@ -55,14 +61,13 @@ et.abclass <- function(x, y,
                        refit = FALSE,
                        ...)
 {
+    loss <- match.arg(loss)
+    penalty <- match.arg(penalty)
     ## nstages
     nstages <- as.integer(nstages)
     if (nstages < 1L) {
         stop("The 'nstages' must be a positive integer.")
     }
-    ## loss
-    all_loss <- c("logistic", "boost", "hinge-boost", "lum")
-    loss <- match.arg(loss, choices = all_loss)
     ## controls
     dot_list <- list(...)
     control <- do.call(abclass.control, modify_list(control, dot_list))
@@ -70,9 +75,11 @@ et.abclass <- function(x, y,
     res <- .abclass(
         x = x,
         y = y,
-        intercept = intercept,
-        weight = null2num0(weight),
         loss = loss,
+        penalty = penalty,
+        weights = weights,
+        offset = offset,
+        intercept = intercept,
         control = control,
         nstages = nstages,
         nfolds = nfolds,
@@ -82,7 +89,7 @@ et.abclass <- function(x, y,
     ## refit if needed
     if (! isFALSE(refit) && length(res$et$selected) > 0) {
         if (isTRUE(refit)) {
-            refit <- list(lambda = 1e-6, alignment = 1L)
+            refit <- list(lambda = 1e-4, alignment = 1L)
         }
         idx <- res$et$selected
         ## inherit the penalty factors for those selected predictors
@@ -93,10 +100,12 @@ et.abclass <- function(x, y,
         refit_res <- .abclass(
             x = x[, idx, drop = FALSE],
             y = y,
-            ## assume intercept, weight, loss are the same with et-lasso
-            intercept = intercept,
-            weight = res$weight,
+            ## assume intercept, weights, loss are the same with et-lasso
             loss = loss,
+            penalty = penalty,
+            intercept = intercept,
+            weights = res$weights,
+            offset = res$offset,
             control = refit_control,
             ## cv
             nfolds = null0(refit$nfolds),
@@ -113,7 +122,8 @@ et.abclass <- function(x, y,
                                             cv_idx_list)
         }
         res$refit <- refit_res[! names(refit_res) %in%
-                               c("intercept", "weight", "loss", "category")]
+                               c("category", "loss", "penalty",
+                                 "weights", "offset", "intercept")]
         res$refit$selected_coef <- idx
     } else {
         res$refit <- FALSE

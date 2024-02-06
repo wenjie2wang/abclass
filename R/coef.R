@@ -49,11 +49,11 @@ coef.abclass <- function(object,
     if (! (is.null(object$refit) || isFALSE(object$refit))) {
         tmp <- object$refit
         nlambda <- tmp$coefficients
-        p <- nrow(object$coefficients) - as.integer(object$intercept)
+        p <- nrow(object$coefficients) - as.integer(object$specs$intercept)
         dk <- dim(tmp$coefficients)[3L]
         coef_arr <- array(0, dim = c(dim(object$coefficients)[seq_len(2)], dk))
         idx <- object$refit$selected_coef
-        if (object$intercept) {
+        if (object$specs$intercept) {
             idx <- c(1L, idx + 1L)
         }
         for (k in seq_len(dk)) {

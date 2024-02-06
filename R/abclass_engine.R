@@ -15,11 +15,28 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ##
 
+## encode loss and penalty functions
+.id_loss <- function(loss)
+{
+    all_losses <- c("logistic", "boost", "hinge-boost", "lum")
+    match(loss, all_losses)
+}
+.id_penalty <- function(penalty)
+{
+    all_penalties <- c("glasso", "gscad", "gmcp",
+                       "lasso", "scad", "mcp",
+                       "cmcp", "gel",
+                       "mellowmax", "mellowmcp")
+    match(penalty, all_penalties)
+}
+
 ## engine function that should be called internally only
 .abclass <- function(x, y,
+                     loss,
+                     penalty,
+                     weights = NULL,
+                     offset = NULL,
                      intercept = TRUE,
-                     weight = NULL,
-                     loss = "logistic",
                      ## abclass.control
                      control = abclass.control(),
                      ## cv
@@ -27,7 +44,9 @@
                      stratified = TRUE,
                      alignment = 0L,
                      ## et
-                     nstages = 0L)
+                     nstages = 0L,
+                     ## moml
+                     moml_args = NULL)
 {
     ## pre-process
     is_x_sparse <- FALSE
@@ -42,13 +61,8 @@
     }
     ## determine the loss and penalty function
     ## better to append new options to the existing ones
-    all_losses <- c("logistic", "boost", "hinge-boost", "lum")
-    all_penalties <- c("lasso", "scad", "mcp",
-                       "glasso", "gscad", "gmcp",
-                       "cmcp", "gel",
-                       "mellowmax", "mellowmcp")
-    loss_id <- match(loss, all_losses)
-    penalty_id <- match(control$penalty, all_penalties)
+    loss_id <- .id_loss(loss)
+    penalty_id <- .id_penalty(penalty)
     ## process alignment
     all_alignment <- c("fraction", "lambda")
     if (is.numeric(alignment)) {
@@ -70,8 +84,9 @@
     ## prepare arguments
     ctrl <- c(
         control,
-        list(intercept = intercept,
-             weight = null2num0(weight),
+        list(weights = null2num0(weights),
+             offset = null2mat0(offset),
+             intercept = intercept,
              nfolds = as.integer(nfolds),
              stratified = stratified,
              alignment = as.integer(alignment),
@@ -81,20 +96,44 @@
     )
     ctrl$lambda <- null2num0(ctrl$lambda)
     ctrl$penalty_factor = null2num0(ctrl$penalty_factor)
-    ctrl$offset = null2mat0(ctrl$offset)
-    ## arguments
-    call_list <- c(list(x = x, y = cat_y$y, control = ctrl))
-    fun_to_call <- if (is_x_sparse) {
-                       rcpp_abclass_fit_sp
-                   } else {
-                       rcpp_abclass_fit
-                   }
+    ## moml
+    if (length(moml_args) > 0) {
+        ## moml
+        call_list <- c(list(x = x, treatment = cat_y$y, control = ctrl),
+                       moml_args)
+        fun_to_call <- if (is_x_sparse) {
+                           rcpp_moml_fit_sp
+                       } else {
+                           rcpp_moml_fit
+                       }
+    } else {
+        ## abclass
+        call_list <- list(x = x, y = cat_y$y, control = ctrl)
+        fun_to_call <- if (is_x_sparse) {
+                           rcpp_abclass_fit_sp
+                       } else {
+                           rcpp_abclass_fit
+                       }
+    }
     res <- do.call(fun_to_call, call_list)
     ## post-process
     res$category <- cat_y
     res$category$k <- length(res$category$label)
-    res$intercept <- intercept
-    res$loss <- loss
+    res$specs <- list(
+        loss = loss,
+        penalty = penalty,
+        weights = res$weights,
+        offset = res$offset,
+        intercept = intercept
+    )
+    if (is.null(weights)) {
+        res$specs["weights"] <- list(NULL)
+    }
+    if (is.null(offset)) {
+        res$specs["offset"] <- list(NULL)
+    }
+    res$weights <- NULL
+    res$offset <- NULL
     res$control <- control
     if (call_list$control$nfolds == 0L) {
         res$cross_validation <- NULL
@@ -112,11 +151,11 @@
     ## update regularization
     return_lambda <- c("alpha", "lambda", "penalty_factor",
                        "lambda_max", "l1_lambda_max")
-    if (grepl("scad|mcp", control$penalty)) {
+    if (grepl("scad|mcp", penalty)) {
         return_lambda <- c(return_lambda, "ncv_kappa", "ncv_gamma")
-    } else if (control$penalty == "gel") {
+    } else if (penalty == "gel") {
         return_lambda <- c(return_lambda, "gel_tau")
-    } else if (grepl("^mellow", control$penalty)) {
+    } else if (grepl("^mellow", penalty)) {
         return_lambda <- c(return_lambda, "mellowmax_omega")
     }
     res$regularization <- res$regularization[return_lambda]

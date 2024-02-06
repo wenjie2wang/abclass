@@ -29,17 +29,20 @@
 ##'     \code{x}.
 ##' @param y An integer vector, a character vector, or a factor vector
 ##'     representing the response label.
-##' @param intercept A logical value indicating if an intercept should be
-##'     considered in the model.  The default value is \code{TRUE} and the
-##'     intercept is excluded from regularization.
-##' @param weight A numeric vector for nonnegative observation weights. Equal
-##'     observation weights are used by default.
 ##' @param loss A character value specifying the loss function.  The available
 ##'     options are \code{"logistic"} for the logistic deviance loss,
 ##'     \code{"boost"} for the exponential loss approximating Boosting machines,
 ##'     \code{"hinge-boost"} for hybrid of SVM and AdaBoost machine, and
 ##'     \code{"lum"} for largin-margin unified machines (LUM).  See Liu, et
 ##'     al. (2011) for details.
+##' @param penalty A character vector specifying the name of the penalty.
+##' @param weights A numeric vector for nonnegative observation weights. Equal
+##'     observation weights are used by default.
+##' @param offset An optional numeric matrix for offsets of the decision
+##'     functions.
+##' @param intercept A logical value indicating if an intercept should be
+##'     considered in the model.  The default value is \code{TRUE} and the
+##'     intercept is excluded from regularization.
 ##' @param control A list of control parameters. See \code{abclass.control()}
 ##'     for details.
 ##' @param ... Other control parameters passed to \code{abclass.control()}.
@@ -62,26 +65,37 @@
 ##'
 ##' @export
 abclass <- function(x, y,
-                    intercept = TRUE,
-                    weight = NULL,
                     loss = c("logistic", "boost", "hinge-boost", "lum"),
+                    penalty = c(
+                        "glasso", "gscad", "gmcp",
+                        "lasso", "scad", "mcp",
+                        "cmcp", "gel", "mellowmax", "mellowmcp"
+                    ),
+                    weights = NULL,
+                    offset = NULL,
+                    intercept = TRUE,
                     control = list(),
                     ...)
 {
-    all_loss <- c("logistic", "boost", "hinge-boost", "lum")
-    loss <- match.arg(as.character(loss), choices = all_loss)
+    loss <- match.arg(loss)
+    penalty <- match.arg(penalty)
     ## controls
     dot_list <- list(...)
     control <- do.call(abclass.control, modify_list(control, dot_list))
     res <- .abclass(
         x = x,
         y = y,
-        intercept = intercept,
-        weight = null2num0(weight),
         loss = loss,
+        penalty = penalty,
+        weights = weights,
+        offset = offset,
+        intercept = intercept,
         control = control
     )
     class(res) <- c("abclass_path", "abclass")
+    if (isTRUE(control$save_call)) {
+        res$call <- match.call()
+    }
     ## return
     res
 }
@@ -89,6 +103,14 @@ abclass <- function(x, y,
 
 ##' @rdname abclass
 ##'
+##' @param lum_a A positive number greater than one representing the parameter
+##'     \emph{a} in LUM, which will be used only if \code{loss = "lum"}.  The
+##'     default value is \code{1.0}.
+##' @param lum_c A nonnegative number specifying the parameter \emph{c} in LUM,
+##'     which will be used only if \code{loss = "hinge-boost"} or \code{loss =
+##'     "lum"}.  The default value is \code{1.0}.
+##' @param boost_umin A negative number for adjusting the boosting loss for the
+##'     internal majorization procedure.
 ##' @param alpha A numeric value in [0, 1] representing the mixing parameter
 ##'     \emph{alpha}.  The default value is \code{1.0}.
 ##' @param nlambda A positive integer specifying the length of the internally
@@ -107,69 +129,57 @@ abclass <- function(x, y,
 ##' @param penalty_factor A numerical vector with nonnegative values specifying
 ##'     the adaptive penalty factors for individual predictors (excluding
 ##'     intercept).
-##' @param penalty A character vector specifying the name of the penalty.
-##' @param offset An optional numeric matrix for offsets of the decision
-##'     functions.
-##' @param lum_a A positive number greater than one representing the parameter
-##'     \emph{a} in LUM, which will be used only if \code{loss = "lum"}.  The
-##'     default value is \code{1.0}.
-##' @param lum_c A nonnegative number specifying the parameter \emph{c} in LUM,
-##'     which will be used only if \code{loss = "hinge-boost"} or \code{loss =
-##'     "lum"}.  The default value is \code{1.0}.
-##' @param boost_umin A negative number for adjusting the boosting loss for the
-##'     internal majorization procedure.
 ##' @param ncv_kappa A positive number within (0, 1) specifying the ratio of
 ##'     reciprocal gamma parameter for group SCAD or group MCP.  A close-to-zero
 ##'     \code{ncv_kappa} would give a solution close to lasso solution.
 ##' @param gel_tau A positive parameter tau for group exponential lasso penalty.
 ##' @param mellowmax_omega A positive parameter omega for Mellowmax penalty.
 ##' @param maxit A positive integer specifying the maximum number of iteration.
-##'     The default value is \code{10^4}.
 ##' @param epsilon A positive number specifying the relative tolerance that
-##'     determines convergence.  The default value is \code{1e-7}.
+##'     determines convergence.
 ##' @param standardize A logical value indicating if each column of the design
 ##'     matrix should be standardized internally to have mean zero and standard
 ##'     deviation equal to the sample size.  The default value is \code{TRUE}.
 ##'     Notice that the coefficient estimates are always returned on the
 ##'     original scale.
 ##' @param varying_active_set A logical value indicating if the active set
-##'     should be updated after each cycle of coordinate-majorization-descent
-##'     algorithm.  The default value is \code{TRUE} for usually more efficient
-##'     estimation procedure.
+##'     should be updated after each cycle of coordinate-descent algorithm.  The
+##'     default value is \code{TRUE} for usually more efficient estimation
+##'     procedure.
+##' @param save_call A logical value indicating if the function call of the
+##'     model fitting should be saved.  If \code{TRUE}, the function call will
+##'     be saved in the \code{abclass} object so that one can utilize
+##'     \code{stats::update()} to update the argument specifications
+##'     conveniently.
 ##' @param verbose A nonnegative integer specifying if the estimation procedure
 ##'     is allowed to print out intermediate steps/results.  The default value
 ##'     is \code{0} for silent estimation procedure.
 ##'
 ##' @export
-abclass.control <- function(offset = NULL,
-                            ## loss
+abclass.control <- function(## loss
                             lum_a = 1.0,
                             lum_c = 0.0,
                             boost_umin = -5.0,
                             ## penalty
                             alpha = 1.0,
+                            lambda = NULL,
                             nlambda = 50L,
                             lambda_min_ratio = NULL,
-                            lambda = NULL,
                             penalty_factor = NULL,
-                            penalty = c("lasso", "scad", "mcp",
-                                        "glasso", "gscad", "gmcp",
-                                        "cmcp", "gel",
-                                        "mellowmax", "mellowmcp"),
                             ncv_kappa = 0.1,
                             gel_tau = 0.33,
                             mellowmax_omega = 1,
                             ## optim
                             epsilon = 1e-7,
-                            maxit = 1e4L,
+                            maxit = 1e5L,
                             standardize = TRUE,
                             varying_active_set = TRUE,
+                            ## misc
+                            save_call = FALSE,
                             verbose = 0L,
                             ...)
 {
-    penalty <- match.arg(penalty)
     structure(list(
-        offset = offset,
         lum_a = lum_a,
         lum_c = lum_c,
         boost_umin = boost_umin,
@@ -178,7 +188,6 @@ abclass.control <- function(offset = NULL,
         nlambda = as.integer(nlambda),
         lambda_min_ratio = lambda_min_ratio,
         penalty_factor = penalty_factor,
-        penalty = penalty,
         ncv_kappa = ncv_kappa,
         gel_tau = gel_tau,
         mellowmax_omega = mellowmax_omega,
@@ -186,6 +195,7 @@ abclass.control <- function(offset = NULL,
         maxit = as.integer(maxit),
         standardize = standardize,
         varying_active_set = varying_active_set,
+        save_call = save_call,
         verbose = as.integer(verbose)
     ), class = "abclass.control")
 }

@@ -35,12 +35,21 @@ et.moml <- function(x,
                     treatment,
                     reward,
                     propensity_score,
-                    intercept = TRUE,
-                    weight = NULL,
                     loss = c("logistic", "boost", "hinge-boost", "lum"),
+                    penalty = c(
+                        "glasso", "gscad", "gmcp",
+                        "lasso", "scad", "mcp",
+                        "cmcp", "gel", "mellowmax", "mellowmcp"
+                    ),
+                    weights = NULL,
+                    offset = NULL,
+                    intercept = TRUE,
                     control = list(),
                     nstages = 2,
-                    refit = list(lambda = 1e-6),
+                    nfolds = 0L,
+                    stratified = TRUE,
+                    alignment = c("fraction", "lambda"),
+                    refit = FALSE,
                     ...)
 {
     ## nstages
@@ -49,26 +58,34 @@ et.moml <- function(x,
         stop("The 'nstages' must be a positive integer.")
     }
     ## loss
-    all_loss <- c("logistic", "boost", "hinge-boost", "lum")
-    loss <- match.arg(loss, choices = all_loss)
+    loss <- match.arg(loss)
+    penalty <- match.arg(penalty)
     ## controls
     dot_list <- list(...)
     control <- do.call(moml.control, modify_list(control, dot_list))
     ## prepare arguments
-    res <- .moml(
+    res <- .abclass(
         x = x,
-        treatment,
-        reward,
-        propensity_score,
-        intercept = intercept,
+        y = treatment,
         loss = loss,
+        penalty = penalty,
+        weights = weights,
+        offset = offset,
+        intercept = intercept,
         control = control,
-        nstages = nstages
+        nstages = nstages,
+        nfolds = nfolds,
+        stratified = stratified,
+        alignment = alignment,
+        moml_args = list(
+            reward = reward,
+            propensity_score = propensity_score
+        )
     )
     ## refit if needed
     if (! isFALSE(refit) && length(res$et$selected) > 0) {
         if (isTRUE(refit)) {
-            refit <- list(lambda = 1e-6)
+            refit <- list(lambda = 1e-4, alignment = 1L)
         }
         idx <- res$et$selected
         ## inherit the penalty factors for those selected predictors
@@ -76,21 +93,27 @@ et.moml <- function(x,
             refit$penalty_factor <- res$regularization$penalty_factor[idx]
         }
         refit_control <- modify_list(control, refit)
-        refit_res <- .moml(
+        refit_res <- .abclass(
             x = x[, idx, drop = FALSE],
-            treatment,
-            reward,
-            propensity_score,
-            ## assume intercept, weight, loss are the same with et-lasso
-            intercept = intercept,
+            y = treatment,
+            ## assume intercept, weights, loss are the same
             loss = loss,
+            penalty = penalty,
+            weights = weights,
+            offset = offset,
+            intercept = intercept,
             control = refit_control,
             ## cv
             nfolds = null0(refit$nfolds),
             stratified = null0(refit$stratified),
             alignment = null0(refit$alignment),
             ## et
-            nstages = null0(refit$nstages)
+            nstages = null0(refit$nstages),
+            ## moml
+            moml_args = list(
+                reward = reward,
+                propensity_score = propensity_score
+            )
         )
         if (! is.null(refit_res$cross_validation)) {
             ## add cv idx
@@ -99,8 +122,7 @@ et.moml <- function(x,
             refit_res$cross_validation <- c(refit_res$cross_validation,
                                             cv_idx_list)
         }
-        res$refit <- refit_res[! names(refit_res) %in%
-                               c("intercept", "loss", "category")]
+        res$refit <- refit_res[! names(refit_res) %in% c("specs", "category")]
         res$refit$selected_coef <- idx
     } else {
         res$refit <- FALSE

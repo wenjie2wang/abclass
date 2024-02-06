@@ -23,7 +23,7 @@ plot.abclass_path <- function(x, y, ...)
     beta_l2norm <- apply(x$coefficients, c(3, 1), function(a) {
         sqrt(sum(a ^ 2))
     })
-    inter <- as.integer(x$intercept)
+    inter <- as.integer(x$specs$intercept)
     dot_list <- list(...)
     default_ctrl <- list(
         lty = 1,
@@ -42,7 +42,7 @@ plot.abclass_path <- function(x, y, ...)
     do.call(matplot, ctrl)
     text(x = rep(last_px, length(coef_idx)),
          y = last_py, label = coef_idx, cex = 0.5, pos = 2)
-    if (x$intercept) {
+    if (x$specs$intercept) {
         lines(x = log_lambda, y = beta_l2norm[, 1L],
               col = "grey", lty = 2)
         text(x = last_px, y = beta_l2norm[nrow(beta_l2norm), 1L],

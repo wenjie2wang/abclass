@@ -39,26 +39,38 @@ moml <- function(x,
                  treatment,
                  reward,
                  propensity_score,
-                 intercept = TRUE,
                  loss = c("logistic", "boost", "hinge-boost", "lum"),
+                 penalty = c(
+                     "glasso", "gscad", "gmcp",
+                     "lasso", "scad", "mcp",
+                     "cmcp", "gel", "mellowmax", "mellowmcp"
+                 ),
+                 weights = NULL,
+                 offset = NULL,
+                 intercept = TRUE,
                  control = moml.control(),
                  ...)
 {
-    all_loss <- c("logistic", "boost", "hinge-boost", "lum")
-    loss <- match.arg(as.character(loss), choices = all_loss)
+    loss <- match.arg(loss)
+    penalty <- match.arg(penalty)
     ## controls
     dot_list <- list(...)
     control <- do.call(moml.control, modify_list(control, dot_list))
-    res <- .moml(
+    res <- .abclass(
         x = x,
-        treatment = treatment,
-        reward = reward,
-        propensity_score = propensity_score,
-        intercept = intercept,
+        y = treatment,
         loss = loss,
-        control = control
+        penalty = penalty,
+        weights = weights,
+        offset = offset,
+        intercept = intercept,
+        control = control,
+        moml_args = list(
+            reward = reward,
+            propensity_score = propensity_score
+        )
     )
-    class(res) <- c("moml_path", "moml", "abclass")
+    class(res) <- c("moml", "abclass_path", "abclass")
     ## return
     res
 }

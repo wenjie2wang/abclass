@@ -30,7 +30,7 @@ inline abclass::Control abrank_control(const Rcpp::List& control)
         control["standardize"], control["verbose"]
     };
     ctrl.set_intercept(false)->
-        set_weight(control["weight"])->
+        set_weight(control["weights"])->
         rank(control["query_weight"],
              control["delta_weight"],
              control["delta_adaptive"],

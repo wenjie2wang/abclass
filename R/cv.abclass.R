@@ -46,9 +46,15 @@
 ##'
 ##' @export
 cv.abclass <- function(x, y,
-                       intercept = TRUE,
-                       weight = NULL,
                        loss = c("logistic", "boost", "hinge-boost", "lum"),
+                       penalty = c(
+                           "glasso", "gscad", "gmcp",
+                           "lasso", "scad", "mcp",
+                           "cmcp", "gel", "mellowmax", "mellowmcp"
+                       ),
+                       weights = NULL,
+                       offset = NULL,
+                       intercept = TRUE,
                        control = list(),
                        nfolds = 5L,
                        stratified = TRUE,
@@ -56,27 +62,30 @@ cv.abclass <- function(x, y,
                        refit = FALSE,
                        ...)
 {
+    loss <- match.arg(loss)
+    penalty <- match.arg(penalty)
     ## nfolds
     nfolds <- as.integer(nfolds)
     if (nfolds < 3L) {
         stop("The 'nfolds' must be > 2.")
     }
-    ## loss
-    all_loss <- c("logistic", "boost", "hinge-boost", "lum")
-    loss <- match.arg(loss, choices = all_loss)
     ## controls
     dot_list <- list(...)
     control <- do.call(abclass.control, modify_list(control, dot_list))
     ## prepare arguments
-    res <- .abclass(x = x,
-                    y = y,
-                    intercept = intercept,
-                    weight = null2num0(weight),
-                    loss = loss,
-                    control = control,
-                    nfolds = nfolds,
-                    stratified = stratified,
-                    alignment = alignment)
+    res <- .abclass(
+        x = x,
+        y = y,
+        loss = loss,
+        penalty = penalty,
+        weights = weights,
+        offset = offset,
+        intercept = intercept,
+        control = control,
+        nfolds = nfolds,
+        stratified = stratified,
+        alignment = alignment
+    )
     ## add cv idx
     cv_idx_list <- with(res$cross_validation,
                         select_lambda(cv_accuracy_mean, cv_accuracy_sd))
@@ -98,10 +107,12 @@ cv.abclass <- function(x, y,
         refit_res <- .abclass(
             x = x[, idx, drop = FALSE],
             y = y,
-            ## assume intercept, weight, loss are the same with
-            intercept = intercept,
-            weight = res$weight,
+            ## assume intercept, weights, loss are the same with
             loss = loss,
+            penalty = penalty,
+            weights = weights,
+            offset = offset,
+            intercept = intercept,
             control = refit_control,
             nfolds = null0(refit$nfolds),
             stratified = ! isFALSE(refit$straitified),
@@ -115,7 +126,8 @@ cv.abclass <- function(x, y,
                                             cv_idx_list)
         }
         res$refit <- refit_res[
-            ! names(refit_res) %in% c("intercept", "weight", "loss", "category")
+            ! names(refit_res) %in%
+            c("category", "loss", "penalty", "weights", "offset", "intercept")
         ]
         res$refit$selected_coef <- idx
     } else {
