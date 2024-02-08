@@ -178,6 +178,7 @@ abclass.control <- function(## loss
                             save_call = FALSE,
                             verbose = 0L)
 {
+    ## TODO validate data types
     structure(list(
         lum_a = lum_a,
         lum_c = lum_c,

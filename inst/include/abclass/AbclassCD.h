@@ -540,6 +540,7 @@ namespace abclass
                     }
                     obj0 = obj1;
                     loss0 = loss1;
+                    reg0 = reg1;
                     beta0 = beta;
                 }
                 // run a full cycle over the converged beta
@@ -595,6 +596,7 @@ namespace abclass
                 }
                 obj0 = obj1;
                 loss0 = loss1;
+                reg0 = reg1;
                 beta0 = beta;
                 ++i;
             }
@@ -655,6 +657,7 @@ namespace abclass
             }
             obj0 = obj1;
             loss0 = loss1;
+            reg0 = reg1;
             beta0 = beta;
         }
         if (verbose > 0) {
