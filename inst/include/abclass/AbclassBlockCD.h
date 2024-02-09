@@ -234,10 +234,10 @@ namespace abclass
         }
         // for predictors
         for (size_t g {0}; g < p0_; ++g) {
+            const size_t g1 { g + inter_ };
             if (is_active(g) == 0) {
                 continue;
             }
-            const size_t g1 { g + inter_ };
             // update beta and inner
             update_beta_g(beta, inner, g, g1, l1_lambda, l2_lambda);
             // update active

@@ -418,8 +418,8 @@ namespace abclass
         }
         // predictors
         for (size_t g { 0 }; g < p0_; ++g) {
+            const size_t g1 { g + inter_ };
             for (size_t k {0}; k < km1_; ++k) {
-                const size_t g1 { g + inter_ };
                 // update beta and inner
                 update_beta_gk(beta, inner, k, g, g1, l1_lambda, l2_lambda);
             }
@@ -457,11 +457,11 @@ namespace abclass
         }
         // for predictors
         for (size_t g { 0 }; g < p0_; ++g) {
+            const size_t g1 { g + inter_ };
             for (size_t k {0}; k < km1_; ++k) {
                 if (is_active(g, k) == 0) {
                     continue;
                 }
-                const size_t g1 { g + inter_ };
                 // update beta and inner
                 update_beta_gk(beta, inner, k, g, g1, l1_lambda, l2_lambda);
                 // update active
