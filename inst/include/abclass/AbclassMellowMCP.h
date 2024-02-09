@@ -46,7 +46,7 @@ namespace abclass
                                const double l1_lambda,
                                const double l2_lambda) const override
         {
-            const Mellowmax mlm { beta, control_.mellowmax_omega_ };
+            const MellowmaxL1 mlm { beta, control_.mellowmax_omega_ };
             const double inner_pen { mlm.value() };
             const double outer_pen {
                 mcp_penalty(inner_pen, l1_lambda, control_.ncv_gamma_)
@@ -117,23 +117,28 @@ namespace abclass
             const arma::vec v_k { get_vertex_y(k) };
             const arma::vec vk_xg { x_.col(g) % v_k };
             const double d_gk { mm_gradient(inner, vk_xg) };
-            const double u_g { mm_lowerbound_(g) * beta(g1, k) - d_gk };
             const double l1_lambda_g0 {
                 l1_lambda * control_.penalty_factor_(g)
             };
             // local approximation
-            const Mellowmax mlm {
+            const MellowmaxL1 mlm {
                 beta.row(g1), control_.mellowmax_omega_
             };
             const double inner_pen { mlm.value() };
-            const arma::rowvec dvec { mlm.grad() };
             const double outer_dpen {
                 dmcp_penalty(inner_pen, l1_lambda_g0,
                              control_.ncv_gamma_)
             };
-            const double outer_dpen2 { outer_dpen * mlm.mm_lb_ };
+            const arma::rowvec dvec { mlm.grad() };
+            const double mlm_dk { dvec(k) };
+            const double outer_dpen2 {
+                outer_dpen * mlm.mm_lb_
+            };
+            const double u_g {
+                (mm_lowerbound_(g) + outer_dpen2) * old_beta_g1k - d_gk
+            };
             const double l1_lambda_g {
-                outer_dpen * (dvec(k) - mlm.mm_lb_ * std::abs(old_beta_g1k))
+                outer_dpen * mlm_dk
             };
             const double tmp { std::abs(u_g) - l1_lambda_g };
             if (tmp <= 0.0) {
