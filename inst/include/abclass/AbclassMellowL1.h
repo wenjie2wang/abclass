@@ -15,8 +15,8 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //
 
-#ifndef ABCLASS_ABCLASS_MELLOWMAX_H
-#define ABCLASS_ABCLASS_MELLOWMAX_H
+#ifndef ABCLASS_ABCLASS_MELLOWL1_H
+#define ABCLASS_ABCLASS_MELLOWL1_H
 
 #include <RcppArmadillo.h>
 #include "AbclassCD.h"
@@ -28,7 +28,7 @@ namespace abclass
     // the angle-based classifier with Mellowmax penalty
     // estimation by coordinate-majorization-descent algorithm
     template <typename T_loss, typename T_x>
-    class AbclassMellowmax : public AbclassCD<T_loss, T_x>
+    class AbclassMellowL1 : public AbclassCD<T_loss, T_x>
     {
     protected:
         // data
@@ -44,7 +44,7 @@ namespace abclass
                                const double l1_lambda,
                                const double l2_lambda) const override
         {
-            const Mellowmax mlm { beta, control_.mellowmax_omega_ };
+            const MellowmaxL1 mlm { beta, control_.mellowmax_omega_ };
             double ridge_pen { 0.0 };
             // optional ridge penalty
             if (l2_lambda > 0) {
@@ -98,7 +98,7 @@ namespace abclass
                 l1_lambda * control_.penalty_factor_(g)
             };
             // local approximation
-            const Mellowmax mlm {
+            const MellowmaxL1 mlm {
                 beta.row(g1), control_.mellowmax_omega_
             };
             const arma::rowvec mlm_d { mlm.grad() };
@@ -143,4 +143,4 @@ namespace abclass
 }  // abclass
 
 
-#endif /* ABCLASS_ABCLASS_MELLOWMAX_H */
+#endif /* ABCLASS_ABCLASS_MELLOWL1_H */

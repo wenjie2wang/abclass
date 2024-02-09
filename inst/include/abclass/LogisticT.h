@@ -29,7 +29,7 @@
 #include "AbclassGroupMCP.h"
 #include "AbclassCompMCP.h"
 #include "AbclassGEL.h"
-#include "AbclassMellowmax.h"
+#include "AbclassMellowL1.h"
 #include "AbclassMellowMCP.h"
 
 namespace abclass
@@ -68,7 +68,7 @@ namespace abclass
     using LogisticGEL = LogisticT<AbclassGEL<Logistic, T_x>, T_x>;
 
     template<typename T_x>
-    using LogisticMellowmax = LogisticT<AbclassMellowmax<Logistic, T_x>, T_x>;
+    using LogisticMellowL1 = LogisticT<AbclassMellowL1<Logistic, T_x>, T_x>;
 
     template<typename T_x>
     using LogisticMellowMCP = LogisticT<AbclassMellowMCP<Logistic, T_x>, T_x>;

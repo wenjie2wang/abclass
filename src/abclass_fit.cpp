@@ -66,8 +66,8 @@ Rcpp::List template_abclass_fit(
                     abclass::LogisticGEL<T> object {x, y, ctrl};
                     return template_fit(object);
                 }
-                case 9: {       // mellowmax
-                    abclass::LogisticMellowmax<T> object {x, y, ctrl};
+                case 9: {       // mellowmax L1
+                    abclass::LogisticMellowL1<T> object {x, y, ctrl};
                     return template_fit(object);
                 }
                 case 10: {      // mellowmax mcp
@@ -118,8 +118,8 @@ Rcpp::List template_abclass_fit(
                     object.loss_fun_.set_inner_min(control["boost_umin"]);
                     return template_fit(object);
                 }
-                case 9: {       // mellowmax
-                    abclass::BoostMellowmax<T> object {x, y, ctrl};
+                case 9: {       // mellowmax L1
+                    abclass::BoostMellowL1<T> object {x, y, ctrl};
                     object.loss_fun_.set_inner_min(control["boost_umin"]);
                     return template_fit(object);
                 }
@@ -172,8 +172,8 @@ Rcpp::List template_abclass_fit(
                     object.loss_fun_.set_c(control["lum_c"]);
                     return template_fit(object);
                 }
-                case 9: {       // mellowmax
-                    abclass::HingeBoostMellowmax<T> object {x, y, ctrl};
+                case 9: {       // mellowmax L1
+                    abclass::HingeBoostMellowL1<T> object {x, y, ctrl};
                     object.loss_fun_.set_c(control["lum_c"]);
                     return template_fit(object);
                 }
@@ -226,8 +226,8 @@ Rcpp::List template_abclass_fit(
                     object.loss_fun_.set_ac(control["lum_a"], control["lum_c"]);
                     return template_fit(object);
                 }
-                case 9: {       // mellowmax
-                    abclass::LumMellowmax<T> object {x, y, ctrl};
+                case 9: {       // mellowmax L1
+                    abclass::LumMellowL1<T> object {x, y, ctrl};
                     object.loss_fun_.set_ac(control["lum_a"], control["lum_c"]);
                     return template_fit(object);
                 }

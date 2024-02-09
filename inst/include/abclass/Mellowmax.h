@@ -33,18 +33,15 @@ namespace abclass
         double dn_x_;            // double(x.n_elem)
         double max_x_;           // max(x)
         double sum_exp_x_max_;   // sum(exp(x - max(x)))
-        arma::rowvec x_;         // x = omega * abs(theta)
+        arma::rowvec x_;         // x = omega * theta
         arma::rowvec exp_x_max_; // exp(x - max(x))
 
-    public:
-        double mm_lb_;
-
-        // omega != 0
-        Mellowmax(const arma::rowvec& theta, const double omega)
+        // initialize
+        inline virtual void init(const arma::rowvec& theta, const double omega)
         {
             theta_ = theta;
             omega_ = omega;
-            x_ = omega_ * arma::abs(theta_);
+            x_ = omega_ * theta;
             max_x_ = x_.max();
             dn_x_ = static_cast<double>(x_.n_elem);
             exp_x_max_ = arma::zeros<arma::rowvec>(x_.n_elem);
@@ -61,18 +58,40 @@ namespace abclass
             sum_exp_x_max_ = arma::accu(exp_x_max_);
         }
 
+    public:
+        double mm_lb_;
+
+        Mellowmax() {}
+
+        // omega != 0
+        Mellowmax(const arma::rowvec& theta, const double omega)
+        {
+            init(theta, omega);
+        }
+
         // Mellowmax
-        inline double value() const
+        inline virtual double value() const
         {
             return (std::log(sum_exp_x_max_ / dn_x_) + max_x_) / omega_;
         }
-
         // gradient of Mellowmax penalty wrt the theta vector
-        inline arma::rowvec grad() const
+        inline virtual arma::rowvec grad() const
         {
             return exp_x_max_ / sum_exp_x_max_;
         }
 
+    };
+
+    // mellowmax(abs(theta))
+    class MellowmaxL1 : public Mellowmax
+    {
+    public:
+        double mm_lb_;
+        // omega != 0
+        MellowmaxL1(const arma::rowvec& theta, const double omega)
+        {
+            init(arma::abs(theta), omega);
+        }
     };
 
 }  // abclass

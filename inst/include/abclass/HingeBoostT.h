@@ -29,7 +29,7 @@
 #include "AbclassGroupMCP.h"
 #include "AbclassCompMCP.h"
 #include "AbclassGEL.h"
-#include "AbclassMellowmax.h"
+#include "AbclassMellowL1.h"
 #include "AbclassMellowMCP.h"
 
 namespace abclass
@@ -86,8 +86,8 @@ namespace abclass
         HingeBoostT<AbclassGEL<HingeBoost, T_x>, T_x>;
 
     template<typename T_x>
-    using HingeBoostMellowmax =
-        HingeBoostT<AbclassMellowmax<HingeBoost, T_x>, T_x>;
+    using HingeBoostMellowL1 =
+        HingeBoostT<AbclassMellowL1<HingeBoost, T_x>, T_x>;
 
     template<typename T_x>
     using HingeBoostMellowMCP =

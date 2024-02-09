@@ -29,7 +29,7 @@
 #include "AbclassGroupMCP.h"
 #include "AbclassCompMCP.h"
 #include "AbclassGEL.h"
-#include "AbclassMellowmax.h"
+#include "AbclassMellowL1.h"
 #include "AbclassMellowMCP.h"
 
 namespace abclass
@@ -78,7 +78,7 @@ namespace abclass
     using BoostGEL = BoostT<AbclassGEL<Boost, T_x>, T_x>;
 
     template<typename T_x>
-    using BoostMellowmax = BoostT<AbclassMellowmax<Boost, T_x>, T_x>;
+    using BoostMellowL1 = BoostT<AbclassMellowL1<Boost, T_x>, T_x>;
 
     template<typename T_x>
     using BoostMellowMCP = BoostT<AbclassMellowMCP<Boost, T_x>, T_x>;

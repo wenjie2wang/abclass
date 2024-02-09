@@ -29,7 +29,7 @@
 #include "AbclassGroupMCP.h"
 #include "AbclassCompMCP.h"
 #include "AbclassGEL.h"
-#include "AbclassMellowmax.h"
+#include "AbclassMellowL1.h"
 #include "AbclassMellowMCP.h"
 
 namespace abclass
@@ -77,7 +77,7 @@ namespace abclass
     using LumGEL = LumT<AbclassGEL<Lum, T_x>, T_x>;
 
     template<typename T_x>
-    using LumMellowmax = LumT<AbclassMellowmax<Lum, T_x>, T_x>;
+    using LumMellowL1 = LumT<AbclassMellowL1<Lum, T_x>, T_x>;
 
     template<typename T_x>
     using LumMellowMCP = LumT<AbclassMellowMCP<Lum, T_x>, T_x>;

@@ -48,7 +48,7 @@
 #include "abclass/AbclassGroupMCP.h"
 #include "abclass/AbclassCompMCP.h"
 #include "abclass/AbclassGEL.h"
-#include "abclass/AbclassMellowmax.h"
+#include "abclass/AbclassMellowL1.h"
 #include "abclass/AbclassMellowMCP.h"
 
 // combinations
