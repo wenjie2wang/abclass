@@ -21,15 +21,14 @@
     all_losses <- c("logistic", "boost", "hinge-boost", "lum")
     match(loss, all_losses)
 }
+
+.all_abclass_penalties <- c("lasso", "scad", "mcp",
+                            "glasso", "gscad", "gmcp",
+                            "cmcp", "gel", "mlasso", "mmcp")
+
 .id_penalty <- function(penalty)
 {
-    all_penalties <- c(
-        "lasso", "scad", "mcp",
-        "glasso", "gscad", "gmcp",
-        "cmcp", "gel",
-        "mellowmax", "mellowmcp"
-    )
-    match(penalty, all_penalties)
+    match(penalty, .all_abclass_penalties)
 }
 
 ## engine function that should be called internally only

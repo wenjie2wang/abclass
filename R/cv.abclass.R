@@ -47,11 +47,7 @@
 ##' @export
 cv.abclass <- function(x, y,
                        loss = c("logistic", "boost", "hinge-boost", "lum"),
-                       penalty = c(
-                           "glasso", "gscad", "gmcp",
-                           "lasso", "scad", "mcp",
-                           "cmcp", "gel", "mellowmax", "mellowmcp"
-                       ),
+                       penalty = c("glasso", "lasso"),
                        weights = NULL,
                        offset = NULL,
                        intercept = TRUE,
@@ -63,7 +59,8 @@ cv.abclass <- function(x, y,
                        ...)
 {
     loss <- match.arg(loss)
-    penalty <- match.arg(penalty)
+    penalty <- match.arg(as.character(penalty)[1],
+                         choices = .all_abclass_penalties)
     ## nfolds
     nfolds <- as.integer(nfolds)
     if (nfolds < 3L) {

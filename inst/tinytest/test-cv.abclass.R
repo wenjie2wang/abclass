@@ -30,7 +30,7 @@ expect_equivalent(dim(coef(model2, s = 2)), c(p + 1, k - 1))
 
 ## hinge-boost loss
 model3 <- cv.abclass(train_x, train_y, nlambda = 5,
-                     loss = "hinge-boost", penalty = "scad")
+                     loss = "hinge-boost")
 pred3 <- predict(model3, test_x)
 expect_true(mean(test_y == pred3) > 0.5)
 expect_equivalent(dim(coef(model3, s = 3)), c(p + 1, k - 1))

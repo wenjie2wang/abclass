@@ -9,8 +9,7 @@ abclass(
   x,
   y,
   loss = c("logistic", "boost", "hinge-boost", "lum"),
-  penalty = c("glasso", "gscad", "gmcp", "lasso", "scad", "mcp", "cmcp", "gel",
-    "mellowmax", "mellowmcp"),
+  penalty = c("glasso", "lasso"),
   weights = NULL,
   offset = NULL,
   intercept = TRUE,
@@ -35,8 +34,7 @@ abclass.control(
   standardize = TRUE,
   varying_active_set = TRUE,
   save_call = FALSE,
-  verbose = 0L,
-  ...
+  verbose = 0L
 )
 }
 \arguments{

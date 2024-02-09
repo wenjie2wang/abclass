@@ -20,7 +20,6 @@ model1 <- abclass(
     x = train_x,
     y = train_y,
     nlambda = 5,
-    grouped = FALSE,
     control = abclass.control(penalty_factor = runif(ncol(train_x)))
 )
 
@@ -63,32 +62,15 @@ model4 <- abclass(as.data.frame(train_x),
 expect_equal(predict(model4, as.data.frame(test_x), s = 5), pred4)
 
 ## quick tests for other options
-## grouped
 qset <- expand.grid(loss = c("logistic", "boost", "hinge-boost", "lum"),
-                    gpenalty = c("lasso", "mcp", "scad"),
+                    penalty = c("glasso", "lasso"),
                     KEEP.OUT.ATTRS = FALSE,
                     stringsAsFactors = FALSE)
 for (k in seq_len(nrow(qset))) {
     qmodel <- abclass(train_x, train_y,
                       lambda = 0.01,
                       loss = qset$loss[k],
-                      penalty = qset$gpenalty[k])
-    qpred <- predict(qmodel, test_x)
-    qprob <- predict(qmodel, test_x, type = "prob")
-    qlink <- predict(qmodel, test_x, type = "link")
-}
-
-## ungrouped penalty
-qset <- expand.grid(loss = c("logistic", "boost", "hinge-boost", "lum"),
-                    alpha = c(0, 1),
-                    KEEP.OUT.ATTRS = FALSE,
-                    stringsAsFactors = FALSE)
-for (k in seq_len(nrow(qset))) {
-    qmodel <- abclass(train_x, train_y,
-                      lambda = 0.01,
-                      loss = qset$loss[k],
-                      alpha = qset$alpha[k],
-                      grouped = FALSE)
+                      penalty = qset$penalty[k])
     qpred <- predict(qmodel, test_x)
     qprob <- predict(qmodel, test_x, type = "prob")
     qlink <- predict(qmodel, test_x, type = "link")
@@ -98,39 +80,20 @@ for (k in seq_len(nrow(qset))) {
 if (requireNamespace("Matrix", quietly = TRUE)) {
     sp_train_x <- as(train_x, "sparseMatrix")
     sp_test_x <- as(test_x, "sparseMatrix")
-
     sp_model <- abclass(sp_train_x, train_y, nlambda = 5, loss = "lum",
                         penalty = "lasso")
     expect_equal(predict(sp_model, test_x, s = 5),
                  predict(sp_model, sp_test_x, s = 5))
-
     ## quick tests
-    ## grouped
     qset <- expand.grid(loss = c("logistic", "boost", "hinge-boost", "lum"),
-                        gpenalty = c("lasso", "mcp", "scad"),
+                        penalty = c("glasso", "lasso"),
                         KEEP.OUT.ATTRS = FALSE,
                         stringsAsFactors = FALSE)
     for (k in seq_len(nrow(qset))) {
         qmodel <- abclass(sp_train_x, train_y,
                           lambda = 0.01,
                           loss = qset$loss[k],
-                          penalty = qset$gpenalty[k])
-        qpred <- predict(qmodel, sp_test_x, type = "class")
-        qprob <- predict(qmodel, sp_test_x, type = "prob")
-        qlink <- predict(qmodel, test_x, type = "link")
-    }
-
-    ## ungrouped penalty
-    qset <- expand.grid(loss = c("logistic", "boost", "hinge-boost", "lum"),
-                        alpha = c(0, 1),
-                        KEEP.OUT.ATTRS = FALSE,
-                        stringsAsFactors = FALSE)
-    for (k in seq_len(nrow(qset))) {
-        qmodel <- abclass(sp_train_x, train_y,
-                          lambda = 0.01,
-                          loss = qset$loss[k],
-                          alpha = qset$alpha[k],
-                          grouped = FALSE)
+                          penalty = qset$penalty[k])
         qpred <- predict(qmodel, sp_test_x, type = "class")
         qprob <- predict(qmodel, sp_test_x, type = "prob")
         qlink <- predict(qmodel, test_x, type = "link")

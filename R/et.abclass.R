@@ -45,11 +45,7 @@
 ##' @export
 et.abclass <- function(x, y,
                        loss = c("logistic", "boost", "hinge-boost", "lum"),
-                       penalty = c(
-                           "glasso", "gscad", "gmcp",
-                           "lasso", "scad", "mcp",
-                           "cmcp", "gel", "mellowmax", "mellowmcp"
-                       ),
+                       penalty = c("glasso", "lasso"),
                        weights = NULL,
                        offset = NULL,
                        intercept = TRUE,
@@ -62,7 +58,8 @@ et.abclass <- function(x, y,
                        ...)
 {
     loss <- match.arg(loss)
-    penalty <- match.arg(penalty)
+    penalty <- match.arg(as.character(penalty)[1],
+                         choices = .all_abclass_penalties)
     ## nstages
     nstages <- as.integer(nstages)
     if (nstages < 1L) {

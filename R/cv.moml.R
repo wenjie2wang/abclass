@@ -28,11 +28,7 @@ cv.moml <- function(x,
                     reward,
                     propensity_score,
                     loss = c("logistic", "boost", "hinge-boost", "lum"),
-                    penalty = c(
-                        "glasso", "gscad", "gmcp",
-                        "lasso", "scad", "mcp",
-                        "cmcp", "gel", "mellowmax", "mellowmcp"
-                    ),
+                    penalty = c("glasso", "lasso"),
                     weights = NULL,
                     offset = NULL,
                     intercept = TRUE,
@@ -58,7 +54,8 @@ cv.moml <- function(x,
     }
     ## loss
     loss <- match.arg(loss)
-    penalty <- match.arg(penalty)
+    penalty <- match.arg(as.character(penalty[1]),
+                         choices = .all_abclass_penalties)
     ## controls
     dot_list <- list(...)
     control <- do.call(moml.control, modify_list(control, dot_list))
