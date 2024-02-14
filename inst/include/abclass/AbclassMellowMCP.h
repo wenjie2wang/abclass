@@ -131,8 +131,11 @@ namespace abclass
             };
             const arma::rowvec dvec { mlm.grad() };
             const double mlm_dk { dvec(k) };
+            const double mlm_d2k {
+                control_.mellowmax_omega_ * mlm_dk * (1 - mlm_dk)
+            };
             const double outer_dpen2 {
-                outer_dpen * mlm.mm_lb_
+                outer_dpen * mlm_d2k
             };
             const double u_g {
                 (mm_lowerbound_(g) + outer_dpen2) * old_beta_g1k - d_gk

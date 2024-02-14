@@ -103,11 +103,11 @@ namespace abclass
             };
             const arma::rowvec mlm_d { mlm.grad() };
             const double mlm_dk { mlm_d(k) };
-            // const double mlm_d2k {
-            //     control_.mellowmax_omega_ * mlm_dk * (1 - mlm_dk)
-            // };
+            const double mlm_d2k {
+                control_.mellowmax_omega_ * mlm_dk * (1 - mlm_dk)
+            };
             const double l1_lambda_g {
-                l1_lambda_g0 * (mlm_dk - mlm.mm_lb_ * std::abs(old_beta_g1k))
+                l1_lambda_g0 * (mlm_dk - mlm_d2k * std::abs(old_beta_g1k))
             };
             const double tmp { std::abs(u_g) - l1_lambda_g };
             if (tmp <= 0.0) {
@@ -116,7 +116,7 @@ namespace abclass
                 const double numer { tmp * sign(u_g) };
                 const double denom {
                     mm_lowerbound_(g) + l2_lambda +
-                    l1_lambda_g0 * mlm.mm_lb_
+                    l1_lambda_g0 * mlm_d2k
                 };
                 // update beta
                 beta(g1, k) = numer / denom;
