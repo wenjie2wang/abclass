@@ -384,7 +384,7 @@ supclass_mlog <- function(x, y, penalty, start, control)
                        } else {
                            start
                        }
-        eta <- apply(abs(outer_beta0[- 1L, ]), 1, max)
+        eta <- apply(abs(outer_beta0[- 1L, , drop = FALSE]), 1, max)
         inner_iter <- outer_iter <- 0
         ## main loop for one single lambda
         while (outer_iter < control$maxit) {
@@ -592,7 +592,7 @@ supclass_mpsvm <- function(x, y, penalty, start, control)
         } else {
             ## main loop for one single lambda
             iter <- 0L
-            eta <- apply(abs(beta0[- 1L, ]), 1, max)
+            eta <- apply(abs(beta0[- 1L, , drop = FALSE]), 1, max)
             while (iter < control$maxit) {
                 iter <- iter + 1L
                 dp <- scaddp(control$scad_a, control$lambda[l], eta)
@@ -782,7 +782,7 @@ supclass_msvm <- function(x, y, penalty, start, control)
         } else {
             ## main loop for one single lambda
             iter <- 0L
-            eta <- apply(abs(beta0[- 1L, ]), 1, max)
+            eta <- apply(abs(beta0[- 1L, , drop = FALSE]), 1, max)
             while (iter < control$maxit) {
                 iter <- iter + 1L
                 dp <- scaddp(control$scad_a, control$lambda[l], eta)
