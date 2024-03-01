@@ -36,6 +36,7 @@ namespace abclass
         double lum_log_cp1_;    // log(c + 1)
         double lum_c_cp1_;      // c / (c + 1)
         double lum_amc_;        // a - c
+        double lum_mm_;         // (a + 1)(c + 1) / a
 
     protected:
         double lum_c_ = 0.0;    // c
@@ -89,18 +90,16 @@ namespace abclass
         inline arma::rowvec mm_lowerbound(const T& x,
                                           const arma::vec& obs_weight)
         {
-            double tmp { lum_ap1_ / lum_a_ * lum_cp1_ };
             T sqx { arma::square(x) };
             double dn_obs { static_cast<double>(x.n_rows) };
-            return tmp * (obs_weight.t() * sqx) / dn_obs;
+            return lum_mm_ * (obs_weight.t() * sqx) / dn_obs;
 
         }
         // for the intercept
         inline double mm_lowerbound(const double dn_obs,
                                     const arma::vec& obs_weight)
         {
-            double tmp { lum_ap1_ / lum_a_ * lum_cp1_ };
-            return tmp * arma::accu(obs_weight) / dn_obs;
+            return lum_mm_ * arma::accu(obs_weight) / dn_obs;
         }
 
         inline Lum* set_ac(const double lum_a, const double lum_c)
@@ -108,18 +107,19 @@ namespace abclass
             if (is_le(lum_a, 0.0)) {
                 throw std::range_error("The LUM 'a' must be positive.");
             }
+            if (is_lt(lum_c, 0.0)) {
+                throw std::range_error("The LUM 'c' cannot be negative.");
+            }
             lum_a_ = lum_a;
             lum_ap1_ = lum_a_ + 1.0;
             lum_log_a_ = std::log(lum_a_);
             lum_a_log_a_ = lum_a_ * lum_log_a_;
-            if (is_lt(lum_c, 0.0)) {
-                throw std::range_error("The LUM 'c' cannot be negative.");
-            }
             lum_c_ = lum_c;
             lum_cp1_ = lum_c + 1.0;
             lum_log_cp1_ = std::log(lum_cp1_);
             lum_c_cp1_ = 1.0 - 1.0 / lum_cp1_;
             lum_amc_ = lum_a_ - lum_c_;
+            lum_mm_ = lum_ap1_ / lum_a_ * lum_cp1_;
             return this;
         }
 
