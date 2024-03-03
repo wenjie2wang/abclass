@@ -46,7 +46,7 @@ namespace abclass
             t_vertex_ = vertex_.t();
         }
 
-        inline virtual void set_ex_vertex_matrix() // be virtual for Moml
+        inline virtual void set_ex_vertex_matrix()
         {
             ex_vertex_ = arma::mat(n_obs_, km1_);
             if (control_.owl_reward_.is_empty()) {
@@ -56,7 +56,7 @@ namespace abclass
                 }
                 return;
             }
-            // outcome-weighted learning
+            // for outcome-weighted learning
             if (control_.owl_reward_.n_elem != n_obs_) {
                 throw std::range_error("Incorrect length of reward.");
             }
@@ -75,14 +75,14 @@ namespace abclass
         }
 
         // loss function (with observational weights but no scaling of 1/n)
-        inline double loss(const arma::vec& inner) const
+        inline virtual double loss(const arma::vec& inner) const
         {
             return loss_fun_.loss(inner, control_.obs_weight_);
         }
 
         // the first derivative of the loss function
         // (neither the observational weights nor scaling of 1/n)
-        inline arma::vec loss_derivative(const arma::vec& inner) const
+        inline virtual arma::vec loss_derivative(const arma::vec& inner) const
         {
             return loss_fun_.dloss(inner);
         }
@@ -212,7 +212,7 @@ namespace abclass
         }
 
         // class conditional probability
-        inline arma::mat predict_prob(const arma::mat& pred_f) const
+        inline virtual arma::mat predict_prob(const arma::mat& pred_f) const
         {
             // pred_f: n x (k - 1) matrix
             // vertex_: (k - 1) x k matrix

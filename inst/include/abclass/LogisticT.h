@@ -19,18 +19,7 @@
 #define ABCLASS_LOGISTIC_T_H
 
 #include <RcppArmadillo.h>
-#include "Logistic.h"
 #include "Control.h"
-#include "AbclassNet.h"
-#include "AbclassSCAD.h"
-#include "AbclassMCP.h"
-#include "AbclassGroupLasso.h"
-#include "AbclassGroupSCAD.h"
-#include "AbclassGroupMCP.h"
-#include "AbclassCompMCP.h"
-#include "AbclassGEL.h"
-#include "AbclassMellowL1.h"
-#include "AbclassMellowMCP.h"
 
 namespace abclass
 {
@@ -41,37 +30,6 @@ namespace abclass
         // inherit constructors
         using T_class::T_class;
     };                          // end of class
-
-    // alias templates
-    template<typename T_x>
-    using LogisticNet = LogisticT<AbclassNet<Logistic, T_x>, T_x>;
-
-    template<typename T_x>
-    using LogisticSCAD = LogisticT<AbclassSCAD<Logistic, T_x>, T_x>;
-
-    template<typename T_x>
-    using LogisticMCP = LogisticT<AbclassMCP<Logistic, T_x>, T_x>;
-
-    template<typename T_x>
-    using LogisticGroupLasso = LogisticT<AbclassGroupLasso<Logistic, T_x>, T_x>;
-
-    template<typename T_x>
-    using LogisticGroupSCAD = LogisticT<AbclassGroupSCAD<Logistic, T_x>, T_x>;
-
-    template<typename T_x>
-    using LogisticGroupMCP = LogisticT<AbclassGroupMCP<Logistic, T_x>, T_x>;
-
-    template<typename T_x>
-    using LogisticCompMCP = LogisticT<AbclassCompMCP<Logistic, T_x>, T_x>;
-
-    template<typename T_x>
-    using LogisticGEL = LogisticT<AbclassGEL<Logistic, T_x>, T_x>;
-
-    template<typename T_x>
-    using LogisticMellowL1 = LogisticT<AbclassMellowL1<Logistic, T_x>, T_x>;
-
-    template<typename T_x>
-    using LogisticMellowMCP = LogisticT<AbclassMellowMCP<Logistic, T_x>, T_x>;
 
 }
 

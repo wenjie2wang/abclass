@@ -19,18 +19,7 @@
 #define ABCLASS_BOOST_T_H
 
 #include <RcppArmadillo.h>
-#include "Boost.h"
 #include "Control.h"
-#include "AbclassNet.h"
-#include "AbclassSCAD.h"
-#include "AbclassMCP.h"
-#include "AbclassGroupLasso.h"
-#include "AbclassGroupSCAD.h"
-#include "AbclassGroupMCP.h"
-#include "AbclassCompMCP.h"
-#include "AbclassGEL.h"
-#include "AbclassMellowL1.h"
-#include "AbclassMellowMCP.h"
 
 namespace abclass
 {
@@ -51,37 +40,6 @@ namespace abclass
         }
 
     };                          // end of class
-
-    // alias templates
-    template<typename T_x>
-    using BoostNet = BoostT<AbclassNet<Boost, T_x>, T_x>;
-
-    template<typename T_x>
-    using BoostSCAD = BoostT<AbclassSCAD<Boost, T_x>, T_x>;
-
-    template<typename T_x>
-    using BoostMCP = BoostT<AbclassMCP<Boost, T_x>, T_x>;
-
-    template<typename T_x>
-    using BoostGroupLasso = BoostT<AbclassGroupLasso<Boost, T_x>, T_x>;
-
-    template<typename T_x>
-    using BoostGroupSCAD = BoostT<AbclassGroupSCAD<Boost, T_x>, T_x>;
-
-    template<typename T_x>
-    using BoostGroupMCP = BoostT<AbclassGroupMCP<Boost, T_x>, T_x>;
-
-    template<typename T_x>
-    using BoostCompMCP = BoostT<AbclassCompMCP<Boost, T_x>, T_x>;
-
-    template<typename T_x>
-    using BoostGEL = BoostT<AbclassGEL<Boost, T_x>, T_x>;
-
-    template<typename T_x>
-    using BoostMellowL1 = BoostT<AbclassMellowL1<Boost, T_x>, T_x>;
-
-    template<typename T_x>
-    using BoostMellowMCP = BoostT<AbclassMellowMCP<Boost, T_x>, T_x>;
 
 }
 

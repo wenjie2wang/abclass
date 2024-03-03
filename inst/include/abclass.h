@@ -56,6 +56,7 @@
 #include "abclass/BoostT.h"
 #include "abclass/HingeBoostT.h"
 #include "abclass/LumT.h"
+#include "abclass/template_alias.h"
 
 // utils
 #include "abclass/utils.h"
