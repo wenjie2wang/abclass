@@ -37,6 +37,8 @@ namespace abclass
         double lum_c_cp1_;      // c / (c + 1)
         double lum_amc_;        // a - c
         double lum_mm_;         // (a + 1)(c + 1) / a
+        double lum_loss_const_; // - log(c + 1) + a log(a)
+        double lum_d1_const_;   // (a + 1) log(a)
 
     protected:
         double lum_c_ = 0.0;    // c
@@ -63,7 +65,7 @@ namespace abclass
                     res += obs_weight(i) * (1.0 - u[i]);
                 } else {
                     res += obs_weight(i) * std::exp(
-                        - lum_log_cp1_ + lum_a_log_a_ -
+                        lum_loss_const_ -
                         lum_a_ * std::log(lum_cp1_ * u[i] + lum_amc_));
                 }
             }
@@ -77,7 +79,7 @@ namespace abclass
             for (size_t i {0}; i < u.n_elem; ++i) {
                 if (u[i] > lum_c_cp1_) {
                     out[i] = - std::exp(
-                        lum_a_log_a_ + lum_log_a_ -
+                        lum_d1_const_ -
                         lum_ap1_ * std::log(lum_cp1_ * u[i] + lum_amc_)
                         );
                 }
@@ -120,6 +122,8 @@ namespace abclass
             lum_c_cp1_ = 1.0 - 1.0 / lum_cp1_;
             lum_amc_ = lum_a_ - lum_c_;
             lum_mm_ = lum_ap1_ / lum_a_ * lum_cp1_;
+            lum_loss_const_ = - lum_log_cp1_ + lum_a_log_a_;
+            lum_d1_const_ = lum_a_log_a_ + lum_log_a_;
             return this;
         }
 
