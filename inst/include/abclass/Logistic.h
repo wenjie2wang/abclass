@@ -19,50 +19,33 @@
 #define ABCLASS_LOGISTIC_H
 
 #include <RcppArmadillo.h>
+#include "MarginLoss.h"
 #include "utils.h"
 
 namespace abclass
 {
 
-    class Logistic
+    class Logistic : public MarginLoss
     {
     public:
         Logistic(){}
 
         // loss function
-        inline double loss(const double u) const
+        inline double loss(const double u) const override
         {
             return std::log(1.0 + std::exp(- u));
         }
-        inline double loss(const arma::vec& u,
-                           const arma::vec& obs_weight) const
-        {
-            double res { 0.0 };
-            for (size_t i {0}; i < u.n_elem; ++i) {
-                res += obs_weight(i) * loss(u[i]);
-            }
-            return res;
-        }
 
         // the first derivative of the loss function
-        inline double dloss(const double u) const
+        inline double dloss(const double u) const override
         {
             return - 1.0 / (1.0 + std::exp(u));
-        }
-        inline arma::vec dloss(const arma::vec& u) const
-        {
-            arma::vec out { arma::zeros(u.n_elem) };
-            for (size_t i {0}; i < out.n_elem; ++i) {
-                out[i] = dloss(u[i]);
-            }
-            return out;
-            // return - 1.0 / (1.0 + arma::exp(u));
         }
 
         // MM lowerbound
         template <typename T>
         inline arma::rowvec mm_lowerbound(const T& x,
-                                          const arma::vec& obs_weight)
+                                          const arma::vec& obs_weight) const
         {
             T sqx { arma::square(x) };
             double dn_obs { static_cast<double>(x.n_rows) };
@@ -70,7 +53,7 @@ namespace abclass
         }
         // for the intercept
         inline double mm_lowerbound(const double dn_obs,
-                                    const arma::vec& obs_weight)
+                                    const arma::vec& obs_weight) const
         {
             return arma::accu(obs_weight) / (4.0 * dn_obs);
         }

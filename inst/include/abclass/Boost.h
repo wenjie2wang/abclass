@@ -20,17 +20,19 @@
 
 #include <RcppArmadillo.h>
 #include <stdexcept>
+#include "MarginLoss.h"
 #include "utils.h"
 
 namespace abclass
 {
 
-    class Boost
+    class Boost : public MarginLoss
     {
     protected:
         // cache
         double exp_inner_max_;
         double inner_min_ = - 5.0;
+        double inner_min_p1_ = - 4.0;
 
     public:
         Boost()
@@ -44,33 +46,21 @@ namespace abclass
         }
 
         // loss function
-        inline double loss(const arma::vec& u,
-                           const arma::vec& obs_weight) const
+        inline double loss(const double u) const override
         {
-            double res { 0.0 };
-            double tmp1 { 1.0 + inner_min_ };
-            for (size_t i {0}; i < u.n_elem; ++i) {
-                if (u[i] < inner_min_) {
-                    res += (tmp1 - u[i]) * exp_inner_max_ * obs_weight(i);
-                } else {
-                    res += std::exp(- u[i]) * obs_weight(i);
-                }
+            if (u < inner_min_) {
+                return (inner_min_p1_ - u) * exp_inner_max_;
             }
-            return res;
+            return std::exp(- u);
         }
 
         // the first derivative of the loss function
-        inline arma::vec dloss(const arma::vec& u) const
+        inline double dloss(const double u) const override
         {
-            arma::vec out { arma::zeros(u.n_elem) };
-            for (size_t i {0}; i < u.n_elem; ++i) {
-                if (u[i] < inner_min_) {
-                    out[i] = - exp_inner_max_;
-                } else {
-                    out[i] = - std::exp(- u[i]);
-                }
+            if (u < inner_min_) {
+                return - exp_inner_max_;
             }
-            return out;
+            return - std::exp(- u);
         }
 
         // MM lowerbound
@@ -97,6 +87,7 @@ namespace abclass
                 throw std::range_error("The 'inner_min' cannot be positive.");
             }
             inner_min_ = inner_min;
+            inner_min_p1_ = 1.0 + inner_min_;
             exp_inner_max_ = std::exp(- inner_min_);
             return this;
         }

@@ -20,12 +20,13 @@
 
 #include <RcppArmadillo.h>
 #include <stdexcept>
+#include "MarginLoss.h"
 #include "utils.h"
 
 namespace abclass
 {
 
-    class HingeBoost
+    class HingeBoost : public MarginLoss
     {
     private:
         // cache
@@ -47,31 +48,21 @@ namespace abclass
         }
 
         // loss function
-        inline double loss(const arma::vec& u,
-                           const arma::vec& obs_weight) const
+        inline double loss(const double u) const override
         {
-            double res { 0.0 };
-            for (size_t i {0}; i < u.n_elem; ++i) {
-                if (u[i] < lum_c_cp1_) {
-                    res += obs_weight(i) * (1.0 - u[i]);
-                } else {
-                    res += obs_weight(i) *
-                        std::exp(- (lum_cp1_ * u[i] - lum_c_)) / lum_cp1_;
-                }
+            if (u < lum_c_cp1_) {
+                return 1.0 - u;
             }
-            return res;
+            return std::exp(- (lum_cp1_ * u - lum_c_)) / lum_cp1_;
         }
 
         // the first derivative of the loss function
-        inline arma::vec dloss(const arma::vec& u) const
+        inline double dloss(const double u) const override
         {
-            arma::vec out { - arma::ones(u.n_elem) };
-            for (size_t i {0}; i < u.n_elem; ++i) {
-                if (u[i] > lum_c_cp1_) {
-                    out[i] = - std::exp(- (lum_cp1_ * u[i] - lum_c_));
-                }
+            if (u < lum_c_cp1_) {
+                return - 1.0;
             }
-            return out;
+            return - std::exp(- (lum_cp1_ * u - lum_c_));
         }
 
         // MM lowerbound
