@@ -37,7 +37,7 @@ namespace abclass
         }
 
         // the first derivative of the loss function
-        inline double dloss(const double u) const override
+        inline double dloss_du(const double u) const override
         {
             return - 1.0 / (1.0 + std::exp(u));
         }

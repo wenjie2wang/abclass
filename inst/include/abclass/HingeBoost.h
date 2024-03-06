@@ -57,7 +57,7 @@ namespace abclass
         }
 
         // the first derivative of the loss function
-        inline double dloss(const double u) const override
+        inline double dloss_du(const double u) const override
         {
             if (u < lum_c_cp1_) {
                 return - 1.0;

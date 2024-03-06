@@ -55,7 +55,7 @@ namespace abclass
         }
 
         // the first derivative of the loss function
-        inline double dloss(const double u) const override
+        inline double dloss_du(const double u) const override
         {
             if (u < inner_min_) {
                 return - exp_inner_max_;
