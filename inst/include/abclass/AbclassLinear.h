@@ -19,6 +19,8 @@
 #define ABCLASS_ABCLASS_LINEAR_H
 
 #include <RcppArmadillo.h>
+
+#include <stdexcept>
 #include "Control.h"
 #include "Simplex.h"
 #include "Abclass.h"
@@ -32,14 +34,23 @@ namespace abclass
     class AbclassLinear : public Abclass<T_loss, T_x>
     {
     protected:
-        // inherits
-        using Abclass<T_loss, T_x>::dn_obs_;
-        using Abclass<T_loss, T_x>::km1_;
-
         // for the majorization-based algorithms
         double mm_lowerbound0_;
         arma::rowvec mm_lowerbound_;
         double null_loss_;      // loss function for the null model
+
+        // gradients for beta_g.
+        inline arma::mat iter_dloss_dbeta(const unsigned int g)
+        {
+            return loss_fun_.dloss_dbeta(data_, control_.obs_weight_, g);
+        }
+
+        // gradients for beta_gk
+        inline arma::vec iter_dloss_dbeta(const unsigned int g,
+                                          const unsigned int k)
+        {
+            return loss_fun_.dloss_dbeta(data_, control_.obs_weight_, g, k);
+        }
 
         // transfer coef for standardized data to coef for non-standardized data
         inline arma::mat rescale_coef(const arma::mat& beta) const
@@ -49,20 +60,20 @@ namespace abclass
             }
             arma::mat out { beta };
             if (control_.intercept_) {
-                arma::rowvec tmp_row { x_center_ / x_scale_ };
+                arma::rowvec tmp_row { data_.x_center_ / data_.x_scale_ };
                 // for each columns
-                for (size_t k { 0 }; k < km1_; ++k) {
+                for (size_t k { 0 }; k < data_.km1_; ++k) {
                     arma::vec beta_k { beta.col(k) };
                     out(0, k) = beta(0, k) -
-                        arma::as_scalar(tmp_row * beta_k.tail_rows(p0_));
-                    for (size_t l { 1 }; l < p1_; ++l) {
-                        out(l, k) = beta_k(l) / x_scale_(l - 1);
+                        arma::as_scalar(tmp_row * beta_k.tail_rows(data_.p0_));
+                    for (size_t l { 1 }; l < data_.p1_; ++l) {
+                        out(l, k) = beta_k(l) / data_.x_scale_(l - 1);
                     }
                 }
             } else {
-                for (size_t k { 0 }; k < km1_; ++k) {
-                    for (size_t l { 0 }; l < p0_; ++l) {
-                        out(l, k) /= x_scale_(l);
+                for (size_t k { 0 }; k < data_.km1_; ++k) {
+                    for (size_t l { 0 }; l < data_.p0_; ++l) {
+                        out(l, k) /= data_.x_scale_(l);
                     }
                 }
             }
@@ -74,9 +85,10 @@ namespace abclass
         {
             if (control_.intercept_) {
                 mm_lowerbound0_ = loss_fun_.mm_lowerbound(
-                    dn_obs_, control_.obs_weight_);
+                    data_.dn_obs_, control_.obs_weight_);
             }
-            mm_lowerbound_ = loss_fun_.mm_lowerbound(x_, control_.obs_weight_);
+            mm_lowerbound_ = loss_fun_.mm_lowerbound(
+                data_.x_, control_.obs_weight_);
         }
 
     public:
@@ -85,13 +97,9 @@ namespace abclass
         using Abclass<T_loss, T_x>::Abclass;
 
         // data members
+        using Abclass<T_loss, T_x>::data_;
         using Abclass<T_loss, T_x>::control_;
         using Abclass<T_loss, T_x>::loss_fun_;
-        using Abclass<T_loss, T_x>::p0_;
-        using Abclass<T_loss, T_x>::p1_;
-        using Abclass<T_loss, T_x>::x_;
-        using Abclass<T_loss, T_x>::x_center_;
-        using Abclass<T_loss, T_x>::x_scale_;
 
         // function members
         using Abclass<T_loss, T_x>::accuracy;
@@ -118,7 +126,7 @@ namespace abclass
         inline arma::mat linear_score(
             const arma::mat& beta,
             const T_x& x,
-            const arma::mat& offset = arma::vec()
+            const arma::mat& offset = arma::mat()
             ) const
         {
             arma::mat pred_mat;
@@ -128,7 +136,11 @@ namespace abclass
             } else {
                 pred_mat = x * beta;
             }
-            if (offset.n_rows == x.n_rows && offset.n_cols == beta.n_cols) {
+            if (! offset.is_empty()) {
+                // check the dimension of the offset term
+                if (offset.n_rows != x.n_rows || offset.n_cols != beta.n_cols) {
+                    throw std::range_error("Inconsistent dimension of offset!");
+                }
                 pred_mat += offset;
             }
             return pred_mat;
@@ -138,7 +150,7 @@ namespace abclass
         inline arma::mat predict_prob(
             const arma::mat& beta,
             const T_x& x,
-            const arma::mat& offset = arma::vec()
+            const arma::mat& offset = arma::mat()
             ) const
         {
             return predict_prob(linear_score(beta, x, offset));
@@ -148,7 +160,7 @@ namespace abclass
         inline arma::uvec predict_y(
             const arma::mat& beta,
             const T_x& x,
-            const arma::mat& offset = arma::vec()
+            const arma::mat& offset = arma::mat()
             ) const
         {
             return predict_y(linear_score(beta, x, offset));
@@ -159,7 +171,7 @@ namespace abclass
             const arma::mat& beta,
             const T_x& x,
             const arma::uvec& y,
-            const arma::mat& offset = arma::vec()
+            const arma::mat& offset = arma::mat()
             ) const
         {
             return accuracy(linear_score(beta, x, offset), y);

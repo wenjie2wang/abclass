@@ -31,19 +31,16 @@ namespace abclass
     class AbclassCD : public AbclassLinear<T_loss, T_x>
     {
     protected:
-
         // data members
-        using AbclassLinear<T_loss, T_x>::dn_obs_;
         using AbclassLinear<T_loss, T_x>::inter_;
-        using AbclassLinear<T_loss, T_x>::km1_;
         using AbclassLinear<T_loss, T_x>::mm_lowerbound0_;
         using AbclassLinear<T_loss, T_x>::mm_lowerbound_;
         using AbclassLinear<T_loss, T_x>::null_loss_;
 
         // function members
-        using AbclassLinear<T_loss, T_x>::get_vertex_y;
-        using AbclassLinear<T_loss, T_x>::loss;
-        using AbclassLinear<T_loss, T_x>::loss_derivative;
+        using AbclassLinear<T_loss, T_x>::iter_loss;
+        using AbclassLinear<T_loss, T_x>::iter_dloss_df;
+        using AbclassLinear<T_loss, T_x>::iter_dloss_dbeta;
         using AbclassLinear<T_loss, T_x>::rescale_coef;
 
         // cache
@@ -52,7 +49,7 @@ namespace abclass
         // specifying if a blockwise CD should be used
         inline virtual void set_active_ncol()
         {
-            active_ncol_ = static_cast<size_t>(km1_);
+            active_ncol_ = static_cast<size_t>(data_.km1_);
         }
 
         // penalty function for theta >= 0 (default: lasso)
@@ -96,24 +93,23 @@ namespace abclass
             return out;
         }
 
-        // objective = loss / n + regularization
-        inline virtual double objective(const arma::vec& inner,
-                                        const arma::mat& beta,
-                                        const double l1_lambda,
-                                        const double l2_lambda) const
-        {
-            return loss(inner) / dn_obs_ +
-                regularization(beta, l1_lambda, l2_lambda);
-        }
+        // objective = iter_loss / n + regularization
+        // inline virtual double objective(const arma::mat& beta,
+        //                                 const double l1_lambda,
+        //                                 const double l2_lambda) const
+        // {
+        //     return iter_loss() / data_.dn_obs_ +
+        //         regularization(beta, l1_lambda, l2_lambda);
+        // }
 
         inline arma::vec gen_penalty_factor(
             const arma::vec& penalty_factor = arma::vec()
             ) const
         {
             if (penalty_factor.is_empty()) {
-                return arma::ones(p0_);
+                return arma::ones(data_.p0_);
             }
-            if (penalty_factor.n_elem == p0_) {
+            if (penalty_factor.n_elem == data_.p0_) {
                 if (arma::any(penalty_factor < 0.0)) {
                     throw std::range_error(
                         "The 'penalty_factor' cannot be negative.");
@@ -125,66 +121,53 @@ namespace abclass
         }
 
         // for intercept
-        inline arma::rowvec mm_gradient0(const arma::vec& inner) const
+        inline arma::rowvec mm_gradient0() const
         {
-            arma::vec inner_grad { loss_derivative(inner) };
-            arma::vec tmp_vec { control_.obs_weight_ % inner_grad };
-            arma::rowvec out { tmp_vec.t() * ex_vertex_ };
-            return out / dn_obs_;
+            const arma::mat grad { iter_dloss_df() };
+            return arma::mean(grad, 0);
         }
 
-        inline double mm_gradient0(const arma::vec& inner,
-                                   const unsigned int k) const
+        inline double mm_gradient0(const unsigned int k) const
         {
-            arma::vec inner_grad { loss_derivative(inner) };
-            arma::vec tmp_vec { control_.obs_weight_ % inner_grad };
-            double out { arma::accu(tmp_vec % ex_vertex_.col(k)) };
-            return out / dn_obs_;
+            const arma::vec grad_k { iter_dloss_df(k) };
+            return arma::accu(grad_k) / data_.dn_obs_;
         }
 
         // define gradient function at (g, k) for the given inner product
-        inline double mm_gradient(const arma::vec& inner,
-                                  const arma::vec& vk_xg) const
+        inline double mm_gradient(const unsigned int g,
+                                  const unsigned int k)
         {
-            const arma::vec inner_grad { loss_derivative(inner) };
-            return arma::mean(control_.obs_weight_ % vk_xg % inner_grad);
+            const arma::vec grad_k { iter_dloss_dbeta(g, k) };
+            return arma::accu(grad_k) / data_.dn_obs_;
         }
 
-        // define gradient function for j-th predictor
-        inline arma::rowvec mm_gradient(const arma::vec& inner,
-                                        const unsigned int j) const
+        // define gradient function for g-th predictor
+        inline arma::rowvec mm_gradient(const unsigned int g)
         {
-            const arma::vec inner_grad { loss_derivative(inner) };
-            const arma::vec tmp_vec {
-                x_.col(j) % control_.obs_weight_ % inner_grad
-            };
-            const arma::rowvec out { tmp_vec.t() * ex_vertex_ };
-            return out / dn_obs_;
+            const arma::mat grad { iter_dloss_dbeta(g) };
+            return arma::mean(grad, 0);
         }
 
         // gradient matrix regarding coef only (excluding intercept)
-        // only use it to determine the large-enough lambda
-        inline arma::mat gradient(const arma::vec& inner) const
+        inline arma::mat gradient() const
         {
-            arma::mat out { arma::zeros(p0_, km1_) };
-            arma::vec inner_grad { loss_derivative(inner) };
-            for (size_t j {0}; j < km1_; ++j) {
-                const arma::vec w_v_j {
-                    control_.obs_weight_ % get_vertex_y(j)
-                };
-                for (size_t l {0}; l < p0_; ++l) {
-                    const arma::vec w_vj_xl { w_v_j % x_.col(l) };
-                    out(l, j) = arma::mean(w_vj_xl % inner_grad);
+            arma::mat out { arma::zeros(data_.p0_, data_.km1_) };
+            arma::mat grad { iter_dloss_df() };
+            for (size_t k {0}; k < data_.km1_; ++k) {
+                for (size_t j {0}; j < data_.p0_; ++j) {
+                    const arma::vec grad_jk {
+                        grad.col(k) % data_.x_.col(j)
+                    };
+                    out(j, k) = arma::mean(grad_jk);
                 }
             }
             return out;
         }
 
         // determine the large-enough l1 lambda that results in zero coef's
-        inline virtual void set_lambda_max(const arma::vec& inner,
-                                           const arma::uvec& positive_penalty)
+        inline virtual void set_lambda_max(const arma::uvec& positive_penalty)
         {
-            arma::mat one_grad_beta { arma::abs(gradient(inner)) };
+            arma::mat one_grad_beta { arma::abs(gradient()) };
             // get large enough lambda for zero coefs in positive_penalty
             l1_lambda_max_ = 0.0;
             lambda_max_ = 0.0;
@@ -230,16 +213,15 @@ namespace abclass
         // kkt condition
         inline virtual arma::umat is_kkt_failed(
             const arma::umat& is_active_strong,
-            const arma::vec& inner,
             const arma::uvec& positive_penalty,
             const double l1_lambda) const
         {
             arma::umat is_strong_rule_failed {
                 arma::zeros<arma::umat>(arma::size(is_active_strong))
             };
-            arma::vec inner_grad;
+            arma::mat inner_grad;
             if (positive_penalty.n_elem > 0) {
-                inner_grad = control_.obs_weight_ % loss_derivative(inner);
+                inner_grad = iter_dloss_df();
             }
             for (arma::uvec::const_iterator it { positive_penalty.begin() };
                  it != positive_penalty.end(); ++it) {
@@ -247,8 +229,9 @@ namespace abclass
                     if (is_active_strong(*it, j) > 0) {
                         continue;
                     }
-                    arma::vec vj_xl { x_.col(*it) % get_vertex_y(j) };
-                    double tmp { arma::mean(vj_xl % inner_grad) };
+                    double tmp {
+                        arma::mean(data_.x_.col(*it) % inner_grad.col(j))
+                    };
                     if (std::abs(tmp) > l1_lambda *
                         control_.penalty_factor_(*it)) {
                         // update active set
@@ -261,7 +244,6 @@ namespace abclass
 
         // default: individual update step for beta
         inline virtual void update_beta_gk(arma::mat& beta,
-                                           arma::vec& inner,
                                            const size_t k,
                                            const size_t g,
                                            const size_t g1,
@@ -269,9 +251,7 @@ namespace abclass
                                            const double l2_lambda)
         {
             const double old_beta_g1k { beta(g1, k) };
-            const arma::vec v_k { get_vertex_y(k) };
-            const arma::vec vk_xg { x_.col(g) % v_k };
-            const double d_gk { mm_gradient(inner, vk_xg) };
+            const double d_gk { mm_gradient(g, k) };
             // if mm_lowerbound = 0 and l1_lambda > 0, numer will be 0
             const double u_g { mm_lowerbound_(g) * beta(g1, k) - d_gk };
             const double tmp {
@@ -285,8 +265,13 @@ namespace abclass
                 // update beta
                 beta(g1, k) = numer / denom;
             }
-            // update inner
-            inner += (beta(g1, k) - old_beta_g1k) * vk_xg;
+            // update pred_f and inner
+            const double delta_beta { beta(g1, k) - old_beta_g1k };
+            if constexpr (std::is_base_of_v<T_loss, MarginLoss>) {
+                data_.iter_inner_ += delta_beta * data_.iter_vk_xg_;
+            } else {
+                data_.iter_pred_f_.col(k) += delta_beta * data_.x_.col(g);
+            }
         }
 
         // for 1) individual or bi-level regularization (default)
@@ -294,7 +279,6 @@ namespace abclass
         // run one cycle of coordinate descent over a given active set
         inline virtual void run_one_active_cycle(
             arma::mat& beta,
-            arma::vec& inner,
             arma::umat& is_active,
             const double l1_lambda,
             const double l2_lambda,
@@ -304,14 +288,12 @@ namespace abclass
         // one full cycle for coordinate-descent
         inline virtual void run_one_full_cycle(
             arma::mat& beta,
-            arma::vec& inner,
             const double l1_lambda,
             const double l2_lambda,
             const unsigned int verbose);
 
         // run cycles a given active set and given lambda's until convergence
         inline void run_active_cycles(arma::mat& beta,
-                                      arma::vec& inner,
                                       arma::umat& is_active,
                                       const double l1_lambda,
                                       const double l2_lambda,
@@ -322,7 +304,6 @@ namespace abclass
 
         // run full cycles of CMD for given lambda's until convergence
         inline void run_full_cycles(arma::mat& beta,
-                                    arma::vec& inner,
                                     const double l1_lambda,
                                     const double l2_lambda,
                                     const unsigned int max_iter,
@@ -336,18 +317,15 @@ namespace abclass
 
         // specifics for template inheritance
         // from Abclass
-        using AbclassLinear<T_loss, T_x>::x_;
-        using AbclassLinear<T_loss, T_x>::ex_vertex_;
-        using AbclassLinear<T_loss, T_x>::n_obs_;
-        using AbclassLinear<T_loss, T_x>::p0_;
-        using AbclassLinear<T_loss, T_x>::p1_;
+        using AbclassLinear<T_loss, T_x>::data_;
         using AbclassLinear<T_loss, T_x>::control_;
+        using AbclassLinear<T_loss, T_x>::loss_fun_;
 
         // from AbclassLinear
+        using AbclassLinear<T_loss, T_x>::set_mm_lowerbound;
         using AbclassLinear<T_loss, T_x>::coef_;
         using AbclassLinear<T_loss, T_x>::loss_;
         using AbclassLinear<T_loss, T_x>::objective_;
-        using AbclassLinear<T_loss, T_x>::set_mm_lowerbound;
 
         // along the solution path
         arma::vec penalty_;
@@ -397,7 +375,6 @@ namespace abclass
     template <typename T_loss, typename T_x>
     inline void AbclassCD<T_loss, T_x>::run_one_full_cycle(
         arma::mat& beta,
-        arma::vec& inner,
         const double l1_lambda,
         const double l2_lambda,
         const unsigned int verbose
@@ -410,18 +387,22 @@ namespace abclass
         // for intercept
         if (control_.intercept_) {
             arma::rowvec delta_beta0 {
-                - mm_gradient0(inner) / mm_lowerbound0_
+                - mm_gradient0() / mm_lowerbound0_
             };
             beta.row(0) += delta_beta0;
-            arma::vec tmp_du { ex_vertex_ * delta_beta0.t() };
-            inner += tmp_du;
+            // update pred_f_ and inner_
+            if constexpr (std::is_base_of_v<T_loss, MarginLoss>) {
+                data_.iter_inner_ += data_.ex_vertex_ * delta_beta0.t();
+            } else {
+                data_.iter_pred_f_.each_row() += delta_beta0;
+            }
         }
         // predictors
-        for (size_t g { 0 }; g < p0_; ++g) {
+        for (size_t g { 0 }; g < data_.p0_; ++g) {
             const size_t g1 { g + inter_ };
-            for (size_t k {0}; k < km1_; ++k) {
+            for (size_t k {0}; k < data_.km1_; ++k) {
                 // update beta and inner
-                update_beta_gk(beta, inner, k, g, g1, l1_lambda, l2_lambda);
+                update_beta_gk(beta, k, g, g1, l1_lambda, l2_lambda);
             }
         }
     }
@@ -430,7 +411,6 @@ namespace abclass
     template <typename T_loss, typename T_x>
     inline void AbclassCD<T_loss, T_x>::run_one_active_cycle(
         arma::mat& beta,
-        arma::vec& inner,
         arma::umat& is_active,
         const double l1_lambda,
         const double l2_lambda,
@@ -446,24 +426,26 @@ namespace abclass
         };
         // for intercept
         if (control_.intercept_) {
-            for (size_t k {0}; k < km1_; ++k) {
-                double delta_beta0_k {
-                    - mm_gradient0(inner, k) / mm_lowerbound0_
-                };
-                beta(0, k) += delta_beta0_k;
-                arma::vec tmp_du { ex_vertex_.col(k) * delta_beta0_k };
-                inner += tmp_du;
+            arma::rowvec delta_beta0 {
+                - mm_gradient0() / mm_lowerbound0_
+            };
+            beta.row(0) += delta_beta0;
+            // update pred_f_ and inner_
+            if constexpr (std::is_base_of_v<T_loss, MarginLoss>) {
+                data_.iter_inner_ += data_.ex_vertex_ * delta_beta0.t();
+            } else {
+                data_.iter_pred_f_.each_row() += delta_beta0;
             }
         }
         // for predictors
-        for (size_t g { 0 }; g < p0_; ++g) {
+        for (size_t g { 0 }; g < data_.p0_; ++g) {
             const size_t g1 { g + inter_ };
-            for (size_t k {0}; k < km1_; ++k) {
+            for (size_t k {0}; k < data_.km1_; ++k) {
                 if (is_active(g, k) == 0) {
                     continue;
                 }
                 // update beta and inner
-                update_beta_gk(beta, inner, k, g, g1, l1_lambda, l2_lambda);
+                update_beta_gk(beta, k, g, g1, l1_lambda, l2_lambda);
                 // update active
                 if (update_active) {
                     // check if it has been shrinkaged to zero
@@ -487,7 +469,6 @@ namespace abclass
     template <typename T_loss, typename T_x>
     inline void AbclassCD<T_loss, T_x>::run_active_cycles(
         arma::mat& beta,
-        arma::vec& inner,
         arma::umat& is_active,
         const double l1_lambda,
         const double l2_lambda,
@@ -499,9 +480,9 @@ namespace abclass
     {
         size_t i {0}, num_iter {0};
         arma::mat beta0 { beta };
-        double loss0 { loss(inner) };
+        double loss0 { iter_loss() };
         double reg0 { regularization(beta, l1_lambda, l2_lambda) };
-        double obj0 { loss0 / dn_obs_ + reg0 }, obj1 { obj0 };
+        double obj0 { loss0 / data_.dn_obs_ + reg0 }, obj1 { obj0 };
         // use active-set if p > n ("helps when p >> n")
         if (varying_active_set) {
             arma::umat is_active_strong { is_active },
@@ -517,19 +498,22 @@ namespace abclass
                 while (num_iter < max_iter) {
                     ++num_iter;
                     Rcpp::checkUserInterrupt();
-                    run_one_active_cycle(beta, inner, is_active_varying,
-                                         l1_lambda, l2_lambda, true, verbose);
-
-                    double loss1 { loss(inner) };
+                    run_one_active_cycle(beta,
+                                         is_active_varying,
+                                         l1_lambda,
+                                         l2_lambda,
+                                         true,
+                                         verbose);
+                    double loss1 { iter_loss() };
                     double reg1 { regularization(beta, l1_lambda, l2_lambda) };
-                    obj1 = loss1 / dn_obs_ + reg1;
+                    obj1 = loss1 / data_.dn_obs_ + reg1;
                     // optional: throw warning if objective function increases
                     if (verbose > 1) {
                         Rcpp::Rcout << "The objective function changed\n";
-                        Rprintf("  from %7.7f (loss: %7.7f + penalty: %7.7f)\n",
-                                obj0, loss0 / dn_obs_, reg0);
-                        Rprintf("    to %7.7f (loss: %7.7f + penalty: %7.7f)\n",
-                                obj1, loss1 / dn_obs_, reg1);
+                        Rprintf("  from %7.7f (iter_loss: %7.7f + penalty: %7.7f)\n",
+                                obj0, loss0 / data_.dn_obs_, reg0);
+                        Rprintf("    to %7.7f (iter_loss: %7.7f + penalty: %7.7f)\n",
+                                obj1, loss1 / data_.dn_obs_, reg1);
                         if (obj1 > obj0) {
                             Rcpp::Rcout << "Notice: the objective increased.\n";
                         }
@@ -544,8 +528,12 @@ namespace abclass
                     beta0 = beta;
                 }
                 // run a full cycle over the converged beta
-                run_one_active_cycle(beta, inner, is_active,
-                                     l1_lambda, l2_lambda, true, verbose);
+                run_one_active_cycle(beta,
+                                     is_active,
+                                     l1_lambda,
+                                     l2_lambda,
+                                     true,
+                                     verbose);
                 // check two active sets coincide
                 if (arma::accu(arma::any(is_active_varying != is_active))) {
                     // if different, repeat this process
@@ -571,19 +559,22 @@ namespace abclass
             while (i < max_iter) {
                 Rcpp::checkUserInterrupt();
                 ++num_iter;
-                run_one_active_cycle(beta, inner, is_active,
-                                     l1_lambda, l2_lambda, false, verbose);
-
-                double loss1 { loss(inner) };
+                run_one_active_cycle(beta,
+                                     is_active,
+                                     l1_lambda,
+                                     l2_lambda,
+                                     false,
+                                     verbose);
+                double loss1 { iter_loss() };
                 double reg1 { regularization(beta, l1_lambda, l2_lambda) };
-                obj1 = loss1 / dn_obs_ + reg1;
+                obj1 = loss1 / data_.dn_obs_ + reg1;
                 // optional: throw warning if objective function increases
                 if (verbose > 1) {
                     Rcpp::Rcout << "The objective function changed\n";
-                    Rprintf("  from %7.7f (loss: %7.7f + penalty: %7.7f)\n",
-                            obj0, loss0 / dn_obs_, reg0);
-                    Rprintf("    to %7.7f (loss: %7.7f + penalty: %7.7f)\n",
-                            obj1, loss1 / dn_obs_, reg1);
+                    Rprintf("  from %7.7f (iter_loss: %7.7f + penalty: %7.7f)\n",
+                            obj0, loss0 / data_.dn_obs_, reg0);
+                    Rprintf("    to %7.7f (iter_loss: %7.7f + penalty: %7.7f)\n",
+                            obj1, loss1 / data_.dn_obs_, reg1);
                     if (obj1 > obj0) {
                         Rcpp::Rcout << "Warning: "
                                     << "the function objective "
@@ -618,7 +609,6 @@ namespace abclass
     template <typename T_loss, typename T_x>
     inline void AbclassCD<T_loss, T_x>::run_full_cycles(
         arma::mat& beta,
-        arma::vec& inner,
         const double l1_lambda,
         const double l2_lambda,
         const unsigned int max_iter,
@@ -627,24 +617,24 @@ namespace abclass
         )
     {
         arma::mat beta0 { beta };
-        double loss0 { loss(inner) };
+        double loss0 { iter_loss() };
         double reg0 { regularization(beta, l1_lambda, l2_lambda) };
-        double obj0 { loss0 / dn_obs_ + reg0 }, obj1 { obj0 };
+        double obj0 { loss0 / data_.dn_obs_ + reg0 }, obj1 { obj0 };
         size_t num_iter {0};
         for (size_t i {0}; i < max_iter; ++i) {
             Rcpp::checkUserInterrupt();
             ++num_iter;
-            run_one_full_cycle(beta, inner, l1_lambda, l2_lambda, verbose);
-            double loss1 { loss(inner) };
+            run_one_full_cycle(beta, l1_lambda, l2_lambda, verbose);
+            double loss1 { iter_loss() };
             double reg1 { regularization(beta, l1_lambda, l2_lambda) };
-            obj1 = loss1 / dn_obs_ + reg1;
+            obj1 = loss1 / data_.dn_obs_ + reg1;
             // optional: throw warning if objective function increases
             if (verbose > 1) {
                 Rcpp::Rcout << "The objective function changed\n";
-                Rprintf("  from %7.7f (loss: %7.7f + penalty: %7.7f)\n",
-                        obj0, loss0 / dn_obs_, reg0);
-                Rprintf("    to %7.7f (loss: %7.7f + penalty: %7.7f)\n",
-                        obj1, loss1 / dn_obs_, reg1);
+                Rprintf("  from %7.7f (iter_loss: %7.7f + penalty: %7.7f)\n",
+                        obj0, loss0 / data_.dn_obs_, reg0);
+                Rprintf("    to %7.7f (iter_loss: %7.7f + penalty: %7.7f)\n",
+                        obj1, loss1 / data_.dn_obs_, reg1);
                 if (obj1 > obj0) {
                     Rcpp::Rcout << "Warning: "
                                 << "the function objective "
@@ -689,14 +679,21 @@ namespace abclass
             arma::find(control_.penalty_factor_ > 0.0)
         };
         // initialize
-        arma::vec one_inner;
-        if (control_.has_offset_) {
-            arma::mat ex_inner { ex_vertex_ % control_.offset_ };
-            one_inner = arma::sum(ex_inner, 1);
+        if constexpr (std::is_base_of_v<T_loss, MarginLoss>) {
+            if (control_.has_offset_) {
+                data_.iter_inner_ = arma::sum(
+                    data_.ex_vertex_ % control_.offset_, 1);
+            } else {
+                data_.iter_inner_ = arma::zeros(data_.n_obs_);
+            }
         } else {
-            one_inner = arma::zeros(n_obs_);
+            if (control_.has_offset_) {
+                data_.iter_pred_f_ = control_.offset_;
+            } else {
+                data_.iter_pred_f_ = arma::zeros(data_.n_obs_, data_.km1_);
+            }
         }
-        arma::mat one_beta { arma::zeros(p1_, km1_) },
+        arma::mat one_beta { arma::zeros(data_.p1_, data_.km1_) },
             one_grad_beta { one_beta };
         const bool is_ridge_only {
             isAlmostEqual(control_.ridge_alpha_, 0.0)
@@ -708,7 +705,7 @@ namespace abclass
             lambda_max_ = - 1.0;    // not well defined
         } else {
             // need to determine lambda_max
-            set_lambda_max(one_inner, positive_penalty);
+            set_lambda_max(positive_penalty);
             // set up lambda sequence
             if (! control_.custom_lambda_) {
                 double log_lambda_max { std::log(lambda_max_) };
@@ -725,15 +722,15 @@ namespace abclass
             }
         }
         // initialize the estimate cube
-        coef_ = arma::cube(p1_, km1_, control_.lambda_.n_elem,
+        coef_ = arma::cube(data_.p1_, data_.km1_, control_.lambda_.n_elem,
                            arma::fill::zeros);
         objective_ = penalty_ = loss_ = arma::zeros(control_.lambda_.n_elem);
         // set epsilon from the default null objective, n
-        null_loss_ = dn_obs_;
-        double epsilon0 { exp_log_sum(control_.epsilon_, dn_obs_) };
+        null_loss_ = data_.data_.dn_obs_;
+        double epsilon0 { exp_log_sum(control_.epsilon_, data_.data_.dn_obs_) };
         // get the solution (intercepts) of l1_lambda_max for a warm start
         arma::umat is_active_strong {
-            arma::ones<arma::umat>(p0_, active_ncol_)
+            arma::ones<arma::umat>(data_.p0_, active_ncol_)
         };
         // 1) no need to consider possible constant covariates
         is_active_strong.rows(arma::find(mm_lowerbound_ <= 0.0)).zeros();
@@ -742,7 +739,6 @@ namespace abclass
         if (control_.intercept_) {
             // only need to estimate intercept
             run_active_cycles(one_beta,
-                              one_inner,
                               is_active_strong,
                               0, // does not matter
                               0, // does not matter
@@ -751,7 +747,7 @@ namespace abclass
                               epsilon0,
                               control_.verbose_);
             // update epsilon0
-            null_loss_ = loss(one_inner);
+            null_loss_ = iter_loss();
             epsilon0 = exp_log_sum(control_.epsilon_, null_loss_);
         }
         // for pure ridge penalty
@@ -759,16 +755,15 @@ namespace abclass
             for (size_t li { 0 }; li < control_.lambda_.n_elem; ++li) {
                 l2_lambda = control_.lambda_(li);
                 run_full_cycles(one_beta,
-                                one_inner,
                                 l1_lambda,
                                 l2_lambda,
                                 control_.max_iter_,
                                 epsilon0,
                                 control_.verbose_);
                 coef_.slice(li) = rescale_coef(one_beta);
-                loss_(li) = loss(one_inner);
+                loss_(li) = iter_loss();
                 penalty_(li) = regularization(one_beta, l1_lambda, l2_lambda);
-                objective_(li) = loss_(li) / dn_obs_ + penalty_(li);
+                objective_(li) = loss_(li) / data_.dn_obs_ + penalty_(li);
             }
             return;             // early exit
         }
@@ -790,12 +785,13 @@ namespace abclass
                 coef_.slice(li) = rescale_coef(one_beta);
                 loss_(li) = null_loss_;
                 penalty_(li) = regularization(one_beta, l1_lambda, l2_lambda);
-                objective_(li) = loss_(li) / dn_obs_ + penalty_(li);
+                objective_(li) = loss_(li) / data_.dn_obs_ + penalty_(li);
                 continue;
             }
             // update active set by strong rule
-            one_grad_beta = gradient(one_inner);
-            one_strong_rhs = strong_rule_rhs(l1_lambda, old_l1_lambda);
+            one_grad_beta = gradient();
+            one_strong_rhs = strong_rule_rhs(l1_lambda,
+                                             old_l1_lambda);
             for (size_t j { 0 }; j < active_ncol_; ++j) {
                 for (arma::uvec::iterator it { positive_penalty.begin() };
                      it != positive_penalty.end(); ++it) {
@@ -820,7 +816,6 @@ namespace abclass
                 arma::umat is_active_strong_old { is_active_strong };
                 // update beta
                 run_active_cycles(one_beta,
-                                  one_inner,
                                   is_active_strong,
                                   l1_lambda,
                                   l2_lambda,
@@ -833,8 +828,9 @@ namespace abclass
                 }
                 // check kkt condition
                 arma::umat is_strong_rule_failed {
-                    is_kkt_failed(is_active_strong_old, one_inner,
-                                  positive_penalty, l1_lambda)
+                    is_kkt_failed(is_active_strong_old,
+                                  positive_penalty,
+                                  l1_lambda)
                 };
                 if (arma::accu(is_strong_rule_failed) > 0) {
                     is_active_strong = is_active_strong_old ||
@@ -872,7 +868,7 @@ namespace abclass
                         coef_ = coef_.head_slices(1);
                         loss_ = loss_(0);
                         penalty_ = penalty_(0);
-                        objective_(0) = loss_(0) / dn_obs_ + penalty_(0);
+                        objective_(0) = loss_(0) / data_.dn_obs_ + penalty_(0);
                     } else {
                         // discard the estimates from this itaration
                         coef_ = coef_.head_slices(li);
@@ -900,9 +896,9 @@ namespace abclass
                 }
             }
             coef_.slice(li) = rescale_coef(one_beta);
-            loss_(li) = loss(one_inner);
+            loss_(li) = iter_loss();
             penalty_(li) = regularization(one_beta, l1_lambda, l2_lambda);
-            objective_(li) = loss_(li) / dn_obs_ + penalty_(li);
+            objective_(li) = loss_(li) / data_.dn_obs_ + penalty_(li);
             old_l1_lambda = l1_lambda; // for next iteration
         }
     }
