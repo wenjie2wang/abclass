@@ -19,8 +19,12 @@
 #define ABCLASS_ABCLASS_H
 
 #include <RcppArmadillo.h>
+
+#include <stdexcept>
 #include "Control.h"
 #include "Simplex.h"
+#include "MarginLoss.h"
+#include "utils.h"
 
 namespace abclass
 {
@@ -31,77 +35,27 @@ namespace abclass
     class Abclass
     {
     protected:
-
         // cache variables
-        double dn_obs_;              // double version of n_obs_
-        unsigned int km1_;           // k - 1
-        unsigned int inter_;         // integer version of intercept_
-        arma::mat t_vertex_;         // transpose of vertex_
-
-        // prepare the vertex matrix
-        inline void set_vertex_matrix(const unsigned int k)
-        {
-            Simplex sim { k };
-            vertex_ = sim.get_vertex();
-            t_vertex_ = vertex_.t();
-        }
-
-        inline virtual void set_ex_vertex_matrix()
-        {
-            ex_vertex_ = arma::mat(n_obs_, km1_);
-            if (control_.owl_reward_.is_empty()) {
-                // regular classification
-                for (size_t i {0}; i < n_obs_; ++i) {
-                    ex_vertex_.row(i) = t_vertex_.row(y_[i]);
-                }
-                return;
-            }
-            // for outcome-weighted learning
-            if (control_.owl_reward_.n_elem != n_obs_) {
-                throw std::range_error("Incorrect length of reward.");
-            }
-            for (size_t i {0}; i < n_obs_; ++i) {
-                ex_vertex_.row(i) = t_vertex_.row(y_[i]) *
-                    sign(control_.owl_reward_(i));
-            }
-        }
-
-        inline arma::vec get_vertex_y(const unsigned int j) const
-        {
-            // j in {0, 1, ..., k - 2}
-            // arma::vec vj { vertex_.col(j) };
-            // return vj.elem(y_);
-            return ex_vertex_.col(j);
-        }
+        unsigned int inter_;    // integer version of intercept_
 
         // loss function (with observational weights but no scaling of 1/n)
-        inline virtual double loss(const arma::vec& inner) const
+        inline double iter_loss() const
         {
-            return loss_fun_.loss(inner, control_.obs_weight_);
+            return loss_fun_.loss(data_, control_.obs_weight_);
         }
 
-        // the first derivative of the loss function
-        // (neither the observational weights nor scaling of 1/n)
-        inline virtual arma::vec loss_derivative(const arma::vec& inner) const
+        inline arma::mat iter_dloss_df() const
         {
-            return loss_fun_.dloss(inner);
+            return loss_fun_.dloss_df(data_, control_.obs_weight_);
+        }
+
+        inline arma::vec iter_dloss_df(const unsigned int k) const
+        {
+            return loss_fun_.dloss_df(data_, control_.obs_weight_, k);
         }
 
     public:
-
-        // from the data
-        unsigned int n_obs_;    // number of observations
-        unsigned int k_;        // number of categories
-        unsigned int p0_;       // number of predictors without intercept
-        unsigned int p1_;       // number of predictors (with intercept)
-        T_x x_;                 // (standardized) x_: n by p (without intercept)
-        arma::uvec y_;          // y vector ranging in {0, ..., k - 1}
-        arma::mat vertex_;      // unique vertex: (k-1) by k
-        arma::mat ex_vertex_;   // expanded vertex for y_: n by (k - 1)
-        arma::rowvec x_center_; // the column center of x_
-        arma::rowvec x_scale_;  // the column scale of x_
-
-        // parameters
+        Simplex2<T_x> data_;    // data container
         Control control_;       // control parameters
         T_loss loss_fun_;       // loss funciton class
 
@@ -111,71 +65,82 @@ namespace abclass
         // for using prediction functions
         explicit Abclass(const unsigned k)
         {
-            set_vertex_matrix(k);
-            k_ = k;
+            set_k(k);
         }
 
         // main constructor
         Abclass(const T_x& x,
                 const arma::uvec& y,
                 const Control& control = Control()) :
-            control_ (control)
+            control_ { control }
         {
             set_data(x, y);
             set_weight(control_.obs_weight_);
             set_offset(control_.offset_);
         }
 
+        // k should be set from y
+        inline void set_k(const unsigned int k)
+        {
+            data_ = Simplex2<T_x>(k);
+        }
+
         // setter
         inline void set_data(const T_x& x,
                              const arma::uvec& y)
         {
-            km1_ = std::max(1U, arma::max(y)); // assume y in {0, ..., k-1}
-            // Binary classification will be assumed if y only takes zero/one.
-            k_ = km1_ + 1;
-            set_vertex_matrix(k_);
-            y_ = y;
+            set_y(y);
             set_x(x);
-            set_ex_vertex_matrix(); // requires n_obs_ set by set_x(x);
+        }
+
+        inline void set_y(const arma::uvec& y)
+        {
+            // assume y in {0, ..., k-1}
+            // assume binary classification if y only takes zero
+            set_k(std::max(2U, arma::max(y + 1)));
+            if (control_.owl_reward_.is_empty()) {
+                data_.set_ex_vertex(y);
+                return;
+            }
+            // for outcome-weighted learning
+            if (control_.owl_reward_.n_elem != data_.n_obs_) {
+                throw std::range_error("Inconsistent length of reward!");
+            }
+            data_.set_ex_vertex(y, sign(control_.owl_reward_));
         }
 
         inline void set_x(const T_x& x)
         {
-            // assume y has been set
-            n_obs_ = x.n_rows;
-            if (n_obs_ != y_.n_elem) {
+            // assume y has been set correspondingly or not initialized
+            if (! data_.y_.is_empty() && x.n_rows != data_.y_.n_elem) {
                 throw std::range_error(
-                    "The number of observations in X and y differs.");
+                    "The number of observations in X and y differs!");
             }
-            dn_obs_ = static_cast<double>(n_obs_);
-            x_ = x;
+            data_.n_obs_ = x.n_rows;
+            data_.dn_obs_ = static_cast<double>(data_.n_obs_);
+            data_.x_ = x;
             inter_ = static_cast<unsigned int>(control_.intercept_);
-            p0_ = x_.n_cols;
-            p1_ = p0_ + inter_;
+            data_.p0_ = data_.x_.n_cols;
+            data_.p1_ = data_.p0_ + inter_;
             if (control_.standardize_) {
                 if (control_.intercept_) {
-                    x_center_ = arma::mean(x_);
+                    data_.x_center_ = arma::mean(data_.x_);
                 } else {
-                    x_center_ = arma::zeros<arma::rowvec>(x_.n_cols);
+                    data_.x_center_ = arma::zeros<arma::rowvec>(data_.p0_);
                 }
-                x_scale_ = col_sd(x_);
-                for (size_t j {0}; j < p0_; ++j) {
-                    if (x_scale_(j) > 0) {
-                        x_.col(j) = (x_.col(j) - x_center_(j)) / x_scale_(j);
+                data_.x_scale_ = col_sd(data_.x_);
+                for (size_t j {0}; j < data_.p0_; ++j) {
+                    if (data_.x_scale_(j) > 0) {
+                        data_.x_.col(j) =
+                            (data_.x_.col(j) - data_.x_center_(j)) /
+                            data_.x_scale_(j);
                     } else {
-                        x_.col(j) = arma::zeros(x_.n_rows);
+                        data_.x_.col(j) = arma::zeros(data_.x_.n_rows);
                         // make scale(j) nonzero for rescaling
-                        x_scale_(j) = - 1.0;
+                        data_.x_scale_(j) = - 1.0;
                     }
                 }
             }
-        }
-
-        inline void set_k(const unsigned int k)
-        {
-            k_ = k;
-            km1_ = k - 1;
-            set_vertex_matrix(k);
         }
 
         inline void set_intercept(const bool intercept)
@@ -190,10 +155,11 @@ namespace abclass
 
         inline void set_weight(const arma::vec& weight)
         {
-            if (weight.n_elem != n_obs_) {
-                control_.obs_weight_ = arma::ones(n_obs_);
+            if (weight.n_elem != data_.n_obs_) {
+                control_.obs_weight_ = arma::ones(data_.n_obs_);
             } else {
-                control_.obs_weight_ = weight / arma::sum(weight) * dn_obs_;
+                control_.obs_weight_ = data_.dn_obs_ * weight /
+                    arma::accu(weight);
             }
         }
 
@@ -204,21 +170,21 @@ namespace abclass
                 control_.has_offset_ = false;
                 return;
             }
-            if (offset.n_rows != n_obs_ || offset.n_cols != km1_) {
-                throw std::range_error("Incorrect length of offsets.");
+            if (offset.n_rows != data_.n_obs_ || offset.n_cols != data_.km1_) {
+                throw std::range_error("Inconsistent length of offsets!");
             }
             control_.offset_ = offset;
             control_.has_offset_ = true;
         }
 
-        // class conditional probability
+        // conditional class probability
         inline virtual arma::mat predict_prob(const arma::mat& pred_f) const
         {
             // pred_f: n x (k - 1) matrix
             // vertex_: (k - 1) x k matrix
-            arma::mat out { pred_f * vertex_ }; // n x k
+            arma::mat out { pred_f * data_.vertex_ }; // n x k
             out.each_col([&](arma::vec& a) {
-                a = 1.0 / loss_derivative(a);
+                a = loss_fun_.prob_score_k(a);
             });
             arma::vec row_sums { arma::sum(out, 1) };
             out.each_col() /= row_sums;
@@ -230,7 +196,7 @@ namespace abclass
         {
             // pred_f: n x (k - 1) matrix
             // vertex_: (k - 1) x k matrix
-            arma::mat out { pred_f * vertex_ }; // n x k
+            arma::mat out { pred_f * data_.vertex_ }; // n x k
             return arma::index_max(out, 1);
         }
 
@@ -240,7 +206,7 @@ namespace abclass
         {
             // in case the decision functions are all zeros
             if (! control_.intercept_ && pred_f.is_zero()) {
-                return 1.0 / static_cast<double>(k_);
+                return 1.0 / static_cast<double>(data_.k_);
             }
             arma::uvec max_idx { predict_y(pred_f) };
             arma::uvec is_correct { max_idx == y };

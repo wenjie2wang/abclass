@@ -1,5 +1,5 @@
 Package: abclass
-Title: Angle-Based Large-Margin Classifiers
+Title: Angle-Based Classification
 Version: 0.5.0.9090
 Authors@R: c(
     person(given = "Wenjie", family = "Wang",

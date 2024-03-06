@@ -119,6 +119,14 @@ namespace abclass {
         }
         return 0.0;
     }
+    inline arma::vec sign(const arma::vec& x)
+    {
+        arma::vec res { arma::zeros(x.n_elem) };
+        for (size_t i {0}; i < x.n_elem; ++i) {
+            res[i] = sign(x[i]);
+        }
+        return res;
+    }
 
     // soft-thresholding operator
     inline double soft_threshold(const double beta, const double lambda)

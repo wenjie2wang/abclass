@@ -22,5 +22,5 @@
 arma::mat rcpp_vertex(const unsigned int k)
 {
     abclass::Simplex obj { k };
-    return obj.get_vertex();
+    return obj.vertex_;
 }

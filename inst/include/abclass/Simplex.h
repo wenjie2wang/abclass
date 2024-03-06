@@ -26,12 +26,12 @@ namespace abclass
 
     class Simplex
     {
-    private:
+    public:
+        unsigned int km1_;      // k - 1
         unsigned int k_;        // dimensions
         // k vertex column vectors in R^(k-1) => (k-1) by k
-        arma::mat vertex_;
+        arma::mat vertex_;      // unique vertex: (k-1) by k
 
-    public:
         // default constructor
         Simplex(const unsigned int k = 2)
         {
@@ -39,25 +39,76 @@ namespace abclass
                 throw std::range_error("k must be an integer > 1.");
             }
             k_ = k;
-            vertex_ = arma::zeros(k_ - 1, k_);
-            const arma::vec tmp { arma::ones<arma::vec>(k_ - 1) };
-            vertex_.col(0) = std::pow(k_ - 1.0, - 0.5) * tmp;
+            km1_ = k - 1;
+            double dkm1 { static_cast<double>(km1_) };
+            vertex_ = arma::zeros(km1_, k_);
+            const arma::vec tmp { arma::ones<arma::vec>(km1_) };
+            vertex_.col(0) = std::pow(dkm1, - 0.5) * tmp;
             for (size_t j {1}; j < k_; ++j) {
                 vertex_.col(j) = - (1.0 + std::sqrt(k_)) /
-                    std::pow(k_ - 1.0, 1.5) * tmp;
-                vertex_(j - 1, j) += std::sqrt(k_ / (k_ - 1.0));
+                    std::pow(dkm1, 1.5) * tmp;
+                vertex_(j - 1, j) += std::sqrt(k_ / dkm1);
             }
         }
 
-        // setter and getter
-        inline unsigned int get_k() const
+    };
+
+    // another simplex class that contains all the elements for computing loss
+    template<typename T_x>
+    class Simplex2 : public Simplex
+    {
+    public:
+        arma::mat t_vertex_;    // transpose of vertex_
+        arma::mat ex_vertex_;   // expanded vertex for y: n by (K - 1)
+        arma::uvec y_;          // {0,1,...,k-1}
+
+        unsigned int n_obs_;    // number of observations
+        double dn_obs_;         // double version of n_obs_
+        unsigned int p0_;       // number of predictors without intercept
+        unsigned int p1_;       // number of predictors (with intercept)
+
+        T_x x_;                 // (standardized) x_: n by p (without intercept)
+        arma::rowvec x_center_; // the column center of x_
+        arma::rowvec x_scale_;  // the column scale of x_
+
+        // cache for iterative estimation procedure
+        arma::vec iter_inner_;  // n x 1
+        arma::mat iter_pred_f_; // n x (K - 1)
+        arma::vec iter_vk_xg_;  // n x 1
+        arma::mat iter_v_xg_;   // n x (K - 1)
+
+        Simplex2(const unsigned int k = 2) :
+            Simplex { k }
         {
-            return k_;
+            t_vertex_ = vertex_.t();
         }
 
-        inline arma::mat get_vertex() const
+        // for angle-based classification
+        inline void set_ex_vertex(const arma::uvec& y)
         {
-            return vertex_;
+            y_ = y;
+            ex_vertex_ = arma::mat(y.n_elem, km1_);
+            for (size_t i {0}; i < y.n_elem; ++i) {
+                ex_vertex_.row(i) = t_vertex_.row(y[i]);
+            }
+        }
+        // more general (e.g., for outcome-weighted learning)
+        inline void set_ex_vertex(const arma::uvec& y, const arma::vec& factor)
+        {
+            y_ = y;
+            ex_vertex_ = arma::mat(y.n_elem, km1_);
+            for (size_t i {0}; i < y.n_elem; ++i) {
+                ex_vertex_.row(i) = t_vertex_.row(y[i]) * factor(i);
+            }
+        }
+
+        // reset cache
+        inline void reset_cache()
+        {
+            iter_inner_.reset();
+            iter_pred_f_.reset();
+            iter_vk_xg_.reset();
+            iter_v_xg_.reset();
         }
 
     };
