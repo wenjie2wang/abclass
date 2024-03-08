@@ -37,6 +37,8 @@ namespace abclass
         double lum_c_ = 0.0;
 
     public:
+        using MarginLoss::loss;
+
         HingeBoost()
         {
             set_c(0.0);

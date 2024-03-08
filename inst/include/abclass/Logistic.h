@@ -28,6 +28,8 @@ namespace abclass
     class Logistic : public MarginLoss
     {
     public:
+        using MarginLoss::loss;
+
         Logistic(){}
 
         // loss function

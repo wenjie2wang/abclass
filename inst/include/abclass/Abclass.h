@@ -85,19 +85,28 @@ namespace abclass
             data_ = Simplex2<T_x>(k);
         }
 
+        // enforce k instead of setting it by y
+        inline void enforce_k(const unsigned int k)
+        {
+            // assume y_ is set, update vertex's
+            data_.update_k(k);
+            set_y(data_.y_);
+        }
+
         // setter
         inline void set_data(const T_x& x,
                              const arma::uvec& y)
         {
+            // assume y in {0, ..., k-1}
+            // assume binary classification if y only takes zero
+            set_k(std::max(2U, arma::max(y + 1)));
             set_y(y);
             set_x(x);
         }
 
         inline void set_y(const arma::uvec& y)
         {
-            // assume y in {0, ..., k-1}
-            // assume binary classification if y only takes zero
-            set_k(std::max(2U, arma::max(y + 1)));
+            // assume k is set
             if (control_.owl_reward_.is_empty()) {
                 data_.set_ex_vertex(y);
                 return;

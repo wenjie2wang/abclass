@@ -33,11 +33,11 @@ namespace abclass {
         // default to use y as the strata if stratified is true
         // and strata not specified
         if (obj.control_.cv_stratified_ &&
-            obj.control_.cv_strata_.n_elem != obj.n_obs_) {
-            obj.control_.cv_strata_ = obj.y_;
+            obj.control_.cv_strata_.n_elem != obj.data_.n_obs_) {
+            obj.control_.cv_strata_ = obj.data_.y_;
         }
         CrossValidation cv_obj {
-            obj.n_obs_, obj.control_.cv_nfolds_, obj.control_.cv_strata_
+            obj.data_.n_obs_, obj.control_.cv_nfolds_, obj.control_.cv_strata_
         };
         size_t ntune { obj.control_.lambda_.n_elem };
         if (ntune == 0) {
@@ -46,8 +46,12 @@ namespace abclass {
         obj.cv_accuracy_ = arma::zeros(ntune, obj.control_.cv_nfolds_);
         // model fits
         for (size_t i { 0 }; i < obj.control_.cv_nfolds_; ++i) {
-            auto train_x { subset_rows(obj.x_, cv_obj.train_index_.at(i)) };
-            auto test_x { subset_rows(obj.x_, cv_obj.test_index_.at(i)) };
+            auto train_x {
+                subset_rows(obj.data_.x_, cv_obj.train_index_.at(i))
+            };
+            auto test_x {
+                subset_rows(obj.data_.x_, cv_obj.test_index_.at(i))
+            };
             arma::mat train_offset, test_offset;
             if (obj.control_.has_offset_) {
                 train_offset = subset_rows(obj.control_.offset_,
@@ -55,8 +59,12 @@ namespace abclass {
                 test_offset = subset_rows(obj.control_.offset_,
                                           cv_obj.test_index_.at(i));
             }
-            arma::uvec train_y { obj.y_.rows(cv_obj.train_index_.at(i)) };
-            arma::uvec test_y { obj.y_.rows(cv_obj.test_index_.at(i)) };
+            arma::uvec train_y {
+                obj.data_.y_.rows(cv_obj.train_index_.at(i))
+            };
+            arma::uvec test_y {
+                obj.data_.y_.rows(cv_obj.test_index_.at(i))
+            };
             arma::vec train_weight {
                 obj.control_.obs_weight_.elem(cv_obj.train_index_.at(i))
             };
@@ -64,7 +72,7 @@ namespace abclass {
             T new_obj { obj };
             new_obj.set_standardize(false);
             new_obj.set_data(std::move(train_x), std::move(train_y));
-            new_obj.set_k(obj.k_);
+            new_obj.enforce_k(obj.data_.k_);
             new_obj.set_weight(std::move(train_weight));
             new_obj.set_offset(std::move(train_offset));
             // alignment: 0 for alignment by fraction

@@ -31,20 +31,22 @@ namespace abclass
     class AbclassBlockCD : public AbclassCD<T_loss, T_x>
     {
     protected:
-
         // data members
         using AbclassCD<T_loss, T_x>::active_ncol_;
-        using AbclassCD<T_loss, T_x>::dn_obs_;
         using AbclassCD<T_loss, T_x>::inter_;
         using AbclassCD<T_loss, T_x>::mm_lowerbound0_;
         using AbclassCD<T_loss, T_x>::mm_lowerbound_;
 
         // function members
+        using AbclassCD<T_loss, T_x>::iter_loss;
+        using AbclassCD<T_loss, T_x>::iter_dloss_df;
+        using AbclassCD<T_loss, T_x>::iter_dloss_dbeta;
         using AbclassCD<T_loss, T_x>::gradient;
-        using AbclassCD<T_loss, T_x>::loss_derivative;
         using AbclassCD<T_loss, T_x>::mm_gradient0;
         using AbclassCD<T_loss, T_x>::mm_gradient;
         using AbclassCD<T_loss, T_x>::penalty0;
+        using AbclassCD<T_loss, T_x>::strong_rule_lhs;
+        using AbclassCD<T_loss, T_x>::strong_rule_rhs;
 
         // specifying that a blockwise CD should be used
         inline void set_active_ncol() override
@@ -62,10 +64,9 @@ namespace abclass
         }
 
         // determine the large-enough l1 lambda that results in zero coef's
-        inline void set_lambda_max(const arma::vec& inner,
-                                   const arma::uvec& positive_penalty) override
+        inline void set_lambda_max(const arma::uvec& positive_penalty) override
         {
-            arma::mat one_grad_beta { gradient(inner) };
+            arma::mat one_grad_beta { gradient() };
             // get large enough lambda for zero coefs in penalty_group
             l1_lambda_max_ = 0.0;
             lambda_max_ = 0.0;
@@ -81,30 +82,53 @@ namespace abclass
                 std::max(control_.ridge_alpha_, 1e-2);
         }
 
+        inline void apply_strong_rule(arma::mat& is_active_strong,
+                                      const double next_lambda,
+                                      const double last_lambda,
+                                      const arma::uvec positive_penalty) const
+        {
+            // update active set by strong rule
+            arma::mat one_grad_beta { gradient() };
+            double one_strong_rhs { strong_rule_rhs(next_lambda,last_lambda) };
+            for (arma::uvec::const_iterator it { positive_penalty.begin() };
+                 it != positive_penalty.end(); ++it) {
+                if (is_active_strong(*it, 0) > 0) {
+                    continue;
+                }
+                double sr_lhs { 0.0 };
+                sr_lhs = strong_rule_lhs(one_grad_beta.row(*it));
+                if (sr_lhs >= control_.penalty_factor_(*it) *
+                    one_strong_rhs) {
+                    is_active_strong(*it, 0) = 1;
+                }
+            }
+        }
+
         // kkt condition
         inline arma::umat is_kkt_failed(
             const arma::umat& is_active_strong,
-            const arma::vec& inner,
             const arma::uvec& positive_penalty,
             const double l1_lambda) const override
         {
             arma::umat is_strong_rule_failed {
                 arma::zeros<arma::umat>(arma::size(is_active_strong))
-                    };
-            arma::vec inner_grad;
+            };
+            arma::mat dloss_df_;
             if (positive_penalty.n_elem > 0) {
-                inner_grad = control_.obs_weight_ % loss_derivative(inner);
+                dloss_df_ = iter_dloss_df();
             }
             for (arma::uvec::const_iterator it { positive_penalty.begin() };
                  it != positive_penalty.end(); ++it) {
                 if (is_active_strong(*it, 0) > 0) {
                     continue;
                 }
-                arma::vec tmp_vec_it { x_.col(*it) % inner_grad };
-                arma::rowvec tmp_mm_grad { tmp_vec_it.t() * ex_vertex_ };
-                double tmp_l2 { l2_norm(tmp_mm_grad) / dn_obs_ };
-                if (tmp_l2 > l1_lambda *
-                    control_.penalty_factor_(*it)) {
+                const arma::vec x_g { data_.x_.col(*it) };
+                const arma::mat dloss_dbeta_ {
+                    loss_fun_.dloss_dbeta(dloss_df_, x_g)
+                };
+                const arma::rowvec tmp { arma::mean(dloss_dbeta_) };
+                const double tmp_l2 { l2_norm(tmp) };
+                if (tmp_l2 > l1_lambda * control_.penalty_factor_(*it)) {
                     // update active set
                     is_strong_rule_failed(*it, 0) = 1;
                 }
@@ -115,7 +139,6 @@ namespace abclass
         // group-wise update step for beta
         // default to group lasso
         inline virtual void update_beta_g(arma::mat& beta,
-                                          arma::vec& inner,
                                           const size_t g,
                                           const size_t g1,
                                           const double l1_lambda,
@@ -123,7 +146,7 @@ namespace abclass
         {
             const arma::rowvec old_beta_g1 { beta.row(g1) };
             const double mg { mm_lowerbound_(g) };
-            const arma::rowvec ug { - mm_gradient(inner, g) };
+            const arma::rowvec ug { - mm_gradient(g) };
             const double l1_lambda_g {
                 l1_lambda * control_.penalty_factor_(g)
             };
@@ -134,15 +157,17 @@ namespace abclass
             } else {
                 beta.row(g1).zeros();
             }
-            // update inner
-            const arma::rowvec delta_beta_j { beta.row(g1) - old_beta_g1 };
-            const arma::vec delta_vj { ex_vertex_ * delta_beta_j.t() };
-            inner += x_.col(g) % delta_vj;
+            // update pred_f and inner
+            const arma::rowvec delta_beta { beta.row(g1) - old_beta_g1 };
+            if constexpr (std::is_base_of_v<MarginLoss, T_loss>) {
+                data_.iter_inner_ += data_.iter_v_xg_ * delta_beta.t();
+            } else {
+                data_.iter_pred_f_ += data_.x_.col(g) * delta_beta;
+            }
         }
 
         inline void run_one_full_cycle(
             arma::mat& beta,
-            arma::vec& inner,
             const double l1_lambda,
             const double l2_lambda,
             const unsigned int verbose
@@ -150,7 +175,6 @@ namespace abclass
 
         inline void run_one_active_cycle(
             arma::mat& beta,
-            arma::vec& inner,
             arma::umat& is_active,
             const double l1_lambda,
             const double l2_lambda,
@@ -159,15 +183,13 @@ namespace abclass
             ) override;
 
     public:
-
         // inherit constructors
         using AbclassCD<T_loss, T_x>::AbclassCD;
 
         // specified for template inheritance
+        using AbclassCD<T_loss, T_x>::data_;
         using AbclassCD<T_loss, T_x>::control_;
-        using AbclassCD<T_loss, T_x>::ex_vertex_;
-        using AbclassCD<T_loss, T_x>::p0_;
-        using AbclassCD<T_loss, T_x>::x_;
+        using AbclassCD<T_loss, T_x>::loss_fun_;
         using AbclassCD<T_loss, T_x>::l1_lambda_max_;
         using AbclassCD<T_loss, T_x>::lambda_max_;
 
@@ -177,7 +199,6 @@ namespace abclass
     template <typename T_loss, typename T_x>
     inline void AbclassBlockCD<T_loss, T_x>::run_one_full_cycle(
         arma::mat& beta,
-        arma::vec& inner,
         const double l1_lambda,
         const double l2_lambda,
         const unsigned int verbose
@@ -190,17 +211,21 @@ namespace abclass
         // for intercept
         if (control_.intercept_) {
             arma::rowvec delta_beta0 {
-                - mm_gradient0(inner) / mm_lowerbound0_
+                - mm_gradient0() / mm_lowerbound0_
             };
             beta.row(0) += delta_beta0;
-            arma::vec tmp_du { ex_vertex_ * delta_beta0.t() };
-            inner += tmp_du;
+            // update pred_f_ and inner_
+            if constexpr (std::is_base_of_v<MarginLoss, T_loss>) {
+                data_.iter_inner_ += data_.ex_vertex_ * delta_beta0.t();
+            } else {
+                data_.iter_pred_f_.each_row() += delta_beta0;
+            }
         }
         // predictors
-        for (size_t g { 0 }; g < p0_; ++g) {
+        for (size_t g { 0 }; g < data_.p0_; ++g) {
             const size_t g1 { g + inter_ };
             // update beta and inner
-            update_beta_g(beta, inner, g, g1, l1_lambda, l2_lambda);
+            update_beta_g(beta, g, g1, l1_lambda, l2_lambda);
         }
     }
 
@@ -208,7 +233,6 @@ namespace abclass
     template <typename T_loss, typename T_x>
     inline void AbclassBlockCD<T_loss, T_x>::run_one_active_cycle(
         arma::mat& beta,
-        arma::vec& inner,
         arma::umat& is_active,
         const double l1_lambda,
         const double l2_lambda,
@@ -226,20 +250,24 @@ namespace abclass
         // for intercept
         if (control_.intercept_) {
             const arma::rowvec delta_beta0 {
-                - mm_gradient0(inner) / mm_lowerbound0_
+                - mm_gradient0() / mm_lowerbound0_
             };
             beta.row(0) += delta_beta0;
-            const arma::vec tmp_du { ex_vertex_ * delta_beta0.t() };
-            inner += tmp_du;
+            // update pred_f_ and inner_
+            if constexpr (std::is_base_of_v<MarginLoss, T_loss>) {
+                data_.iter_inner_ += data_.ex_vertex_ * delta_beta0.t();
+            } else {
+                data_.iter_pred_f_.each_row() += delta_beta0;
+            }
         }
         // for predictors
-        for (size_t g {0}; g < p0_; ++g) {
+        for (size_t g {0}; g < data_.p0_; ++g) {
             const size_t g1 { g + inter_ };
             if (is_active(g) == 0) {
                 continue;
             }
             // update beta and inner
-            update_beta_g(beta, inner, g, g1, l1_lambda, l2_lambda);
+            update_beta_g(beta, g, g1, l1_lambda, l2_lambda);
             // update active
             if (update_active) {
                 // check if it has been shrinkaged to zero

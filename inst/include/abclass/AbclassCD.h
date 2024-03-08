@@ -210,6 +210,34 @@ namespace abclass
             return 0.0;
         }
 
+        inline virtual void apply_strong_rule(arma::umat& is_active_strong,
+                                              const double next_lambda,
+                                              const double last_lambda,
+                                              const arma::uvec positive_penalty)
+        {
+            // update active set by strong rule
+            arma::mat one_grad_beta { gradient() };
+            double one_strong_rhs { strong_rule_rhs(next_lambda,last_lambda) };
+            for (size_t j { 0 }; j < active_ncol_; ++j) {
+                for (arma::uvec::const_iterator it { positive_penalty.begin() };
+                     it != positive_penalty.end(); ++it) {
+                    if (is_active_strong(*it, j) > 0) {
+                        continue;
+                    }
+                    double sr_lhs { 0.0 };
+                    // if (active_ncol_ == 1) {
+                    //     sr_lhs = strong_rule_lhs(one_grad_beta.row(*it));
+                    // } else {
+                    sr_lhs = strong_rule_lhs(one_grad_beta(*it, j));
+                    // }
+                    if (sr_lhs >= control_.penalty_factor_(*it) *
+                        one_strong_rhs) {
+                        is_active_strong(*it, j) = 1;
+                    }
+                }
+            }
+        }
+
         // kkt condition
         inline virtual arma::umat is_kkt_failed(
             const arma::umat& is_active_strong,
@@ -219,9 +247,9 @@ namespace abclass
             arma::umat is_strong_rule_failed {
                 arma::zeros<arma::umat>(arma::size(is_active_strong))
             };
-            arma::mat inner_grad;
+            arma::mat dloss_df_;
             if (positive_penalty.n_elem > 0) {
-                inner_grad = iter_dloss_df();
+                dloss_df_ = iter_dloss_df();
             }
             for (arma::uvec::const_iterator it { positive_penalty.begin() };
                  it != positive_penalty.end(); ++it) {
@@ -229,9 +257,12 @@ namespace abclass
                     if (is_active_strong(*it, j) > 0) {
                         continue;
                     }
-                    double tmp {
-                        arma::mean(data_.x_.col(*it) % inner_grad.col(j))
+                    const arma::vec x_g { data_.x_.col(*it) };
+                    const arma::vec dj { dloss_df_.col(j) };
+                    const arma::vec dloss_dbeta_ {
+                        loss_fun_.dloss_dbeta(dj, x_g)
                     };
+                    const double tmp { arma::mean(dloss_dbeta_) };
                     if (std::abs(tmp) > l1_lambda *
                         control_.penalty_factor_(*it)) {
                         // update active set
@@ -267,7 +298,7 @@ namespace abclass
             }
             // update pred_f and inner
             const double delta_beta { beta(g1, k) - old_beta_g1k };
-            if constexpr (std::is_base_of_v<T_loss, MarginLoss>) {
+            if constexpr (std::is_base_of_v<MarginLoss, T_loss>) {
                 data_.iter_inner_ += delta_beta * data_.iter_vk_xg_;
             } else {
                 data_.iter_pred_f_.col(k) += delta_beta * data_.x_.col(g);
@@ -391,7 +422,7 @@ namespace abclass
             };
             beta.row(0) += delta_beta0;
             // update pred_f_ and inner_
-            if constexpr (std::is_base_of_v<T_loss, MarginLoss>) {
+            if constexpr (std::is_base_of_v<MarginLoss, T_loss>) {
                 data_.iter_inner_ += data_.ex_vertex_ * delta_beta0.t();
             } else {
                 data_.iter_pred_f_.each_row() += delta_beta0;
@@ -431,7 +462,7 @@ namespace abclass
             };
             beta.row(0) += delta_beta0;
             // update pred_f_ and inner_
-            if constexpr (std::is_base_of_v<T_loss, MarginLoss>) {
+            if constexpr (std::is_base_of_v<MarginLoss, T_loss>) {
                 data_.iter_inner_ += data_.ex_vertex_ * delta_beta0.t();
             } else {
                 data_.iter_pred_f_.each_row() += delta_beta0;
@@ -679,7 +710,7 @@ namespace abclass
             arma::find(control_.penalty_factor_ > 0.0)
         };
         // initialize
-        if constexpr (std::is_base_of_v<T_loss, MarginLoss>) {
+        if constexpr (std::is_base_of_v<MarginLoss, T_loss>) {
             if (control_.has_offset_) {
                 data_.iter_inner_ = arma::sum(
                     data_.ex_vertex_ % control_.offset_, 1);
@@ -693,8 +724,7 @@ namespace abclass
                 data_.iter_pred_f_ = arma::zeros(data_.n_obs_, data_.km1_);
             }
         }
-        arma::mat one_beta { arma::zeros(data_.p1_, data_.km1_) },
-            one_grad_beta { one_beta };
+        arma::mat one_beta { arma::zeros(data_.p1_, data_.km1_) };
         const bool is_ridge_only {
             isAlmostEqual(control_.ridge_alpha_, 0.0)
         };
@@ -726,8 +756,8 @@ namespace abclass
                            arma::fill::zeros);
         objective_ = penalty_ = loss_ = arma::zeros(control_.lambda_.n_elem);
         // set epsilon from the default null objective, n
-        null_loss_ = data_.data_.dn_obs_;
-        double epsilon0 { exp_log_sum(control_.epsilon_, data_.data_.dn_obs_) };
+        null_loss_ = data_.dn_obs_;
+        double epsilon0 { exp_log_sum(control_.epsilon_, data_.dn_obs_) };
         // get the solution (intercepts) of l1_lambda_max for a warm start
         arma::umat is_active_strong {
             arma::ones<arma::umat>(data_.p0_, active_ncol_)
@@ -765,6 +795,7 @@ namespace abclass
                 penalty_(li) = regularization(one_beta, l1_lambda, l2_lambda);
                 objective_(li) = loss_(li) / data_.dn_obs_ + penalty_(li);
             }
+            data_.reset_cache();
             return;             // early exit
         }
         // else, not just ridge penalty with l1_lambda > 0
@@ -773,7 +804,7 @@ namespace abclass
         positive_penalty = positive_penalty.elem(
             arma::find(mm_lowerbound_ > 0.0));
         // for strong rule
-        double one_strong_rhs { 0.0 }, old_l1_lambda { l1_lambda_max_ };
+        double old_l1_lambda { l1_lambda_max_ };
         // main loop: for each lambda
         for (size_t li { 0 }; li < control_.lambda_.n_elem; ++li) {
             double lambda_li { control_.lambda_(li) };
@@ -789,27 +820,8 @@ namespace abclass
                 continue;
             }
             // update active set by strong rule
-            one_grad_beta = gradient();
-            one_strong_rhs = strong_rule_rhs(l1_lambda,
-                                             old_l1_lambda);
-            for (size_t j { 0 }; j < active_ncol_; ++j) {
-                for (arma::uvec::iterator it { positive_penalty.begin() };
-                     it != positive_penalty.end(); ++it) {
-                    if (is_active_strong(*it, j) > 0) {
-                        continue;
-                    }
-                    double sr_lhs { 0.0 };
-                    if (active_ncol_ == 1) {
-                        sr_lhs = strong_rule_lhs(one_grad_beta.row(*it));
-                    } else {
-                        sr_lhs = strong_rule_lhs(one_grad_beta(*it, j));
-                    }
-                    if (sr_lhs >= control_.penalty_factor_(*it) *
-                        one_strong_rhs) {
-                        is_active_strong(*it, j) = 1;
-                    }
-                }
-            }
+            apply_strong_rule(is_active_strong, l1_lambda,
+                              old_l1_lambda, positive_penalty);
             bool kkt_failed { true };
             // eventually, strong rule will guess correctly
             while (kkt_failed) {
@@ -901,6 +913,7 @@ namespace abclass
             objective_(li) = loss_(li) / data_.dn_obs_ + penalty_(li);
             old_l1_lambda = l1_lambda; // for next iteration
         }
+        data_.reset_cache();
     }
 
 }  // abclass

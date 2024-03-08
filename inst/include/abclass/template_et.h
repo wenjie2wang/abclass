@@ -31,12 +31,12 @@ namespace abclass {
     inline void et_lambda(T& obj)
     {
         // record some original data
-        const unsigned int p0 { obj.p0_ };
-        const unsigned int inter { obj.p1_ - obj.p0_ };
-        const auto x0 { obj.x_ };
+        const unsigned int p0 { obj.data_.p0_ };
+        const unsigned int inter { obj.data_.p1_ - obj.data_.p0_ };
+        const auto x0 { obj.data_.x_ };
         const bool standardize0 { obj.control_.standardize_ };
-        const arma::rowvec x_center0 { obj.x_center_ },
-            x_scale0 { obj.x_scale_ };
+        const arma::rowvec x_center0 { obj.data_.x_center_ },
+            x_scale0 { obj.data_.x_scale_ };
         // 1. set standardize to false to avoid unnessary rescale
         //    as 1) the location/scale do not depend on permutation
         //       2) regardless of standaridze, rescale does nothing
@@ -56,7 +56,7 @@ namespace abclass {
         }, l1_lambda1 { l1_lambda0 };
         for (size_t i { 0 }; i < obj.control_.et_nstages_; ++i) {
             // create pseudo-features
-            const arma::uvec perm_idx { arma::randperm(obj.n_obs_) };
+            const arma::uvec perm_idx { arma::randperm(obj.data_.n_obs_) };
             auto x_perm { subset_rows(x0, perm_idx) };
             x_perm = arma::join_rows(x0.cols(obj.et_vs_), std::move(x_perm));
             obj.control_.penalty_factor_ = arma::join_cols(
@@ -82,8 +82,8 @@ namespace abclass {
             l1_lambda0(i) = obj.et_l1_lambda0_;
             l1_lambda1(i) = obj.et_l1_lambda1_;
             // update active x
-            const unsigned int p1_i { obj.p1_ - p0 };
-            const unsigned int p0_i { obj.p0_ - p0 };
+            const unsigned int p1_i { obj.data_.p1_ - p0 };
+            const unsigned int p0_i { obj.data_.p0_ - p0 };
             const unsigned int et_lambda_idx { obj.coef_.n_slices - 1 };
             active_beta = obj.coef_.slice(et_lambda_idx).head_rows(p1_i);
             arma::vec l1_beta { arma::zeros(p0_i) };
@@ -110,7 +110,8 @@ namespace abclass {
         obj.set_standardize(standardize0);
         obj.set_x(std::move(x0));
         obj.set_penalty_factor(std::move(gw0));
-        obj.coef_ = arma::cube(obj.p1_, obj.k_ - 1, 1, arma::fill::zeros);
+        obj.coef_ = arma::cube(obj.data_.p1_, obj.data_.k_ - 1, 1,
+                               arma::fill::zeros);
         if (obj.control_.intercept_) {
             obj.coef_.slice(0).rows(obj.et_vs_ + 1) =
                 active_beta.rows(active_idx0 + 1);
@@ -121,8 +122,8 @@ namespace abclass {
         }
         if (standardize0) {
             // set to the original center and scale
-            obj.x_center_ = x_center0;
-            obj.x_scale_ = x_scale0;
+            obj.data_.x_center_ = x_center0;
+            obj.data_.x_scale_ = x_scale0;
             obj.force_rescale_coef();
         }
         obj.et_npermuted_ = 0;  // necessary for calling regular fit()
@@ -141,16 +142,20 @@ namespace abclass {
         // default to use y as the strata if stratified is true
         // and strata not specified
         if (obj.control_.cv_stratified_ &&
-            obj.control_.cv_strata_.n_elem != obj.n_obs_) {
-            obj.control_.cv_strata_ = obj.y_;
+            obj.control_.cv_strata_.n_elem != obj.data_.n_obs_) {
+            obj.control_.cv_strata_ = obj.data_.y_;
         }
         CrossValidation cv_obj {
-            obj.n_obs_, obj.control_.cv_nfolds_, obj.control_.cv_strata_
+            obj.data_.n_obs_, obj.control_.cv_nfolds_, obj.control_.cv_strata_
         };
         obj.cv_accuracy_ = arma::zeros(obj.control_.cv_nfolds_);
         for (size_t i { 0 }; i < obj.control_.cv_nfolds_; ++i) {
-            auto train_x { subset_rows(obj.x_, cv_obj.train_index_.at(i)) };
-            auto test_x { subset_rows(obj.x_, cv_obj.test_index_.at(i)) };
+            auto train_x {
+                subset_rows(obj.data_.x_, cv_obj.train_index_.at(i))
+            };
+            auto test_x {
+                subset_rows(obj.data_.x_, cv_obj.test_index_.at(i))
+            };
             arma::mat train_offset, test_offset;
             if (obj.control_.has_offset_) {
                 train_offset = subset_rows(obj.control_.offset_,
@@ -158,8 +163,12 @@ namespace abclass {
                 test_offset = subset_rows(obj.control_.offset_,
                                           cv_obj.test_index_.at(i));
             }
-            arma::uvec train_y { obj.y_.rows(cv_obj.train_index_.at(i)) };
-            arma::uvec test_y { obj.y_.rows(cv_obj.test_index_.at(i)) };
+            arma::uvec train_y {
+                obj.data_.y_.rows(cv_obj.train_index_.at(i))
+            };
+            arma::uvec test_y {
+                obj.data_.y_.rows(cv_obj.test_index_.at(i))
+            };
             arma::vec train_weight {
                 obj.control_.obs_weight_.elem(cv_obj.train_index_.at(i))
             };
@@ -167,7 +176,7 @@ namespace abclass {
             T new_obj { obj };
             new_obj.set_standardize(false);
             new_obj.set_data(std::move(train_x), std::move(train_y));
-            new_obj.set_k(obj.k_);
+            new_obj.enforce_k(obj.data_.k_);
             new_obj.set_weight(std::move(train_weight));
             new_obj.set_offset(std::move(train_offset));
             // alignment: 0 for alignment by fraction

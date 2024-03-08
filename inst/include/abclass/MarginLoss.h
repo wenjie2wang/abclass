@@ -1,3 +1,20 @@
+//
+// R package abclass developed by Wenjie Wang <wang@wwenjie.org>
+// Copyright (C) 2021-2024 Eli Lilly and Company
+//
+// This file is part of the R package abclass.
+//
+// The R package abclass is free software: You can redistribute it and/or
+// modify it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or any later
+// version (at your option). See the GNU General Public License at
+// <https://www.gnu.org/licenses/> for details.
+//
+// The R package abclass is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//
+
 #ifndef ABCLASS_MARGIN_LOSS_H
 #define ABCLASS_MARGIN_LOSS_H
 
@@ -87,7 +104,9 @@ namespace abclass
                                      const unsigned int g) const
         {
             arma::mat vxg { data.ex_vertex_ };
-            vxg.each_col() %= data.x_.col(g);
+            for (size_t j {0}; j < vxg.n_cols; ++j) {
+                vxg.col(j) %= data.x_.col(g);
+            }
             // cache it in data for updating pred_f and inner
             data.iter_v_xg_ = vxg;
             vxg.each_col() %= dloss_du(data.iter_inner_, obs_weight);
@@ -105,6 +124,25 @@ namespace abclass
             // cache it in data for updating pred_f and inner
             data.iter_vk_xg_ = vkxg;
             return dloss_du(data.iter_inner_, obs_weight) % vkxg;
+        }
+
+        // given computed dloss_df
+        inline arma::mat dloss_dbeta(const arma::mat& dloss_df_,
+                                     const arma::vec& x_g) const
+        {
+            arma::mat dmat { dloss_df_ };
+            for (size_t j {0}; j < dmat.n_cols; ++j) {
+                dmat.col(j) %= x_g;
+            }
+            return dmat;
+        }
+
+        inline arma::vec dloss_dbeta(const arma::vec& dloss_df_k,
+                                     const arma::vec& x_g) const
+        {
+            arma::vec dvec { dloss_df_k };
+            dvec %= x_g;
+            return dvec;
         }
 
         // probability score for the decision function of the k-th class

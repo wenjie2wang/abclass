@@ -29,11 +29,17 @@ namespace abclass
     public:
         unsigned int km1_;      // k - 1
         unsigned int k_;        // dimensions
+
         // k vertex column vectors in R^(k-1) => (k-1) by k
         arma::mat vertex_;      // unique vertex: (k-1) by k
 
         // default constructor
         Simplex(const unsigned int k = 2)
+        {
+            update_k(k);
+        }
+
+        inline void update_k(const unsigned int k)
         {
             if (k < 2) {
                 throw std::range_error("k must be an integer > 1.");

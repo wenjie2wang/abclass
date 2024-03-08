@@ -35,6 +35,8 @@ namespace abclass
         double inner_min_p1_ = - 4.0;
 
     public:
+        using MarginLoss::loss;
+
         Boost()
         {
             set_inner_min(inner_min_);
@@ -44,7 +46,6 @@ namespace abclass
         {
             set_inner_min(inner_min);
         }
-
         // loss function
         inline double loss(const double u) const override
         {

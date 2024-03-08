@@ -32,7 +32,6 @@ namespace abclass
     {
     protected:
         // data
-        using AbclassCD<T_loss, T_x>::km1_;
         using AbclassCD<T_loss, T_x>::mm_lowerbound_;
 
         // functions
@@ -64,16 +63,16 @@ namespace abclass
                 ridge_pen += 0.5 * l2_lambda * beta(k) * beta(k);
             }
             // outer penalty
-            out = mcp_penalty(out, l1_lambda,
-                              0.5 * km1_ * control_.ncv_gamma_ * l1_lambda);
+            out = mcp_penalty(
+                out, l1_lambda,
+                0.5 * data_.km1_ * control_.ncv_gamma_ * l1_lambda);
             return out + ridge_pen;
         }
 
         // determine the large-enough l1 lambda that results in zero coef's
-        inline void set_lambda_max(const arma::vec& inner,
-                                   const arma::uvec& positive_penalty) override
+        inline void set_lambda_max(const arma::uvec& positive_penalty) override
         {
-            arma::mat one_grad_beta { arma::abs(gradient(inner)) };
+            arma::mat one_grad_beta { arma::abs(gradient()) };
             // get large enough lambda for zero coefs in positive_penalty
             l1_lambda_max_ = 0.0;
             lambda_max_ = 0.0;
@@ -116,7 +115,6 @@ namespace abclass
         // }
 
         inline void update_beta_gk(arma::mat& beta,
-                                   arma::vec& inner,
                                    const size_t k,
                                    const size_t g,
                                    const size_t g1,
@@ -124,18 +122,16 @@ namespace abclass
                                    const double l2_lambda) override
         {
             const double old_beta_g1k { beta(g1, k) };
-            const arma::vec v_k { get_vertex_y(k) };
-            const arma::vec vk_xg { x_.col(g) % v_k };
-            const double d_gk { mm_gradient(inner, vk_xg) };
+            const double d_gk { mm_gradient(g, k) };
             // local approximation
             double inner_pen { 0.0 };
-            for (size_t ki {0}; ki < km1_; ++ki) {
+            for (size_t ki {0}; ki < data_.km1_; ++ki) {
                 inner_pen += penalty0(std::abs(beta(g1, ki)),
                                       l1_lambda, 0.0);
             }
             const double local_factor {
                 dmcp_penalty(inner_pen, l1_lambda,
-                             0.5 * km1_ * control_.ncv_gamma_ * l1_lambda) *
+                             0.5 * data_.km1_ * control_.ncv_gamma_ * l1_lambda) *
                 dmcp_penalty(std::abs(beta(g1, k)), l1_lambda,
                              control_.ncv_gamma_)
             };
@@ -152,8 +148,13 @@ namespace abclass
                 // update beta
                 beta(g1, k) = numer / denom;
             }
-            // update inner
-            inner += (beta(g1, k) - old_beta_g1k) * vk_xg;
+            // update pred_f and inner
+            const double delta_beta { beta(g1, k) - old_beta_g1k };
+            if constexpr (std::is_base_of_v<MarginLoss, T_loss>) {
+                data_.iter_inner_ += delta_beta * data_.iter_vk_xg_;
+            } else {
+                data_.iter_pred_f_.col(k) += delta_beta * data_.x_.col(g);
+            }
         }
 
     public:
@@ -162,12 +163,9 @@ namespace abclass
 
         // data members
         using AbclassCD<T_loss, T_x>::control_;
-        using AbclassCD<T_loss, T_x>::x_;
+        using AbclassCD<T_loss, T_x>::data_;
         using AbclassCD<T_loss, T_x>::l1_lambda_max_;
         using AbclassCD<T_loss, T_x>::lambda_max_;
-
-        // function members
-        using AbclassCD<T_loss, T_x>::get_vertex_y;
 
     };
 

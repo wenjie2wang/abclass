@@ -82,7 +82,6 @@ namespace abclass
         }
 
         inline void update_beta_gk(arma::mat& beta,
-                                   arma::vec& inner,
                                    const size_t k,
                                    const size_t g,
                                    const size_t g1,
@@ -90,9 +89,7 @@ namespace abclass
                                    const double l2_lambda) override
         {
             const double old_beta_g1k { beta(g1, k) };
-            const arma::vec v_k { get_vertex_y(k) };
-            const arma::vec vk_xg { x_.col(g) % v_k };
-            const double d_gk { mm_gradient(inner, vk_xg) };
+            const double d_gk { mm_gradient(g, k) };
             const double l1_lambda_g {
                 l1_lambda * control_.penalty_factor_(g)
             };
@@ -123,8 +120,13 @@ namespace abclass
                     beta(g1, k) = 0.0;
                 }
             }
-            // update inner
-            inner += (beta(g1, k) - old_beta_g1k) * vk_xg;
+            // update pred_f and inner
+            const double delta_beta { beta(g1, k) - old_beta_g1k };
+            if constexpr (std::is_base_of_v<MarginLoss, T_loss>) {
+                data_.iter_inner_ += delta_beta * data_.iter_vk_xg_;
+            } else {
+                data_.iter_pred_f_.col(k) += delta_beta * data_.x_.col(g);
+            }
         }
 
     public:
@@ -133,10 +135,7 @@ namespace abclass
 
         // data members
         using AbclassCD<T_loss, T_x>::control_;
-        using AbclassCD<T_loss, T_x>::x_;
-
-        // function members
-        using AbclassCD<T_loss, T_x>::get_vertex_y;
+        using AbclassCD<T_loss, T_x>::data_;
 
     };
 

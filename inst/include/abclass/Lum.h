@@ -46,6 +46,8 @@ namespace abclass
         double lum_a_ = 1.0;    // a
 
     public:
+        using MarginLoss::loss;
+
         Lum()
         {
             set_ac(1.0, 0.0);

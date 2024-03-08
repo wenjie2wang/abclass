@@ -80,7 +80,6 @@ namespace abclass
         }
 
         inline void update_beta_g(arma::mat& beta,
-                                  arma::vec& inner,
                                   const size_t g,
                                   const size_t g1,
                                   const double l1_lambda,
@@ -88,7 +87,7 @@ namespace abclass
         {
             const arma::rowvec old_beta_g1 { beta.row(g1) };
             const double m_g { mm_lowerbound_(g) };
-            const arma::rowvec u_g { - mm_gradient(inner, g) };
+            const arma::rowvec u_g { - mm_gradient(g) };
             const double l1_lambda_g {
                 l1_lambda * control_.penalty_factor_(g)
             };
@@ -112,10 +111,13 @@ namespace abclass
                     beta.row(g1).zeros();
                 }
             }
-            // update inner
-            const arma::rowvec delta_beta_j { beta.row(g1) - old_beta_g1 };
-            const arma::vec delta_vj { ex_vertex_ * delta_beta_j.t() };
-            inner += x_.col(g) % delta_vj;
+            // update pred_f and inner
+            const arma::rowvec delta_beta { beta.row(g1) - old_beta_g1 };
+            if constexpr (std::is_base_of_v<MarginLoss, T_loss>) {
+                data_.iter_inner_ += data_.iter_v_xg_ * delta_beta.t();
+            } else {
+                data_.iter_pred_f_ += data_.x_.col(g) * delta_beta;
+            }
         }
 
     public:
@@ -124,8 +126,7 @@ namespace abclass
 
         // data members
         using AbclassBlockCD<T_loss, T_x>::control_;
-        using AbclassBlockCD<T_loss, T_x>::ex_vertex_;
-        using AbclassBlockCD<T_loss, T_x>::x_;
+        using AbclassBlockCD<T_loss, T_x>::data_;
 
     };
 
