@@ -24,12 +24,14 @@ y <- factor(paste0("label_", y))
 train_y <- y[train_idx]
 test_y <- y[- train_idx]
 
-## regularization through ridge penalty
+## regularization through group lasso penalty
 model <- abclass(
     x = train_x,
     y = train_y,
-    control = abclass.control(nlambda = 5, alpha = 0)
+    loss = "logistic",
+    penalty = "glasso"
 )
+
 pred <- predict(model, test_x, s = 5)
 mean(test_y == pred) # accuracy
 table(test_y, pred)

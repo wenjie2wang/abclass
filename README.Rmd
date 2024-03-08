@@ -68,21 +68,21 @@ test_y <- y[- train_idx]
 
 ### logistic deviance loss with elastic-net penalty
 model1 <- cv.abclass(train_x, train_y, nlambda = 100, nfolds = 5,
-                     loss = "logistic", grouped = FALSE)
+                     loss = "logistic", penalty = "lasso", alpha = 0.9)
 pred1 <- predict(model1, test_x)
 table(test_y, pred1)
 mean(test_y == pred1) # accuracy
 
 ### with groupwise lasso
 model2 <- cv.abclass(train_x, train_y, nlambda = 100, nfolds = 5,
-                     loss = "logistic", grouped = TRUE)
+                     loss = "logistic", penalty = "glasso")
 pred2 <- predict(model2, test_x)
 table(test_y, pred2)
 mean(test_y == pred2) # accuracy
 
 ## tuning by ET-Lasso instead of cross-validation
 model3 <- et.abclass(train_x, train_y, nlambda = 100,
-                     loss = "logistic", grouped = TRUE)
+                     loss = "logistic", penalty = "glasso")
 pred3 <- predict(model3, test_x)
 table(test_y, pred3)
 mean(test_y == pred3) # accuracy
