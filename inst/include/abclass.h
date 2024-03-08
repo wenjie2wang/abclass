@@ -52,11 +52,7 @@
 #include "abclass/AbclassMellowL1.h"
 #include "abclass/AbclassMellowMCP.h"
 
-// combinations
-#include "abclass/LogisticT.h"
-#include "abclass/BoostT.h"
-#include "abclass/HingeBoostT.h"
-#include "abclass/LumT.h"
+// aliases
 #include "abclass/template_alias.h"
 
 // utils
