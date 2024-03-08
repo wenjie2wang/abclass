@@ -38,9 +38,10 @@ namespace abclass
         using AbclassLinear<T_loss, T_x>::null_loss_;
 
         // function members
-        using AbclassLinear<T_loss, T_x>::iter_loss;
-        using AbclassLinear<T_loss, T_x>::iter_dloss_df;
+        using AbclassLinear<T_loss, T_x>::dloss_dbeta;
         using AbclassLinear<T_loss, T_x>::iter_dloss_dbeta;
+        using AbclassLinear<T_loss, T_x>::iter_dloss_df;
+        using AbclassLinear<T_loss, T_x>::iter_loss;
         using AbclassLinear<T_loss, T_x>::rescale_coef;
 
         // cache
@@ -259,9 +260,7 @@ namespace abclass
                     }
                     const arma::vec x_g { data_.x_.col(*it) };
                     const arma::vec dj { dloss_df_.col(j) };
-                    const arma::vec dloss_dbeta_ {
-                        loss_fun_.dloss_dbeta(dj, x_g)
-                    };
+                    const arma::vec dloss_dbeta_ { dloss_dbeta(dj, x_g) };
                     const double tmp { arma::mean(dloss_dbeta_) };
                     if (std::abs(tmp) > l1_lambda *
                         control_.penalty_factor_(*it)) {

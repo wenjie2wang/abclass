@@ -38,10 +38,11 @@ namespace abclass
         using AbclassCD<T_loss, T_x>::mm_lowerbound_;
 
         // function members
-        using AbclassCD<T_loss, T_x>::iter_loss;
-        using AbclassCD<T_loss, T_x>::iter_dloss_df;
-        using AbclassCD<T_loss, T_x>::iter_dloss_dbeta;
+        using AbclassCD<T_loss, T_x>::dloss_dbeta;
         using AbclassCD<T_loss, T_x>::gradient;
+        using AbclassCD<T_loss, T_x>::iter_dloss_dbeta;
+        using AbclassCD<T_loss, T_x>::iter_dloss_df;
+        using AbclassCD<T_loss, T_x>::iter_loss;
         using AbclassCD<T_loss, T_x>::mm_gradient0;
         using AbclassCD<T_loss, T_x>::mm_gradient;
         using AbclassCD<T_loss, T_x>::penalty0;
@@ -123,9 +124,7 @@ namespace abclass
                     continue;
                 }
                 const arma::vec x_g { data_.x_.col(*it) };
-                const arma::mat dloss_dbeta_ {
-                    loss_fun_.dloss_dbeta(dloss_df_, x_g)
-                };
+                const arma::mat dloss_dbeta_ { dloss_dbeta(dloss_df_, x_g) };
                 const arma::rowvec tmp { arma::mean(dloss_dbeta_) };
                 const double tmp_l2 { l2_norm(tmp) };
                 if (tmp_l2 > l1_lambda * control_.penalty_factor_(*it)) {

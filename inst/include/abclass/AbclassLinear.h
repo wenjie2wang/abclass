@@ -39,6 +39,25 @@ namespace abclass
         arma::rowvec mm_lowerbound_;
         double null_loss_;      // loss function for the null model
 
+        // given computed dloss_df
+        inline arma::mat dloss_dbeta(const arma::mat& dloss_df_,
+                                     const arma::vec& x_g) const
+        {
+            arma::mat dmat { dloss_df_ };
+            for (size_t j {0}; j < dmat.n_cols; ++j) {
+                dmat.col(j) %= x_g;
+            }
+            return dmat;
+        }
+
+        inline arma::vec dloss_dbeta(const arma::vec& dloss_df_k,
+                                     const arma::vec& x_g) const
+        {
+            arma::vec dvec { dloss_df_k };
+            dvec %= x_g;
+            return dvec;
+        }
+
         // gradients for beta_g.
         inline arma::mat iter_dloss_dbeta(const unsigned int g)
         {

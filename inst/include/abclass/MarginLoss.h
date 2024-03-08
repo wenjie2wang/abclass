@@ -126,25 +126,6 @@ namespace abclass
             return dloss_du(data.iter_inner_, obs_weight) % vkxg;
         }
 
-        // given computed dloss_df
-        inline arma::mat dloss_dbeta(const arma::mat& dloss_df_,
-                                     const arma::vec& x_g) const
-        {
-            arma::mat dmat { dloss_df_ };
-            for (size_t j {0}; j < dmat.n_cols; ++j) {
-                dmat.col(j) %= x_g;
-            }
-            return dmat;
-        }
-
-        inline arma::vec dloss_dbeta(const arma::vec& dloss_df_k,
-                                     const arma::vec& x_g) const
-        {
-            arma::vec dvec { dloss_df_k };
-            dvec %= x_g;
-            return dvec;
-        }
-
         // probability score for the decision function of the k-th class
         inline arma::vec prob_score_k(const arma::vec& pred_k) const
         {
