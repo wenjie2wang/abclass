@@ -34,7 +34,7 @@ namespace abclass
         double lum_c_cp1_;
 
     protected:
-        double lum_c_ = 0.0;
+        double lum_c_ { 0.0 };
 
     public:
         using MarginLoss::loss;

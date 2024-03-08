@@ -42,8 +42,8 @@ namespace abclass
         double lum_d1_const_;   // (a + 1) log(a)
 
     protected:
-        double lum_c_ = 0.0;    // c
-        double lum_a_ = 1.0;    // a
+        double lum_c_ { 0.0 };  // c
+        double lum_a_ { 1.0 };  // a
 
     public:
         using MarginLoss::loss;

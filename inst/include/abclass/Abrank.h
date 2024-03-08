@@ -276,16 +276,16 @@ namespace abclass
 
     // aliases
     template<typename T_x>
-    using LogisticRank = abclass::Abrank<abclass::Logistic, T_x>;
+    using LogisticRank = Abrank<Logistic, T_x>;
 
     template<typename T_x>
-    using BoostRank = abclass::Abrank<abclass::Boost, T_x>;
+    using BoostRank = Abrank<Boost, T_x>;
 
     template<typename T_x>
-    using HingeBoostRank = abclass::Abrank<abclass::HingeBoost, T_x>;
+    using HingeBoostRank = Abrank<HingeBoost, T_x>;
 
     template<typename T_x>
-    using LumRank = abclass::Abrank<abclass::Lum, T_x>;
+    using LumRank = Abrank<Lum, T_x>;
 
 }  // abclass
 

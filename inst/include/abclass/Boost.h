@@ -31,8 +31,8 @@ namespace abclass
     protected:
         // cache
         double exp_inner_max_;
-        double inner_min_ = - 5.0;
-        double inner_min_p1_ = - 4.0;
+        double inner_min_ { - 5.0 };
+        double inner_min_p1_ { - 4.0 };
 
     public:
         using MarginLoss::loss;

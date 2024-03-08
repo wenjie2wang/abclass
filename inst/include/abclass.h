@@ -34,6 +34,7 @@
 #include "abclass/Mellowmax.h"
 
 // losses
+#include "abclass/MarginLoss.h"
 #include "abclass/Boost.h"
 #include "abclass/Logistic.h"
 #include "abclass/HingeBoost.h"
