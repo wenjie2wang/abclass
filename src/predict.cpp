@@ -54,6 +54,12 @@ arma::mat predict_prob(const T_x& x,
             object.set_intercept(beta.n_rows > x.n_cols);
             return object.predict_prob(beta, x, offset);
         }
+        case 5:
+        {
+            abclass::AbclassLinear<abclass::Mlogit, T_x> object { k };
+            object.set_intercept(beta.n_rows > x.n_cols);
+            return object.predict_prob(beta, x, offset);
+        }
         default:
             break;
     }
@@ -89,6 +95,12 @@ arma::uvec predict_y(const T_x& x,
         case 4:
         {
             abclass::AbclassLinear<abclass::Lum, T_x> object { k };
+            object.set_intercept(beta.n_rows > x.n_cols);
+            return object.predict_y(beta, x, offset);
+        }
+        case 5:
+        {
+            abclass::AbclassLinear<abclass::Mlogit, T_x> object { k };
             object.set_intercept(beta.n_rows > x.n_cols);
             return object.predict_y(beta, x, offset);
         }

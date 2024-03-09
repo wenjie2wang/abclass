@@ -24,6 +24,7 @@
 #include "Boost.h"
 #include "HingeBoost.h"
 #include "Lum.h"
+#include "Mlogit.h"
 
 #include "AbclassNet.h"
 #include "AbclassSCAD.h"
@@ -162,6 +163,37 @@ namespace abclass
 
     template<typename T_x>
     using LumMellowMCP = AbclassMellowMCP<Lum, T_x>;
+
+    // Mlogit
+    template<typename T_x>
+    using MlogitNet = AbclassNet<Mlogit, T_x>;
+
+    template<typename T_x>
+    using MlogitSCAD = AbclassSCAD<Mlogit, T_x>;
+
+    template<typename T_x>
+    using MlogitMCP = AbclassMCP<Mlogit, T_x>;
+
+    template<typename T_x>
+    using MlogitGroupLasso = AbclassGroupLasso<Mlogit, T_x>;
+
+    template<typename T_x>
+    using MlogitGroupSCAD = AbclassGroupSCAD<Mlogit, T_x>;
+
+    template<typename T_x>
+    using MlogitGroupMCP = AbclassGroupMCP<Mlogit, T_x>;
+
+    template<typename T_x>
+    using MlogitCompMCP = AbclassCompMCP<Mlogit, T_x>;
+
+    template<typename T_x>
+    using MlogitGEL = AbclassGEL<Mlogit, T_x>;
+
+    template<typename T_x>
+    using MlogitMellowL1 = AbclassMellowL1<Mlogit, T_x>;
+
+    template<typename T_x>
+    using MlogitMellowMCP = AbclassMellowMCP<Mlogit, T_x>;
 
 }  // abclass
 

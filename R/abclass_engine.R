@@ -16,16 +16,14 @@
 ##
 
 ## encode loss and penalty functions
+.all_abclass_losses <- c("logistic", "boost", "hinge-boost", "lum", "mlogit")
 .id_loss <- function(loss)
 {
-    all_losses <- c("logistic", "boost", "hinge-boost", "lum")
-    match(loss, all_losses)
+    match(loss, .all_abclass_losses)
 }
-
 .all_abclass_penalties <- c("lasso", "scad", "mcp",
                             "glasso", "gscad", "gmcp",
                             "cmcp", "gel", "mlasso", "mmcp")
-
 .id_penalty <- function(penalty)
 {
     match(penalty, .all_abclass_penalties)

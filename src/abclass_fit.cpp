@@ -237,6 +237,50 @@ Rcpp::List template_abclass_fit(
                     return template_fit(object);
                 }
             }
+            case 5: {               // mlogit
+                switch (penalty_id) {
+                    case 1: {       // lasso
+                        abclass::MlogitNet<T> object {x, y, ctrl};
+                        return template_fit(object);
+                    }
+                    case 2: {       // scad
+                        abclass::MlogitSCAD<T> object {x, y, ctrl};
+                        return template_fit(object);
+                    }
+                    case 3: {       // mcp
+                        abclass::MlogitMCP<T> object {x, y, ctrl};
+                        return template_fit(object);
+                    }
+                    case 4: {       // group lasso
+                        abclass::MlogitGroupLasso<T> object {x, y, ctrl};
+                        return template_fit(object);
+                    }
+                    case 5: {       // group scad
+                        abclass::MlogitGroupSCAD<T> object {x, y, ctrl};
+                        return template_fit(object);
+                    }
+                    case 6: {       // group mcp
+                        abclass::MlogitGroupMCP<T> object {x, y, ctrl};
+                        return template_fit(object);
+                    }
+                    case 7: {       // composite mcp
+                        abclass::MlogitCompMCP<T> object {x, y, ctrl};
+                        return template_fit(object);
+                    }
+                    case 8: {       // gel
+                        abclass::MlogitGEL<T> object {x, y, ctrl};
+                        return template_fit(object);
+                    }
+                    case 9: {       // mellowmax L1
+                        abclass::MlogitMellowL1<T> object {x, y, ctrl};
+                        return template_fit(object);
+                    }
+                    case 10: {      // mellowmax mcp
+                        abclass::MlogitMellowMCP<T> object {x, y, ctrl};
+                        return template_fit(object);
+                    }
+                }
+            }
         }
         default:
             break;
