@@ -39,6 +39,7 @@
 #include "abclass/Logistic.h"
 #include "abclass/HingeBoost.h"
 #include "abclass/Lum.h"
+#include "abclass/Mlogit.h"
 
 // penalties
 #include "abclass/AbclassNet.h"

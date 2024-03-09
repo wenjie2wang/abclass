@@ -19,6 +19,8 @@
 #define ABCLASS_LOGISTIC_H
 
 #include <RcppArmadillo.h>
+
+#include "Simplex.h"
 #include "MarginLoss.h"
 #include "utils.h"
 
@@ -45,19 +47,24 @@ namespace abclass
         }
 
         // MM lowerbound
-        template <typename T>
-        inline arma::rowvec mm_lowerbound(const T& x,
-                                          const arma::vec& obs_weight) const
+        template <typename T_x>
+        inline arma::rowvec mm_lowerbound(
+            const Simplex2<T_x>& data,
+            const arma::vec& obs_weight
+            ) const
         {
-            T sqx { arma::square(x) };
-            double dn_obs { static_cast<double>(x.n_rows) };
-            return obs_weight.t() * sqx / (4.0 * dn_obs);
+            T_x sqx { arma::square(data.x_) };
+            return obs_weight.t() * sqx / (4.0 * data.dn_obs_);
         }
+
         // for the intercept
-        inline double mm_lowerbound(const double dn_obs,
-                                    const arma::vec& obs_weight) const
+        template <typename T_x>
+        inline double mm_lowerbound0(
+            const Simplex2<T_x>& data,
+            const arma::vec& obs_weight
+            ) const
         {
-            return arma::accu(obs_weight) / (4.0 * dn_obs);
+            return arma::accu(obs_weight) / (4.0 * data.dn_obs_);
         }
 
     };

@@ -21,9 +21,10 @@
 #include <RcppArmadillo.h>
 
 #include <stdexcept>
+
+#include "Abclass.h"
 #include "Control.h"
 #include "Simplex.h"
-#include "Abclass.h"
 
 namespace abclass
 {
@@ -103,11 +104,11 @@ namespace abclass
         inline void set_mm_lowerbound()
         {
             if (control_.intercept_) {
-                mm_lowerbound0_ = loss_fun_.mm_lowerbound(
-                    data_.dn_obs_, control_.obs_weight_);
+                mm_lowerbound0_ = loss_fun_.mm_lowerbound0(
+                    data_, control_.obs_weight_);
             }
             mm_lowerbound_ = loss_fun_.mm_lowerbound(
-                data_.x_, control_.obs_weight_);
+                data_, control_.obs_weight_);
         }
 
     public:

@@ -64,6 +64,12 @@ namespace abclass
             return out;
         }
 
+        // probability score for the decision function of the k-th class
+        inline arma::vec prob_score_k(const arma::vec& pred_k) const
+        {
+            return 1.0 / dloss_du(pred_k);
+        }
+
         // wrappers for Abclass
         // a margin-based loss that depends on inner product
         template <typename T_x>
@@ -124,12 +130,6 @@ namespace abclass
             // cache it in data for updating pred_f and inner
             data.iter_vk_xg_ = vkxg;
             return dloss_du(data.iter_inner_, obs_weight) % vkxg;
-        }
-
-        // probability score for the decision function of the k-th class
-        inline arma::vec prob_score_k(const arma::vec& pred_k) const
-        {
-            return 1.0 / dloss_du(pred_k);
         }
 
     };

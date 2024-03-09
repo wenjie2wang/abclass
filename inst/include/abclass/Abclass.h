@@ -21,9 +21,9 @@
 #include <RcppArmadillo.h>
 
 #include <stdexcept>
+
 #include "Control.h"
 #include "Simplex.h"
-#include "MarginLoss.h"
 #include "utils.h"
 
 namespace abclass

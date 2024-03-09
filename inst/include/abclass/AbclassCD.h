@@ -22,6 +22,7 @@
 
 #include "AbclassLinear.h"
 #include "Control.h"
+#include "MarginLoss.h"
 #include "utils.h"
 
 namespace abclass

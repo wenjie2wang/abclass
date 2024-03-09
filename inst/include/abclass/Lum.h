@@ -19,8 +19,11 @@
 #define ABCLASS_LUM_H
 
 #include <RcppArmadillo.h>
+
 #include <stdexcept>
+
 #include "MarginLoss.h"
+#include "Simplex.h"
 #include "utils.h"
 
 namespace abclass
@@ -79,20 +82,24 @@ namespace abclass
         }
 
         // MM lowerbound
-        template <typename T>
-        inline arma::rowvec mm_lowerbound(const T& x,
-                                          const arma::vec& obs_weight)
+        template <typename T_x>
+        inline arma::rowvec mm_lowerbound(
+            const Simplex2<T_x>& data,
+            const arma::vec& obs_weight
+            ) const
         {
-            T sqx { arma::square(x) };
-            double dn_obs { static_cast<double>(x.n_rows) };
-            return lum_mm_ * (obs_weight.t() * sqx) / dn_obs;
-
+            T_x sqx { arma::square(data.x_) };
+            return lum_mm_ * (obs_weight.t() * sqx) / data.dn_obs_;
         }
+
         // for the intercept
-        inline double mm_lowerbound(const double dn_obs,
-                                    const arma::vec& obs_weight)
+        template <typename T_x>
+        inline double mm_lowerbound0(
+            const Simplex2<T_x>& data,
+            const arma::vec& obs_weight
+            ) const
         {
-            return lum_mm_ * arma::accu(obs_weight) / dn_obs;
+            return lum_mm_ * arma::accu(obs_weight) / data.dn_obs_;
         }
 
         inline Lum* set_ac(const double lum_a, const double lum_c)
