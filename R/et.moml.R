@@ -54,7 +54,8 @@ et.moml <- function(x,
         stop("The 'nstages' must be a positive integer.")
     }
     ## loss
-    loss <- match.arg(loss)
+    loss <- match.arg(as.character(loss)[1],
+                      choices = .all_abclass_losses)
     penalty <- match.arg(as.character(penalty)[1],
                          choices = .all_abclass_penalties)
     ## controls
