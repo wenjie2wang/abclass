@@ -144,9 +144,7 @@ namespace abclass
             ) const
         {
             T_x sqx { arma::square(data.x_) };
-            double dk { static_cast<double>(data.k_) };
-            dk *= dk;
-            return dk * obs_weight.t() * sqx / data.dn_obs_;
+            return obs_weight.t() * sqx / data.dn_obs_;
         }
 
         // for the intercept
@@ -156,9 +154,7 @@ namespace abclass
             const arma::vec& obs_weight
             ) const
         {
-            double dk { static_cast<double>(data.k_) };
-            dk *= dk;
-            return dk * arma::accu(obs_weight) / data.dn_obs_;
+            return arma::accu(obs_weight) / data.dn_obs_;
         }
 
     };                          // end of class

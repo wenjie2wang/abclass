@@ -37,6 +37,9 @@ namespace abclass
         using AbclassLinear<T_loss, T_x>::mm_lowerbound0_;
         using AbclassLinear<T_loss, T_x>::mm_lowerbound_;
         using AbclassLinear<T_loss, T_x>::null_loss_;
+        using AbclassLinear<T_loss, T_x>::last_loss_;
+        using AbclassLinear<T_loss, T_x>::last_penalty_;
+        using AbclassLinear<T_loss, T_x>::last_obj_;
 
         // function members
         using AbclassLinear<T_loss, T_x>::dloss_dbeta;
@@ -510,10 +513,6 @@ namespace abclass
         )
     {
         size_t i {0}, num_iter {0};
-        arma::mat beta0 { beta };
-        double loss0 { iter_loss() };
-        double reg0 { regularization(beta, l1_lambda, l2_lambda) };
-        double obj0 { loss0 / data_.dn_obs_ + reg0 }, obj1 { obj0 };
         // use active-set if p > n ("helps when p >> n")
         if (varying_active_set) {
             arma::umat is_active_strong { is_active },
@@ -536,27 +535,25 @@ namespace abclass
                                          true,
                                          verbose);
                     double loss1 { iter_loss() };
-                    double reg1 { regularization(beta, l1_lambda, l2_lambda) };
-                    obj1 = loss1 / data_.dn_obs_ + reg1;
                     // optional: throw warning if objective function increases
                     if (verbose > 1) {
+                        double pen1 { regularization(beta, l1_lambda, l2_lambda) };
+                        double obj1 { loss1 / data_.dn_obs_ + pen1 };
                         Rcpp::Rcout << "The objective function changed\n";
                         Rprintf("  from %7.7f (iter_loss: %7.7f + penalty: %7.7f)\n",
-                                obj0, loss0 / data_.dn_obs_, reg0);
+                                last_obj_, last_loss_ / data_.dn_obs_, last_penalty_);
                         Rprintf("    to %7.7f (iter_loss: %7.7f + penalty: %7.7f)\n",
-                                obj1, loss1 / data_.dn_obs_, reg1);
-                        if (obj1 > obj0) {
+                                obj1, loss1 / data_.dn_obs_, pen1);
+                        if (last_obj_ < obj1) {
                             Rcpp::Rcout << "Notice: the objective increased.\n";
                         }
+                        last_obj_ = obj1;
+                        last_penalty_ = pen1;
                     }
-                    if (std::abs(obj0 - obj1) < epsilon &&
-                        rel_diff(beta0, beta) < epsilon) {
+                    if (std::abs(last_loss_ - loss1) < epsilon) {
                         break;
                     }
-                    obj0 = obj1;
-                    loss0 = loss1;
-                    reg0 = reg1;
-                    beta0 = beta;
+                    last_loss_ = loss1;
                 }
                 // run a full cycle over the converged beta
                 run_one_active_cycle(beta,
@@ -597,29 +594,27 @@ namespace abclass
                                      false,
                                      verbose);
                 double loss1 { iter_loss() };
-                double reg1 { regularization(beta, l1_lambda, l2_lambda) };
-                obj1 = loss1 / data_.dn_obs_ + reg1;
                 // optional: throw warning if objective function increases
                 if (verbose > 1) {
+                    double pen1 { regularization(beta, l1_lambda, l2_lambda) };
+                    double obj1 { loss1 / data_.dn_obs_ + pen1 };
                     Rcpp::Rcout << "The objective function changed\n";
                     Rprintf("  from %7.7f (iter_loss: %7.7f + penalty: %7.7f)\n",
-                            obj0, loss0 / data_.dn_obs_, reg0);
+                            last_obj_, last_loss_ / data_.dn_obs_, last_penalty_);
                     Rprintf("    to %7.7f (iter_loss: %7.7f + penalty: %7.7f)\n",
-                            obj1, loss1 / data_.dn_obs_, reg1);
-                    if (obj1 > obj0) {
+                            obj1, loss1 / data_.dn_obs_, pen1);
+                    if (last_obj_ < obj1) {
                         Rcpp::Rcout << "Warning: "
                                     << "the function objective "
                                     << "somehow increased.\n";
                     }
+                    last_obj_ = obj1;
+                    last_penalty_ = pen1;
                 }
-                if (std::abs(obj0 - obj1) < epsilon &&
-                    rel_diff(beta0, beta) < epsilon) {
+                if (std::abs(last_loss_ - loss1) < epsilon) {
                     break;
                 }
-                obj0 = obj1;
-                loss0 = loss1;
-                reg0 = reg1;
-                beta0 = beta;
+                last_loss_ = loss1;
                 ++i;
             }
         }
@@ -647,39 +642,33 @@ namespace abclass
         const unsigned int verbose
         )
     {
-        arma::mat beta0 { beta };
-        double loss0 { iter_loss() };
-        double reg0 { regularization(beta, l1_lambda, l2_lambda) };
-        double obj0 { loss0 / data_.dn_obs_ + reg0 }, obj1 { obj0 };
         size_t num_iter {0};
         for (size_t i {0}; i < max_iter; ++i) {
             Rcpp::checkUserInterrupt();
             ++num_iter;
             run_one_full_cycle(beta, l1_lambda, l2_lambda, verbose);
             double loss1 { iter_loss() };
-            double reg1 { regularization(beta, l1_lambda, l2_lambda) };
-            obj1 = loss1 / data_.dn_obs_ + reg1;
             // optional: throw warning if objective function increases
             if (verbose > 1) {
+                double pen1 { regularization(beta, l1_lambda, l2_lambda) };
+                double obj1 { loss1 / data_.dn_obs_ + pen1 };
                 Rcpp::Rcout << "The objective function changed\n";
                 Rprintf("  from %7.7f (iter_loss: %7.7f + penalty: %7.7f)\n",
-                        obj0, loss0 / data_.dn_obs_, reg0);
+                        last_obj_, last_loss_ / data_.dn_obs_, last_penalty_);
                 Rprintf("    to %7.7f (iter_loss: %7.7f + penalty: %7.7f)\n",
-                        obj1, loss1 / data_.dn_obs_, reg1);
-                if (obj1 > obj0) {
+                        obj1, loss1 / data_.dn_obs_, pen1);
+                if (obj1 > last_obj_) {
                     Rcpp::Rcout << "Warning: "
                                 << "the function objective "
                                 << "somehow increased.\n";
                 }
+                last_obj_ = obj1;
+                last_penalty_ = pen1;
             }
-            if (std::abs(obj0 - obj1) < epsilon &&
-                rel_diff(beta0, beta) < epsilon) {
+            if (std::abs(last_loss_ - loss1) < epsilon) {
                 break;
             }
-            obj0 = obj1;
-            loss0 = loss1;
-            reg0 = reg1;
-            beta0 = beta;
+            last_loss_ = loss1;
         }
         if (verbose > 0) {
             if (num_iter < max_iter) {
@@ -756,8 +745,10 @@ namespace abclass
                            arma::fill::zeros);
         objective_ = penalty_ = loss_ = arma::zeros(control_.lambda_.n_elem);
         // set epsilon from the default null objective, n
-        null_loss_ = data_.dn_obs_;
-        double epsilon0 { exp_log_sum(control_.epsilon_, data_.dn_obs_) };
+        last_loss_ = null_loss_ = iter_loss();
+        last_penalty_ = 0.0;
+        last_obj_ = last_loss_ / data_.dn_obs_;
+        double epsilon0 { exp_log_sum(control_.epsilon_, null_loss_) };
         // get the solution (intercepts) of l1_lambda_max for a warm start
         arma::umat is_active_strong {
             arma::ones<arma::umat>(data_.p0_, active_ncol_)
@@ -777,7 +768,7 @@ namespace abclass
                               epsilon0,
                               control_.verbose_);
             // update epsilon0
-            null_loss_ = iter_loss();
+            last_loss_ = null_loss_ = iter_loss();
             epsilon0 = exp_log_sum(control_.epsilon_, null_loss_);
         }
         // for pure ridge penalty

@@ -38,7 +38,12 @@ namespace abclass
         // for the majorization-based algorithms
         double mm_lowerbound0_;
         arma::rowvec mm_lowerbound_;
+
+        // cache
         double null_loss_;      // loss function for the null model
+        double last_loss_;      // last loss
+        double last_penalty_;   // penalty of last coefficient estimates
+        double last_obj_;       // last objective
 
         // given computed dloss_df
         inline arma::mat dloss_dbeta(const arma::mat& dloss_df_,
