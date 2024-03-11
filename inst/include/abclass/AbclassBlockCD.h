@@ -85,23 +85,23 @@ namespace abclass
                 std::max(control_.ridge_alpha_, 1e-2);
         }
 
-        inline void apply_strong_rule(arma::mat& is_active_strong,
-                                      const double next_lambda,
-                                      const double last_lambda,
-                                      const arma::uvec positive_penalty) const
+        inline void apply_strong_rule(
+            arma::umat& is_active_strong,
+            const double next_lambda,
+            const double last_lambda,
+            const arma::uvec positive_penalty
+            ) override
         {
             // update active set by strong rule
             arma::mat one_grad_beta { gradient() };
-            double one_strong_rhs { strong_rule_rhs(next_lambda,last_lambda) };
+            double one_strong_rhs { strong_rule_rhs(next_lambda, last_lambda) };
             for (arma::uvec::const_iterator it { positive_penalty.begin() };
                  it != positive_penalty.end(); ++it) {
                 if (is_active_strong(*it, 0) > 0) {
                     continue;
                 }
-                double sr_lhs { 0.0 };
-                sr_lhs = strong_rule_lhs(one_grad_beta.row(*it));
-                if (sr_lhs >= control_.penalty_factor_(*it) *
-                    one_strong_rhs) {
+                double sr_lhs { strong_rule_lhs(one_grad_beta.row(*it)) };
+                if (sr_lhs >= control_.penalty_factor_(*it) * one_strong_rhs) {
                     is_active_strong(*it, 0) = 1;
                 }
             }

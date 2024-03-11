@@ -218,26 +218,22 @@ namespace abclass
             return 0.0;
         }
 
-        inline virtual void apply_strong_rule(arma::umat& is_active_strong,
-                                              const double next_lambda,
-                                              const double last_lambda,
-                                              const arma::uvec positive_penalty)
+        inline virtual void apply_strong_rule(
+            arma::umat& is_active_strong,
+            const double next_lambda,
+            const double last_lambda,
+            const arma::uvec positive_penalty)
         {
             // update active set by strong rule
             arma::mat one_grad_beta { gradient() };
-            double one_strong_rhs { strong_rule_rhs(next_lambda,last_lambda) };
+            double one_strong_rhs { strong_rule_rhs(next_lambda, last_lambda) };
             for (size_t j { 0 }; j < active_ncol_; ++j) {
                 for (arma::uvec::const_iterator it { positive_penalty.begin() };
                      it != positive_penalty.end(); ++it) {
                     if (is_active_strong(*it, j) > 0) {
                         continue;
                     }
-                    double sr_lhs { 0.0 };
-                    // if (active_ncol_ == 1) {
-                    //     sr_lhs = strong_rule_lhs(one_grad_beta.row(*it));
-                    // } else {
-                    sr_lhs = strong_rule_lhs(one_grad_beta(*it, j));
-                    // }
+                    double sr_lhs { strong_rule_lhs(one_grad_beta(*it, j)) };
                     if (sr_lhs >= control_.penalty_factor_(*it) *
                         one_strong_rhs) {
                         is_active_strong(*it, j) = 1;
