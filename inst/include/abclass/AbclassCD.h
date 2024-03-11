@@ -769,7 +769,6 @@ namespace abclass
         coef_ = arma::cube(data_.p1_, data_.km1_, control_.lambda_.n_elem,
                            arma::fill::zeros);
         objective_ = penalty_ = loss_ = arma::zeros(control_.lambda_.n_elem);
-
         // get the solution (intercepts) of l1_lambda_max for a warm start
         arma::umat is_active_strong {
             arma::ones<arma::umat>(data_.p0_, active_ncol_)
@@ -778,6 +777,13 @@ namespace abclass
         is_active_strong.rows(arma::find(mm_lowerbound_ <= 0.0)).zeros();
         // 2) only need to estimate beta not in the penalty group
         is_active_strong.rows(positive_penalty).zeros();
+        // set up epsilon0
+        last_loss_ = null_loss_ = iter_loss();
+        last_penalty_ = 0.0;
+        last_obj_ = last_loss_ / data_.dn_obs_;
+        double epsilon0 {
+            exp_log_sum(control_.epsilon_, null_loss_)
+        };
         if (control_.intercept_) {
             // only need to estimate intercept
             run_active_cycles(one_beta,
@@ -788,10 +794,10 @@ namespace abclass
                               control_.max_iter_,
                               control_.epsilon_,
                               control_.verbose_);
+            last_loss_ = null_loss_ = iter_loss();
+            epsilon0 = exp_log_sum(control_.epsilon_, null_loss_);
+            last_obj_ = last_loss_ / data_.dn_obs_;
         }
-        last_loss_ = null_loss_ = iter_loss();
-        last_penalty_ = 0.0;
-        last_obj_ = last_loss_ / data_.dn_obs_;
         // for pure ridge penalty
         if (is_ridge_only) {
             for (size_t li { 0 }; li < control_.lambda_.n_elem; ++li) {
@@ -800,7 +806,7 @@ namespace abclass
                                 l1_lambda,
                                 l2_lambda,
                                 control_.max_iter_,
-                                control_.epsilon_,
+                                epsilon0,
                                 control_.verbose_);
                 coef_.slice(li) = rescale_coef(one_beta);
                 loss_(li) = iter_loss();
@@ -855,7 +861,7 @@ namespace abclass
                                   l2_lambda,
                                   control_.varying_active_set_,
                                   control_.max_iter_,
-                                  control_.epsilon_,
+                                  epsilon0,
                                   control_.verbose_);
                 if (control_.verbose_ > 0) {
                     msg("Checking the KKT condition for the null set.");
