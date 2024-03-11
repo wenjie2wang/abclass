@@ -103,10 +103,12 @@ namespace abclass
             }
             // update pred_f and inner
             const arma::rowvec delta_beta { beta.row(g1) - old_beta_g1 };
-            if constexpr (std::is_base_of_v<MarginLoss, T_loss>) {
-                data_.iter_inner_ += data_.iter_v_xg_ * delta_beta.t();
-            } else {
-                data_.iter_pred_f_ += data_.x_.col(g) * delta_beta;
+            if (l1_norm(delta_beta) > 0.0) {
+                if constexpr (std::is_base_of_v<MarginLoss, T_loss>) {
+                    data_.iter_inner_ += data_.iter_v_xg_ * delta_beta.t();
+                } else {
+                    data_.iter_pred_f_ += data_.x_.col(g) * delta_beta;
+                }
             }
         }
 

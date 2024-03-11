@@ -40,6 +40,8 @@ namespace abclass
         using AbclassLinear<T_loss, T_x>::last_loss_;
         using AbclassLinear<T_loss, T_x>::last_penalty_;
         using AbclassLinear<T_loss, T_x>::last_obj_;
+        using AbclassLinear<T_loss, T_x>::last_eps_;
+        using AbclassLinear<T_loss, T_x>::n_iter_;
 
         // function members
         using AbclassLinear<T_loss, T_x>::dloss_dbeta;
@@ -50,6 +52,7 @@ namespace abclass
 
         // cache
         size_t active_ncol_;
+        bool converged_;
 
         // specifying if a blockwise CD should be used
         inline virtual void set_active_ncol()
@@ -287,7 +290,8 @@ namespace abclass
             const double old_beta_g1k { beta(g1, k) };
             const double d_gk { mm_gradient(g, k) };
             // if mm_lowerbound = 0 and l1_lambda > 0, numer will be 0
-            const double u_g { mm_lowerbound_(g) * beta(g1, k) - d_gk };
+            const double m_g { mm_lowerbound_(g) };
+            const double u_g { m_g * beta(g1, k) - d_gk };
             const double tmp {
                 std::abs(u_g) - l1_lambda * control_.penalty_factor_(g)
             };
@@ -295,16 +299,19 @@ namespace abclass
                 beta(g1, k) = 0.0;
             } else {
                 const double numer { tmp * sign(u_g) };
-                const double denom { mm_lowerbound_(g) + l2_lambda };
+                const double denom { m_g + l2_lambda };
                 // update beta
                 beta(g1, k) = numer / denom;
             }
             // update pred_f and inner
             const double delta_beta { beta(g1, k) - old_beta_g1k };
-            if constexpr (std::is_base_of_v<MarginLoss, T_loss>) {
-                data_.iter_inner_ += delta_beta * data_.iter_vk_xg_;
-            } else {
-                data_.iter_pred_f_.col(k) += delta_beta * data_.x_.col(g);
+            if (delta_beta != 0.0) {
+                if constexpr (std::is_base_of_v<MarginLoss, T_loss>) {
+                    data_.iter_inner_ += delta_beta * data_.iter_vk_xg_;
+                } else {
+                    data_.iter_pred_f_.col(k) += delta_beta * data_.x_.col(g);
+                }
+                last_eps_ = std::max(last_eps_, m_g * delta_beta * delta_beta);
             }
         }
 
@@ -414,6 +421,7 @@ namespace abclass
         const unsigned int verbose
         )
     {
+        last_eps_ = 0.0;
         if (verbose > 2) {
             Rcpp::Rcout << "\nStarting values of beta:\n";
             Rcpp::Rcout << beta << "\n";
@@ -423,12 +431,17 @@ namespace abclass
             arma::rowvec delta_beta0 {
                 - mm_gradient0() / mm_lowerbound0_
             };
-            beta.row(0) += delta_beta0;
-            // update pred_f_ and inner_
-            if constexpr (std::is_base_of_v<MarginLoss, T_loss>) {
-                data_.iter_inner_ += data_.ex_vertex_ * delta_beta0.t();
-            } else {
-                data_.iter_pred_f_.each_row() += delta_beta0;
+            if (l1_norm(delta_beta0) > 0.0) {
+                beta.row(0) += delta_beta0;
+                // update pred_f_ and inner_
+                if constexpr (std::is_base_of_v<MarginLoss, T_loss>) {
+                    data_.iter_inner_ += data_.ex_vertex_ * delta_beta0.t();
+                } else {
+                    data_.iter_pred_f_.each_row() += delta_beta0;
+                }
+                last_eps_ = std::max(
+                    last_eps_,
+                    arma::max(mm_lowerbound0_ * delta_beta0 % delta_beta0));
             }
         }
         // predictors
@@ -439,6 +452,7 @@ namespace abclass
                 update_beta_gk(beta, k, g, g1, l1_lambda, l2_lambda);
             }
         }
+        ++n_iter_;
     }
 
     // run one update step over active sets
@@ -452,6 +466,7 @@ namespace abclass
         const unsigned int verbose
         )
     {
+        last_eps_ = 0.0;
         if (verbose > 2) {
             Rcpp::Rcout << "\nStarting values of beta:\n"
                         << beta << "\n"
@@ -460,15 +475,18 @@ namespace abclass
         };
         // for intercept
         if (control_.intercept_) {
-            arma::rowvec delta_beta0 {
-                - mm_gradient0() / mm_lowerbound0_
-            };
-            beta.row(0) += delta_beta0;
-            // update pred_f_ and inner_
-            if constexpr (std::is_base_of_v<MarginLoss, T_loss>) {
-                data_.iter_inner_ += data_.ex_vertex_ * delta_beta0.t();
-            } else {
-                data_.iter_pred_f_.each_row() += delta_beta0;
+            arma::rowvec delta_beta0 { - mm_gradient0() / mm_lowerbound0_ };
+            if (l1_norm(delta_beta0) > 0.0) {
+                beta.row(0) += delta_beta0;
+                // update pred_f_ and inner_
+                if constexpr (std::is_base_of_v<MarginLoss, T_loss>) {
+                    data_.iter_inner_ += data_.ex_vertex_ * delta_beta0.t();
+                } else {
+                    data_.iter_pred_f_.each_row() += delta_beta0;
+                }
+                last_eps_ = std::max(
+                    last_eps_,
+                    arma::max(mm_lowerbound0_ * delta_beta0 % delta_beta0));
             }
         }
         // for predictors
@@ -497,6 +515,7 @@ namespace abclass
                         << "\nThe active set of updated beta:\n"
                         << is_active << "\n";
         };
+        ++n_iter_;
     }
 
     // run CMD cycles over active sets
@@ -512,7 +531,8 @@ namespace abclass
         const unsigned int verbose
         )
     {
-        size_t i {0}, num_iter {0};
+        converged_ = false;
+        size_t num_iter {0};
         // use active-set if p > n ("helps when p >> n")
         if (varying_active_set) {
             arma::umat is_active_strong { is_active },
@@ -522,11 +542,10 @@ namespace abclass
                             << l1_norm(is_active_strong)
                             << "\n";
             }
-            while (i < max_iter) {
+            while (n_iter_ < max_iter) {
                 num_iter = 0;
                 // cycles over the active set
-                while (num_iter < max_iter) {
-                    ++num_iter;
+                while (n_iter_ < max_iter) {
                     Rcpp::checkUserInterrupt();
                     run_one_active_cycle(beta,
                                          is_active_varying,
@@ -534,9 +553,10 @@ namespace abclass
                                          l2_lambda,
                                          true,
                                          verbose);
-                    double loss1 { iter_loss() };
+                    ++num_iter;
                     // optional: throw warning if objective function increases
                     if (verbose > 1) {
+                        double loss1 { iter_loss() };
                         double pen1 { regularization(beta, l1_lambda, l2_lambda) };
                         double obj1 { loss1 / data_.dn_obs_ + pen1 };
                         Rcpp::Rcout << "The objective function changed\n";
@@ -547,13 +567,14 @@ namespace abclass
                         if (last_obj_ < obj1) {
                             Rcpp::Rcout << "Notice: the objective increased.\n";
                         }
+                        last_loss_ = loss1;
                         last_obj_ = obj1;
                         last_penalty_ = pen1;
                     }
-                    if (std::abs(last_loss_ - loss1) < epsilon) {
+                    if (last_eps_ < epsilon) {
+                        converged_ = true;
                         break;
                     }
-                    last_loss_ = loss1;
                 }
                 // run a full cycle over the converged beta
                 run_one_active_cycle(beta,
@@ -562,6 +583,7 @@ namespace abclass
                                      l2_lambda,
                                      true,
                                      verbose);
+                ++num_iter;
                 // check two active sets coincide
                 if (arma::accu(arma::any(is_active_varying != is_active))) {
                     // if different, repeat this process
@@ -574,28 +596,27 @@ namespace abclass
                                     << num_iter
                                     << " iteration(s)\n";
                     }
+                    // recover the active set
                     is_active_varying = is_active;
                     is_active = is_active_strong;
-                    // recover the active set
-                    i += num_iter;
                 } else {
-                    break;
+                      break;
                 }
             }
         } else {
             // regular coordinate descent
-            while (i < max_iter) {
+            while (n_iter_ < max_iter) {
                 Rcpp::checkUserInterrupt();
-                ++num_iter;
                 run_one_active_cycle(beta,
                                      is_active,
                                      l1_lambda,
                                      l2_lambda,
                                      false,
                                      verbose);
-                double loss1 { iter_loss() };
+                ++num_iter;
                 // optional: throw warning if objective function increases
                 if (verbose > 1) {
+                    double loss1 { iter_loss() };
                     double pen1 { regularization(beta, l1_lambda, l2_lambda) };
                     double obj1 { loss1 / data_.dn_obs_ + pen1 };
                     Rcpp::Rcout << "The objective function changed\n";
@@ -608,18 +629,18 @@ namespace abclass
                                     << "the function objective "
                                     << "somehow increased.\n";
                     }
+                    last_loss_ = loss1;
                     last_obj_ = obj1;
                     last_penalty_ = pen1;
                 }
-                if (std::abs(last_loss_ - loss1) < epsilon) {
+                if (last_eps_ < epsilon) {
+                    converged_ = true;
                     break;
                 }
-                last_loss_ = loss1;
-                ++i;
             }
         }
         if (verbose > 0) {
-            if (num_iter < max_iter) {
+            if (converged_) {
                 Rcpp::Rcout << "Outer loop converged over the active set after "
                             << num_iter
                             << " iteration(s);\n";
@@ -642,14 +663,15 @@ namespace abclass
         const unsigned int verbose
         )
     {
+        converged_ = false;
         size_t num_iter {0};
-        for (size_t i {0}; i < max_iter; ++i) {
+        while (n_iter_ < max_iter) {
             Rcpp::checkUserInterrupt();
-            ++num_iter;
             run_one_full_cycle(beta, l1_lambda, l2_lambda, verbose);
-            double loss1 { iter_loss() };
+            ++num_iter;
             // optional: throw warning if objective function increases
             if (verbose > 1) {
+                double loss1 { iter_loss() };
                 double pen1 { regularization(beta, l1_lambda, l2_lambda) };
                 double obj1 { loss1 / data_.dn_obs_ + pen1 };
                 Rcpp::Rcout << "The objective function changed\n";
@@ -662,16 +684,17 @@ namespace abclass
                                 << "the function objective "
                                 << "somehow increased.\n";
                 }
+                last_loss_ = loss1;
                 last_obj_ = obj1;
                 last_penalty_ = pen1;
             }
-            if (std::abs(last_loss_ - loss1) < epsilon) {
+            if (last_eps_ < epsilon) {
+                converged_ = true;
                 break;
             }
-            last_loss_ = loss1;
         }
         if (verbose > 0) {
-            if (num_iter < max_iter) {
+            if (converged_) {
                 Rcpp::Rcout << "Outer loop converged after "
                             << num_iter
                             << " iteration(s)\n";
@@ -694,6 +717,8 @@ namespace abclass
         set_gamma(control_.ncv_kappa_);
         // set cache to help determine update steps
         set_active_ncol();
+        // initialize total number of iterations
+        n_iter_ = 0;
         // penalty for covariates with positive penalty factors only
         arma::uvec positive_penalty {
             arma::find(control_.penalty_factor_ > 0.0)
@@ -744,11 +769,7 @@ namespace abclass
         coef_ = arma::cube(data_.p1_, data_.km1_, control_.lambda_.n_elem,
                            arma::fill::zeros);
         objective_ = penalty_ = loss_ = arma::zeros(control_.lambda_.n_elem);
-        // set epsilon from the default null objective, n
-        last_loss_ = null_loss_ = iter_loss();
-        last_penalty_ = 0.0;
-        last_obj_ = last_loss_ / data_.dn_obs_;
-        double epsilon0 { exp_log_sum(control_.epsilon_, null_loss_) };
+
         // get the solution (intercepts) of l1_lambda_max for a warm start
         arma::umat is_active_strong {
             arma::ones<arma::umat>(data_.p0_, active_ncol_)
@@ -765,12 +786,12 @@ namespace abclass
                               0, // does not matter
                               false,
                               control_.max_iter_,
-                              epsilon0,
+                              control_.epsilon_,
                               control_.verbose_);
-            // update epsilon0
-            last_loss_ = null_loss_ = iter_loss();
-            epsilon0 = exp_log_sum(control_.epsilon_, null_loss_);
         }
+        last_loss_ = null_loss_ = iter_loss();
+        last_penalty_ = 0.0;
+        last_obj_ = last_loss_ / data_.dn_obs_;
         // for pure ridge penalty
         if (is_ridge_only) {
             for (size_t li { 0 }; li < control_.lambda_.n_elem; ++li) {
@@ -779,12 +800,22 @@ namespace abclass
                                 l1_lambda,
                                 l2_lambda,
                                 control_.max_iter_,
-                                epsilon0,
+                                control_.epsilon_,
                                 control_.verbose_);
                 coef_.slice(li) = rescale_coef(one_beta);
                 loss_(li) = iter_loss();
                 penalty_(li) = regularization(one_beta, l1_lambda, l2_lambda);
                 objective_(li) = loss_(li) / data_.dn_obs_ + penalty_(li);
+                // if max iter is reached
+                if (! converged_) {
+                    size_t li1 { li + 1 };
+                    coef_ = coef_.head_slices(li1);
+                    control_.lambda_ = control_.lambda_.head(li1);
+                    loss_ = loss_.head(li1);
+                    penalty_ = penalty_.head(li1);
+                    objective_ = objective_.head(li1);
+                    break;
+                }
             }
             data_.reset_cache();
             return;             // early exit
@@ -824,7 +855,7 @@ namespace abclass
                                   l2_lambda,
                                   control_.varying_active_set_,
                                   control_.max_iter_,
-                                  epsilon0,
+                                  control_.epsilon_,
                                   control_.verbose_);
                 if (control_.verbose_ > 0) {
                     msg("Checking the KKT condition for the null set.");
@@ -902,6 +933,16 @@ namespace abclass
             loss_(li) = iter_loss();
             penalty_(li) = regularization(one_beta, l1_lambda, l2_lambda);
             objective_(li) = loss_(li) / data_.dn_obs_ + penalty_(li);
+            // if max iter is reached
+            if (! converged_) {
+                size_t li1 { li + 1 };
+                coef_ = coef_.head_slices(li1);
+                control_.lambda_ = control_.lambda_.head(li1);
+                loss_ = loss_.head(li1);
+                penalty_ = penalty_.head(li1);
+                objective_ = objective_.head(li1);
+                break;
+            }
             old_l1_lambda = l1_lambda; // for next iteration
         }
         data_.reset_cache();

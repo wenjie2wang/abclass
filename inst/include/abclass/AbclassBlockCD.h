@@ -36,6 +36,8 @@ namespace abclass
         using AbclassCD<T_loss, T_x>::inter_;
         using AbclassCD<T_loss, T_x>::mm_lowerbound0_;
         using AbclassCD<T_loss, T_x>::mm_lowerbound_;
+        using AbclassCD<T_loss, T_x>::last_eps_;
+        using AbclassCD<T_loss, T_x>::n_iter_;
 
         // function members
         using AbclassCD<T_loss, T_x>::dloss_dbeta;
@@ -158,10 +160,14 @@ namespace abclass
             }
             // update pred_f and inner
             const arma::rowvec delta_beta { beta.row(g1) - old_beta_g1 };
-            if constexpr (std::is_base_of_v<MarginLoss, T_loss>) {
-                data_.iter_inner_ += data_.iter_v_xg_ * delta_beta.t();
-            } else {
-                data_.iter_pred_f_ += data_.x_.col(g) * delta_beta;
+            if (l1_norm(delta_beta) > 0.0) {
+                if constexpr (std::is_base_of_v<MarginLoss, T_loss>) {
+                    data_.iter_inner_ += data_.iter_v_xg_ * delta_beta.t();
+                } else {
+                    data_.iter_pred_f_ += data_.x_.col(g) * delta_beta;
+                }
+                last_eps_ = std::max(last_eps_,
+                                     arma::max(mg * delta_beta % delta_beta));
             }
         }
 
@@ -203,6 +209,7 @@ namespace abclass
         const unsigned int verbose
         )
     {
+        last_eps_ = 0.0;
         if (verbose > 2) {
             Rcpp::Rcout << "\nStarting values of beta:\n";
             Rcpp::Rcout << beta << "\n";
@@ -212,12 +219,17 @@ namespace abclass
             arma::rowvec delta_beta0 {
                 - mm_gradient0() / mm_lowerbound0_
             };
-            beta.row(0) += delta_beta0;
-            // update pred_f_ and inner_
-            if constexpr (std::is_base_of_v<MarginLoss, T_loss>) {
-                data_.iter_inner_ += data_.ex_vertex_ * delta_beta0.t();
-            } else {
-                data_.iter_pred_f_.each_row() += delta_beta0;
+            if (l1_norm(delta_beta0) > 0.0) {
+                beta.row(0) += delta_beta0;
+                // update pred_f_ and inner_
+                if constexpr (std::is_base_of_v<MarginLoss, T_loss>) {
+                    data_.iter_inner_ += data_.ex_vertex_ * delta_beta0.t();
+                } else {
+                    data_.iter_pred_f_.each_row() += delta_beta0;
+                }
+                last_eps_ = std::max(
+                    last_eps_,
+                    arma::max(mm_lowerbound0_ * delta_beta0 % delta_beta0));
             }
         }
         // predictors
@@ -226,6 +238,7 @@ namespace abclass
             // update beta and inner
             update_beta_g(beta, g, g1, l1_lambda, l2_lambda);
         }
+        ++n_iter_;
     }
 
     // run one group-wise update step over active sets
@@ -239,6 +252,7 @@ namespace abclass
         const unsigned int verbose
         )
     {
+        last_eps_ = 0.0;
         if (verbose > 2) {
             Rcpp::Rcout << "\nStarting values of beta:\n"
                         << beta << "\n"
@@ -251,12 +265,17 @@ namespace abclass
             const arma::rowvec delta_beta0 {
                 - mm_gradient0() / mm_lowerbound0_
             };
-            beta.row(0) += delta_beta0;
-            // update pred_f_ and inner_
-            if constexpr (std::is_base_of_v<MarginLoss, T_loss>) {
-                data_.iter_inner_ += data_.ex_vertex_ * delta_beta0.t();
-            } else {
-                data_.iter_pred_f_.each_row() += delta_beta0;
+            if (l1_norm(delta_beta0) > 0.0) {
+                beta.row(0) += delta_beta0;
+                // update pred_f_ and inner_
+                if constexpr (std::is_base_of_v<MarginLoss, T_loss>) {
+                    data_.iter_inner_ += data_.ex_vertex_ * delta_beta0.t();
+                } else {
+                    data_.iter_pred_f_.each_row() += delta_beta0;
+                }
+                last_eps_ = std::max(
+                    last_eps_,
+                    arma::max(mm_lowerbound0_ * delta_beta0 % delta_beta0));
             }
         }
         // for predictors
@@ -277,6 +296,7 @@ namespace abclass
                 }
             }
         }
+        ++n_iter_;
     }
 
 

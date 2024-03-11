@@ -122,10 +122,12 @@ namespace abclass
             }
             // update pred_f and inner
             const double delta_beta { beta(g1, k) - old_beta_g1k };
-            if constexpr (std::is_base_of_v<MarginLoss, T_loss>) {
-                data_.iter_inner_ += delta_beta * data_.iter_vk_xg_;
-            } else {
-                data_.iter_pred_f_.col(k) += delta_beta * data_.x_.col(g);
+            if (delta_beta != 0.0) {
+                if constexpr (std::is_base_of_v<MarginLoss, T_loss>) {
+                    data_.iter_inner_ += delta_beta * data_.iter_vk_xg_;
+                } else {
+                    data_.iter_pred_f_.col(k) += delta_beta * data_.x_.col(g);
+                }
             }
         }
 
