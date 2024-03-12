@@ -76,6 +76,7 @@ namespace abclass
         T_x x_;                 // (standardized) x_: n by p (without intercept)
         arma::rowvec x_center_; // the column center of x_
         arma::rowvec x_scale_;  // the column scale of x_
+        arma::uvec x_skip_;     // index of const x_
 
         // cache for iterative estimation procedure
         arma::vec iter_inner_;  // n x 1

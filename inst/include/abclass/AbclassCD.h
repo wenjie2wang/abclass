@@ -159,7 +159,7 @@ namespace abclass
         // gradient matrix regarding coef only (excluding intercept)
         inline arma::mat gradient() const
         {
-            arma::mat out { arma::zeros(data_.p0_, data_.km1_) };
+            arma::mat out(data_.p0_, data_.km1_);
             arma::mat grad { iter_dloss_df() };
             for (size_t k {0}; k < data_.km1_; ++k) {
                 for (size_t j {0}; j < data_.p0_; ++j) {
@@ -248,9 +248,8 @@ namespace abclass
             const arma::uvec& positive_penalty,
             const double l1_lambda) const
         {
-            arma::umat is_strong_rule_failed {
-                arma::zeros<arma::umat>(arma::size(is_active_strong))
-            };
+            arma::umat is_strong_rule_failed(arma::size(is_active_strong),
+                                             arma::fill::zeros);
             arma::mat dloss_df_;
             if (positive_penalty.n_elem > 0) {
                 dloss_df_ = iter_dloss_df();
@@ -322,13 +321,6 @@ namespace abclass
             const bool update_active,
             const unsigned int verbose);
 
-        // one full cycle for coordinate-descent
-        inline virtual void run_one_full_cycle(
-            arma::mat& beta,
-            const double l1_lambda,
-            const double l2_lambda,
-            const unsigned int verbose);
-
         // run cycles a given active set and given lambda's until convergence
         inline void run_active_cycles(arma::mat& beta,
                                       arma::umat& is_active,
@@ -339,16 +331,7 @@ namespace abclass
                                       const double epsilon,
                                       const unsigned int verbose);
 
-        // run full cycles of CMD for given lambda's until convergence
-        inline void run_full_cycles(arma::mat& beta,
-                                    const double l1_lambda,
-                                    const double l2_lambda,
-                                    const unsigned int max_iter,
-                                    const double epsilon,
-                                    const unsigned int verbose);
-
     public:
-
         // inherit constructors
         using AbclassLinear<T_loss, T_x>::AbclassLinear;
 
@@ -407,49 +390,6 @@ namespace abclass
         inline void fit();
 
     };
-
-    // one full cycle for coordinate-descent
-    template <typename T_loss, typename T_x>
-    inline void AbclassCD<T_loss, T_x>::run_one_full_cycle(
-        arma::mat& beta,
-        const double l1_lambda,
-        const double l2_lambda,
-        const unsigned int verbose
-        )
-    {
-        last_eps_ = 0.0;
-        if (verbose > 2) {
-            Rcpp::Rcout << "\nStarting values of beta:\n";
-            Rcpp::Rcout << beta << "\n";
-        };
-        // for intercept
-        if (control_.intercept_) {
-            arma::rowvec delta_beta0 {
-                - mm_gradient0() / mm_lowerbound0_
-            };
-            if (l1_norm(delta_beta0) > 0.0) {
-                beta.row(0) += delta_beta0;
-                // update pred_f_ and inner_
-                if constexpr (std::is_base_of_v<MarginLoss, T_loss>) {
-                    data_.iter_inner_ += data_.ex_vertex_ * delta_beta0.t();
-                } else {
-                    data_.iter_pred_f_.each_row() += delta_beta0;
-                }
-                last_eps_ = std::max(
-                    last_eps_,
-                    arma::max(mm_lowerbound0_ * delta_beta0 % delta_beta0));
-            }
-        }
-        // predictors
-        for (size_t g { 0 }; g < data_.p0_; ++g) {
-            const size_t g1 { g + inter_ };
-            for (size_t k {0}; k < data_.km1_; ++k) {
-                // update beta and inner
-                update_beta_gk(beta, k, g, g1, l1_lambda, l2_lambda);
-            }
-        }
-        ++n_iter_;
-    }
 
     // run one update step over active sets
     template <typename T_loss, typename T_x>
@@ -648,58 +588,6 @@ namespace abclass
         }
     }
 
-    // run full cycles till convergence or reach max number of iterations
-    template <typename T_loss, typename T_x>
-    inline void AbclassCD<T_loss, T_x>::run_full_cycles(
-        arma::mat& beta,
-        const double l1_lambda,
-        const double l2_lambda,
-        const unsigned int max_iter,
-        const double epsilon,
-        const unsigned int verbose
-        )
-    {
-        converged_ = false;
-        size_t num_iter {0};
-        while (n_iter_ < max_iter) {
-            Rcpp::checkUserInterrupt();
-            run_one_full_cycle(beta, l1_lambda, l2_lambda, verbose);
-            ++num_iter;
-            // optional: throw warning if objective function increases
-            if (verbose > 1) {
-                double loss1 { iter_loss() };
-                double pen1 { regularization(beta, l1_lambda, l2_lambda) };
-                double obj1 { loss1 / data_.dn_obs_ + pen1 };
-                Rcpp::Rcout << "The objective function changed\n";
-                Rprintf("  from %7.7f (iter_loss: %7.7f + penalty: %7.7f)\n",
-                        last_obj_, last_loss_ / data_.dn_obs_, last_penalty_);
-                Rprintf("    to %7.7f (iter_loss: %7.7f + penalty: %7.7f)\n",
-                        obj1, loss1 / data_.dn_obs_, pen1);
-                if (obj1 > last_obj_) {
-                    Rcpp::Rcout << "Warning: "
-                                << "the function objective "
-                                << "somehow increased.\n";
-                }
-                last_loss_ = loss1;
-                last_obj_ = obj1;
-                last_penalty_ = pen1;
-            }
-            if (last_eps_ < epsilon) {
-                converged_ = true;
-                break;
-            }
-        }
-        if (verbose > 0) {
-            if (converged_) {
-                Rcpp::Rcout << "Outer loop converged after "
-                            << num_iter
-                            << " iteration(s)\n";
-            } else {
-                msg("Outer loop reached the maximum number of iteratons.");
-            }
-        }
-    }
-
     // for a sequence of lambda's
     // lambda * (alpha * lasso + (1 - alpha) / 2 * ridge)
     template <typename T_loss, typename T_x>
@@ -734,7 +622,7 @@ namespace abclass
                 data_.iter_pred_f_ = arma::zeros(data_.n_obs_, data_.km1_);
             }
         }
-        arma::mat one_beta { arma::zeros(data_.p1_, data_.km1_) };
+        arma::mat one_beta(data_.p1_, data_.km1_);
         const bool is_ridge_only {
             isAlmostEqual(control_.ridge_alpha_, 0.0)
         };
@@ -766,11 +654,13 @@ namespace abclass
                            arma::fill::zeros);
         objective_ = penalty_ = loss_ = arma::zeros(control_.lambda_.n_elem);
         // get the solution (intercepts) of l1_lambda_max for a warm start
-        arma::umat is_active_strong {
-            arma::ones<arma::umat>(data_.p0_, active_ncol_)
-        };
+        arma::umat is_active_strong(data_.p0_, active_ncol_, arma::fill::ones);
         // 1) no need to consider possible constant covariates
-        is_active_strong.rows(arma::find(mm_lowerbound_ <= 0.0)).zeros();
+        is_active_strong.rows(data_.x_skip_).zeros();
+        arma::umat is_active_strong2;
+        if (is_ridge_only) {
+            is_active_strong2 = is_active_strong;
+        }
         // 2) only need to estimate beta not in the penalty group
         is_active_strong.rows(positive_penalty).zeros();
         // set up epsilon0
@@ -798,12 +688,14 @@ namespace abclass
         if (is_ridge_only) {
             for (size_t li { 0 }; li < control_.lambda_.n_elem; ++li) {
                 l2_lambda = control_.lambda_(li);
-                run_full_cycles(one_beta,
-                                l1_lambda,
-                                l2_lambda,
-                                control_.max_iter_,
-                                epsilon0,
-                                control_.verbose_);
+                run_active_cycles(one_beta,
+                                  is_active_strong2,
+                                  l1_lambda,
+                                  l2_lambda,
+                                  false,
+                                  control_.max_iter_,
+                                  epsilon0,
+                                  control_.verbose_);
                 coef_.slice(li) = rescale_coef(one_beta);
                 loss_(li) = iter_loss();
                 penalty_(li) = regularization(one_beta, l1_lambda, l2_lambda);

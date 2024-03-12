@@ -64,9 +64,7 @@ namespace abclass
         inline arma::mat dloss_df(const Simplex2<T_x>& data,
                                   const arma::vec& obs_weight) const
         {
-            arma::mat out {
-                arma::zeros(data.y_.n_elem, data.t_vertex_.n_cols)
-            };
+            arma::mat out(data.y_.n_elem, data.t_vertex_.n_cols);
             for (size_t i {0}; i < data.y_.n_elem; ++i) {
                 arma::rowvec vi { data.iter_pred_f_.row(i) * data.vertex_ };
                 vi = arma::exp(vi);
@@ -91,7 +89,7 @@ namespace abclass
                                   const arma::vec& obs_weight,
                                   const unsigned int k) const
         {
-            arma::vec out { arma::zeros(data.y_.n_elem) };
+            arma::vec out(data.y_.n_elem);
             for (size_t i {0}; i < data.y_.n_elem; ++i) {
                 arma::rowvec vi { data.iter_pred_f_.row(i) * data.vertex_ };
                 vi = arma::exp(vi);

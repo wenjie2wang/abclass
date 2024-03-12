@@ -113,9 +113,7 @@ namespace abclass
             const arma::uvec& positive_penalty,
             const double l1_lambda) const override
         {
-            arma::umat is_strong_rule_failed {
-                arma::zeros<arma::umat>(arma::size(is_active_strong))
-            };
+            arma::umat is_strong_rule_failed(arma::size(is_active_strong));
             arma::mat dloss_df_;
             if (positive_penalty.n_elem > 0) {
                 dloss_df_ = iter_dloss_df();
@@ -171,13 +169,6 @@ namespace abclass
             }
         }
 
-        inline void run_one_full_cycle(
-            arma::mat& beta,
-            const double l1_lambda,
-            const double l2_lambda,
-            const unsigned int verbose
-            ) override;
-
         inline void run_one_active_cycle(
             arma::mat& beta,
             arma::umat& is_active,
@@ -199,47 +190,6 @@ namespace abclass
         using AbclassCD<T_loss, T_x>::lambda_max_;
 
     };
-
-    // one full cycle for coordinate-descent
-    template <typename T_loss, typename T_x>
-    inline void AbclassBlockCD<T_loss, T_x>::run_one_full_cycle(
-        arma::mat& beta,
-        const double l1_lambda,
-        const double l2_lambda,
-        const unsigned int verbose
-        )
-    {
-        last_eps_ = 0.0;
-        if (verbose > 2) {
-            Rcpp::Rcout << "\nStarting values of beta:\n";
-            Rcpp::Rcout << beta << "\n";
-        };
-        // for intercept
-        if (control_.intercept_) {
-            arma::rowvec delta_beta0 {
-                - mm_gradient0() / mm_lowerbound0_
-            };
-            if (l1_norm(delta_beta0) > 0.0) {
-                beta.row(0) += delta_beta0;
-                // update pred_f_ and inner_
-                if constexpr (std::is_base_of_v<MarginLoss, T_loss>) {
-                    data_.iter_inner_ += data_.ex_vertex_ * delta_beta0.t();
-                } else {
-                    data_.iter_pred_f_.each_row() += delta_beta0;
-                }
-                last_eps_ = std::max(
-                    last_eps_,
-                    arma::max(mm_lowerbound0_ * delta_beta0 % delta_beta0));
-            }
-        }
-        // predictors
-        for (size_t g { 0 }; g < data_.p0_; ++g) {
-            const size_t g1 { g + inter_ };
-            // update beta and inner
-            update_beta_g(beta, g, g1, l1_lambda, l2_lambda);
-        }
-        ++n_iter_;
-    }
 
     // run one group-wise update step over active sets
     template <typename T_loss, typename T_x>

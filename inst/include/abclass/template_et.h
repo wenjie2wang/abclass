@@ -51,9 +51,8 @@ namespace abclass {
         arma::mat active_beta;
         arma::uvec active_idx0;
         // record lambda's
-        arma::vec l1_lambda0 {
-            arma::zeros(obj.control_.et_nstages_)
-        }, l1_lambda1 { l1_lambda0 };
+        arma::vec l1_lambda0(obj.control_.et_nstages_),
+            l1_lambda1 { l1_lambda0 };
         for (size_t i { 0 }; i < obj.control_.et_nstages_; ++i) {
             // create pseudo-features
             const arma::uvec perm_idx { arma::randperm(obj.data_.n_obs_) };

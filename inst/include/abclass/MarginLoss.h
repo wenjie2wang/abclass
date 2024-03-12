@@ -39,7 +39,7 @@ namespace abclass
         {
             double res { 0.0 };
             for (size_t i {0}; i < u.n_elem; ++i) {
-                res += obs_weight(i) * loss(u[i]);
+                res += obs_weight[i] * loss(u[i]);
             }
             return res;
         }
@@ -48,16 +48,16 @@ namespace abclass
         inline arma::vec dloss_du(const arma::vec& u,
                                   const arma::vec& obs_weight) const
         {
-            arma::vec out { arma::zeros(u.n_elem) };
+            arma::vec out(u.n_elem);
             for (size_t i {0}; i < out.n_elem; ++i) {
-                out[i] = obs_weight(i) * dloss_du(u[i]);
+                out[i] = obs_weight[i] * dloss_du(u[i]);
             }
             return out;
         }
 
         inline arma::vec dloss_du(const arma::vec& u) const
         {
-            arma::vec out { arma::zeros(u.n_elem) };
+            arma::vec out(u.n_elem);
             for (size_t i {0}; i < out.n_elem; ++i) {
                 out[i] = dloss_du(u[i]);
             }

@@ -149,7 +149,10 @@ namespace abclass
                         data_.x_scale_(j) = - 1.0;
                     }
                 }
+            } else {
+                data_.x_scale_ = col_sd(data_.x_);
             }
+            data_.x_skip_ = arma::find(data_.x_scale_ <= 0.0);
         }
 
         inline void set_intercept(const bool intercept)

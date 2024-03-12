@@ -86,7 +86,7 @@ namespace abclass
             for (size_t i {1}; i < query_vec_.size(); ++i) {
                 abc_x = arma::join_cols(abc_x, query_vec_.at(i).pair_x_);
             }
-            arma::uvec abc_y { arma::zeros<arma::uvec>(n_all_pairs_) };
+            arma::uvec abc_y(n_all_pairs_);
             // not need intercept
             control.set_intercept(false);
             // set offset
