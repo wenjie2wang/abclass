@@ -11,7 +11,8 @@ check: $(checkLog)
 build: $(tar)
 
 .PHONY: install
-install: $(tar)
+install:
+	R CMD build .
 	R CMD INSTALL $(tar)
 
 .PHONY: pkgdown
