@@ -69,9 +69,10 @@ namespace abclass
         arma::uvec y_;          // {0,1,...,k-1}
 
         unsigned int n_obs_;    // number of observations
-        double dn_obs_;         // double version of n_obs_
+        double div_n_obs_;      // 1.0 / n_obs_
         unsigned int p0_;       // number of predictors without intercept
         unsigned int p1_;       // number of predictors (with intercept)
+        unsigned int inter_;    // integer version of intercept_
 
         T_x x_;                 // (standardized) x_: n by p (without intercept)
         arma::rowvec x_center_; // the column center of x_
@@ -93,7 +94,6 @@ namespace abclass
         // for angle-based classification
         inline void set_ex_vertex(const arma::uvec& y)
         {
-            y_ = y;
             ex_vertex_ = arma::mat(y.n_elem, km1_);
             for (size_t i {0}; i < y.n_elem; ++i) {
                 ex_vertex_.row(i) = t_vertex_.row(y[i]);
@@ -102,7 +102,6 @@ namespace abclass
         // more general (e.g., for outcome-weighted learning)
         inline void set_ex_vertex(const arma::uvec& y, const arma::vec& factor)
         {
-            y_ = y;
             ex_vertex_ = arma::mat(y.n_elem, km1_);
             for (size_t i {0}; i < y.n_elem; ++i) {
                 ex_vertex_.row(i) = t_vertex_.row(y[i]) * factor(i);

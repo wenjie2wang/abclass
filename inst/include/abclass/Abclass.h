@@ -35,8 +35,6 @@ namespace abclass
     class Abclass
     {
     protected:
-        // cache variables
-        unsigned int inter_;    // integer version of intercept_
 
         // loss function (with observational weights but no scaling of 1/n)
         inline double iter_loss() const
@@ -106,6 +104,9 @@ namespace abclass
 
         inline void set_y(const arma::uvec& y)
         {
+            data_.n_obs_ = y.n_elem;
+            data_.div_n_obs_ = 1.0 / static_cast<double>(data_.n_obs_);
+            data_.y_ = y;
             // assume k is set
             if (control_.owl_reward_.is_empty()) {
                 data_.set_ex_vertex(y);
@@ -125,12 +126,10 @@ namespace abclass
                 throw std::range_error(
                     "The number of observations in X and y differs!");
             }
-            data_.n_obs_ = x.n_rows;
-            data_.dn_obs_ = static_cast<double>(data_.n_obs_);
             data_.x_ = x;
-            inter_ = static_cast<unsigned int>(control_.intercept_);
+            data_.inter_ = static_cast<unsigned int>(control_.intercept_);
             data_.p0_ = data_.x_.n_cols;
-            data_.p1_ = data_.p0_ + inter_;
+            data_.p1_ = data_.p0_ + data_.inter_;
             if (control_.standardize_) {
                 if (control_.intercept_) {
                     data_.x_center_ = arma::mean(data_.x_);
@@ -170,8 +169,8 @@ namespace abclass
             if (weight.n_elem != data_.n_obs_) {
                 control_.obs_weight_ = arma::ones(data_.n_obs_);
             } else {
-                control_.obs_weight_ = data_.dn_obs_ * weight /
-                    arma::accu(weight);
+                control_.obs_weight_ = weight /
+                    (arma::accu(weight) * data_.div_n_obs_);
             }
         }
 

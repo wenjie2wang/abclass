@@ -33,6 +33,7 @@ namespace abclass
     protected:
         // data
         using AbclassCD<T_loss, T_x>::mm_lowerbound_;
+        using AbclassCD<T_loss, T_x>::last_eps_;
 
         // functions
         using AbclassCD<T_loss, T_x>::mm_gradient;
@@ -86,22 +87,26 @@ namespace abclass
             const double l1_lambda_g {
                 l1_lambda * control_.penalty_factor_(g) * local_factor
             };
-            const double u_g { mm_lowerbound_(g) * beta(g1, k) - d_gk };
+            const double m_g { mm_lowerbound_(g) };
+            const double u_g { m_g * beta(g1, k) - d_gk };
             const double tmp { std::abs(u_g) - l1_lambda_g };
             if (tmp <= 0.0) {
                 beta(g1, k) = 0.0;
             } else {
                 const double numer { tmp * sign(u_g) };
-                const double denom { mm_lowerbound_(g) + l2_lambda };
+                const double denom { m_g + l2_lambda };
                 // update beta
                 beta(g1, k) = numer / denom;
             }
             // update pred_f and inner
             const double delta_beta { beta(g1, k) - old_beta_g1k };
-            if constexpr (std::is_base_of_v<MarginLoss, T_loss>) {
-                data_.iter_inner_ += delta_beta * data_.iter_vk_xg_;
-            } else {
-                data_.iter_pred_f_.col(k) += delta_beta * data_.x_.col(g);
+            if (delta_beta != 0.0) {
+                if constexpr (std::is_base_of_v<MarginLoss, T_loss>) {
+                    data_.iter_inner_ += delta_beta * data_.iter_vk_xg_;
+                } else {
+                    data_.iter_pred_f_.col(k) += delta_beta * data_.x_.col(g);
+                }
+                last_eps_ = std::max(last_eps_, m_g * delta_beta * delta_beta);
             }
         }
 

@@ -46,6 +46,7 @@ namespace abclass
         unsigned int nlambda_ { 20 };
         double lambda_min_ratio_ { 0.01 };
         double lambda_min_ { - 1.0 };
+        double lambda_max_alpha_min_ { 0.01 };
         //   adaptive penalty factor for each covariate
         arma::vec penalty_factor_ { arma::vec() };
         //   ridge
@@ -172,13 +173,19 @@ namespace abclass
             lambda_min_ = lambda_min;
             return this;
         }
-        inline Control* reg_ridge(const double alpha)
+        inline Control* reg_ridge(const double alpha,
+                                  const double lambda_max_alpha_min = 0.01)
         {
             // check alpha
             if ((alpha < 0.0) || (alpha > 1.0)) {
                 throw std::range_error("The 'alpha' must be between 0 and 1.");
             }
+            if (lambda_max_alpha_min <= 0.0) {
+                throw std::range_error(
+                    "The 'lambda_max_alpha_min' must be positive.");
+            }
             ridge_alpha_ = alpha;
+            lambda_max_alpha_min_ = lambda_max_alpha_min;
             return this;
         }
         inline Control* reg_ncv(const double kappa = 0.9)

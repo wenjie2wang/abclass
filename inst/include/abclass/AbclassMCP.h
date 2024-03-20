@@ -33,6 +33,7 @@ namespace abclass
     protected:
         // data
         using AbclassCD<T_loss, T_x>::mm_lowerbound_;
+        using AbclassCD<T_loss, T_x>::last_eps_;
 
         // functions
         using AbclassCD<T_loss, T_x>::mm_gradient;
@@ -113,6 +114,7 @@ namespace abclass
                 } else {
                     data_.iter_pred_f_.col(k) += delta_beta * data_.x_.col(g);
                 }
+                last_eps_ = std::max(last_eps_, m_g * delta_beta * delta_beta);
             }
         }
 

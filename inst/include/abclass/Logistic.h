@@ -54,7 +54,7 @@ namespace abclass
             ) const
         {
             T_x sqx { arma::square(data.x_) };
-            return obs_weight.t() * sqx / (4.0 * data.dn_obs_);
+            return (0.25 * data.div_n_obs_) * obs_weight.t() * sqx;
         }
 
         // for the intercept
@@ -64,7 +64,7 @@ namespace abclass
             const arma::vec& obs_weight
             ) const
         {
-            return arma::accu(obs_weight) / (4.0 * data.dn_obs_);
+            return (0.25 * data.div_n_obs_) * arma::accu(obs_weight);
         }
 
     };

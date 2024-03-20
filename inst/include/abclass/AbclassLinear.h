@@ -140,6 +140,7 @@ namespace abclass
 
         // loss/penalty/objective functions along the solution path
         arma::vec loss_;
+        arma::vec penalty_;
         arma::vec objective_;
 
         // rescale the coefficients

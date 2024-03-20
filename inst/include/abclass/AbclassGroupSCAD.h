@@ -31,6 +31,7 @@ namespace abclass
     protected:
         // data
         using AbclassBlockCD<T_loss, T_x>::mm_lowerbound_;
+        using AbclassBlockCD<T_loss, T_x>::last_eps_;
 
         // functions
         using AbclassBlockCD<T_loss, T_x>::mm_gradient;
@@ -113,12 +114,14 @@ namespace abclass
             }
             // update pred_f and inner
             const arma::rowvec delta_beta { beta.row(g1) - old_beta_g1 };
-            if (l1_norm(delta_beta) > 0.0) {
+            if (! delta_beta.is_zero()) {
                 if constexpr (std::is_base_of_v<MarginLoss, T_loss>) {
                     data_.iter_inner_ += data_.iter_v_xg_ * delta_beta.t();
                 } else {
                     data_.iter_pred_f_ += data_.x_.col(g) * delta_beta;
                 }
+                last_eps_ = std::max(
+                    last_eps_, arma::max(m_g * (delta_beta % delta_beta)));
             }
         }
 

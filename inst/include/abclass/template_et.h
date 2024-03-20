@@ -32,7 +32,7 @@ namespace abclass {
     {
         // record some original data
         const unsigned int p0 { obj.data_.p0_ };
-        const unsigned int inter { obj.data_.p1_ - obj.data_.p0_ };
+        const unsigned int inter { obj.data_.inter_ };
         const auto x0 { obj.data_.x_ };
         const bool standardize0 { obj.control_.standardize_ };
         const arma::rowvec x_center0 { obj.data_.x_center_ },
@@ -70,7 +70,8 @@ namespace abclass {
                     double et_lambda_min {
                         std::pow(obj.control_.lambda_min_ratio_, 0.25) *
                         obj.et_l1_lambda1_ /
-                        std::max(obj.control_.ridge_alpha_, 1e-2)
+                        std::max(obj.control_.ridge_alpha_,
+                                 obj.control_.lambda_max_alpha_min_)
                     };
                     obj.control_.reg_lambda_min(et_lambda_min);
                 } else {
@@ -85,12 +86,14 @@ namespace abclass {
             const unsigned int p0_i { obj.data_.p0_ - p0 };
             const unsigned int et_lambda_idx { obj.coef_.n_slices - 1 };
             active_beta = obj.coef_.slice(et_lambda_idx).head_rows(p1_i);
-            arma::vec l1_beta { arma::zeros(p0_i) };
+            arma::uvec pos_beta(p0_i);
             // get the indices of the selected predictors
             for (size_t j { 0 }; j < p0_i; ++j) {
-                l1_beta[j] = l1_norm(active_beta.row(inter + j));
+                if (! active_beta.row(inter + j).is_zero()) {
+                    pos_beta[j] = 1;
+                }
             }
-            active_idx0 = arma::find(l1_beta > 0);
+            active_idx0 = arma::find(pos_beta > 0);
             obj.et_vs_ = obj.et_vs_.elem(active_idx0);
             // verbose
             if (obj.control_.verbose_ > 0) {

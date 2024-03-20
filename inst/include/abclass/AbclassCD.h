@@ -33,7 +33,6 @@ namespace abclass
     {
     protected:
         // data members
-        using AbclassLinear<T_loss, T_x>::inter_;
         using AbclassLinear<T_loss, T_x>::mm_lowerbound0_;
         using AbclassLinear<T_loss, T_x>::mm_lowerbound_;
         using AbclassLinear<T_loss, T_x>::null_loss_;
@@ -94,7 +93,7 @@ namespace abclass
         {
             double out { 0.0 };
             for (size_t g {0}; g < control_.penalty_factor_.n_elem; ++g) {
-                out += penalty1(beta.row(g + inter_),
+                out += penalty1(beta.row(g + data_.inter_),
                                 l1_lambda * control_.penalty_factor_(g),
                                 l2_lambda);
             }
@@ -106,7 +105,7 @@ namespace abclass
         //                                 const double l1_lambda,
         //                                 const double l2_lambda) const
         // {
-        //     return iter_loss() / data_.dn_obs_ +
+        //     return iter_loss() * data_.div_n_obs_ +
         //         regularization(beta, l1_lambda, l2_lambda);
         // }
 
@@ -138,7 +137,7 @@ namespace abclass
         inline double mm_gradient0(const unsigned int k) const
         {
             const arma::vec grad_k { iter_dloss_df(k) };
-            return arma::accu(grad_k) / data_.dn_obs_;
+            return arma::accu(grad_k) * data_.div_n_obs_;
         }
 
         // define gradient function at (g, k) for the given inner product
@@ -146,7 +145,7 @@ namespace abclass
                                   const unsigned int k)
         {
             const arma::vec grad_k { iter_dloss_dbeta(g, k) };
-            return arma::accu(grad_k) / data_.dn_obs_;
+            return arma::accu(grad_k) * data_.div_n_obs_;
         }
 
         // define gradient function for g-th predictor
@@ -163,10 +162,8 @@ namespace abclass
             arma::mat grad { iter_dloss_df() };
             for (size_t k {0}; k < data_.km1_; ++k) {
                 for (size_t j {0}; j < data_.p0_; ++j) {
-                    const arma::vec grad_jk {
-                        grad.col(k) % data_.x_.col(j)
-                    };
-                    out(j, k) = arma::mean(grad_jk);
+                    out(j, k) = arma::dot(grad.col(k), data_.x_.col(j)) *
+                        data_.div_n_obs_;
                 }
             }
             return out;
@@ -188,7 +185,7 @@ namespace abclass
                 }
             }
             lambda_max_ =  l1_lambda_max_ /
-                std::max(control_.ridge_alpha_, 1e-2);
+                std::max(control_.ridge_alpha_, control_.lambda_max_alpha_min_);
         }
 
         // optional set gamma for non-convex penalty (e.g., scad and mcp)
@@ -263,7 +260,9 @@ namespace abclass
                     const arma::vec x_g { data_.x_.col(*it) };
                     const arma::vec dj { dloss_df_.col(j) };
                     const arma::vec dloss_dbeta_ { dloss_dbeta(dj, x_g) };
-                    const double tmp { arma::mean(dloss_dbeta_) };
+                    const double tmp {
+                        arma::accu(dloss_dbeta_) * data_.div_n_obs_
+                    };
                     if (std::abs(tmp) > l1_lambda *
                         control_.penalty_factor_(*it)) {
                         // update active set
@@ -345,10 +344,8 @@ namespace abclass
         using AbclassLinear<T_loss, T_x>::set_mm_lowerbound;
         using AbclassLinear<T_loss, T_x>::coef_;
         using AbclassLinear<T_loss, T_x>::loss_;
+        using AbclassLinear<T_loss, T_x>::penalty_;
         using AbclassLinear<T_loss, T_x>::objective_;
-
-        // along the solution path
-        arma::vec penalty_;
 
         // tuning by cross-validation
         arma::mat cv_accuracy_;
@@ -412,7 +409,7 @@ namespace abclass
         // for intercept
         if (control_.intercept_) {
             arma::rowvec delta_beta0 { - mm_gradient0() / mm_lowerbound0_ };
-            if (l1_norm(delta_beta0) > 0.0) {
+            if (! delta_beta0.is_zero()) {
                 beta.row(0) += delta_beta0;
                 // update pred_f_ and inner_
                 if constexpr (std::is_base_of_v<MarginLoss, T_loss>) {
@@ -427,7 +424,7 @@ namespace abclass
         }
         // for predictors
         for (size_t g { 0 }; g < data_.p0_; ++g) {
-            const size_t g1 { g + inter_ };
+            const size_t g1 { g + data_.inter_ };
             for (size_t k {0}; k < data_.km1_; ++k) {
                 if (is_active(g, k) == 0) {
                     continue;
@@ -437,10 +434,10 @@ namespace abclass
                 // update active
                 if (update_active) {
                     // check if it has been shrinkaged to zero
-                    if (std::abs(beta(g1, k)) > 0.0) {
-                        is_active(g, k) = 1;
-                    } else {
+                    if (beta(g1, k) == 0.0) {
                         is_active(g, k) = 0;
+                    } else {
+                        is_active(g, k) = 1;
                     }
                 }
             }
@@ -494,12 +491,12 @@ namespace abclass
                     if (verbose > 1) {
                         double loss1 { iter_loss() };
                         double pen1 { regularization(beta, l1_lambda, l2_lambda) };
-                        double obj1 { loss1 / data_.dn_obs_ + pen1 };
+                        double obj1 { loss1 * data_.div_n_obs_ + pen1 };
                         Rcpp::Rcout << "The objective function changed\n";
                         Rprintf("  from %7.7f (iter_loss: %7.7f + penalty: %7.7f)\n",
-                                last_obj_, last_loss_ / data_.dn_obs_, last_penalty_);
+                                last_obj_, last_loss_ * data_.div_n_obs_, last_penalty_);
                         Rprintf("    to %7.7f (iter_loss: %7.7f + penalty: %7.7f)\n",
-                                obj1, loss1 / data_.dn_obs_, pen1);
+                                obj1, loss1 * data_.div_n_obs_, pen1);
                         if (last_obj_ < obj1) {
                             Rcpp::Rcout << "Notice: the objective increased.\n";
                         }
@@ -554,12 +551,12 @@ namespace abclass
                 if (verbose > 1) {
                     double loss1 { iter_loss() };
                     double pen1 { regularization(beta, l1_lambda, l2_lambda) };
-                    double obj1 { loss1 / data_.dn_obs_ + pen1 };
+                    double obj1 { loss1 * data_.div_n_obs_ + pen1 };
                     Rcpp::Rcout << "The objective function changed\n";
                     Rprintf("  from %7.7f (iter_loss: %7.7f + penalty: %7.7f)\n",
-                            last_obj_, last_loss_ / data_.dn_obs_, last_penalty_);
+                            last_obj_, last_loss_ * data_.div_n_obs_, last_penalty_);
                     Rprintf("    to %7.7f (iter_loss: %7.7f + penalty: %7.7f)\n",
-                            obj1, loss1 / data_.dn_obs_, pen1);
+                            obj1, loss1 * data_.div_n_obs_, pen1);
                     if (last_obj_ < obj1) {
                         Rcpp::Rcout << "Warning: "
                                     << "the function objective "
@@ -657,7 +654,7 @@ namespace abclass
         arma::umat is_active_strong(data_.p0_, active_ncol_, arma::fill::ones);
         // 1) no need to consider possible constant covariates
         is_active_strong.rows(data_.x_skip_).zeros();
-        arma::umat is_active_strong2;
+        arma::umat is_active_strong2; // pure ridge
         if (is_ridge_only) {
             is_active_strong2 = is_active_strong;
         }
@@ -666,7 +663,7 @@ namespace abclass
         // set up epsilon0
         last_loss_ = null_loss_ = iter_loss();
         last_penalty_ = 0.0;
-        last_obj_ = last_loss_ / data_.dn_obs_;
+        last_obj_ = last_loss_ * data_.div_n_obs_;
         double epsilon0 {
             exp_log_sum(control_.epsilon_, null_loss_)
         };
@@ -677,12 +674,12 @@ namespace abclass
                               0, // does not matter
                               0, // does not matter
                               false,
-                              control_.max_iter_,
+                              epsilon0,
                               control_.epsilon_,
                               control_.verbose_);
             last_loss_ = null_loss_ = iter_loss();
             epsilon0 = exp_log_sum(control_.epsilon_, null_loss_);
-            last_obj_ = last_loss_ / data_.dn_obs_;
+            last_obj_ = last_loss_ * data_.div_n_obs_;
         }
         // for pure ridge penalty
         if (is_ridge_only) {
@@ -699,7 +696,7 @@ namespace abclass
                 coef_.slice(li) = rescale_coef(one_beta);
                 loss_(li) = iter_loss();
                 penalty_(li) = regularization(one_beta, l1_lambda, l2_lambda);
-                objective_(li) = loss_(li) / data_.dn_obs_ + penalty_(li);
+                objective_(li) = loss_(li) * data_.div_n_obs_ + penalty_(li);
                 // if max iter is reached
                 if (! converged_) {
                     size_t li1 { li + 1 };
@@ -732,7 +729,7 @@ namespace abclass
                 coef_.slice(li) = rescale_coef(one_beta);
                 loss_(li) = null_loss_;
                 penalty_(li) = regularization(one_beta, l1_lambda, l2_lambda);
-                objective_(li) = loss_(li) / data_.dn_obs_ + penalty_(li);
+                objective_(li) = loss_(li) * data_.div_n_obs_ + penalty_(li);
                 continue;
             }
             // update active set by strong rule
@@ -785,7 +782,7 @@ namespace abclass
                 }
                 // assume the last (permuted ) predictors are inactive
                 arma::mat permuted_beta { one_beta.tail_rows(et_npermuted_) };
-                if (! permuted_beta.is_zero(arma::datum::eps)) {
+                if (! permuted_beta.is_zero()) {
                     if (li == 0) {
                         msg("Warning: Failed to tune by ET-lasso; ",
                             "selected pseudo-predictor(s) by ",
@@ -796,7 +793,7 @@ namespace abclass
                         coef_ = coef_.head_slices(1);
                         loss_ = loss_(0);
                         penalty_ = penalty_(0);
-                        objective_(0) = loss_(0) / data_.dn_obs_ + penalty_(0);
+                        objective_(0) = loss_(0) * data_.div_n_obs_ + penalty_(0);
                     } else {
                         // discard the estimates from this itaration
                         coef_ = coef_.head_slices(li);
@@ -826,7 +823,7 @@ namespace abclass
             coef_.slice(li) = rescale_coef(one_beta);
             loss_(li) = iter_loss();
             penalty_(li) = regularization(one_beta, l1_lambda, l2_lambda);
-            objective_(li) = loss_(li) / data_.dn_obs_ + penalty_(li);
+            objective_(li) = loss_(li) * data_.div_n_obs_ + penalty_(li);
             // if max iter is reached
             if (! converged_) {
                 size_t li1 { li + 1 };

@@ -38,8 +38,15 @@ namespace abclass
             for (size_t i {0}; i < y.n_elem; ++i) {
                 arma::rowvec fi { pred_f0.row(i) };
                 fi -= fi(y(i));
-                res += obs_weight(i) *
-                    std::log(arma::accu(arma::exp(fi)));
+                double tmp { 0.0 };
+                for (size_t j {0}; j < fi.n_elem; ++j) {
+                    if (j == y[i]) {
+                        tmp += 1.0;
+                        continue;
+                    }
+                    tmp += std::exp(fi[j]);
+                }
+                res += obs_weight(i) * std::log(tmp);
             }
             return res;
         }
@@ -142,7 +149,7 @@ namespace abclass
             ) const
         {
             T_x sqx { arma::square(data.x_) };
-            return obs_weight.t() * sqx / data.dn_obs_;
+            return data.div_n_obs_ * obs_weight.t() * sqx;
         }
 
         // for the intercept
@@ -152,7 +159,7 @@ namespace abclass
             const arma::vec& obs_weight
             ) const
         {
-            return arma::accu(obs_weight) / data.dn_obs_;
+            return data.div_n_obs_ * arma::accu(obs_weight);
         }
 
     };                          // end of class

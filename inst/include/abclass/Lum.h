@@ -89,7 +89,7 @@ namespace abclass
             ) const
         {
             T_x sqx { arma::square(data.x_) };
-            return lum_mm_ * (obs_weight.t() * sqx) / data.dn_obs_;
+            return data.div_n_obs_ * lum_mm_ * (obs_weight.t() * sqx);
         }
 
         // for the intercept
@@ -99,7 +99,7 @@ namespace abclass
             const arma::vec& obs_weight
             ) const
         {
-            return lum_mm_ * arma::accu(obs_weight) / data.dn_obs_;
+            return data.div_n_obs_ * lum_mm_ * arma::accu(obs_weight);
         }
 
         inline Lum* set_ac(const double lum_a, const double lum_c)

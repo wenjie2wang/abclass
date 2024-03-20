@@ -33,7 +33,6 @@ namespace abclass
     protected:
         // data members
         using AbclassCD<T_loss, T_x>::active_ncol_;
-        using AbclassCD<T_loss, T_x>::inter_;
         using AbclassCD<T_loss, T_x>::mm_lowerbound0_;
         using AbclassCD<T_loss, T_x>::mm_lowerbound_;
         using AbclassCD<T_loss, T_x>::last_eps_;
@@ -82,7 +81,7 @@ namespace abclass
                 }
             }
             lambda_max_ =  l1_lambda_max_ /
-                std::max(control_.ridge_alpha_, 1e-2);
+                std::max(control_.ridge_alpha_, control_.lambda_max_alpha_min_);
         }
 
         inline void apply_strong_rule(
@@ -158,7 +157,7 @@ namespace abclass
             }
             // update pred_f and inner
             const arma::rowvec delta_beta { beta.row(g1) - old_beta_g1 };
-            if (l1_norm(delta_beta) > 0.0) {
+            if (! delta_beta.is_zero()) {
                 if constexpr (std::is_base_of_v<MarginLoss, T_loss>) {
                     data_.iter_inner_ += data_.iter_v_xg_ * delta_beta.t();
                 } else {
@@ -215,7 +214,7 @@ namespace abclass
             const arma::rowvec delta_beta0 {
                 - mm_gradient0() / mm_lowerbound0_
             };
-            if (l1_norm(delta_beta0) > 0.0) {
+            if (! delta_beta0.is_zero()) {
                 beta.row(0) += delta_beta0;
                 // update pred_f_ and inner_
                 if constexpr (std::is_base_of_v<MarginLoss, T_loss>) {
@@ -225,12 +224,12 @@ namespace abclass
                 }
                 last_eps_ = std::max(
                     last_eps_,
-                    arma::max(mm_lowerbound0_ * delta_beta0 % delta_beta0));
+                    arma::max(mm_lowerbound0_ * (delta_beta0 % delta_beta0)));
             }
         }
         // for predictors
         for (size_t g {0}; g < data_.p0_; ++g) {
-            const size_t g1 { g + inter_ };
+            const size_t g1 { g + data_.inter_ };
             if (is_active(g) == 0) {
                 continue;
             }
@@ -239,10 +238,10 @@ namespace abclass
             // update active
             if (update_active) {
                 // check if it has been shrinkaged to zero
-                if (l1_norm(beta.row(g1)) > 0.0) {
-                    is_active(g) = 1;
-                } else {
+                if (beta.row(g1).is_zero()) {
                     is_active(g) = 0;
+                } else {
+                    is_active(g) = 1;
                 }
             }
         }
