@@ -117,7 +117,8 @@ inline abclass::Control abclass_control(const Rcpp::List& control)
                  control["penalty_factor"],
                  control["varying_active_set"])->
         reg_lambda(control["lambda"])->
-        reg_ridge(control["alpha"])->
+        reg_ridge(control["alpha"],
+                  control["lambda_max_alpha_min"])->
         reg_ncv(control["ncv_kappa"])->
         reg_gel(control["gel_tau"])->
         reg_mellowmax(control["mellowmax_omega"])->

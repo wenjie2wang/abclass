@@ -25,6 +25,7 @@ abclass.control(
   lambda = NULL,
   nlambda = 50L,
   lambda_min_ratio = NULL,
+  lambda_max_alpha_min = 0.01,
   penalty_factor = NULL,
   ncv_kappa = 0.1,
   gel_tau = 0.33,
@@ -100,6 +101,13 @@ valid \code{lambda} is specified.  The default value is \code{50}.}
 smallest lambda parameter to the largest lambda parameter.  The default
 value is set to \code{1e-4} if the sample size is larger than the number
 of predictors, and \code{1e-2} otherwise.}
+
+\item{lambda_max_alpha_min}{A positive number specifying the minimum
+denominator when the function determines the largest lambda.  If the
+\code{lambda} is not specified, the largest lambda will be determined by
+the data and be the large enough lambda (that would result in all zero
+estimates for the covariates with positive penalty factors) devided by
+\code{max(alpha, lambda_max_alpha_min)}.}
 
 \item{penalty_factor}{A numerical vector with nonnegative values specifying
 the adaptive penalty factors for individual predictors (excluding

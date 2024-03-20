@@ -114,16 +114,22 @@ abclass <- function(x, y,
 ##' @param nlambda A positive integer specifying the length of the internally
 ##'     generated \emph{lambda} sequence.  This argument will be ignored if a
 ##'     valid \code{lambda} is specified.  The default value is \code{50}.
-##' @param lambda_min_ratio A positive number specifying the ratio of the
-##'     smallest lambda parameter to the largest lambda parameter.  The default
-##'     value is set to \code{1e-4} if the sample size is larger than the number
-##'     of predictors, and \code{1e-2} otherwise.
 ##' @param lambda A numeric vector specifying the tuning parameter
 ##'     \emph{lambda}.  A data-driven \emph{lambda} sequence will be generated
 ##'     and used according to specified \code{alpha}, \code{nlambda} and
 ##'     \code{lambda_min_ratio} if this argument is left as \code{NULL} by
 ##'     default.  The specified \code{lambda} will be sorted in decreasing order
 ##'     internally and only the unique values will be kept.
+##' @param lambda_min_ratio A positive number specifying the ratio of the
+##'     smallest lambda parameter to the largest lambda parameter.  The default
+##'     value is set to \code{1e-4} if the sample size is larger than the number
+##'     of predictors, and \code{1e-2} otherwise.
+##' @param lambda_max_alpha_min A positive number specifying the minimum
+##'     denominator when the function determines the largest lambda.  If the
+##'     \code{lambda} is not specified, the largest lambda will be determined by
+##'     the data and be the large enough lambda (that would result in all zero
+##'     estimates for the covariates with positive penalty factors) devided by
+##'     \code{max(alpha, lambda_max_alpha_min)}.
 ##' @param penalty_factor A numerical vector with nonnegative values specifying
 ##'     the adaptive penalty factors for individual predictors (excluding
 ##'     intercept).
@@ -163,6 +169,7 @@ abclass.control <- function(## loss
                             lambda = NULL,
                             nlambda = 50L,
                             lambda_min_ratio = NULL,
+                            lambda_max_alpha_min = 0.01,
                             penalty_factor = NULL,
                             ncv_kappa = 0.1,
                             gel_tau = 0.33,
@@ -185,6 +192,7 @@ abclass.control <- function(## loss
         lambda = lambda,
         nlambda = as.integer(nlambda),
         lambda_min_ratio = lambda_min_ratio,
+        lambda_max_alpha_min = lambda_max_alpha_min,
         penalty_factor = penalty_factor,
         ncv_kappa = ncv_kappa,
         gel_tau = gel_tau,

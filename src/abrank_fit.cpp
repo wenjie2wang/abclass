@@ -41,7 +41,8 @@ inline abclass::Control abrank_control(const Rcpp::List& control)
                  control["penalty_factor"],
                  control["varying_active_set"])->
         reg_lambda(control["lambda"])->
-        reg_ridge(control["alpha"])->
+        reg_ridge(control["alpha"],
+                  control["lambda_max_alpha_min"])->
         tune_cv(control["cv_metric"])->
         tune_et(control["nstages"]);
     return ctrl;
