@@ -70,6 +70,26 @@ namespace abclass
             return out + ridge_pen;
         }
 
+        // determine the large-enough l1 lambda that results in zero coef's
+        inline void set_lambda_max(const arma::uvec& positive_penalty) override
+        {
+            arma::mat one_grad_beta { arma::abs(gradient()) };
+            // get large enough lambda for zero coefs in positive_penalty
+            l1_lambda_max_ = 0.0;
+            lambda_max_ = 0.0;
+            for (arma::uvec::const_iterator it { positive_penalty.begin() };
+                 it != positive_penalty.end(); ++it) {
+                double tmp { one_grad_beta.row(*it).max() };
+                tmp /= control_.penalty_factor_(*it);
+                tmp = std::sqrt(tmp); // the difference
+                if (l1_lambda_max_ < tmp) {
+                    l1_lambda_max_ = tmp;
+                }
+            }
+            lambda_max_ =  l1_lambda_max_ /
+                std::max(control_.ridge_alpha_, control_.lambda_max_alpha_min_);
+        }
+
         inline void set_gamma(const double kappa = 0.9) override
         {
             // kappa must be in (0, 1)
