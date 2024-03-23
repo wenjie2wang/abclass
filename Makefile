@@ -19,31 +19,34 @@ install:
 pkgdown:
 	Rscript -e "library(methods); pkgdown::build_site();"
 
-$(tar): $(objects)
-	@$(RM) -rf src/RcppExports.cpp R/RcppExports.R
-	@Rscript -e "library(methods);" \
-	-e "Rcpp::compileAttributes()" \
-	-e "devtools::document();";
-	@$(MAKE) updateTimestamp
-	R CMD build .
-
-$(checkLog): $(tar)
-	R CMD check --as-cran $(tar)
+.PHONY: deploy-pkgdown
+deploy-pkgdown:
+	@bash misc/deploy_docs.sh
 
 .PHONY: readme
 readme: README.md
 README.md: README.Rmd
 	@Rscript -e "rmarkdown::render('$<')"
 
-.PHONY: updateTimestamp
-updateTimestamp:
+.PHONY: update-timestamp
+update-timestamp:
 	@bash misc/update_timestamp.sh
 
 ## make tags
 .PHONY: tags
 tags:
 	Rscript -e "utils::rtags(path = 'R', ofile = 'TAGS')"
-	gtags
+
+$(tar): $(objects)
+	@$(RM) -rf src/RcppExports.cpp R/RcppExports.R
+	@Rscript -e "library(methods);" \
+	-e "Rcpp::compileAttributes()" \
+	-e "devtools::document();";
+	@$(MAKE) update-timestamp
+	R CMD build .
+
+$(checkLog): $(tar)
+	R CMD check --as-cran $(tar)
 
 .PHONY: clean
 clean:
