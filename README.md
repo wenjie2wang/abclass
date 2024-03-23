@@ -10,9 +10,11 @@ The package **abclass** provides implementations of the multi-category
 angle-based classifiers (Zhang & Liu, 2014) with the large-margin
 unified machines (Liu, et al., 2011) for high-dimensional data.
 
-> **Note** This package is still very experimental and under active
-> development. The function interface is subject to change without
-> guarantee of backward compatibility.
+**Note**
+
+This package is still very experimental and under active development.
+The function interface is subject to change without guarantee of
+backward compatibility.
 
 ## Installation
 
@@ -40,7 +42,7 @@ library(abclass)
 packageVersion("abclass")
 ```
 
-    ## [1] '0.5.0.9050'
+    ## [1] '0.5.0.9120'
 
 ``` r
 ## toy examples for demonstration purpose
@@ -69,51 +71,51 @@ test_y <- y[- train_idx]
 
 ### logistic deviance loss with elastic-net penalty
 model1 <- cv.abclass(train_x, train_y, nlambda = 100, nfolds = 5,
-                     loss = "logistic", grouped = FALSE)
+                     loss = "logistic", penalty = "lasso", alpha = 0.9)
 pred1 <- predict(model1, test_x)
 table(test_y, pred1)
 ```
 
     ##          pred1
     ## test_y    label_1 label_2 label_3 label_4 label_5
-    ##   label_1    1347       0       2     654       0
-    ##   label_2       2    1856       2       0     108
-    ##   label_3       3       6    1763       0     180
-    ##   label_4       0       8       0    1922     102
-    ##   label_5       0      68      37       1    1939
+    ##   label_1    1678       0       3     322       0
+    ##   label_2       0    1862       0       0     106
+    ##   label_3       4      12    1736       0     200
+    ##   label_4       3      12       0    1938      79
+    ##   label_5       0      66      29       1    1949
 
 ``` r
 mean(test_y == pred1) # accuracy
 ```
 
-    ## [1] 0.8827
+    ## [1] 0.9163
 
 ``` r
 ### with groupwise lasso
 model2 <- cv.abclass(train_x, train_y, nlambda = 100, nfolds = 5,
-                     loss = "logistic", grouped = TRUE)
+                     loss = "logistic", penalty = "glasso")
 pred2 <- predict(model2, test_x)
 table(test_y, pred2)
 ```
 
     ##          pred2
     ## test_y    label_1 label_2 label_3 label_4 label_5
-    ##   label_1    1993       1       2       3       4
-    ##   label_2       0    1780       0       0     188
-    ##   label_3       4       2    1368       0     578
-    ##   label_4      10      28       0    1964      30
-    ##   label_5       0      10       3       0    2032
+    ##   label_1    1994       1       2       3       3
+    ##   label_2       0    1784       0       0     184
+    ##   label_3       4       2    1336       0     610
+    ##   label_4      12      27       0    1963      30
+    ##   label_5       0      10       2       0    2033
 
 ``` r
 mean(test_y == pred2) # accuracy
 ```
 
-    ## [1] 0.9137
+    ## [1] 0.911
 
 ``` r
 ## tuning by ET-Lasso instead of cross-validation
 model3 <- et.abclass(train_x, train_y, nlambda = 100,
-                     loss = "logistic", grouped = TRUE)
+                     loss = "logistic", penalty = "glasso")
 pred3 <- predict(model3, test_x)
 table(test_y, pred3)
 ```
@@ -122,15 +124,15 @@ table(test_y, pred3)
     ## test_y    label_1 label_2 label_3 label_4 label_5
     ##   label_1    1991       1       5       5       1
     ##   label_2       0    1843       0       0     125
-    ##   label_3       3       5    1676       0     268
-    ##   label_4       6      12       0    1999      15
-    ##   label_5       0      17      12       0    2016
+    ##   label_3       3       7    1644       0     298
+    ##   label_4       7      13       0    1997      15
+    ##   label_5       0      19      11       0    2015
 
 ``` r
 mean(test_y == pred3) # accuracy
 ```
 
-    ## [1] 0.9525
+    ## [1] 0.949
 
 ## References
 
