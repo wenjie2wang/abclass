@@ -22,7 +22,6 @@
 
 #include "Simplex.h"
 #include "MarginLoss.h"
-#include "utils.h"
 
 namespace abclass
 {

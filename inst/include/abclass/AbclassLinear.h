@@ -23,8 +23,6 @@
 #include <stdexcept>
 
 #include "Abclass.h"
-#include "Control.h"
-#include "Simplex.h"
 
 namespace abclass
 {

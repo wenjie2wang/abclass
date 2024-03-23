@@ -20,7 +20,6 @@
 
 #include <RcppArmadillo.h>
 #include "AbclassCD.h"
-#include "Control.h"
 #include "utils.h"
 
 namespace abclass
@@ -107,7 +106,7 @@ namespace abclass
             control_.ncv_gamma_ = 1.0 / min_mg / kappa;
         }
 
-        // experimental
+        // no strong rule so far
         // inline double strong_rule_rhs(const double next_lambda,
         //                               const double last_lambda) const override
         // {

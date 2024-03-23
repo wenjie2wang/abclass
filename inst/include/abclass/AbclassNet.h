@@ -20,8 +20,6 @@
 
 #include <RcppArmadillo.h>
 #include "AbclassCD.h"
-#include "Control.h"
-#include "utils.h"
 
 namespace abclass
 {
