@@ -64,7 +64,7 @@ namespace abclass
     class Simplex2 : public Simplex
     {
     public:
-        arma::mat t_vertex_;    // transpose of vertex_
+        arma::mat t_vertex_;    // transpose of vertex_: (K, K - 1)
         arma::mat ex_vertex_;   // expanded vertex for y: n by (K - 1)
         arma::uvec y_;          // {0,1,...,k-1}
 
