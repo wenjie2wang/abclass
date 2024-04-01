@@ -29,6 +29,7 @@ namespace abclass
     public:
         unsigned int km1_;      // k - 1
         unsigned int k_;        // dimensions
+        double dk_;             // double(k_)
 
         // k vertex column vectors in R^(k-1) => (k-1) by k
         arma::mat vertex_;      // unique vertex: (k-1) by k
@@ -46,7 +47,8 @@ namespace abclass
             }
             k_ = k;
             km1_ = k - 1;
-            double dkm1 { static_cast<double>(km1_) };
+            dk_ = static_cast<double>(k);
+            double dkm1 { dk_ - 1.0 };
             vertex_ = arma::zeros(km1_, k_);
             const arma::vec tmp { arma::ones<arma::vec>(km1_) };
             vertex_.col(0) = std::pow(dkm1, - 0.5) * tmp;

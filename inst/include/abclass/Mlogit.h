@@ -149,7 +149,7 @@ namespace abclass
             ) const
         {
             T_x sqx { arma::square(data.x_) };
-            return data.div_n_obs_ * obs_weight.t() * sqx;
+            return data.div_n_obs_ * obs_weight.t() * sqx / data.dk_;
         }
 
         // for the intercept
@@ -159,7 +159,7 @@ namespace abclass
             const arma::vec& obs_weight
             ) const
         {
-            return data.div_n_obs_ * arma::accu(obs_weight);
+            return data.div_n_obs_ * arma::accu(obs_weight) / data.dk_;
         }
 
     };                          // end of class
