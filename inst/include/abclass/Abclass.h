@@ -168,9 +168,11 @@ namespace abclass
         {
             if (weight.n_elem != data_.n_obs_) {
                 control_.obs_weight_ = arma::ones(data_.n_obs_);
+                control_.custom_obs_weight_ = false;
             } else {
                 control_.obs_weight_ = weight /
                     (arma::accu(weight) * data_.div_n_obs_);
+                control_.custom_obs_weight_ = true;
             }
         }
 

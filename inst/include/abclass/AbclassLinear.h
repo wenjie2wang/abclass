@@ -23,6 +23,7 @@
 #include <stdexcept>
 
 #include "Abclass.h"
+#include "MarginLoss.h"
 
 namespace abclass
 {
@@ -110,12 +111,31 @@ namespace abclass
         // MM lowerbound used in coordinate-descent algorithm
         inline void set_mm_lowerbound()
         {
-            if (control_.intercept_) {
-                mm_lowerbound0_ = loss_fun_.mm_lowerbound0(
-                    data_, control_.obs_weight_);
+            double mm_lowerbound_factor { 1.0 };
+            if constexpr (std::is_base_of_v<MarginLoss, T_loss>) {
+                mm_lowerbound_factor = loss_fun_.mm_lowerbound();
+            } else {
+                mm_lowerbound_factor = loss_fun_.mm_lowerbound(data_.dk_);
             }
-            mm_lowerbound_ = loss_fun_.mm_lowerbound(
-                data_, control_.obs_weight_);
+            if (control_.standardize_ && ! control_.custom_obs_weight_) {
+                mm_lowerbound_ = mm_lowerbound_factor *
+                    arma::ones<arma::rowvec>(data_.p0_);
+            } else if (control_.custom_obs_weight_) {
+                T_x sqx { arma::square(data_.x_) };
+                mm_lowerbound_ = mm_lowerbound_factor * data_.div_n_obs_ *
+                    (control_.obs_weight_.t() * sqx);
+            } else {
+                T_x sqx { arma::square(data_.x_) };
+                mm_lowerbound_ = mm_lowerbound_factor * arma::mean(sqx, 0);
+            }
+            if (control_.intercept_) {
+                if (control_.custom_obs_weight_) {
+                    mm_lowerbound0_ = mm_lowerbound_factor * data_.div_n_obs_ *
+                        arma::accu(control_.obs_weight_);
+                } else {
+                    mm_lowerbound0_ = mm_lowerbound_factor;
+                }
+            }
         }
 
     public:

@@ -30,6 +30,7 @@ namespace abclass
     public:
         // model
         arma::vec obs_weight_ { arma::vec() }; // observational weights
+        bool custom_obs_weight_ { false };     // is obs_weight_ customized
         bool intercept_ { true };              // if to contrain intercepts
 
         // offset

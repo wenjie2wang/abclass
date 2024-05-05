@@ -67,25 +67,10 @@ namespace abclass
             return - std::exp(- u);
         }
 
-        // MM lowerbound
-        template <typename T_x>
-        inline arma::rowvec mm_lowerbound(
-            const Simplex2<T_x>& data,
-            const arma::vec& obs_weight
-            ) const
+        // MM lowerbound factor
+        inline double mm_lowerbound() const
         {
-            T_x sqx { arma::square(data.x_) };
-            return exp_inner_max_ * (obs_weight.t() * sqx) * data.div_n_obs_;
-        }
-
-        // for the intercept
-        template <typename T_x>
-        inline double mm_lowerbound0(
-            const Simplex2<T_x>& data,
-            const arma::vec& obs_weight
-            ) const
-        {
-            return exp_inner_max_ * arma::accu(obs_weight) * data.div_n_obs_;
+            return exp_inner_max_;
         }
 
         // setter

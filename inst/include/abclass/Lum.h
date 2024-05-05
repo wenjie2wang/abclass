@@ -81,25 +81,10 @@ namespace abclass
                               lum_ap1_ * std::log(lum_cp1_ * u + lum_amc_));
         }
 
-        // MM lowerbound
-        template <typename T_x>
-        inline arma::rowvec mm_lowerbound(
-            const Simplex2<T_x>& data,
-            const arma::vec& obs_weight
-            ) const
+        // MM lowerbound factor
+        inline double mm_lowerbound() const
         {
-            T_x sqx { arma::square(data.x_) };
-            return data.div_n_obs_ * lum_mm_ * (obs_weight.t() * sqx);
-        }
-
-        // for the intercept
-        template <typename T_x>
-        inline double mm_lowerbound0(
-            const Simplex2<T_x>& data,
-            const arma::vec& obs_weight
-            ) const
-        {
-            return data.div_n_obs_ * lum_mm_ * arma::accu(obs_weight);
+            return lum_mm_;
         }
 
         inline Lum* set_ac(const double lum_a, const double lum_c)
