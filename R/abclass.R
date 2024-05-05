@@ -49,8 +49,8 @@
 ##'
 ##' @return The function \code{abclass()} returns an object of class
 ##'     \code{abclass} representing a trained classifier; The function
-##'     \code{abclass.control()} returns an object of class {abclass.control}
-##'     representing a list of control parameters.
+##'     \code{abclass.control()} returns an object of class
+##'     \code{abclass.control} representing a list of control parameters.
 ##'
 ##' @references
 ##'
