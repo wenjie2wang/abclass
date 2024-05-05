@@ -42,7 +42,7 @@ library(abclass)
 packageVersion("abclass")
 ```
 
-    ## [1] '0.5.0.9120'
+    ## [1] '0.5.0.9130'
 
 ``` r
 ## toy examples for demonstration purpose
