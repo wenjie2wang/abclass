@@ -9,14 +9,6 @@ rcpp_abclass_fit_sp <- function(x, y, control) {
     .Call('_abclass_rcpp_abclass_fit_sp', PACKAGE = 'abclass', x, y, control)
 }
 
-rcpp_abrank_fit <- function(x, y, qid, control) {
-    .Call('_abclass_rcpp_abrank_fit', PACKAGE = 'abclass', x, y, qid, control)
-}
-
-rcpp_query_delta_weight <- function(y, pred) {
-    .Call('_abclass_rcpp_query_delta_weight', PACKAGE = 'abclass', y, pred)
-}
-
 cv_samples <- function(nobs, nfolds, strata) {
     .Call('_abclass_cv_samples', PACKAGE = 'abclass', nobs, nfolds, strata)
 }

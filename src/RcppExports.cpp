@@ -38,32 +38,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// rcpp_abrank_fit
-Rcpp::List rcpp_abrank_fit(const arma::mat& x, const arma::vec& y, const arma::uvec& qid, const Rcpp::List& control);
-RcppExport SEXP _abclass_rcpp_abrank_fit(SEXP xSEXP, SEXP ySEXP, SEXP qidSEXP, SEXP controlSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
-    Rcpp::traits::input_parameter< const arma::uvec& >::type qid(qidSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::List& >::type control(controlSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpp_abrank_fit(x, y, qid, control));
-    return rcpp_result_gen;
-END_RCPP
-}
-// rcpp_query_delta_weight
-Rcpp::List rcpp_query_delta_weight(const arma::vec& y, const arma::vec& pred);
-RcppExport SEXP _abclass_rcpp_query_delta_weight(SEXP ySEXP, SEXP predSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type pred(predSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpp_query_delta_weight(y, pred));
-    return rcpp_result_gen;
-END_RCPP
-}
 // cv_samples
 Rcpp::List cv_samples(const unsigned int nobs, const unsigned int nfolds, const arma::uvec& strata);
 RcppExport SEXP _abclass_cv_samples(SEXP nobsSEXP, SEXP nfoldsSEXP, SEXP strataSEXP) {
@@ -176,8 +150,6 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_abclass_rcpp_abclass_fit", (DL_FUNC) &_abclass_rcpp_abclass_fit, 3},
     {"_abclass_rcpp_abclass_fit_sp", (DL_FUNC) &_abclass_rcpp_abclass_fit_sp, 3},
-    {"_abclass_rcpp_abrank_fit", (DL_FUNC) &_abclass_rcpp_abrank_fit, 4},
-    {"_abclass_rcpp_query_delta_weight", (DL_FUNC) &_abclass_rcpp_query_delta_weight, 2},
     {"_abclass_cv_samples", (DL_FUNC) &_abclass_cv_samples, 3},
     {"_abclass_rcpp_pred_prob", (DL_FUNC) &_abclass_rcpp_pred_prob, 5},
     {"_abclass_rcpp_pred_prob_sp", (DL_FUNC) &_abclass_rcpp_pred_prob_sp, 5},

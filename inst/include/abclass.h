@@ -29,8 +29,6 @@
 #include "abclass/AbclassBlockCD.h"
 #include "abclass/Control.h"
 #include "abclass/Simplex.h"
-#include "abclass/Query.h"
-#include "abclass/Abrank.h"
 #include "abclass/Mellowmax.h"
 
 // losses
