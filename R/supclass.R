@@ -21,10 +21,11 @@
 ##' penalties proposed by Zhang, et al. (2008) and Li & Zhang (2021).
 ##'
 ##' For the multinomial logistic model or the proximal SVM model, this function
-##' utilizes the function \code{quadprog::solve.QP()} to solve the equivalent
-##' quadratic problem; For the multi-class SVM, this function utilizes GNU GLPK
-##' to solve the equivalent linear programming problem via the package
-##' \pkg{Rglpk}.  It is recommended to use a recent version of \code{GLPK}.
+##' utilizes the function \code{qpmadr::solveqp()} to solve the equivalent
+##' quadratic problem.  For the multi-class SVM, this function utilizes GNU
+##' Linear Programming Kit (GLPK) to solve the equivalent linear programming
+##' problem via the package \pkg{Rglpk}.  It is recommended to use a recent
+##' version of \pkg{GLPK}.
 ##'
 ##' @inheritParams abclass
 ##'
@@ -52,6 +53,8 @@
 ##' multi-classification. \emph{Journal of Data Science}, 19(1), 56--74.
 ##'
 ##' @example inst/examples/ex-supclass.R
+##'
+##' @importFrom stats runif
 ##'
 ##' @export
 supclass <- function(x, y,
@@ -125,8 +128,13 @@ supclass <- function(x, y,
     }
     ## check start
     if (is.null(start)) {
-        ## TODO apply ridge estimates instead of zeros
-        start <- matrix(0, nrow = pp, ncol = K)
+        start <- if (is.na(control$ridge_lambda)) {
+                     matrix(0, nrow = pp, ncol = K)
+                 } else {
+                     ## TODO apply ridge estimates instead of zeros
+                     warning("Not implemented; using random starts instead.")
+                     matrix(stats::runif(pp * K), nrow = pp, ncol = K)
+                 }
     } else {
         if (! is.matrix(start)) {
             start <- as.matrix(start)
@@ -203,8 +211,8 @@ supclass <- function(x, y,
 ##' @param shrinkage A nonnegative tolerance to shrink estimates with sup-norm
 ##'     close enough to zero (within the specified tolerance) to zeros.  The
 ##'     default value is \code{1e-4}.
-##' @param ridge_lambda TODO The tuning parameter lambda of the ridge penalty
-##'     used to set the starting values for multinomial logistic models.
+##' @param ridge_lambda The tuning parameter lambda of the ridge penalty used to
+##'     set the starting values for multinomial logistic models.
 ##' @param warm_start A logical value indicating if the estimates from last
 ##'     lambda should be used as the starting values for the next lambda.  If
 ##'     \code{FALSE}, the user-specified starting values will be used instead.
@@ -220,7 +228,7 @@ supclass.control <- function(lambda = 0.1,
                              maxit = 50,
                              epsilon = 1e-4,
                              shrinkage = 1e-4,
-                             ridge_lambda = 1,
+                             ridge_lambda = NA,
                              warm_start = TRUE,
                              standardize = TRUE,
                              Rglpk = list(
@@ -236,6 +244,7 @@ supclass.control <- function(lambda = 0.1,
         maxit = maxit,
         epsilon = epsilon,
         shrinkage = shrinkage,
+        ridge_lambda = ridge_lambda,
         warm_start = warm_start,
         standardize = standardize,
         Rglpk = Rglpk
@@ -345,7 +354,6 @@ supclass_mlog <- function(x, y, penalty, start, control)
     ## get_var_names <- function(x) {
     ##     apply(as.matrix(x), 2, .get_var_names, simplify = FALSE)
     ## }
-    ## TODO avoid t(Amat) by generating Amat in a different way
     ## prepare the matrix for the equality constraints
     A0 <- matrix(0, nrow = df, ncol = pp)
     for (i in seq_len(pp)) {
@@ -372,6 +380,7 @@ supclass_mlog <- function(x, y, penalty, start, control)
              }
     Aineq <- do.call(cbind, Aineq)
     Amat <- cbind(A0, Aineq)
+    t_Amat <- t(Amat)
     b0vec <- rep(0, pp + 2 * p * K)
     sc <- sqrt(.Machine$double.eps)
     ## initialize
@@ -413,7 +422,7 @@ supclass_mlog <- function(x, y, penalty, start, control)
                     qpmadr::solveqp(
                                 H = Dmat,
                                 h = dvec,
-                                A = t(Amat),
+                                A = t_Amat,
                                 Alb = b0vec,
                                 Aub = c(rep(0, pp), rep(Inf, 2 * p * K))
                             )
@@ -447,7 +456,7 @@ supclass_mlog <- function(x, y, penalty, start, control)
                         qpmadr::solveqp(
                                     H = Dmat,
                                     h = dvec,
-                                    A = t(Amat),
+                                    A = t_Amat,
                                     Alb = b0vec,
                                     Aub = c(rep(0, pp), rep(Inf, 2 * p * K))
                                 )
@@ -534,6 +543,7 @@ supclass_mpsvm <- function(x, y, penalty, start, control)
              }
     Aineq <- do.call(cbind, Aineq)
     Amat <- cbind(A0, Aineq)
+    t_Amat <- t(Amat)
     b0vec <- rep(0, pp + 2 * p * K)
     ## prepare the vector for the objective function
     delta <- matrix(1, nrow = n, ncol = K) / n
@@ -571,7 +581,7 @@ supclass_mpsvm <- function(x, y, penalty, start, control)
                 qpmadr::solveqp(
                             H = Dmat,
                             h = dvec,
-                            A = t(Amat),
+                            A = t_Amat,
                             Alb = b0vec,
                             Aub = c(rep(0, pp), rep(Inf, 2 * p * K))
                         )
@@ -606,7 +616,7 @@ supclass_mpsvm <- function(x, y, penalty, start, control)
                     qpmadr::solveqp(
                                 H = Dmat,
                                 h = dvec,
-                                A = t(Amat),
+                                A = t_Amat,
                                 Alb = b0vec,
                                 Aub = c(rep(0, pp), rep(Inf, 2 * p * K))
                             )
