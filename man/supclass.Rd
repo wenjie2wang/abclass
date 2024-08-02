@@ -22,7 +22,7 @@ supclass.control(
   maxit = 50,
   epsilon = 1e-04,
   shrinkage = 1e-04,
-  ridge_lambda = 1,
+  ridge_lambda = NA,
   warm_start = TRUE,
   standardize = TRUE,
   Rglpk = list(verbose = TRUE, tm_limit = 6e+05),
@@ -85,8 +85,8 @@ determines convergence.}
 close enough to zero (within the specified tolerance) to zeros.  The
 default value is \code{1e-4}.}
 
-\item{ridge_lambda}{TODO The tuning parameter lambda of the ridge penalty
-used to set the starting values for multinomial logistic models.}
+\item{ridge_lambda}{The tuning parameter lambda of the ridge penalty used to
+set the starting values for multinomial logistic models.}
 
 \item{warm_start}{A logical value indicating if the estimates from last
 lambda should be used as the starting values for the next lambda.  If
@@ -105,10 +105,11 @@ penalties proposed by Zhang, et al. (2008) and Li & Zhang (2021).
 }
 \details{
 For the multinomial logistic model or the proximal SVM model, this function
-utilizes the function \code{quadprog::solve.QP()} to solve the equivalent
-quadratic problem; For the multi-class SVM, this function utilizes GNU GLPK
-to solve the equivalent linear programming problem via the package
-\pkg{Rglpk}.  It is recommended to use a recent version of \code{GLPK}.
+utilizes the function \code{qpmadr::solveqp()} to solve the equivalent
+quadratic problem.  For the multi-class SVM, this function utilizes GNU
+Linear Programming Kit (GLPK) to solve the equivalent linear programming
+problem via the package \pkg{Rglpk}.  It is recommended to use a recent
+version of \pkg{GLPK}.
 }
 \examples{
 library(abclass)
