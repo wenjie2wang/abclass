@@ -33,8 +33,8 @@ pred2 <- predict(model2, test_x, s = 5)
 expect_true(mean(test_y == pred2) > 0.5)
 expect_equivalent(dim(coef(model2, s = 5)), c(p + 1, k - 1))
 
-## hinge-boost loss
-model3 <- abclass(train_x, train_y, nlambda = 5, loss = "hinge-boost")
+## hinge.boost loss
+model3 <- abclass(train_x, train_y, nlambda = 5, loss = "hinge.boost")
 pred3 <- predict(model3, test_x, s = 5)
 expect_true(mean(test_y == pred3) > 0.5)
 expect_equivalent(dim(coef(model3, s = 5)), c(p + 1, k - 1))
@@ -62,7 +62,7 @@ model4 <- abclass(as.data.frame(train_x),
 expect_equal(predict(model4, as.data.frame(test_x), s = 5), pred4)
 
 ## quick tests for other options
-qset <- expand.grid(loss = c("logistic", "boost", "hinge-boost", "lum"),
+qset <- expand.grid(loss = c("logistic", "boost", "hinge.boost", "lum"),
                     penalty = c("glasso", "lasso"),
                     KEEP.OUT.ATTRS = FALSE,
                     stringsAsFactors = FALSE)
@@ -85,7 +85,7 @@ if (requireNamespace("Matrix", quietly = TRUE)) {
     expect_equal(predict(sp_model, test_x, s = 5),
                  predict(sp_model, sp_test_x, s = 5))
     ## quick tests
-    qset <- expand.grid(loss = c("logistic", "boost", "hinge-boost", "lum"),
+    qset <- expand.grid(loss = c("logistic", "boost", "hinge.boost", "lum"),
                         penalty = c("glasso", "lasso"),
                         KEEP.OUT.ATTRS = FALSE,
                         stringsAsFactors = FALSE)

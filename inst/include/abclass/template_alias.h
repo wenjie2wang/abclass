@@ -24,7 +24,12 @@
 #include "Boost.h"
 #include "HingeBoost.h"
 #include "Lum.h"
+
 #include "Mlogit.h"
+#include "LikeBoost.h"
+#include "LikeLogistic.h"
+#include "LikeHingeBoost.h"
+#include "LikeLum.h"
 
 #include "AbclassNet.h"
 #include "AbclassSCAD.h"
@@ -39,37 +44,36 @@
 
 namespace abclass
 {
-
     // Logistic
     template<typename T_x>
-    using LogisticNet = AbclassNet<Logistic, T_x>;
+    using LogitNet = AbclassNet<Logistic, T_x>;
 
     template<typename T_x>
-    using LogisticSCAD = AbclassSCAD<Logistic, T_x>;
+    using LogitSCAD = AbclassSCAD<Logistic, T_x>;
 
     template<typename T_x>
-    using LogisticMCP = AbclassMCP<Logistic, T_x>;
+    using LogitMCP = AbclassMCP<Logistic, T_x>;
 
     template<typename T_x>
-    using LogisticGroupLasso = AbclassGroupLasso<Logistic, T_x>;
+    using LogitGLasso = AbclassGroupLasso<Logistic, T_x>;
 
     template<typename T_x>
-    using LogisticGroupSCAD = AbclassGroupSCAD<Logistic, T_x>;
+    using LogitGSCAD = AbclassGroupSCAD<Logistic, T_x>;
 
     template<typename T_x>
-    using LogisticGroupMCP = AbclassGroupMCP<Logistic, T_x>;
+    using LogitGMCP = AbclassGroupMCP<Logistic, T_x>;
 
     template<typename T_x>
-    using LogisticCompMCP = AbclassCompMCP<Logistic, T_x>;
+    using LogitCMCP = AbclassCompMCP<Logistic, T_x>;
 
     template<typename T_x>
-    using LogisticGEL = AbclassGEL<Logistic, T_x>;
+    using LogitGEL = AbclassGEL<Logistic, T_x>;
 
     template<typename T_x>
-    using LogisticMellowL1 = AbclassMellowL1<Logistic, T_x>;
+    using LogitML1 = AbclassMellowL1<Logistic, T_x>;
 
     template<typename T_x>
-    using LogisticMellowMCP = AbclassMellowMCP<Logistic, T_x>;
+    using LogitMMCP = AbclassMellowMCP<Logistic, T_x>;
 
     // Boost
     template<typename T_x>
@@ -82,56 +86,56 @@ namespace abclass
     using BoostMCP = AbclassMCP<Boost, T_x>;
 
     template<typename T_x>
-    using BoostGroupLasso = AbclassGroupLasso<Boost, T_x>;
+    using BoostGLasso = AbclassGroupLasso<Boost, T_x>;
 
     template<typename T_x>
-    using BoostGroupSCAD = AbclassGroupSCAD<Boost, T_x>;
+    using BoostGSCAD = AbclassGroupSCAD<Boost, T_x>;
 
     template<typename T_x>
-    using BoostGroupMCP = AbclassGroupMCP<Boost, T_x>;
+    using BoostGMCP = AbclassGroupMCP<Boost, T_x>;
 
     template<typename T_x>
-    using BoostCompMCP = AbclassCompMCP<Boost, T_x>;
+    using BoostCMCP = AbclassCompMCP<Boost, T_x>;
 
     template<typename T_x>
     using BoostGEL = AbclassGEL<Boost, T_x>;
 
     template<typename T_x>
-    using BoostMellowL1 = AbclassMellowL1<Boost, T_x>;
+    using BoostML1 = AbclassMellowL1<Boost, T_x>;
 
     template<typename T_x>
-    using BoostMellowMCP = AbclassMellowMCP<Boost, T_x>;
+    using BoostMMCP = AbclassMellowMCP<Boost, T_x>;
 
     // HingeBoost
     template<typename T_x>
-    using HingeBoostNet = AbclassNet<HingeBoost, T_x>;
+    using HBoostNet = AbclassNet<HingeBoost, T_x>;
 
     template<typename T_x>
-    using HingeBoostSCAD = AbclassSCAD<HingeBoost, T_x>;
+    using HBoostSCAD = AbclassSCAD<HingeBoost, T_x>;
 
     template<typename T_x>
-    using HingeBoostMCP = AbclassMCP<HingeBoost, T_x>;
+    using HBoostMCP = AbclassMCP<HingeBoost, T_x>;
 
     template<typename T_x>
-    using HingeBoostGroupLasso = AbclassGroupLasso<HingeBoost, T_x>;
+    using HBoostGLasso = AbclassGroupLasso<HingeBoost, T_x>;
 
     template<typename T_x>
-    using HingeBoostGroupSCAD = AbclassGroupSCAD<HingeBoost, T_x>;
+    using HBoostGSCAD = AbclassGroupSCAD<HingeBoost, T_x>;
 
     template<typename T_x>
-    using HingeBoostGroupMCP = AbclassGroupMCP<HingeBoost, T_x>;
+    using HBoostGMCP = AbclassGroupMCP<HingeBoost, T_x>;
 
     template<typename T_x>
-    using HingeBoostCompMCP = AbclassCompMCP<HingeBoost, T_x>;
+    using HBoostCMCP = AbclassCompMCP<HingeBoost, T_x>;
 
     template<typename T_x>
-    using HingeBoostGEL = AbclassGEL<HingeBoost, T_x>;
+    using HBoostGEL = AbclassGEL<HingeBoost, T_x>;
 
     template<typename T_x>
-    using HingeBoostMellowL1 = AbclassMellowL1<HingeBoost, T_x>;
+    using HBoostML1 = AbclassMellowL1<HingeBoost, T_x>;
 
     template<typename T_x>
-    using HingeBoostMellowMCP = AbclassMellowMCP<HingeBoost, T_x>;
+    using HBoostMMCP = AbclassMellowMCP<HingeBoost, T_x>;
 
     // Lum
     template<typename T_x>
@@ -144,27 +148,27 @@ namespace abclass
     using LumMCP = AbclassMCP<Lum, T_x>;
 
     template<typename T_x>
-    using LumGroupLasso = AbclassGroupLasso<Lum, T_x>;
+    using LumGLasso = AbclassGroupLasso<Lum, T_x>;
 
     template<typename T_x>
-    using LumGroupSCAD = AbclassGroupSCAD<Lum, T_x>;
+    using LumGSCAD = AbclassGroupSCAD<Lum, T_x>;
 
     template<typename T_x>
-    using LumGroupMCP = AbclassGroupMCP<Lum, T_x>;
+    using LumGMCP = AbclassGroupMCP<Lum, T_x>;
 
     template<typename T_x>
-    using LumCompMCP = AbclassCompMCP<Lum, T_x>;
+    using LumCMCP = AbclassCompMCP<Lum, T_x>;
 
     template<typename T_x>
     using LumGEL = AbclassGEL<Lum, T_x>;
 
     template<typename T_x>
-    using LumMellowL1 = AbclassMellowL1<Lum, T_x>;
+    using LumML1 = AbclassMellowL1<Lum, T_x>;
 
     template<typename T_x>
-    using LumMellowMCP = AbclassMellowMCP<Lum, T_x>;
+    using LumMMCP = AbclassMellowMCP<Lum, T_x>;
 
-    // Mlogit
+    // Mlogit = LikeBoost
     template<typename T_x>
     using MlogitNet = AbclassNet<Mlogit, T_x>;
 
@@ -175,25 +179,149 @@ namespace abclass
     using MlogitMCP = AbclassMCP<Mlogit, T_x>;
 
     template<typename T_x>
-    using MlogitGroupLasso = AbclassGroupLasso<Mlogit, T_x>;
+    using MlogitGLasso = AbclassGroupLasso<Mlogit, T_x>;
 
     template<typename T_x>
-    using MlogitGroupSCAD = AbclassGroupSCAD<Mlogit, T_x>;
+    using MlogitGSCAD = AbclassGroupSCAD<Mlogit, T_x>;
 
     template<typename T_x>
-    using MlogitGroupMCP = AbclassGroupMCP<Mlogit, T_x>;
+    using MlogitGMCP = AbclassGroupMCP<Mlogit, T_x>;
 
     template<typename T_x>
-    using MlogitCompMCP = AbclassCompMCP<Mlogit, T_x>;
+    using MlogitCMCP = AbclassCompMCP<Mlogit, T_x>;
 
     template<typename T_x>
     using MlogitGEL = AbclassGEL<Mlogit, T_x>;
 
     template<typename T_x>
-    using MlogitMellowL1 = AbclassMellowL1<Mlogit, T_x>;
+    using MlogitML1 = AbclassMellowL1<Mlogit, T_x>;
 
     template<typename T_x>
-    using MlogitMellowMCP = AbclassMellowMCP<Mlogit, T_x>;
+    using MlogitMMCP = AbclassMellowMCP<Mlogit, T_x>;
+
+    // LikeLogistic
+    template<typename T_x>
+    using LeLogitNet = AbclassNet<LikeLogistic, T_x>;
+
+    template<typename T_x>
+    using LeLogitSCAD = AbclassSCAD<LikeLogistic, T_x>;
+
+    template<typename T_x>
+    using LeLogitMCP = AbclassMCP<LikeLogistic, T_x>;
+
+    template<typename T_x>
+    using LeLogitGLasso = AbclassGroupLasso<LikeLogistic, T_x>;
+
+    template<typename T_x>
+    using LeLogitGSCAD = AbclassGroupSCAD<LikeLogistic, T_x>;
+
+    template<typename T_x>
+    using LeLogitGMCP = AbclassGroupMCP<LikeLogistic, T_x>;
+
+    template<typename T_x>
+    using LeLogitCMCP = AbclassCompMCP<LikeLogistic, T_x>;
+
+    template<typename T_x>
+    using LeLogitGEL = AbclassGEL<LikeLogistic, T_x>;
+
+    template<typename T_x>
+    using LeLogitML1 = AbclassMellowL1<LikeLogistic, T_x>;
+
+    template<typename T_x>
+    using LeLogitMMCP = AbclassMellowMCP<LikeLogistic, T_x>;
+
+    // LikeLogistic
+    template<typename T_x>
+    using LeBoostNet = AbclassNet<LikeBoost, T_x>;
+
+    template<typename T_x>
+    using LeBoostSCAD = AbclassSCAD<LikeBoost, T_x>;
+
+    template<typename T_x>
+    using LeBoostMCP = AbclassMCP<LikeBoost, T_x>;
+
+    template<typename T_x>
+    using LeBoostGLasso = AbclassGroupLasso<LikeBoost, T_x>;
+
+    template<typename T_x>
+    using LeBoostGSCAD = AbclassGroupSCAD<LikeBoost, T_x>;
+
+    template<typename T_x>
+    using LeBoostGMCP = AbclassGroupMCP<LikeBoost, T_x>;
+
+    template<typename T_x>
+    using LeBoostCMCP = AbclassCompMCP<LikeBoost, T_x>;
+
+    template<typename T_x>
+    using LeBoostGEL = AbclassGEL<LikeBoost, T_x>;
+
+    template<typename T_x>
+    using LeBoostML1 = AbclassMellowL1<LikeBoost, T_x>;
+
+    template<typename T_x>
+    using LeBoostMMCP = AbclassMellowMCP<LikeBoost, T_x>;
+
+    // LikeHingeBoost
+    template<typename T_x>
+    using LeHBoostNet = AbclassNet<LikeHingeBoost, T_x>;
+
+    template<typename T_x>
+    using LeHBoostSCAD = AbclassSCAD<LikeHingeBoost, T_x>;
+
+    template<typename T_x>
+    using LeHBoostMCP = AbclassMCP<LikeHingeBoost, T_x>;
+
+    template<typename T_x>
+    using LeHBoostGLasso = AbclassGroupLasso<LikeHingeBoost, T_x>;
+
+    template<typename T_x>
+    using LeHBoostGSCAD = AbclassGroupSCAD<LikeHingeBoost, T_x>;
+
+    template<typename T_x>
+    using LeHBoostGMCP = AbclassGroupMCP<LikeHingeBoost, T_x>;
+
+    template<typename T_x>
+    using LeHBoostCMCP = AbclassCompMCP<LikeHingeBoost, T_x>;
+
+    template<typename T_x>
+    using LeHBoostGEL = AbclassGEL<LikeHingeBoost, T_x>;
+
+    template<typename T_x>
+    using LeHBoostML1 = AbclassMellowL1<LikeHingeBoost, T_x>;
+
+    template<typename T_x>
+    using LeHBoostMMCP = AbclassMellowMCP<LikeHingeBoost, T_x>;
+
+    // LikeLum
+    template<typename T_x>
+    using LeLumNet = AbclassNet<LikeLum, T_x>;
+
+    template<typename T_x>
+    using LeLumSCAD = AbclassSCAD<LikeLum, T_x>;
+
+    template<typename T_x>
+    using LeLumMCP = AbclassMCP<LikeLum, T_x>;
+
+    template<typename T_x>
+    using LeLumGLasso = AbclassGroupLasso<LikeLum, T_x>;
+
+    template<typename T_x>
+    using LeLumGSCAD = AbclassGroupSCAD<LikeLum, T_x>;
+
+    template<typename T_x>
+    using LeLumGMCP = AbclassGroupMCP<LikeLum, T_x>;
+
+    template<typename T_x>
+    using LeLumCMCP = AbclassCompMCP<LikeLum, T_x>;
+
+    template<typename T_x>
+    using LeLumGEL = AbclassGEL<LikeLum, T_x>;
+
+    template<typename T_x>
+    using LeLumML1 = AbclassMellowL1<LikeLum, T_x>;
+
+    template<typename T_x>
+    using LeLumMMCP = AbclassMellowMCP<LikeLum, T_x>;
 
 }  // abclass
 

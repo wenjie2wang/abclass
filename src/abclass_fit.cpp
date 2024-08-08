@@ -26,7 +26,7 @@ Rcpp::List template_abclass_fit(
     const T& x,
     const arma::uvec& y,
     const Rcpp::List& control
-)
+    )
 {
     const size_t loss_id { control["loss_id"] };
     const size_t penalty_id { control["penalty_id"] };
@@ -35,43 +35,43 @@ Rcpp::List template_abclass_fit(
         case 1: {               // logistic
             switch (penalty_id) {
                 case 1: {       // lasso
-                    abclass::LogisticNet<T> object {x, y, ctrl};
+                    abclass::LogitNet<T> object {x, y, ctrl};
                     return template_fit(object);
                 }
                 case 2: {       // scad
-                    abclass::LogisticSCAD<T> object {x, y, ctrl};
+                    abclass::LogitSCAD<T> object {x, y, ctrl};
                     return template_fit(object);
                 }
                 case 3: {       // mcp
-                    abclass::LogisticMCP<T> object {x, y, ctrl};
+                    abclass::LogitMCP<T> object {x, y, ctrl};
                     return template_fit(object);
                 }
                 case 4: {       // group lasso
-                    abclass::LogisticGroupLasso<T> object {x, y, ctrl};
+                    abclass::LogitGLasso<T> object {x, y, ctrl};
                     return template_fit(object);
                 }
                 case 5: {       // group scad
-                    abclass::LogisticGroupSCAD<T> object {x, y, ctrl};
+                    abclass::LogitGSCAD<T> object {x, y, ctrl};
                     return template_fit(object);
                 }
                 case 6: {       // group mcp
-                    abclass::LogisticGroupMCP<T> object {x, y, ctrl};
+                    abclass::LogitGMCP<T> object {x, y, ctrl};
                     return template_fit(object);
                 }
                 case 7: {       // composite mcp
-                    abclass::LogisticCompMCP<T> object {x, y, ctrl};
+                    abclass::LogitCMCP<T> object {x, y, ctrl};
                     return template_fit(object);
                 }
                 case 8: {       // gel
-                    abclass::LogisticGEL<T> object {x, y, ctrl};
+                    abclass::LogitGEL<T> object {x, y, ctrl};
                     return template_fit(object);
                 }
                 case 9: {       // mellowmax L1
-                    abclass::LogisticMellowL1<T> object {x, y, ctrl};
+                    abclass::LogitML1<T> object {x, y, ctrl};
                     return template_fit(object);
                 }
                 case 10: {      // mellowmax mcp
-                    abclass::LogisticMellowMCP<T> object {x, y, ctrl};
+                    abclass::LogitMMCP<T> object {x, y, ctrl};
                     return template_fit(object);
                 }
             }
@@ -94,22 +94,22 @@ Rcpp::List template_abclass_fit(
                     return template_fit(object);
                 }
                 case 4: {       // group lasso
-                    abclass::BoostGroupLasso<T> object {x, y, ctrl};
+                    abclass::BoostGLasso<T> object {x, y, ctrl};
                     object.loss_fun_.set_inner_min(control["boost_umin"]);
                     return template_fit(object);
                 }
                 case 5: {       // group scad
-                    abclass::BoostGroupSCAD<T> object {x, y, ctrl};
+                    abclass::BoostGSCAD<T> object {x, y, ctrl};
                     object.loss_fun_.set_inner_min(control["boost_umin"]);
                     return template_fit(object);
                 }
                 case 6: {       // group mcp
-                    abclass::BoostGroupMCP<T> object {x, y, ctrl};
+                    abclass::BoostGMCP<T> object {x, y, ctrl};
                     object.loss_fun_.set_inner_min(control["boost_umin"]);
                     return template_fit(object);
                 }
                 case 7: {       // composite mcp
-                    abclass::BoostCompMCP<T> object {x, y, ctrl};
+                    abclass::BoostCMCP<T> object {x, y, ctrl};
                     object.loss_fun_.set_inner_min(control["boost_umin"]);
                     return template_fit(object);
                 }
@@ -119,66 +119,66 @@ Rcpp::List template_abclass_fit(
                     return template_fit(object);
                 }
                 case 9: {       // mellowmax L1
-                    abclass::BoostMellowL1<T> object {x, y, ctrl};
+                    abclass::BoostML1<T> object {x, y, ctrl};
                     object.loss_fun_.set_inner_min(control["boost_umin"]);
                     return template_fit(object);
                 }
                 case 10: {       // mellowmax mcp
-                    abclass::BoostMellowMCP<T> object {x, y, ctrl};
+                    abclass::BoostMMCP<T> object {x, y, ctrl};
                     object.loss_fun_.set_inner_min(control["boost_umin"]);
                     return template_fit(object);
                 }
             }
         }
-        case 3: {               // hinge-boost
+        case 3: {               // hinge.boost
             switch (penalty_id) {
                 case 1: {       // lasso
-                    abclass::HingeBoostNet<T> object {x, y, ctrl};
+                    abclass::HBoostNet<T> object {x, y, ctrl};
                     object.loss_fun_.set_c(control["lum_c"]);
                     return template_fit(object);
                 }
                 case 2: {       // scad
-                    abclass::HingeBoostSCAD<T> object {x, y, ctrl};
+                    abclass::HBoostSCAD<T> object {x, y, ctrl};
                     object.loss_fun_.set_c(control["lum_c"]);
                     return template_fit(object);
                 }
                 case 3: {       // mcp
-                    abclass::HingeBoostMCP<T> object {x, y, ctrl};
+                    abclass::HBoostMCP<T> object {x, y, ctrl};
                     object.loss_fun_.set_c(control["lum_c"]);
                     return template_fit(object);
                 }
                 case 4: {       // group lasso
-                    abclass::HingeBoostGroupLasso<T> object {x, y, ctrl};
+                    abclass::HBoostGLasso<T> object {x, y, ctrl};
                     object.loss_fun_.set_c(control["lum_c"]);
                     return template_fit(object);
                 }
                 case 5: {       // group scad
-                    abclass::HingeBoostGroupSCAD<T> object {x, y, ctrl};
+                    abclass::HBoostGSCAD<T> object {x, y, ctrl};
                     object.loss_fun_.set_c(control["lum_c"]);
                     return template_fit(object);
                 }
                 case 6: {       // group mcp
-                    abclass::HingeBoostGroupMCP<T> object {x, y, ctrl};
+                    abclass::HBoostGMCP<T> object {x, y, ctrl};
                     object.loss_fun_.set_c(control["lum_c"]);
                     return template_fit(object);
                 }
                 case 7: {       // composite mcp
-                    abclass::HingeBoostCompMCP<T> object {x, y, ctrl};
+                    abclass::HBoostCMCP<T> object {x, y, ctrl};
                     object.loss_fun_.set_c(control["lum_c"]);
                     return template_fit(object);
                 }
                 case 8: {       // gel
-                    abclass::HingeBoostGEL<T> object {x, y, ctrl};
+                    abclass::HBoostGEL<T> object {x, y, ctrl};
                     object.loss_fun_.set_c(control["lum_c"]);
                     return template_fit(object);
                 }
                 case 9: {       // mellowmax L1
-                    abclass::HingeBoostMellowL1<T> object {x, y, ctrl};
+                    abclass::HBoostML1<T> object {x, y, ctrl};
                     object.loss_fun_.set_c(control["lum_c"]);
                     return template_fit(object);
                 }
                 case 10: {       // mellowmax mcp
-                    abclass::HingeBoostMellowMCP<T> object {x, y, ctrl};
+                    abclass::HBoostMMCP<T> object {x, y, ctrl};
                     object.loss_fun_.set_c(control["lum_c"]);
                     return template_fit(object);
                 }
@@ -202,22 +202,22 @@ Rcpp::List template_abclass_fit(
                     return template_fit(object);
                 }
                 case 4: {       // group lasso
-                    abclass::LumGroupLasso<T> object {x, y, ctrl};
+                    abclass::LumGLasso<T> object {x, y, ctrl};
                     object.loss_fun_.set_ac(control["lum_a"], control["lum_c"]);
                     return template_fit(object);
                 }
                 case 5: {       // group scad
-                    abclass::LumGroupSCAD<T> object {x, y, ctrl};
+                    abclass::LumGSCAD<T> object {x, y, ctrl};
                     object.loss_fun_.set_ac(control["lum_a"], control["lum_c"]);
                     return template_fit(object);
                 }
                 case 6: {       // group mcp
-                    abclass::LumGroupMCP<T> object {x, y, ctrl};
+                    abclass::LumGMCP<T> object {x, y, ctrl};
                     object.loss_fun_.set_ac(control["lum_a"], control["lum_c"]);
                     return template_fit(object);
                 }
                 case 7: {       // composite mcp
-                    abclass::LumCompMCP<T> object {x, y, ctrl};
+                    abclass::LumCMCP<T> object {x, y, ctrl};
                     object.loss_fun_.set_ac(control["lum_a"], control["lum_c"]);
                     return template_fit(object);
                 }
@@ -227,58 +227,314 @@ Rcpp::List template_abclass_fit(
                     return template_fit(object);
                 }
                 case 9: {       // mellowmax L1
-                    abclass::LumMellowL1<T> object {x, y, ctrl};
+                    abclass::LumML1<T> object {x, y, ctrl};
                     object.loss_fun_.set_ac(control["lum_a"], control["lum_c"]);
                     return template_fit(object);
                 }
                 case 10: {       // mellowmax mcp
-                    abclass::LumMellowMCP<T> object {x, y, ctrl};
+                    abclass::LumMMCP<T> object {x, y, ctrl};
                     object.loss_fun_.set_ac(control["lum_a"], control["lum_c"]);
                     return template_fit(object);
                 }
             }
-            case 5: {               // mlogit
-                switch (penalty_id) {
-                    case 1: {       // lasso
-                        abclass::MlogitNet<T> object {x, y, ctrl};
-                        return template_fit(object);
-                    }
-                    case 2: {       // scad
-                        abclass::MlogitSCAD<T> object {x, y, ctrl};
-                        return template_fit(object);
-                    }
-                    case 3: {       // mcp
-                        abclass::MlogitMCP<T> object {x, y, ctrl};
-                        return template_fit(object);
-                    }
-                    case 4: {       // group lasso
-                        abclass::MlogitGroupLasso<T> object {x, y, ctrl};
-                        return template_fit(object);
-                    }
-                    case 5: {       // group scad
-                        abclass::MlogitGroupSCAD<T> object {x, y, ctrl};
-                        return template_fit(object);
-                    }
-                    case 6: {       // group mcp
-                        abclass::MlogitGroupMCP<T> object {x, y, ctrl};
-                        return template_fit(object);
-                    }
-                    case 7: {       // composite mcp
-                        abclass::MlogitCompMCP<T> object {x, y, ctrl};
-                        return template_fit(object);
-                    }
-                    case 8: {       // gel
-                        abclass::MlogitGEL<T> object {x, y, ctrl};
-                        return template_fit(object);
-                    }
-                    case 9: {       // mellowmax L1
-                        abclass::MlogitMellowL1<T> object {x, y, ctrl};
-                        return template_fit(object);
-                    }
-                    case 10: {      // mellowmax mcp
-                        abclass::MlogitMellowMCP<T> object {x, y, ctrl};
-                        return template_fit(object);
-                    }
+        }
+        case 5: {               // mlogit
+            switch (penalty_id) {
+                case 1: {       // lasso
+                    abclass::MlogitNet<T> object {x, y, ctrl};
+                    return template_fit(object);
+                }
+                case 2: {       // scad
+                    abclass::MlogitSCAD<T> object {x, y, ctrl};
+                    return template_fit(object);
+                }
+                case 3: {       // mcp
+                    abclass::MlogitMCP<T> object {x, y, ctrl};
+                    return template_fit(object);
+                }
+                case 4: {       // group lasso
+                    abclass::MlogitGLasso<T> object {x, y, ctrl};
+                    return template_fit(object);
+                }
+                case 5: {       // group scad
+                    abclass::MlogitGSCAD<T> object {x, y, ctrl};
+                    return template_fit(object);
+                }
+                case 6: {       // group mcp
+                    abclass::MlogitGMCP<T> object {x, y, ctrl};
+                    return template_fit(object);
+                }
+                case 7: {       // composite mcp
+                    abclass::MlogitCMCP<T> object {x, y, ctrl};
+                    return template_fit(object);
+                }
+                case 8: {       // gel
+                    abclass::MlogitGEL<T> object {x, y, ctrl};
+                    return template_fit(object);
+                }
+                case 9: {       // mellowmax L1
+                    abclass::MlogitML1<T> object {x, y, ctrl};
+                    return template_fit(object);
+                }
+                case 10: {      // mellowmax mcp
+                    abclass::MlogitMMCP<T> object {x, y, ctrl};
+                    return template_fit(object);
+                }
+            }
+        }
+        case 6: {               // LikeLogistic
+            switch (penalty_id) {
+                case 1: {       // lasso
+                    abclass::LeLogitNet<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+                case 2: {       // scad
+                    abclass::LeLogitSCAD<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+                case 3: {       // mcp
+                    abclass::LeLogitMCP<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+                case 4: {       // group lasso
+                    abclass::LeLogitGLasso<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+                case 5: {       // group scad
+                    abclass::LeLogitGSCAD<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+                case 6: {       // group mcp
+                    abclass::LeLogitGMCP<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+                case 7: {       // composite mcp
+                    abclass::LeLogitCMCP<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+                case 8: {       // gel
+                    abclass::LeLogitGEL<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+                case 9: {       // mellowmax L1
+                    abclass::LeLogitML1<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+                case 10: {      // mellowmax mcp
+                    abclass::LeLogitMMCP<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+            }
+        }
+        case 7: {               // LikeBoost
+            switch (penalty_id) {
+                case 1: {       // lasso
+                    abclass::LeBoostNet<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+                case 2: {       // scad
+                    abclass::LeBoostSCAD<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+                case 3: {       // mcp
+                    abclass::LeBoostMCP<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+                case 4: {       // group lasso
+                    abclass::LeBoostGLasso<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+                case 5: {       // group scad
+                    abclass::LeBoostGSCAD<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+                case 6: {       // group mcp
+                    abclass::LeBoostGMCP<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+                case 7: {       // composite mcp
+                    abclass::LeBoostCMCP<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+                case 8: {       // gel
+                    abclass::LeBoostGEL<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+                case 9: {       // mellowmax L1
+                    abclass::LeBoostML1<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+                case 10: {      // mellowmax mcp
+                    abclass::LeBoostMMCP<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+            }
+        }
+        case 8: {               // LikeHingeBoost
+            switch (penalty_id) {
+                case 1: {       // lasso
+                    abclass::LeHBoostNet<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+                case 2: {       // scad
+                    abclass::LeHBoostSCAD<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+                case 3: {       // mcp
+                    abclass::LeHBoostMCP<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+                case 4: {       // group lasso
+                    abclass::LeHBoostGLasso<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+                case 5: {       // group scad
+                    abclass::LeHBoostGSCAD<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+                case 6: {       // group mcp
+                    abclass::LeHBoostGMCP<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+                case 7: {       // composite mcp
+                    abclass::LeHBoostCMCP<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+                case 8: {       // gel
+                    abclass::LeHBoostGEL<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+                case 9: {       // mellowmax L1
+                    abclass::LeHBoostML1<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+                case 10: {      // mellowmax mcp
+                    abclass::LeHBoostMMCP<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+            }
+        }
+        case 9: {               // LikeLum
+            switch (penalty_id) {
+                case 1: {       // lasso
+                    abclass::LeLumNet<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+                case 2: {       // scad
+                    abclass::LeLumSCAD<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+                case 3: {       // mcp
+                    abclass::LeLumMCP<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+                case 4: {       // group lasso
+                    abclass::LeLumGLasso<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+                case 5: {       // group scad
+                    abclass::LeLumGSCAD<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+                case 6: {       // group mcp
+                    abclass::LeLumGMCP<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+                case 7: {       // composite mcp
+                    abclass::LeLumCMCP<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+                case 8: {       // gel
+                    abclass::LeLumGEL<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+                case 9: {       // mellowmax L1
+                    abclass::LeLumML1<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
+                }
+                case 10: {      // mellowmax mcp
+                    abclass::LeLumMMCP<T> object {
+                        x, y, ctrl
+                    };
+                    return template_fit(object);
                 }
             }
         }
@@ -294,7 +550,7 @@ Rcpp::List rcpp_abclass_fit(
     const arma::mat& x,
     const arma::uvec& y,
     const Rcpp::List& control
-)
+    )
 {
     return template_abclass_fit<arma::mat>(x, y, control);
 }
@@ -304,7 +560,7 @@ Rcpp::List rcpp_abclass_fit_sp(
     const arma::sp_mat& x,
     const arma::uvec& y,
     const Rcpp::List& control
-)
+    )
 {
     return template_abclass_fit<arma::sp_mat>(x, y, control);
 }

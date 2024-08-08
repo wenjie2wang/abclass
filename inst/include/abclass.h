@@ -38,6 +38,10 @@
 #include "abclass/HingeBoost.h"
 #include "abclass/Lum.h"
 #include "abclass/Mlogit.h"
+#include "abclass/LikeBoost.h"
+#include "abclass/LikeLogistic.h"
+#include "abclass/LikeHingeBoost.h"
+#include "abclass/LikeLum.h"
 
 // penalties
 #include "abclass/AbclassNet.h"

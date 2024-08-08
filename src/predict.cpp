@@ -60,6 +60,30 @@ arma::mat predict_prob(const T_x& x,
             object.set_intercept(beta.n_rows > x.n_cols);
             return object.predict_prob(beta, x, offset);
         }
+        case 6:
+        {
+            abclass::AbclassLinear<abclass::LikeLogistic, T_x> object { k };
+            object.set_intercept(beta.n_rows > x.n_cols);
+            return object.predict_prob(beta, x, offset);
+        }
+        case 7:
+        {
+            abclass::AbclassLinear<abclass::LikeBoost, T_x> object { k };
+            object.set_intercept(beta.n_rows > x.n_cols);
+            return object.predict_prob(beta, x, offset);
+        }
+        case 8:
+        {
+            abclass::AbclassLinear<abclass::LikeHingeBoost, T_x> object { k };
+            object.set_intercept(beta.n_rows > x.n_cols);
+            return object.predict_prob(beta, x, offset);
+        }
+        case 9:
+        {
+            abclass::AbclassLinear<abclass::LikeLum, T_x> object { k };
+            object.set_intercept(beta.n_rows > x.n_cols);
+            return object.predict_prob(beta, x, offset);
+        }
         default:
             break;
     }
@@ -101,6 +125,30 @@ arma::uvec predict_y(const T_x& x,
         case 5:
         {
             abclass::AbclassLinear<abclass::Mlogit, T_x> object { k };
+            object.set_intercept(beta.n_rows > x.n_cols);
+            return object.predict_y(beta, x, offset);
+        }
+        case 6:
+        {
+            abclass::AbclassLinear<abclass::LikeLogistic, T_x> object { k };
+            object.set_intercept(beta.n_rows > x.n_cols);
+            return object.predict_y(beta, x, offset);
+        }
+        case 7:
+        {
+            abclass::AbclassLinear<abclass::LikeBoost, T_x> object { k };
+            object.set_intercept(beta.n_rows > x.n_cols);
+            return object.predict_y(beta, x, offset);
+        }
+        case 8:
+        {
+            abclass::AbclassLinear<abclass::LikeHingeBoost, T_x> object { k };
+            object.set_intercept(beta.n_rows > x.n_cols);
+            return object.predict_y(beta, x, offset);
+        }
+        case 9:
+        {
+            abclass::AbclassLinear<abclass::LikeLum, T_x> object { k };
             object.set_intercept(beta.n_rows > x.n_cols);
             return object.predict_y(beta, x, offset);
         }

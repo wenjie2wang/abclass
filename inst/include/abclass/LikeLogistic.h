@@ -15,42 +15,38 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //
 
-#ifndef ABCLASS_LOGISTIC_H
-#define ABCLASS_LOGISTIC_H
+#ifndef ABCLASS_LIKELOGISTIC_H
+#define ABCLASS_LIKELOGISTIC_H
 
 #include <RcppArmadillo.h>
-#include "MarginLoss.h"
+#include "LikeBoost.h"
 
 namespace abclass
 {
 
-    class Logistic : public MarginLoss
+    class LikeLogistic : public LikeBoost
     {
     public:
-        using MarginLoss::loss;
+        LikeLogistic(){}
 
-        Logistic() {}
-
-        // loss function
-        inline double loss(const double u) const override
+        inline double neg_inv_d1loss(const double u) const override
         {
-            return std::log(1.0 + std::exp(- u));
+            // - 1 / l'(u)
+            return 1.0 + std::exp(u);
         }
-
-        // the first derivative of the loss function
-        inline double dloss_du(const double u) const override
+        inline double neg_d2_over_d1(const double u) const override
         {
-            return - 1.0 / (1.0 + std::exp(u));
+            // - l''(u) / l'(u)
+            return 1.0 / (1.0 + std::exp(- u));
         }
-
-        // MM lowerbound factor
-        inline double mm_lowerbound() const
+        inline double d2_over_d1s(const double u) const override
         {
-            return 0.25;
+            // l''(u) / (l'(u) ^ 2)
+            return std::exp(u);
         }
 
     };
 
 }  // abclass
 
-#endif /* ABCLASS_LOGISTIC_H */
+#endif /* ABCLASS_LIKELOGISTIC_H */

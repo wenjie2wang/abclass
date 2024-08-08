@@ -15,18 +15,18 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //
 
-#ifndef ABCLASS_LUM_H
-#define ABCLASS_LUM_H
+#ifndef ABCLASS_LIKELUM_H
+#define ABCLASS_LIKELUM_H
 
 #include <RcppArmadillo.h>
 #include <stdexcept>
-#include "MarginLoss.h"
 #include "utils.h"
+#include "LikeBoost.h"
 
 namespace abclass
 {
 
-    class Lum : public MarginLoss
+    class LikeLum : public LikeBoost
     {
     private:
         // cache
@@ -46,45 +46,18 @@ namespace abclass
         double lum_a_ { 1.0 };  // a
 
     public:
-        using MarginLoss::loss;
-
-        Lum()
+        LikeLum()
         {
             set_ac(1.0, 0.0);
         }
 
-        Lum(const double a, const double c)
+        explicit LikeLum(const double a, const double c)
         {
-            set_ac(a, c);
+            set_ac(1.0, 0.0);
         }
 
-        // loss function
-        inline double loss(const double u) const override
-        {
-            if (u < lum_c_cp1_) {
-                return 1.0 - u;
-            }
-            return std::exp(lum_loss_const_ -
-                            lum_a_ * std::log(lum_cp1_ * u + lum_amc_));
-        }
-
-        // the first derivative of the loss function
-        inline double dloss_du(const double u) const override
-        {
-            if (u < lum_c_cp1_) {
-                return - 1.0;
-            }
-            return - std::exp(lum_d1_const_ -
-                              lum_ap1_ * std::log(lum_cp1_ * u + lum_amc_));
-        }
-
-        // MM lowerbound factor
-        inline double mm_lowerbound() const
-        {
-            return lum_mm_;
-        }
-
-        inline Lum* set_ac(const double lum_a, const double lum_c)
+        // setter
+        inline LikeLum* set_ac(const double lum_a, const double lum_c)
         {
             if (is_le(lum_a, 0.0)) {
                 throw std::range_error("The LUM 'a' must be positive.");
@@ -107,9 +80,36 @@ namespace abclass
             return this;
         }
 
-    };
+        inline double neg_inv_d1loss(const double u) const override
+        {
+            // - 1 / l'(u)
+            if (u < lum_c_cp1_) {
+                return 1.0;
+            }
+            return std::exp(- lum_d1_const_ +
+                            lum_ap1_ * std::log(lum_cp1_ * u + lum_amc_));
+        }
+        inline double neg_d2_over_d1(const double u) const override
+        {
+            // - l''(u) / l'(u)
+            if (u < lum_c_cp1_) {
+                return 0.0;
+            }
+            return lum_ap1_  / (u + lum_amc_ / lum_cp1_);
+        }
+        inline double d2_over_d1s(const double u) const override
+        {
+            // l''(u) / (l'(u) ^ 2)
+            if (u < lum_c_cp1_) {
+                return 0.0;
+            }
+            return lum_ap1_  / (u + lum_amc_ / lum_cp1_) *
+                std::exp(- lum_d1_const_ +
+                         lum_ap1_ * std::log(lum_cp1_ * u + lum_amc_));
+        }
 
+    };
 
 }  // abclass
 
-#endif /* ABCLASS_LUM_H */
+#endif /* ABCLASS_LIKELUM_H */

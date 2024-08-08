@@ -19,11 +19,8 @@
 #define ABCLASS_BOOST_H
 
 #include <RcppArmadillo.h>
-
 #include <stdexcept>
-
 #include "MarginLoss.h"
-#include "Simplex.h"
 #include "utils.h"
 
 namespace abclass
