@@ -33,7 +33,7 @@
 abclass_propscore <- function(x,
                               treatment,
                               loss = c("logistic", "boost",
-                                       "hinge-boost", "lum"),
+                                       "hinge.boost", "lum"),
                               penalty = c(
                                   "glasso", "gscad", "gmcp",
                                   "lasso", "scad", "mcp",

@@ -32,7 +32,7 @@
 ##' @param loss A character value specifying the loss function.  The available
 ##'     options are \code{"logistic"} for the logistic deviance loss,
 ##'     \code{"boost"} for the exponential loss approximating Boosting machines,
-##'     \code{"hinge-boost"} for hybrid of SVM and AdaBoost machine, and
+##'     \code{"hinge.boost"} for hybrid of SVM and AdaBoost machine, and
 ##'     \code{"lum"} for largin-margin unified machines (LUM).  See Liu, et
 ##'     al. (2011) for details.
 ##' @param penalty A character vector specifying the name of the penalty.
@@ -65,7 +65,7 @@
 ##'
 ##' @export
 abclass <- function(x, y,
-                    loss = c("logistic", "boost", "hinge-boost", "lum"),
+                    loss = c("logistic", "boost", "hinge.boost", "lum"),
                     penalty = c("glasso", "lasso"),
                     weights = NULL,
                     offset = NULL,
@@ -105,7 +105,7 @@ abclass <- function(x, y,
 ##'     \emph{a} in LUM, which will be used only if \code{loss = "lum"}.  The
 ##'     default value is \code{1.0}.
 ##' @param lum_c A nonnegative number specifying the parameter \emph{c} in LUM,
-##'     which will be used only if \code{loss = "hinge-boost"} or \code{loss =
+##'     which will be used only if \code{loss = "hinge.boost"} or \code{loss =
 ##'     "lum"}.  The default value is \code{1.0}.
 ##' @param boost_umin A negative number for adjusting the boosting loss for the
 ##'     internal majorization procedure.

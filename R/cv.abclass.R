@@ -46,7 +46,7 @@
 ##'
 ##' @export
 cv.abclass <- function(x, y,
-                       loss = c("logistic", "boost", "hinge-boost", "lum"),
+                       loss = c("logistic", "boost", "hinge.boost", "lum"),
                        penalty = c("glasso", "lasso"),
                        weights = NULL,
                        offset = NULL,

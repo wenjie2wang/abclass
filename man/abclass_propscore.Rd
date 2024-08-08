@@ -7,7 +7,7 @@
 abclass_propscore(
   x,
   treatment,
-  loss = c("logistic", "boost", "hinge-boost", "lum"),
+  loss = c("logistic", "boost", "hinge.boost", "lum"),
   penalty = c("glasso", "gscad", "gmcp", "lasso", "scad", "mcp", "cmcp", "gel",
     "mellowmax", "mellowmcp"),
   weights = NULL,
@@ -31,7 +31,7 @@ integer, numeric, or factor vector.}
 \item{loss}{A character value specifying the loss function.  The available
 options are \code{"logistic"} for the logistic deviance loss,
 \code{"boost"} for the exponential loss approximating Boosting machines,
-\code{"hinge-boost"} for hybrid of SVM and AdaBoost machine, and
+\code{"hinge.boost"} for hybrid of SVM and AdaBoost machine, and
 \code{"lum"} for largin-margin unified machines (LUM).  See Liu, et
 al. (2011) for details.}
 
