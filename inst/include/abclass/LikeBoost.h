@@ -46,6 +46,12 @@ namespace abclass
             return std::exp(u);
         }
 
+        // MM lowerbound factor
+        inline virtual double mm_lowerbound(const double dk) const
+        {
+            return 1.0 / dk;
+        }
+
         // loss function with observational weights
         inline double loss(const arma::mat& pred_f0,
                            const arma::vec& obs_weight,
@@ -161,12 +167,6 @@ namespace abclass
             arma::vec dvec { dloss_df(data, obs_weight, k) };
             dvec %= data.x_.col(g);
             return dvec;
-        }
-
-        // MM lowerbound factor
-        inline double mm_lowerbound(const double dk) const
-        {
-            return 1.0 / dk;
         }
 
     };                          // end of class

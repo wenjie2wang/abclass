@@ -108,6 +108,12 @@ namespace abclass
                          lum_ap1_ * std::log(lum_cp1_ * u + lum_amc_));
         }
 
+        // MM lowerbound factor
+        inline double mm_lowerbound(const double dk) const override
+        {
+            return lum_ap1_ * lum_cp1_ / lum_a_;
+        }
+
     };
 
 }  // abclass

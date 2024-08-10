@@ -84,6 +84,12 @@ namespace abclass
             return lum_cp1_ * std::exp(lum_cp1_ * u - lum_c_);
         }
 
+        // MM lowerbound factor
+        inline double mm_lowerbound(const double dk) const override
+        {
+            return lum_cp1_;
+        }
+
     };
 
 }  // abclass
