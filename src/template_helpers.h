@@ -115,7 +115,8 @@ inline abclass::Control abclass_control(const Rcpp::List& control)
         reg_path(control["nlambda"],
                  control["lambda_min_ratio"],
                  control["penalty_factor"],
-                 control["varying_active_set"])->
+                 control["varying_active_set"],
+                 control["adjust_mm"])->
         reg_lambda(control["lambda"])->
         reg_ridge(control["alpha"],
                   control["lambda_max_alpha_min"])->

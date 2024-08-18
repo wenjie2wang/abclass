@@ -487,17 +487,25 @@ namespace abclass
                                          verbose);
                     ++num_iter;
                     // optional: throw warning if objective function increases
-                    if (verbose > 1) {
+                    if (verbose > 1 || control_.adjust_mm_) {
                         double loss1 { iter_loss() };
                         double pen1 { regularization(beta, l1_lambda, l2_lambda) };
                         double obj1 { loss1 * data_.div_n_obs_ + pen1 };
-                        Rcpp::Rcout << "The objective function changed\n";
-                        Rprintf("  from %7.7f (iter_loss: %7.7f + penalty: %7.7f)\n",
-                                last_obj_, last_loss_ * data_.div_n_obs_, last_penalty_);
-                        Rprintf("    to %7.7f (iter_loss: %7.7f + penalty: %7.7f)\n",
-                                obj1, loss1 * data_.div_n_obs_, pen1);
+                        if (verbose > 1) {
+                            Rcpp::Rcout << "The objective function changed\n";
+                            Rprintf("  from %7.7f (iter_loss: %7.7f + penalty: %7.7f)\n",
+                                    last_obj_, last_loss_ * data_.div_n_obs_, last_penalty_);
+                            Rprintf("    to %7.7f (iter_loss: %7.7f + penalty: %7.7f)\n",
+                                    obj1, loss1 * data_.div_n_obs_, pen1);
+                        }
                         if (last_obj_ < obj1) {
-                            Rcpp::Rcout << "Notice: the objective increased.\n";
+                            if (verbose > 1) {
+                                Rcpp::Rcout << "Notice: the objective increased.\n";
+                            }
+                            if (control_.adjust_mm_) {
+                                mm_lowerbound0_ = mm_lowerbound0_ * 2.0;
+                                mm_lowerbound_ = mm_lowerbound_ * 2.0;
+                            }
                         }
                         last_loss_ = loss1;
                         last_obj_ = obj1;
@@ -547,19 +555,27 @@ namespace abclass
                                      verbose);
                 ++num_iter;
                 // optional: throw warning if objective function increases
-                if (verbose > 1) {
+                if (verbose > 1 || control_.adjust_mm_) {
                     double loss1 { iter_loss() };
                     double pen1 { regularization(beta, l1_lambda, l2_lambda) };
                     double obj1 { loss1 * data_.div_n_obs_ + pen1 };
-                    Rcpp::Rcout << "The objective function changed\n";
-                    Rprintf("  from %7.7f (iter_loss: %7.7f + penalty: %7.7f)\n",
-                            last_obj_, last_loss_ * data_.div_n_obs_, last_penalty_);
-                    Rprintf("    to %7.7f (iter_loss: %7.7f + penalty: %7.7f)\n",
-                            obj1, loss1 * data_.div_n_obs_, pen1);
+                    if (verbose > 1) {
+                        Rcpp::Rcout << "The objective function changed\n";
+                        Rprintf("  from %7.7f (iter_loss: %7.7f + penalty: %7.7f)\n",
+                                last_obj_, last_loss_ * data_.div_n_obs_, last_penalty_);
+                        Rprintf("    to %7.7f (iter_loss: %7.7f + penalty: %7.7f)\n",
+                                obj1, loss1 * data_.div_n_obs_, pen1);
+                    }
                     if (last_obj_ < obj1) {
-                        Rcpp::Rcout << "Warning: "
-                                    << "the function objective "
-                                    << "somehow increased.\n";
+                        if (verbose > 1) {
+                            Rcpp::Rcout << "Warning: "
+                                        << "the function objective "
+                                        << "somehow increased.\n";
+                        }
+                        if (control_.adjust_mm_) {
+                            mm_lowerbound0_ = mm_lowerbound0_ * 2.0;
+                            mm_lowerbound_ = mm_lowerbound_ * 2.0;
+                        }
                     }
                     last_loss_ = loss1;
                     last_obj_ = obj1;

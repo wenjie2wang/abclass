@@ -34,6 +34,7 @@ abclass.control(
   maxit = 100000L,
   standardize = TRUE,
   varying_active_set = TRUE,
+  adjust_mm = FALSE,
   save_call = FALSE,
   verbose = 0L
 )
@@ -136,6 +137,10 @@ original scale.}
 should be updated after each cycle of coordinate-descent algorithm.  The
 default value is \code{TRUE} for usually more efficient estimation
 procedure.}
+
+\item{adjust_mm}{An experimental logical value specifying if the estimation
+procedure should track loss function and adjust the MM lowerbound if
+needed.}
 
 \item{save_call}{A logical value indicating if the function call of the
 model fitting should be saved.  If \code{TRUE}, the function call will

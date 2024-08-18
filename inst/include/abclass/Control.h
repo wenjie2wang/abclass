@@ -73,6 +73,8 @@ namespace abclass
         unsigned int max_iter_ { 10000 };  // maximum number of iterations
         double epsilon_ { 1e-7 };          // tolerance to check convergence
         bool varying_active_set_ { true }; // if active set should be adaptive
+        // monitor convergecen and adjust mm lowerbound if needed
+        bool adjust_mm_ { false };
         bool standardize_ { true };        // is x_ standardized (column-wise)
         unsigned int verbose_ { 0 };
 
@@ -144,7 +146,8 @@ namespace abclass
         inline Control* reg_path(const unsigned int nlambda,
                                  const double lambda_min_ratio,
                                  const arma::vec& penalty_factor = arma::vec(),
-                                 const bool varying_active_set = true)
+                                 const bool varying_active_set = true,
+                                 const bool adjust_mm = false)
         {
             if (is_le(lambda_min_ratio, 0.0)) {
                 throw std::range_error(
@@ -154,6 +157,7 @@ namespace abclass
             nlambda_ = nlambda;
             penalty_factor_ = penalty_factor;
             varying_active_set_ = varying_active_set;
+            adjust_mm_ = adjust_mm;
             return this;
         }
         inline Control* reg_lambda(const arma::vec& lambda = arma::vec())
