@@ -100,7 +100,10 @@ namespace abclass
             const double u_g1 { std::abs(u_g) };
             if (u_g1 >= control_.ncv_gamma_ * l1_lambda_g * m_gp) {
                 // zero derivative from the penalty function
-                beta(g1, k) = u_g / m_gp;
+                beta(g1, k) = std::max(
+                    control_.lower_limit_(g, k),
+                    std::min(control_.upper_limit_(g, k),
+                             u_g / m_gp));
             } else if (u_g1 > (m_gp + 1.0) * l1_lambda_g) {
                 // core part
                 const double tmp {
@@ -109,13 +112,19 @@ namespace abclass
                 };
                 const double numer { tmp * sign(u_g) };
                 const double denom { (control_.ncv_gamma_ - 1.0) * m_gp - 1.0 };
-                beta(g1, k) = numer / denom;
+                beta(g1, k) = std::max(
+                    control_.lower_limit_(g, k),
+                    std::min(control_.upper_limit_(g, k),
+                             numer / denom));
             } else {
                 // lasso part
                 const double tmp { u_g1 - l1_lambda_g };
                 const double numer { tmp * sign(u_g) };
                 if (tmp > 0.0) {
-                    beta(g1, k) = numer / m_gp;
+                    beta(g1, k) = std::max(
+                        control_.lower_limit_(g, k),
+                        std::min(control_.upper_limit_(g, k),
+                                 numer / m_gp));
                 } else {
                     beta(g1, k) = 0.0;
                 }

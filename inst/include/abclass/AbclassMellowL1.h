@@ -115,7 +115,10 @@ namespace abclass
                     l1_lambda_g0 * mlm_d2k
                 };
                 // update beta
-                beta(g1, k) = numer / denom;
+                beta(g1, k) = std::max(
+                    control_.lower_limit_(g, k),
+                    std::min(control_.upper_limit_(g, k),
+                             numer / denom));
             }
             // update pred_f and inner
             const double delta_beta { beta(g1, k) - old_beta_g1k };

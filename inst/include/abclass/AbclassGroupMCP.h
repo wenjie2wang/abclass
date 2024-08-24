@@ -94,12 +94,18 @@ namespace abclass
                 if (tmp >= 0.0) {
                     const double igamma_g { 1.0 / control_.ncv_gamma_ / m_g };
                     const double rhs { tmp / (m_g_ratio - igamma_g) };
-                    beta.row(g1) = rhs * z_g;
+                    beta.row(g1) = arma::max(
+                        control_.lower_limit_.row(g),
+                        arma::min(control_.upper_limit_.row(g),
+                                  rhs * z_g));
                 } else {
                     beta.row(g1).zeros();
                 }
             } else {
-                beta.row(g1) = z_g / m_g_ratio;
+                beta.row(g1) = arma::max(
+                    control_.lower_limit_.row(g),
+                    arma::min(control_.upper_limit_.row(g),
+                              z_g / m_g_ratio));
             }
             // update pred_f and inner
             const arma::rowvec delta_beta { beta.row(g1) - old_beta_g1 };

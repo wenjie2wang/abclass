@@ -30,6 +30,8 @@ abclass.control(
   ncv_kappa = 0.1,
   gel_tau = 0.33,
   mellowmax_omega = 1,
+  lower_limit = -Inf,
+  upper_limit = Inf,
   epsilon = 1e-07,
   maxit = 100000L,
   standardize = TRUE,
@@ -121,6 +123,9 @@ reciprocal gamma parameter for group SCAD or group MCP.  A close-to-zero
 \item{gel_tau}{A positive parameter tau for group exponential lasso penalty.}
 
 \item{mellowmax_omega}{A positive parameter omega for Mellowmax penalty.}
+
+\item{lower_limit, upper_limit}{Numeric matrices representing the desired
+lower and upper limits for the coefficient estimates, respectively.}
 
 \item{epsilon}{A positive number specifying the relative tolerance that
 determines convergence.}

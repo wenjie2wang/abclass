@@ -148,7 +148,10 @@ namespace abclass
                     mm_lowerbound_(g) + l2_lambda + outer_dpen2
                 };
                 // update beta
-                beta(g1, k) = numer / denom;
+                beta(g1, k) = std::max(
+                    control_.lower_limit_(g, k),
+                    std::min(control_.upper_limit_(g, k),
+                             numer / denom));
             }
             // update pred_f and inner
             const double delta_beta { beta(g1, k) - old_beta_g1k };

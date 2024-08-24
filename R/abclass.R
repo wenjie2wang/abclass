@@ -138,9 +138,11 @@ abclass <- function(x, y,
 ##'     \code{ncv_kappa} would give a solution close to lasso solution.
 ##' @param gel_tau A positive parameter tau for group exponential lasso penalty.
 ##' @param mellowmax_omega A positive parameter omega for Mellowmax penalty.
-##' @param maxit A positive integer specifying the maximum number of iteration.
+##' @param lower_limit,upper_limit Numeric matrices representing the desired
+##'     lower and upper limits for the coefficient estimates, respectively.
 ##' @param epsilon A positive number specifying the relative tolerance that
 ##'     determines convergence.
+##' @param maxit A positive integer specifying the maximum number of iteration.
 ##' @param standardize A logical value indicating if each column of the design
 ##'     matrix should be standardized internally to have mean zero and standard
 ##'     deviation equal to the sample size.  The default value is \code{TRUE}.
@@ -177,6 +179,9 @@ abclass.control <- function(## loss
                             ncv_kappa = 0.1,
                             gel_tau = 0.33,
                             mellowmax_omega = 1,
+                            ## coef
+                            lower_limit = - Inf,
+                            upper_limit = Inf,
                             ## optim
                             epsilon = 1e-7,
                             maxit = 1e5L,
@@ -201,6 +206,8 @@ abclass.control <- function(## loss
         ncv_kappa = ncv_kappa,
         gel_tau = gel_tau,
         mellowmax_omega = mellowmax_omega,
+        lower_limit = as.matrix(lower_limit),
+        upper_limit = as.matrix(upper_limit),
         epsilon = epsilon,
         maxit = as.integer(maxit),
         standardize = standardize,

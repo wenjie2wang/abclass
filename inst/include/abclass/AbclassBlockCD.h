@@ -150,7 +150,10 @@ namespace abclass
             const arma::rowvec z_mg { ug + mg * beta.row(g1) };
             const double pos_part { 1.0 - l1_lambda_g / l2_norm(z_mg) };
             if (pos_part > 0.0) {
-                beta.row(g1) = z_mg * (pos_part / (mg + l2_lambda));
+                beta.row(g1) = arma::max(
+                    control_.lower_limit_.row(g),
+                    arma::min(control_.upper_limit_.row(g),
+                              z_mg * (pos_part / (mg + l2_lambda))));
             } else {
                 beta.row(g1).zeros();
             }

@@ -111,6 +111,8 @@ inline abclass::Control abclass_control(const Rcpp::List& control)
     ctrl.set_intercept(control["intercept"])->
         set_weight(control["weights"])->
         set_offset(control["offset"])->
+        set_lower_limit(control["lower_limit"])->
+        set_upper_limit(control["upper_limit"])->
         set_owl_reward(control["owl_reward"])->
         reg_path(control["nlambda"],
                  control["lambda_min_ratio"],

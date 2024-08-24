@@ -37,11 +37,15 @@ namespace abclass
         bool has_offset_ { false };        // to avoid some computation
         arma::mat offset_ { arma::mat() }; // for the decision functions
 
+        // lower/upper limits for coefficients in linear learning
+        arma::mat lower_limit_ { arma::mat() };
+        arma::mat upper_limit_ { arma::mat() };
+
         // reward for the outcome-weighted learning
         arma::vec owl_reward_ { arma::vec() };
 
         // regularization
-        //   did user specified a customized lambda sequence?
+        //   true if user specified a customized lambda sequence
         bool custom_lambda_ { false };
         arma::vec lambda_  { arma::vec() };
         unsigned int nlambda_ { 20 };
@@ -119,6 +123,18 @@ namespace abclass
             if (offset_.n_elem > 0) {
                 has_offset_ = true;
             }
+            return this;
+        }
+        template <typename T=arma::mat>
+        inline Control* set_lower_limit(const T& lower_limit)
+        {
+            lower_limit_ = arma::mat(lower_limit);
+            return this;
+        }
+        template <typename T=arma::mat>
+        inline Control* set_upper_limit(const T& upper_limit)
+        {
+            upper_limit_ = arma::mat(upper_limit);
             return this;
         }
         inline Control* set_standardize(const bool standardize)

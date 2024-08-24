@@ -102,11 +102,17 @@ namespace abclass
                 const double denom { (control_.ncv_gamma_ - 1.0) * m_gp - 1.0 };
                 const double tmp { numer / denom *
                     (1.0 - control_.ncv_gamma_ * l1_lambda_g / numer / z_g2) };
-                beta.row(g1) = tmp * z_g;
+                beta.row(g1) = arma::max(
+                    control_.lower_limit_.row(g),
+                    arma::min(control_.upper_limit_.row(g),
+                              tmp * z_g));
             } else {
                 const double tmp { 1.0 - l1_lambda_g / m_g / z_g2 };
                 if (tmp > 0.0) {
-                    beta.row(g1) = tmp * z_g / m_g_ratio;
+                    beta.row(g1) = arma::max(
+                        control_.lower_limit_.row(g),
+                        arma::min(control_.upper_limit_.row(g),
+                                  tmp * z_g / m_g_ratio));
                 } else {
                     beta.row(g1).zeros();
                 }

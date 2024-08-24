@@ -37,6 +37,8 @@ namespace abclass {
         const bool standardize0 { obj.control_.standardize_ };
         const arma::rowvec x_center0 { obj.data_.x_center_ },
             x_scale0 { obj.data_.x_scale_ };
+        const arma::mat lower_limit0 { obj.control_.lower_limit_ };
+        const arma::mat upper_limit0 { obj.control_.upper_limit_ };
         // 1. set standardize to false to avoid unnessary rescale
         //    as 1) the location/scale do not depend on permutation
         //       2) regardless of standaridze, rescale does nothing
@@ -60,6 +62,12 @@ namespace abclass {
             x_perm = arma::join_rows(x0.cols(obj.et_vs_), std::move(x_perm));
             obj.control_.penalty_factor_ = arma::join_cols(
                 obj.control_.penalty_factor_.elem(obj.et_vs_), gw0);
+            obj.control_.lower_limit_ = arma::join_cols(
+                obj.control_.lower_limit_.rows(obj.et_vs_),
+                lower_limit0);
+            obj.control_.upper_limit_ = arma::join_cols(
+                obj.control_.upper_limit_.rows(obj.et_vs_),
+                upper_limit0);
             obj.set_x(x_perm);
             obj.et_npermuted_ = p0;
             obj.fit();
@@ -112,6 +120,8 @@ namespace abclass {
         obj.set_standardize(standardize0);
         obj.set_x(std::move(x0));
         obj.set_penalty_factor(std::move(gw0));
+        obj.set_coef_lower_limit(std::move(lower_limit0));
+        obj.set_coef_upper_limit(std::move(upper_limit0));
         obj.coef_ = arma::cube(obj.data_.p1_, obj.data_.k_ - 1, 1,
                                arma::fill::zeros);
         if (obj.control_.intercept_) {

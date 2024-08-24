@@ -143,6 +143,17 @@ namespace abclass
         // constructors
         using Abclass<T_loss, T_x>::Abclass;
 
+        // main constructor
+        AbclassLinear(const T_x& x,
+                      const arma::uvec& y,
+                      const Control& control = Control()) :
+            Abclass<T_loss, T_x>(x, y, control)
+        {
+            set_coef_lower_limit(control_.lower_limit_);
+            set_coef_upper_limit(control_.upper_limit_);
+            scale_coef_limits();
+        }
+
         // data members
         using Abclass<T_loss, T_x>::data_;
         using Abclass<T_loss, T_x>::control_;
@@ -160,6 +171,73 @@ namespace abclass
         arma::vec loss_;
         arma::vec penalty_;
         arma::vec objective_;
+
+
+        // set coef lower limit
+        inline void set_coef_lower_limit(const arma::mat& lower_limit)
+        {
+            if (lower_limit.n_elem == 0) {
+                control_.lower_limit_ = arma::mat(
+                    data_.p0_, data_.km1_,
+                    arma::fill::value(- arma::datum::inf));
+                return;
+            }
+            if (lower_limit.n_elem == 1) {
+                double limit_value { arma::as_scalar(lower_limit) };
+                if (limit_value > 0.0) {
+                    throw std::range_error("Lower limit cannot be positive!");
+                }
+                control_.lower_limit_ = arma::mat(
+                    data_.p0_, data_.km1_,
+                    arma::fill::value(limit_value));
+                return;
+            }
+            if (lower_limit.n_rows != data_.p0_ ||
+                lower_limit.n_cols != data_.km1_) {
+                throw std::range_error("Incorrect dimension of lower_limit!");
+            }
+            control_.lower_limit_ = lower_limit;
+        }
+        // set coef upper limit
+        inline void set_coef_upper_limit(const arma::mat& upper_limit)
+        {
+            if (upper_limit.n_elem == 0) {
+                control_.upper_limit_ = arma::mat(
+                    data_.p0_, data_.km1_,
+                    arma::fill::value(arma::datum::inf));
+                return;
+            }
+            if (upper_limit.n_elem == 1) {
+                double limit_value { arma::as_scalar(upper_limit) };
+                if (limit_value < 0.0) {
+                    throw std::range_error("Upper limit cannot be negative!");
+                }
+                control_.upper_limit_ = arma::mat(
+                    data_.p0_, data_.km1_,
+                    arma::fill::value(limit_value));
+                return;
+            }
+            if (upper_limit.n_rows != data_.p0_ ||
+                upper_limit.n_cols != data_.km1_) {
+                throw std::range_error("Incorrect dimension of upper_limit!");
+            }
+            control_.upper_limit_ = upper_limit;
+        }
+        // scale coef limits
+        inline void scale_coef_limits()
+        {
+            // scale only if needed
+            if (! control_.standardize_) {
+                return;
+            }
+            arma::uvec valid_x_idx {
+                arma::find(data_.x_scale_ > 0)
+            };
+            for (size_t i : valid_x_idx) {
+                control_.lower_limit_.row(i) *= data_.x_scale_(i);
+                control_.upper_limit_.row(i) *= data_.x_scale_(i);
+            }
+        }
 
         // rescale the coefficients
         inline void force_rescale_coef()
