@@ -46,7 +46,6 @@ namespace abclass
         // for convergence
         double last_eps_;       // last difference for checking congerence
         unsigned int n_iter_;   // number of iteration
-        unsigned int last_lambda_idx_; // index of last lambda
 
         // given computed dloss_df
         inline arma::mat dloss_dbeta(const arma::mat& dloss_df_,

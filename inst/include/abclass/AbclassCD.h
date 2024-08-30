@@ -540,7 +540,7 @@ namespace abclass
                                     << " iteration(s)\n";
                     }
                     // recover the active set
-                    is_active_varying = is_active;
+                    is_active_varying = is_active_strong;
                     is_active = is_active_strong;
                 } else {
                     break;
@@ -653,11 +653,11 @@ namespace abclass
             if (! control_.custom_lambda_) {
                 double log_lambda_max { std::log(lambda_max_) };
                 double log_lambda_min { 0.0 };
-                if (control_.lambda_min_ < 0.0) {
+                if (control_.lambda_min_ > 0.0) {
+                    log_lambda_min = std::log(control_.lambda_min_);
+                } else {
                     log_lambda_min = log_lambda_max +
                         std::log(control_.lambda_min_ratio_);
-                } else {
-                    log_lambda_min = std::log(control_.lambda_min_);
                 }
                 control_.lambda_ = arma::exp(
                     arma::linspace(log_lambda_max, log_lambda_min,

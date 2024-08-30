@@ -250,18 +250,6 @@ namespace abclass
             et_nstages_ = nstages;
             return this;
         }
-        // ranking
-        inline Control* rank(const bool query_weight,
-                             const bool delta_weight,
-                             const bool delta_adaptive,
-                             const unsigned int delta_max_iter = 0)
-        {
-            query_weight_ = query_weight;
-            delta_weight_ = delta_weight;
-            delta_adaptive_ = delta_adaptive;
-            delta_max_iter_ = delta_max_iter;
-            return this;
-        }
 
     };
 
