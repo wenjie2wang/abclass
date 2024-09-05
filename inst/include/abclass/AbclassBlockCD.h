@@ -242,9 +242,8 @@ namespace abclass
                 // check if it has been shrinkaged to zero
                 if (beta.row(g1).is_zero()) {
                     is_active(g) = 0;
-                } else {
-                    is_active(g) = 1;
                 }
+                // is_active(g) must be one to get here
             }
         }
         ++n_iter_;

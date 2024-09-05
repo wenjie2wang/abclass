@@ -91,7 +91,7 @@ namespace abclass
             const double m_g_ratio { m_gp / m_g }; // m_g' / m_g > 1
             if (z_g2 < control_.ncv_gamma_ * l1_lambda_g * m_g_ratio) {
                 const double tmp { 1.0 - l1_lambda_g / m_g / z_g2 };
-                if (tmp >= 0.0) {
+                if (tmp > 0.0) {
                     const double igamma_g { 1.0 / control_.ncv_gamma_ / m_g };
                     const double rhs { tmp / (m_g_ratio - igamma_g) };
                     beta.row(g1) = arma::max(

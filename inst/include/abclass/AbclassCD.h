@@ -288,9 +288,7 @@ namespace abclass
             const double tmp {
                 std::abs(u_g) - l1_lambda * control_.penalty_factor_(g)
             };
-            if (tmp <= 0.0) {
-                beta(g1, k) = 0.0;
-            } else {
+            if (tmp > 0.0) {
                 const double numer { tmp * sign(u_g) };
                 const double denom { m_g + l2_lambda };
                 // update beta
@@ -298,6 +296,8 @@ namespace abclass
                     control_.lower_limit_(g, k),
                     std::min(control_.upper_limit_(g, k),
                              numer / denom));
+            } else {
+                beta(g1, k) = 0.0;
             }
             // update pred_f and inner
             const double delta_beta { beta(g1, k) - old_beta_g1k };
@@ -438,9 +438,8 @@ namespace abclass
                     // check if it has been shrinkaged to zero
                     if (beta(g1, k) == 0.0) {
                         is_active(g, k) = 0;
-                    } else {
-                        is_active(g, k) = 1;
                     }
+                    // is_active(g, k) must be 1 to get here
                 }
             }
         }
@@ -539,7 +538,12 @@ namespace abclass
                                     << num_iter
                                     << " iteration(s)\n";
                     }
-                    // recover the active set
+                    // however, quit anyway if beta is converged
+                    if (last_eps_ < epsilon) {
+                        converged_ = true;
+                        break;
+                    }
+                    // otherwise, recover the active set
                     is_active_varying = is_active_strong;
                     is_active = is_active_strong;
                 } else {

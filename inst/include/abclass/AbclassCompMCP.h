@@ -141,9 +141,7 @@ namespace abclass
             const double m_g { mm_lowerbound_(g) };
             const double u_g { m_g * beta(g1, k) - d_gk };
             const double tmp { std::abs(u_g) - l1_lambda_g };
-            if (tmp <= 0.0) {
-                beta(g1, k) = 0.0;
-            } else {
+            if (tmp > 0.0) {
                 const double numer { tmp * sign(u_g) };
                 const double denom { m_g + l2_lambda };
                 // update beta
@@ -151,6 +149,8 @@ namespace abclass
                     control_.lower_limit_(g, k),
                     std::min(control_.upper_limit_(g, k),
                              numer / denom));
+            } else {
+                beta(g1, k) = 0.0;
             }
             // update pred_f and inner
             const double delta_beta { beta(g1, k) - old_beta_g1k };

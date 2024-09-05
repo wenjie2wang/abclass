@@ -101,14 +101,14 @@ namespace abclass
             } else {
                 // core part
                 const double tmp { u_g1 - l1_lambda_g };
-                if (tmp < 0.0) {
-                    beta(g1, k) = 0.0;
-                } else {
+                if (tmp > 0.0) {
                     const double numer { tmp * sign(u_g) };
                     beta(g1, k) = std::max(
                         control_.lower_limit_(g, k),
                         std::min(control_.upper_limit_(g, k),
                                  numer / (m_gp - 1.0 / control_.ncv_gamma_)));
+                } else {
+                    beta(g1, k) = 0.0;
                 }
             }
             // update pred_f and inner

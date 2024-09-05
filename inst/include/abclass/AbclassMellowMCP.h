@@ -140,9 +140,7 @@ namespace abclass
                 outer_dpen * mlm_dk
             };
             const double tmp { std::abs(u_g) - l1_lambda_g };
-            if (tmp <= 0.0) {
-                beta(g1, k) = 0.0;
-            } else {
+            if (tmp > 0.0) {
                 const double numer { tmp * sign(u_g) };
                 const double denom {
                     mm_lowerbound_(g) + l2_lambda + outer_dpen2
@@ -152,6 +150,8 @@ namespace abclass
                     control_.lower_limit_(g, k),
                     std::min(control_.upper_limit_(g, k),
                              numer / denom));
+            } else {
+                beta(g1, k) = 0.0;
             }
             // update pred_f and inner
             const double delta_beta { beta(g1, k) - old_beta_g1k };
