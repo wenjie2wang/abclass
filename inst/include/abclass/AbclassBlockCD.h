@@ -35,7 +35,6 @@ namespace abclass
         using AbclassCD<T_loss, T_x>::mm_lowerbound0_;
         using AbclassCD<T_loss, T_x>::mm_lowerbound_;
         using AbclassCD<T_loss, T_x>::last_eps_;
-        using AbclassCD<T_loss, T_x>::n_iter_;
 
         // function members
         using AbclassCD<T_loss, T_x>::dloss_dbeta;
@@ -189,6 +188,7 @@ namespace abclass
         using AbclassCD<T_loss, T_x>::loss_fun_;
         using AbclassCD<T_loss, T_x>::l1_lambda_max_;
         using AbclassCD<T_loss, T_x>::lambda_max_;
+        using AbclassCD<T_loss, T_x>::n_iter_;
 
     };
 

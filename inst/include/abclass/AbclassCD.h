@@ -39,7 +39,6 @@ namespace abclass
         using AbclassLinear<T_loss, T_x>::last_penalty_;
         using AbclassLinear<T_loss, T_x>::last_obj_;
         using AbclassLinear<T_loss, T_x>::last_eps_;
-        using AbclassLinear<T_loss, T_x>::n_iter_;
 
         // function members
         using AbclassLinear<T_loss, T_x>::dloss_dbeta;
@@ -348,6 +347,7 @@ namespace abclass
         using AbclassLinear<T_loss, T_x>::loss_;
         using AbclassLinear<T_loss, T_x>::penalty_;
         using AbclassLinear<T_loss, T_x>::objective_;
+        using AbclassLinear<T_loss, T_x>::n_iter_;
 
         // tuning by cross-validation
         arma::mat cv_accuracy_;

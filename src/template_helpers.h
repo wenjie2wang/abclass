@@ -76,7 +76,8 @@ inline Rcpp::List template_fit(T& object)
         Rcpp::Named("optimization") = Rcpp::List::create(
             Rcpp::Named("loss") = abclass::arma2rvec(object.loss_),
             Rcpp::Named("penalty") = abclass::arma2rvec(object.penalty_),
-            Rcpp::Named("objective") = abclass::arma2rvec(object.objective_)
+            Rcpp::Named("objective") = abclass::arma2rvec(object.objective_),
+            Rcpp::Named("n_iteration") = object.n_iter_
             ),
         Rcpp::Named("regularization") = Rcpp::List::create(
             Rcpp::Named("lambda") =

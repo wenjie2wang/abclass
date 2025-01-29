@@ -45,7 +45,6 @@ namespace abclass
         double last_obj_;       // last objective
         // for convergence
         double last_eps_;       // last difference for checking congerence
-        unsigned int n_iter_;   // number of iteration
 
         // given computed dloss_df
         inline arma::mat dloss_dbeta(const arma::mat& dloss_df_,
@@ -171,6 +170,7 @@ namespace abclass
         arma::vec penalty_;
         arma::vec objective_;
 
+        unsigned int n_iter_;   // number of iteration
 
         // set coef lower limit
         inline void set_coef_lower_limit(const arma::mat& lower_limit)
