@@ -42,7 +42,7 @@ library(abclass)
 packageVersion("abclass")
 ```
 
-    ## [1] '0.5.0.9130'
+    ## [1] '0.5.0.9230'
 
 ``` r
 ## toy examples for demonstration purpose
@@ -78,17 +78,17 @@ table(test_y, pred1)
 
     ##          pred1
     ## test_y    label_1 label_2 label_3 label_4 label_5
-    ##   label_1    1678       0       3     322       0
+    ##   label_1    1704       0       3     296       0
     ##   label_2       0    1862       0       0     106
-    ##   label_3       4      12    1736       0     200
-    ##   label_4       3      12       0    1938      79
-    ##   label_5       0      66      29       1    1949
+    ##   label_3       4      11    1739       0     198
+    ##   label_4       3      12       0    1947      70
+    ##   label_5       0      63      30       1    1951
 
 ``` r
 mean(test_y == pred1) # accuracy
 ```
 
-    ## [1] 0.9163
+    ## [1] 0.9203
 
 ``` r
 ### with groupwise lasso
@@ -123,16 +123,16 @@ table(test_y, pred3)
     ##          pred3
     ## test_y    label_1 label_2 label_3 label_4 label_5
     ##   label_1    1991       1       5       5       1
-    ##   label_2       0    1843       0       0     125
-    ##   label_3       3       7    1644       0     298
+    ##   label_2       0    1842       0       0     126
+    ##   label_3       3       7    1643       0     299
     ##   label_4       7      13       0    1997      15
-    ##   label_5       0      19      11       0    2015
+    ##   label_5       0      18      11       0    2016
 
 ``` r
 mean(test_y == pred3) # accuracy
 ```
 
-    ## [1] 0.949
+    ## [1] 0.9489
 
 ## References
 
