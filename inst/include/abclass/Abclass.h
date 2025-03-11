@@ -143,7 +143,7 @@ namespace abclass
                             (data_.x_.col(j) - data_.x_center_(j)) /
                             data_.x_scale_(j);
                     } else {
-                        data_.x_.col(j) = arma::zeros(data_.x_.n_rows);
+                        data_.x_.col(j).zeros();
                         // make scale(j) nonzero for rescaling
                         data_.x_scale_(j) = - 1.0;
                     }
