@@ -182,14 +182,14 @@ namespace abclass {
                 obj.data_.y_.rows(cv_obj.test_index_.at(i))
             };
             arma::vec train_weight {
-                obj.control_.obs_weight_.elem(cv_obj.train_index_.at(i))
+                obj.control_.obs_weights_.elem(cv_obj.train_index_.at(i))
             };
             // create a new object
             T new_obj { obj };
             new_obj.set_standardize(false);
             new_obj.set_data(std::move(train_x), std::move(train_y));
             new_obj.enforce_k(obj.data_.k_);
-            new_obj.set_weight(std::move(train_weight));
+            new_obj.set_obs_weights(std::move(train_weight));
             new_obj.set_offset(std::move(train_offset));
             // alignment: 0 for alignment by fraction
             //            1 for alignment by lambda

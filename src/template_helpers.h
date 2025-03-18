@@ -93,7 +93,7 @@ inline Rcpp::List template_fit(T& object)
             Rcpp::Named("mellowmax_omega") = object.control_.mellowmax_omega_
             ),
         Rcpp::Named("weights") =
-        abclass::arma2rvec(object.control_.obs_weight_),
+        abclass::arma2rvec(object.control_.obs_weights_),
         Rcpp::Named("offset") = abclass::arma2rvec(object.control_.offset_),
         Rcpp::Named("cross_validation") = cv_res,
         Rcpp::Named("et") = et_res
@@ -110,7 +110,7 @@ inline abclass::Control abclass_control(const Rcpp::List& control)
         control["verbose"]
     };
     ctrl.set_intercept(control["intercept"])->
-        set_weight(control["weights"])->
+        set_obs_weights(control["weights"])->
         set_offset(control["offset"])->
         set_lower_limit(control["lower_limit"])->
         set_upper_limit(control["upper_limit"])->

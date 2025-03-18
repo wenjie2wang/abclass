@@ -27,9 +27,9 @@ namespace abclass
     class Simplex
     {
     public:
-        unsigned int km1_;      // k - 1
-        unsigned int k_;        // dimensions
-        double dk_;             // double(k_)
+        unsigned int km1_ { 0 }; // k - 1
+        unsigned int k_ { 1 };   // dimensions
+        double dk_ { 1.0 };      // double(k_)
 
         // k vertex column vectors in R^(k-1) => (k-1) by k
         arma::mat vertex_;      // unique vertex: (k-1) by k
@@ -43,7 +43,7 @@ namespace abclass
         inline void update_k(const unsigned int k)
         {
             if (k < 2) {
-                throw std::range_error("k must be an integer > 1.");
+                throw std::invalid_argument("k must be an integer > 1.");
             }
             k_ = k;
             km1_ = k - 1;
@@ -101,6 +101,7 @@ namespace abclass
                 ex_vertex_.row(i) = t_vertex_.row(y[i]);
             }
         }
+
         // more general (e.g., for outcome-weighted learning)
         inline void set_ex_vertex(const arma::uvec& y, const arma::vec& factor)
         {
