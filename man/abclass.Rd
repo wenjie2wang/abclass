@@ -86,7 +86,7 @@ which will be used only if \code{loss = "hinge.boost"} or \code{loss =
 \item{boost_umin}{A negative number for adjusting the boosting loss for the
 internal majorization procedure.}
 
-\item{alpha}{A numeric value in [0, 1] representing the mixing parameter
+\item{alpha}{A numeric value in $[0,1]$ representing the mixing parameter
 \emph{alpha}.  The default value is \code{1.0}.}
 
 \item{lambda}{A numeric vector specifying the tuning parameter
@@ -109,14 +109,14 @@ of predictors, and \code{1e-2} otherwise.}
 denominator when the function determines the largest lambda.  If the
 \code{lambda} is not specified, the largest lambda will be determined by
 the data and be the large enough lambda (that would result in all zero
-estimates for the covariates with positive penalty factors) devided by
+estimates for the covariates with positive penalty factors) divided by
 \code{max(alpha, lambda_max_alpha_min)}.}
 
 \item{penalty_factor}{A numerical vector with nonnegative values specifying
 the adaptive penalty factors for individual predictors (excluding
 intercept).}
 
-\item{ncv_kappa}{A positive number within (0, 1) specifying the ratio of
+\item{ncv_kappa}{A positive number within $(0,1)$ specifying the ratio of
 reciprocal gamma parameter for group SCAD or group MCP.  A close-to-zero
 \code{ncv_kappa} would give a solution close to lasso solution.}
 
@@ -144,12 +144,12 @@ default value is \code{TRUE} for usually more efficient estimation
 procedure.}
 
 \item{adjust_mm}{An experimental logical value specifying if the estimation
-procedure should track loss function and adjust the MM lowerbound if
+procedure should track loss function and adjust the MM lower bound if
 needed.}
 
 \item{save_call}{A logical value indicating if the function call of the
 model fitting should be saved.  If \code{TRUE}, the function call will
-be saved in the \code{abclass} object so that one can utilize
+be saved in the returned object so that one can utilize
 \code{stats::update()} to update the argument specifications
 conveniently.}
 

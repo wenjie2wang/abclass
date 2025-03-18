@@ -173,7 +173,6 @@ namespace abclass
             arma::mat one_grad_beta { arma::abs(gradient()) };
             // get large enough lambda for zero coefs in positive_penalty
             l1_lambda_max_ = 0.0;
-            lambda_max_ = 0.0;
             for (arma::uvec::const_iterator it { positive_penalty.begin() };
                  it != positive_penalty.end(); ++it) {
                 double tmp { one_grad_beta.row(*it).max() };
@@ -245,9 +244,9 @@ namespace abclass
         {
             arma::umat is_strong_rule_failed(arma::size(is_active_strong),
                                              arma::fill::zeros);
-            arma::mat dloss_df_;
+            arma::mat dloss_df;
             if (positive_penalty.n_elem > 0) {
-                dloss_df_ = iter_dloss_df();
+                dloss_df = iter_dloss_df();
             }
             for (arma::uvec::const_iterator it { positive_penalty.begin() };
                  it != positive_penalty.end(); ++it) {
@@ -256,7 +255,7 @@ namespace abclass
                         continue;
                     }
                     const arma::vec x_g { data_.x_.col(*it) };
-                    const arma::vec dj { dloss_df_.col(j) };
+                    const arma::vec dj { dloss_df.col(j) };
                     const arma::vec dloss_dbeta_ { dloss_dbeta(dj, x_g) };
                     const double tmp {
                         arma::accu(dloss_dbeta_) * data_.div_n_obs_
@@ -615,7 +614,7 @@ namespace abclass
         // set the CMD lowerbound
         set_mm_lowerbound();
         // set penalty factor from the control_
-        set_penalty_factor();
+        set_penalty_factor(control_.penalty_factor_);
         // set gamma
         set_gamma(control_.ncv_kappa_);
         // set cache to help determine update steps
