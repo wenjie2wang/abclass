@@ -16,7 +16,7 @@
 ^\.Rhistory$
 ^\.Rproj\.user$
 ^\.\#
-^\.clang_complete$
+^\.clang-format$
 ^\.clangd$
 ^\.dir-locals\.el$
 ^\.git$
