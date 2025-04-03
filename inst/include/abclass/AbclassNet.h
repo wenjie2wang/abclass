@@ -18,8 +18,8 @@
 #ifndef ABCLASS_ABCLASS_NET_H
 #define ABCLASS_ABCLASS_NET_H
 
-#include <RcppArmadillo.h>
 #include "AbclassCD.h"
+#include <RcppArmadillo.h>
 
 namespace abclass
 {
@@ -29,7 +29,6 @@ namespace abclass
     class AbclassNet : public AbclassCD<T_loss, T_x>
     {
     protected:
-
         // the strong rule for lasso
         inline double strong_rule_rhs(const double next_lambda,
                                       const double last_lambda) const override
@@ -40,10 +39,8 @@ namespace abclass
     public:
         // inherits constructors
         using AbclassCD<T_loss, T_x>::AbclassCD;
-
     };
 
-}  // abclass
-
+} // namespace abclass
 
 #endif /* ABCLASS_ABCLASS_NET_H */

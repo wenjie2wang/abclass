@@ -19,7 +19,8 @@
 #define ABCLASS_MARGIN_LOSS_H
 
 #include <RcppArmadillo.h>
-#include "Simplex.h"
+
+#include "Data.h"
 
 namespace abclass
 {
@@ -37,8 +38,8 @@ namespace abclass
         inline double loss(const arma::vec& u,
                            const arma::vec& obs_weight) const
         {
-            double res { 0.0 };
-            for (size_t i {0}; i < u.n_elem; ++i) {
+            double res{0.0};
+            for (size_t i{0}; i < u.n_elem; ++i) {
                 res += obs_weight[i] * loss(u[i]);
             }
             return res;
@@ -49,7 +50,7 @@ namespace abclass
                                   const arma::vec& obs_weight) const
         {
             arma::vec out(u.n_elem);
-            for (size_t i {0}; i < out.n_elem; ++i) {
+            for (size_t i{0}; i < out.n_elem; ++i) {
                 out[i] = obs_weight[i] * dloss_du(u[i]);
             }
             return out;
@@ -58,7 +59,7 @@ namespace abclass
         inline arma::vec dloss_du(const arma::vec& u) const
         {
             arma::vec out(u.n_elem);
-            for (size_t i {0}; i < out.n_elem; ++i) {
+            for (size_t i{0}; i < out.n_elem; ++i) {
                 out[i] = dloss_du(u[i]);
             }
             return out;
@@ -73,31 +74,33 @@ namespace abclass
         // wrappers for Abclass
         // a margin-based loss that depends on inner product
         template <typename T_x>
-        inline double loss(const Simplex2<T_x>& data,
-                           const arma::vec& obs_weight) const
+        inline double loss(const Data<T_x>* const p_data,
+                           const IterCache& cache) const
         {
-            return loss(data.iter_inner_, obs_weight);
+            return loss(cache.iter_inner_, p_data->obs_weights_);
         }
 
         // gradient of loss wrt the (K-1) decision functions
         template <typename T_x>
-        inline arma::mat dloss_df(const Simplex2<T_x>& data,
-                                  const arma::vec& obs_weight) const
+        inline arma::mat dloss_df(const Data<T_x>* const p_data,
+                                  const IterCache& cache) const
         {
-            arma::mat out { data.ex_vertex_ };
-            arma::vec dloss_u { dloss_du(data.iter_inner_, obs_weight) };
+            arma::mat out{p_data->ex_vertex_};
+            arma::vec dloss_u{
+                dloss_du(cache.iter_inner_, p_data->obs_weights_)};
             out.each_col() %= dloss_u;
             return out;
         }
 
         // gradient of loss wrt the k-th decision function
         template <typename T_x>
-        inline arma::vec dloss_df(const Simplex2<T_x>& data,
-                                  const arma::vec& obs_weight,
+        inline arma::vec dloss_df(const Data<T_x>* const p_data,
+                                  const IterCache& cache,
                                   const unsigned int k) const
         {
-            arma::vec out { data.ex_vertex_.col(k) };
-            arma::vec dloss_u { dloss_du(data.iter_inner_, obs_weight) };
+            arma::vec out{p_data->ex_vertex_.col(k)};
+            arma::vec dloss_u{
+                dloss_du(cache.iter_inner_, p_data->obs_weights_)};
             out %= dloss_u;
             return out;
         }
@@ -105,36 +108,33 @@ namespace abclass
         // for linear learning
         // gradient wrt beta_g.
         template <typename T_x>
-        inline arma::mat dloss_dbeta(Simplex2<T_x>& data,
-                                     const arma::vec& obs_weight,
+        inline arma::mat dloss_dbeta(const Data<T_x>* const p_data,
+                                     IterCache& cache,
                                      const unsigned int g) const
         {
-            arma::mat vxg { data.ex_vertex_ };
-            for (size_t j {0}; j < vxg.n_cols; ++j) {
-                vxg.col(j) %= data.x_.col(g);
+            arma::mat vxg{p_data->ex_vertex_};
+            for (size_t j{0}; j < vxg.n_cols; ++j) {
+                vxg.col(j) %= p_data->x_.col(g);
             }
-            // cache it in data for updating pred_f and inner
-            data.iter_v_xg_ = vxg;
-            vxg.each_col() %= dloss_du(data.iter_inner_, obs_weight);
+            // cache it in p_data for updating pred_f and inner
+            cache.iter_v_xg_ = vxg;
+            vxg.each_col() %= dloss_du(cache.iter_inner_, p_data->obs_weights_);
             return vxg;
         }
 
         // gradient wrt beta_gk
         template <typename T_x>
-        inline arma::vec dloss_dbeta(Simplex2<T_x>& data,
-                                     const arma::vec& obs_weight,
-                                     const unsigned int g,
+        inline arma::vec dloss_dbeta(const Data<T_x>* const p_data,
+                                     IterCache& cache, const unsigned int g,
                                      const unsigned int k) const
         {
-            arma::vec vkxg { data.ex_vertex_.col(k) % data.x_.col(g) };
-            // cache it in data for updating pred_f and inner
-            data.iter_vk_xg_ = vkxg;
-            return dloss_du(data.iter_inner_, obs_weight) % vkxg;
+            arma::vec vkxg{p_data->ex_vertex_.col(k) % p_data->x_.col(g)};
+            // cache it in p_data for updating pred_f and inner
+            cache.iter_vk_xg_ = vkxg;
+            return dloss_du(cache.iter_inner_, p_data->obs_weights_) % vkxg;
         }
-
     };
 
-}  // abclass
-
+} // namespace abclass
 
 #endif /* ABCLASS_MARGIN_LOSS_H */

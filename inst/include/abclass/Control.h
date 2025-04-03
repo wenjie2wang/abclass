@@ -18,9 +18,9 @@
 #ifndef ABCLASS_CONTROL_H
 #define ABCLASS_CONTROL_H
 
+#include "utils.h"
 #include <RcppArmadillo.h>
 #include <stdexcept>
-#include "utils.h"
 
 namespace abclass
 {
@@ -28,134 +28,84 @@ namespace abclass
     class Control
     {
     public:
-        // model
-        arma::vec obs_weights_ { arma::vec() }; // observational weights
-        bool custom_obs_weights_ { false };     // is obs_weights_ customized
-        bool intercept_ { true };               // if to contrain intercepts
-
-        // offset
-        bool has_offset_ { false };        // to avoid some computation
-        arma::mat offset_ { arma::mat() }; // for the decision functions
+        // loss functions
+        double boost_umin_{-5.0};
+        double lum_a_{1.0};
+        double lum_c_{0.0};
 
         // lower/upper limits for coefficients in linear learning
-        arma::mat lower_limit_ { arma::mat() };
-        arma::mat upper_limit_ { arma::mat() };
-
-        // reward for the outcome-weighted learning
-        arma::vec owl_reward_ { arma::vec() };
+        arma::mat lower_limit_{arma::mat()};
+        arma::mat upper_limit_{arma::mat()};
 
         // regularization
         //   true if user specified a customized lambda sequence
-        bool custom_lambda_ { false };
-        arma::vec lambda_  { arma::vec() };
-        unsigned int nlambda_ { 20 };
-        double lambda_min_ratio_ { 0.01 };
-        double lambda_min_ { - 1.0 };
-        double lambda_max_alpha_min_ { 0.01 };
+        bool custom_lambda_{false};
+        arma::vec lambda_{arma::vec()};
+        unsigned int nlambda_{20};
+        double lambda_min_ratio_{0.01};
+        double lambda_min_{-1.0};
+        double lambda_max_alpha_min_{0.01};
         //   adaptive penalty factor for each covariate
-        arma::vec penalty_factor_ { arma::vec() };
+        arma::vec penalty_factor_{arma::vec()};
         //   ridge
-        double ridge_alpha_ { 1.0 };
+        double ridge_alpha_{1.0};
         //   scad, mcp
-        double ncv_kappa_ { 0.1 };   // parameter to set gamma
-        double ncv_gamma_ { - 1.0 }; // gamma for group non-convex penalty
+        double ncv_kappa_{0.1};  // parameter to set gamma
+        double ncv_gamma_{-1.0}; // gamma for group non-convex penalty
         //   group exponential penalty
-        double gel_tau_ { 0.33 };
+        double gel_tau_{0.33};
         //   mellowmax penalty
-        double mellowmax_omega_ { 1 };
+        double mellowmax_omega_{1};
 
         // tuning
         //   cross-validation
-        unsigned int cv_nfolds_ { 0 };
-        bool cv_stratified_ { true };
-        arma::uvec cv_strata_ { arma::uvec() };
-        unsigned int cv_alignment_ { 0 };
+        unsigned int cv_nfolds_{0};
+        bool cv_stratified_{true};
+        arma::uvec cv_strata_{arma::uvec()};
+        unsigned int cv_alignment_{0};
         //   ET-lasso
-        unsigned int et_nstages_ { 0 };
+        unsigned int et_nstages_{0};
 
         // optimization
-        unsigned int max_iter_ { 10000 };  // maximum number of iterations
-        double epsilon_ { 1e-7 };          // tolerance to check convergence
-        bool varying_active_set_ { true }; // if active set should be adaptive
+        unsigned int max_iter_{10000};  // maximum number of iterations
+        double epsilon_{1e-7};          // tolerance to check convergence
+        bool varying_active_set_{true}; // if active set should be adaptive
         // monitor convergecen and adjust mm lowerbound if needed
-        bool adjust_mm_ { false };
-        bool standardize_ { true };        // is x_ standardized (column-wise)
-        unsigned int verbose_ { 0 };
+        bool adjust_mm_{false};
+        unsigned int verbose_{0};
 
         // default constructor
         Control() {}
 
-        Control(const unsigned int max_iter,
-                const double epsilon,
-                const bool standardize = true,
+        Control(const unsigned int max_iter, const double epsilon,
                 const unsigned int verbose = 0)
         {
             if (is_lt(epsilon, 0.0)) {
-                throw std::invalid_argument("The 'epsilon' cannot be negative.");
+                throw std::invalid_argument(
+                    "The 'epsilon' cannot be negative.");
             }
             max_iter_ = max_iter;
             epsilon_ = epsilon;
-            standardize_ = standardize;
             verbose_ = verbose;
         }
 
-        // individual setters
-        inline Control* set_intercept(const bool intercept)
-        {
-            intercept_ = intercept;
-            return this;
-        }
-
-        inline Control* set_obs_weights(const arma::vec& obs_weights)
-        {
-            obs_weights_ = obs_weights;
-            return this;
-        }
-
-        template <typename T=arma::mat>
-        inline Control* set_offset(const T& offset)
-        {
-            offset_ = arma::mat(offset);
-            if (offset_.n_elem > 0) {
-                has_offset_ = true;
-            }
-            return this;
-        }
-
-        template <typename T=arma::mat>
+        template <typename T = arma::mat>
         inline Control* set_lower_limit(const T& lower_limit)
         {
             lower_limit_ = arma::mat(lower_limit);
             return this;
         }
 
-        template <typename T=arma::mat>
+        template <typename T = arma::mat>
         inline Control* set_upper_limit(const T& upper_limit)
         {
             upper_limit_ = arma::mat(upper_limit);
             return this;
         }
 
-        inline Control* set_standardize(const bool standardize)
-        {
-            standardize_ = standardize;
-            return this;
-        }
-
         inline Control* set_verbose(const unsigned int verbose)
         {
             verbose_ = verbose;
-            return this;
-        }
-
-        // for outcome-weighted learning
-        inline Control* set_owl_reward(const arma::vec& reward)
-        {
-            if (reward.n_elem == 0 || reward.is_zero()) {
-                owl_reward_ = arma::vec();
-                return this;
-            }
-            owl_reward_ = reward;
             return this;
         }
 
@@ -180,7 +130,7 @@ namespace abclass
         inline Control* reg_lambda(const arma::vec& lambda = arma::vec())
         {
             lambda_ = lambda;
-            if (! lambda_.empty()) {
+            if (!lambda_.empty()) {
                 custom_lambda_ = true;
                 lambda_ = arma::reverse(arma::unique(lambda));
                 nlambda_ = lambda_.n_elem;
@@ -191,7 +141,7 @@ namespace abclass
             return this;
         }
 
-        inline Control* reg_lambda_min(const double lambda_min = - 1.0)
+        inline Control* reg_lambda_min(const double lambda_min = -1.0)
         {
             lambda_min_ = lambda_min;
             return this;
@@ -258,10 +208,8 @@ namespace abclass
             et_nstages_ = nstages;
             return this;
         }
-
     };
 
-}
-
+} // namespace abclass
 
 #endif /* ABCLASS_CONTROL_H */

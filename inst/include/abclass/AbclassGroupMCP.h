@@ -18,9 +18,9 @@
 #ifndef ABCLASS_ABCLASS_GROUP_MCP_H
 #define ABCLASS_ABCLASS_GROUP_MCP_H
 
-#include <RcppArmadillo.h>
 #include "AbclassBlockCD.h"
 #include "utils.h"
+#include <RcppArmadillo.h>
 
 namespace abclass
 {
@@ -36,11 +36,10 @@ namespace abclass
         using AbclassBlockCD<T_loss, T_x>::mm_gradient;
         using AbclassBlockCD<T_loss, T_x>::set_mm_lowerbound;
 
-        inline double penalty0(const double beta,
-                               const double l1_lambda,
+        inline double penalty0(const double beta, const double l1_lambda,
                                const double l2_lambda) const override
         {
-            const double ridge_pen { 0.5 * l2_lambda * beta * beta };
+            const double ridge_pen{0.5 * l2_lambda * beta * beta};
             if (beta < control_.ncv_gamma_ * l1_lambda) {
                 return beta * (l1_lambda - 0.5 * beta / control_.ncv_gamma_) +
                     ridge_pen;
@@ -60,9 +59,8 @@ namespace abclass
                 set_mm_lowerbound();
             }
             // exclude zeros lowerbounds from constant columns
-            const double min_mg {
-                mm_lowerbound_.elem(arma::find(mm_lowerbound_ > 0.0)).min()
-            };
+            const double min_mg{
+                mm_lowerbound_.elem(arma::find(mm_lowerbound_ > 0.0)).min()};
             control_.ncv_gamma_ = 1.0 / min_mg / kappa;
         }
 
@@ -70,50 +68,46 @@ namespace abclass
                                       const double last_lambda) const override
         {
             return (control_.ncv_gamma_ / (control_.ncv_gamma_ - 1) *
-                    (next_lambda - last_lambda) + next_lambda);
+                        (next_lambda - last_lambda) +
+                    next_lambda);
         }
 
-        inline void update_beta_g(arma::mat& beta,
-                                  const size_t g,
-                                  const size_t g1,
-                                  const double l1_lambda,
+        inline void update_beta_g(arma::mat& beta, const size_t g,
+                                  const size_t g1, const double l1_lambda,
                                   const double l2_lambda) override
         {
-            const arma::rowvec old_beta_g1 { beta.row(g1) };
-            const double m_g { mm_lowerbound_(g) };
-            const arma::rowvec u_g { - mm_gradient(g) };
-            const double l1_lambda_g {
-                l1_lambda * control_.penalty_factor_(g)
-            };
-            const arma::rowvec z_g { u_g / m_g + beta.row(g1)};
-            const double z_g2 { l2_norm(z_g) };
-            const double m_gp { m_g + l2_lambda }; // m_g'
-            const double m_g_ratio { m_gp / m_g }; // m_g' / m_g > 1
+            const arma::rowvec old_beta_g1{beta.row(g1)};
+            const double m_g{mm_lowerbound_(g)};
+            const arma::rowvec u_g{-mm_gradient(g)};
+            const double l1_lambda_g{l1_lambda * control_.penalty_factor_(g)};
+            const arma::rowvec z_g{u_g / m_g + beta.row(g1)};
+            const double z_g2{l2_norm(z_g)};
+            const double m_gp{m_g + l2_lambda}; // m_g'
+            const double m_g_ratio{m_gp / m_g}; // m_g' / m_g > 1
             if (z_g2 < control_.ncv_gamma_ * l1_lambda_g * m_g_ratio) {
-                const double tmp { 1.0 - l1_lambda_g / m_g / z_g2 };
+                const double tmp{1.0 - l1_lambda_g / m_g / z_g2};
                 if (tmp > 0.0) {
-                    const double igamma_g { 1.0 / control_.ncv_gamma_ / m_g };
-                    const double rhs { tmp / (m_g_ratio - igamma_g) };
+                    const double igamma_g{1.0 / control_.ncv_gamma_ / m_g};
+                    const double rhs{tmp / (m_g_ratio - igamma_g)};
                     beta.row(g1) = arma::max(
                         control_.lower_limit_.row(g),
-                        arma::min(control_.upper_limit_.row(g),
-                                  rhs * z_g));
+                        arma::min(control_.upper_limit_.row(g), rhs * z_g));
                 } else {
                     beta.row(g1).zeros();
                 }
             } else {
                 beta.row(g1) = arma::max(
                     control_.lower_limit_.row(g),
-                    arma::min(control_.upper_limit_.row(g),
-                              z_g / m_g_ratio));
+                    arma::min(control_.upper_limit_.row(g), z_g / m_g_ratio));
             }
             // update pred_f and inner
-            const arma::rowvec delta_beta { beta.row(g1) - old_beta_g1 };
-            if (! delta_beta.is_zero()) {
+            const arma::rowvec delta_beta{beta.row(g1) - old_beta_g1};
+            if (!delta_beta.is_zero()) {
                 if constexpr (std::is_base_of_v<MarginLoss, T_loss>) {
-                    data_.iter_inner_ += data_.iter_v_xg_ * delta_beta.t();
+                    iter_cache_.iter_inner_ +=
+                        iter_cache_.iter_v_xg_ * delta_beta.t();
                 } else {
-                    data_.iter_pred_f_ += data_.x_.col(g) * delta_beta;
+                    iter_cache_.iter_pred_f_ += p_data_->x_.col(g) * delta_beta;
                 }
                 last_eps_ = std::max(
                     last_eps_, arma::max(m_g * (delta_beta % delta_beta)));
@@ -125,12 +119,11 @@ namespace abclass
         using AbclassBlockCD<T_loss, T_x>::AbclassBlockCD;
 
         // data members
+        using AbclassBlockCD<T_loss, T_x>::iter_cache_;
+        using AbclassBlockCD<T_loss, T_x>::p_data_;
         using AbclassBlockCD<T_loss, T_x>::control_;
-        using AbclassBlockCD<T_loss, T_x>::data_;
-
     };
 
-}  // abclass
-
+} // namespace abclass
 
 #endif /* ABCLASS_ABCLASS_GROUP_MCP_H */

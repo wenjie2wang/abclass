@@ -18,8 +18,8 @@
 #ifndef ABCLASS_ABCLASS_GROUP_LASSO_H
 #define ABCLASS_ABCLASS_GROUP_LASSO_H
 
-#include <RcppArmadillo.h>
 #include "AbclassBlockCD.h"
+#include <RcppArmadillo.h>
 
 namespace abclass
 {
@@ -27,7 +27,6 @@ namespace abclass
     class AbclassGroupLasso : public AbclassBlockCD<T_loss, T_x>
     {
     protected:
-
         // the strong rule
         inline double strong_rule_rhs(const double next_lambda,
                                       const double last_lambda) const override
@@ -38,9 +37,7 @@ namespace abclass
     public:
         // inherit constructors
         using AbclassBlockCD<T_loss, T_x>::AbclassBlockCD;
-
     };
-}
-
+} // namespace abclass
 
 #endif /* ABCLASS_ABCLASS_GROUP_LASSO_H */

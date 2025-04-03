@@ -128,20 +128,17 @@ namespace abclass
         CrossValidation();
 
         // explicit constructor
-        explicit CrossValidation(const unsigned long n_obs) :
-            n_obs_ { n_obs }
+        explicit CrossValidation(const unsigned long n_obs)
+            : CrossValidation(n_obs, 5)
         {
-            CrossValidation(n_obs_, 5);
         }
 
         // major constructor
-        CrossValidation(const unsigned long n_obs,
-                        const unsigned long n_folds,
-                        const arma::uvec& strata = arma::uvec()) :
-            n_obs_ { n_obs },
-            n_folds_ { n_folds }
+        CrossValidation(const unsigned long n_obs, const unsigned long n_folds,
+                        const arma::uvec& strata = arma::uvec())
+            : n_obs_ { n_obs }, n_folds_ { n_folds }
         {
-            const bool stratified { ! strata.empty() };
+            const bool stratified{!strata.empty()};
             cv_indices res;
             if (stratified) {
                 res = stratified_split(strata, n_folds);

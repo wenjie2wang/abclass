@@ -18,9 +18,9 @@
 #ifndef ABCLASS_ABCLASS_GEL_H
 #define ABCLASS_ABCLASS_GEL_H
 
-#include <RcppArmadillo.h>
 #include "AbclassCD.h"
 #include "utils.h"
+#include <RcppArmadillo.h>
 
 namespace abclass
 {
@@ -40,13 +40,12 @@ namespace abclass
 
         // inner penalty: lasso
         // outer penalty for each "group": exponential
-        inline double penalty1(const arma::rowvec& beta,
-                               const double l1_lambda,
+        inline double penalty1(const arma::rowvec& beta, const double l1_lambda,
                                const double l2_lambda) const override
         {
-            double out { 0.0 };
-            double ridge_pen { 0.0 };
-            for (size_t k {0}; k < beta.n_elem; ++k) {
+            double out{0.0};
+            double ridge_pen{0.0};
+            for (size_t k{0}; k < beta.n_elem; ++k) {
                 // inner penalty
                 out += std::abs(beta(k));
                 // optional ridge penalty
@@ -62,44 +61,41 @@ namespace abclass
             return out + ridge_pen;
         }
 
-        inline void update_beta_gk(arma::mat& beta,
-                                   const size_t k,
-                                   const size_t g,
-                                   const size_t g1,
+        inline void update_beta_gk(arma::mat& beta, const size_t k,
+                                   const size_t g, const size_t g1,
                                    const double l1_lambda,
                                    const double l2_lambda) override
         {
-            const double old_beta_g1k { beta(g1, k) };
-            const double d_gk { mm_gradient(g, k) };
+            const double old_beta_g1k{beta(g1, k)};
+            const double d_gk{mm_gradient(g, k)};
             // local approximation
-            const double inner_pen { l1_norm(beta.row(g1)) };
-            const double local_factor {
-                dexp_penalty(inner_pen, l1_lambda, control_.gel_tau_)
-            };
-            const double l1_lambda_g {
-                control_.penalty_factor_(g) * local_factor
-            };
-            const double m_g { mm_lowerbound_(g) };
-            const double u_g { m_g * beta(g1, k) - d_gk };
-            const double tmp { std::abs(u_g) - l1_lambda_g };
+            const double inner_pen{l1_norm(beta.row(g1))};
+            const double local_factor{
+                dexp_penalty(inner_pen, l1_lambda, control_.gel_tau_)};
+            const double l1_lambda_g{control_.penalty_factor_(g) *
+                                     local_factor};
+            const double m_g{mm_lowerbound_(g)};
+            const double u_g{m_g * beta(g1, k) - d_gk};
+            const double tmp{std::abs(u_g) - l1_lambda_g};
             if (tmp > 0.0) {
-                const double numer { tmp * sign(u_g) };
-                const double denom { m_g + l2_lambda };
+                const double numer{tmp * sign(u_g)};
+                const double denom{m_g + l2_lambda};
                 // update beta
                 beta(g1, k) = std::max(
                     control_.lower_limit_(g, k),
-                    std::min(control_.upper_limit_(g, k),
-                             numer / denom));
+                    std::min(control_.upper_limit_(g, k), numer / denom));
             } else {
                 beta(g1, k) = 0.0;
             }
             // update pred_f and inner
-            const double delta_beta { beta(g1, k) - old_beta_g1k };
+            const double delta_beta{beta(g1, k) - old_beta_g1k};
             if (delta_beta != 0.0) {
                 if constexpr (std::is_base_of_v<MarginLoss, T_loss>) {
-                    data_.iter_inner_ += delta_beta * data_.iter_vk_xg_;
+                    iter_cache_.iter_inner_ +=
+                        delta_beta * iter_cache_.iter_vk_xg_;
                 } else {
-                    data_.iter_pred_f_.col(k) += delta_beta * data_.x_.col(g);
+                    iter_cache_.iter_pred_f_.col(k) +=
+                        delta_beta * p_data_->x_.col(g);
                 }
                 last_eps_ = std::max(last_eps_, m_g * delta_beta * delta_beta);
             }
@@ -110,12 +106,11 @@ namespace abclass
         using AbclassCD<T_loss, T_x>::AbclassCD;
 
         // data members
+        using AbclassCD<T_loss, T_x>::iter_cache_;
+        using AbclassCD<T_loss, T_x>::p_data_;
         using AbclassCD<T_loss, T_x>::control_;
-        using AbclassCD<T_loss, T_x>::data_;
-
     };
 
-}  // abclass
-
+} // namespace abclass
 
 #endif /* ABCLASS_ABCLASS_GEL_H */

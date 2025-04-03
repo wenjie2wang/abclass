@@ -12,29 +12,29 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// rcpp_abclass_fit
-Rcpp::List rcpp_abclass_fit(const arma::mat& x, const arma::uvec& y, const Rcpp::List& control);
-RcppExport SEXP _abclass_rcpp_abclass_fit(SEXP xSEXP, SEXP ySEXP, SEXP controlSEXP) {
+// rcpp_abclass_linear_fit
+Rcpp::List rcpp_abclass_linear_fit(const arma::mat& x, const arma::uvec& y, const Rcpp::List& control);
+RcppExport SEXP _abclass_rcpp_abclass_linear_fit(SEXP xSEXP, SEXP ySEXP, SEXP controlSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::mat& >::type x(xSEXP);
     Rcpp::traits::input_parameter< const arma::uvec& >::type y(ySEXP);
     Rcpp::traits::input_parameter< const Rcpp::List& >::type control(controlSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpp_abclass_fit(x, y, control));
+    rcpp_result_gen = Rcpp::wrap(rcpp_abclass_linear_fit(x, y, control));
     return rcpp_result_gen;
 END_RCPP
 }
-// rcpp_abclass_fit_sp
-Rcpp::List rcpp_abclass_fit_sp(const arma::sp_mat& x, const arma::uvec& y, const Rcpp::List& control);
-RcppExport SEXP _abclass_rcpp_abclass_fit_sp(SEXP xSEXP, SEXP ySEXP, SEXP controlSEXP) {
+// rcpp_abclass_linear_fit_sp
+Rcpp::List rcpp_abclass_linear_fit_sp(const arma::sp_mat& x, const arma::uvec& y, const Rcpp::List& control);
+RcppExport SEXP _abclass_rcpp_abclass_linear_fit_sp(SEXP xSEXP, SEXP ySEXP, SEXP controlSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::sp_mat& >::type x(xSEXP);
     Rcpp::traits::input_parameter< const arma::uvec& >::type y(ySEXP);
     Rcpp::traits::input_parameter< const Rcpp::List& >::type control(controlSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpp_abclass_fit_sp(x, y, control));
+    rcpp_result_gen = Rcpp::wrap(rcpp_abclass_linear_fit_sp(x, y, control));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -148,8 +148,8 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_abclass_rcpp_abclass_fit", (DL_FUNC) &_abclass_rcpp_abclass_fit, 3},
-    {"_abclass_rcpp_abclass_fit_sp", (DL_FUNC) &_abclass_rcpp_abclass_fit_sp, 3},
+    {"_abclass_rcpp_abclass_linear_fit", (DL_FUNC) &_abclass_rcpp_abclass_linear_fit, 3},
+    {"_abclass_rcpp_abclass_linear_fit_sp", (DL_FUNC) &_abclass_rcpp_abclass_linear_fit_sp, 3},
     {"_abclass_cv_samples", (DL_FUNC) &_abclass_cv_samples, 3},
     {"_abclass_rcpp_pred_prob", (DL_FUNC) &_abclass_rcpp_pred_prob, 5},
     {"_abclass_rcpp_pred_prob_sp", (DL_FUNC) &_abclass_rcpp_pred_prob_sp, 5},

@@ -19,7 +19,8 @@
 #define ABCLASS_MLOGIT_H
 
 #include <RcppArmadillo.h>
-#include "Simplex.h"
+
+#include "Data.h"
 
 namespace abclass
 {
@@ -34,12 +35,12 @@ namespace abclass
                            const arma::vec& obs_weight,
                            const arma::uvec& y) const
         {
-            double res { 0.0 };
-            for (size_t i {0}; i < y.n_elem; ++i) {
-                arma::rowvec fi { pred_f0.row(i) };
+            double res{0.0};
+            for (size_t i{0}; i < y.n_elem; ++i) {
+                arma::rowvec fi{pred_f0.row(i)};
                 fi -= fi(y(i));
-                double tmp { 0.0 };
-                for (size_t j {0}; j < fi.n_elem; ++j) {
+                double tmp{0.0};
+                for (size_t j{0}; j < fi.n_elem; ++j) {
                     if (j == y[i]) {
                         tmp += 1.0;
                         continue;
@@ -58,59 +59,57 @@ namespace abclass
         }
 
         // methods for Abclass
-        template<typename T_x>
-        inline double loss(const Simplex2<T_x>& data,
-                           const arma::vec& obs_weight) const
+        template <typename T_x>
+        inline double loss(const Data<T_x>* const p_data,
+                           const IterCache cache) const
         {
-            arma::mat pred_f0 { data.iter_pred_f_ * data.vertex_ };
-            return loss(pred_f0, obs_weight, data.y_);
+            arma::mat pred_f0{cache.iter_pred_f_ * p_data->vertex_};
+            return loss(pred_f0, p_data->obs_weights_, p_data->y_);
         }
 
         // gradient of loss wrt the (K-1) decision functions with weights
-        template<typename T_x>
-        inline arma::mat dloss_df(const Simplex2<T_x>& data,
-                                  const arma::vec& obs_weight) const
+        template <typename T_x>
+        inline arma::mat dloss_df(const Data<T_x>* const p_data,
+                                  const IterCache& cache) const
         {
-            arma::mat out(data.n_obs_, data.km1_);
-            for (size_t i {0}; i < data.n_obs_; ++i) {
-                arma::rowvec vi { data.iter_pred_f_.row(i) * data.vertex_ };
+            arma::mat out(p_data->n_obs_, p_data->km1_);
+            for (size_t i{0}; i < p_data->n_obs_; ++i) {
+                arma::rowvec vi{cache.iter_pred_f_.row(i) * p_data->vertex_};
                 vi = arma::exp(vi);
                 vi /= arma::accu(vi);
-                for (size_t j {0}; j < data.t_vertex_.n_rows; ++j) {
-                    if (j == data.y_[i]) {
+                for (size_t j{0}; j < p_data->t_vertex_.n_rows; ++j) {
+                    if (j == p_data->y_[i]) {
                         continue;
                     }
-                    arma::rowvec w_diff {
-                        data.t_vertex_.row(j) - data.t_vertex_.row(data.y_[i])
-                    };
+                    arma::rowvec w_diff{p_data->t_vertex_.row(j) -
+                                        p_data->t_vertex_.row(p_data->y_[i])};
                     out.row(i) += vi(j) * w_diff;
                 }
-                out.row(i) *= obs_weight(i);
+                out.row(i) *= p_data->obs_weights_(i);
             }
             return out;
         }
 
         // gradient of loss wrt the k-th decision function
-        template<typename T_x>
-        inline arma::vec dloss_df(const Simplex2<T_x>& data,
-                                  const arma::vec& obs_weight,
+        template <typename T_x>
+        inline arma::vec dloss_df(const Data<T_x>* const p_data,
+                                  const IterCache& cache,
                                   const unsigned int k) const
         {
-            arma::vec out(data.y_.n_elem);
-            for (size_t i {0}; i < data.y_.n_elem; ++i) {
-                arma::rowvec vi { data.iter_pred_f_.row(i) * data.vertex_ };
+            arma::vec out(p_data->y_.n_elem);
+            for (size_t i{0}; i < p_data->y_.n_elem; ++i) {
+                arma::rowvec vi{cache.iter_pred_f_.row(i) * p_data->vertex_};
                 vi = arma::exp(vi);
                 vi /= arma::accu(vi);
-                for (size_t j {0}; j < data.t_vertex_.n_rows; ++j) {
-                    if (j == data.y_[i]) {
+                for (size_t j{0}; j < p_data->t_vertex_.n_rows; ++j) {
+                    if (j == p_data->y_[i]) {
                         continue;
                     }
-                    double w_diff {
-                        data.t_vertex_(j, k) - data.t_vertex_(data.y_[i], k)
-                    };
+                    double w_diff{p_data->t_vertex_(j, k) -
+                                  p_data->t_vertex_(p_data->y_[i], k)};
                     out(i) += vi(j) * w_diff;
                 }
-                out(i) *= obs_weight(i);
+                out(i) *= p_data->obs_weights_(i);
             }
             return out;
         }
@@ -118,37 +117,33 @@ namespace abclass
         // for linear learning
         // gradient wrt beta_g.
         template <typename T_x>
-        inline arma::mat dloss_dbeta(const Simplex2<T_x>& data,
-                                     const arma::vec& obs_weight,
+        inline arma::mat dloss_dbeta(const Data<T_x>* const p_data,
+                                     const IterCache& cache,
                                      const unsigned int g) const
         {
-            arma::mat dmat { dloss_df(data, obs_weight) };
-            for (size_t j {0}; j < dmat.n_cols; ++j) {
-                dmat.col(j) %= data.x_.col(g);
+            arma::mat dmat{dloss_df(p_data, cache)};
+            for (size_t j{0}; j < dmat.n_cols; ++j) {
+                dmat.col(j) %= p_data->x_.col(g);
             }
             return dmat;
         }
 
         // gradient wrt beta_gk
         template <typename T_x>
-        inline arma::vec dloss_dbeta(const Simplex2<T_x>& data,
-                                     const arma::vec& obs_weight,
-                                     const unsigned int g,
-                                     const unsigned int k) const
+        inline arma::vec
+        dloss_dbeta(const Data<T_x>* const p_data, const IterCache& cache,
+                    const unsigned int g, const unsigned int k) const
         {
-            arma::vec dvec { dloss_df(data, obs_weight, k) };
-            dvec %= data.x_.col(g);
+            arma::vec dvec{dloss_df(p_data, cache, k)};
+            dvec %= p_data->x_.col(g);
             return dvec;
         }
 
         // MM lowerbound factor
-        inline double mm_lowerbound(const double dk) const
-        {
-            return 1.0 / dk;
-        }
+        inline double mm_lowerbound(const double dk) const { return 1.0 / dk; }
 
-    };                          // end of class
+    }; // end of class
 
-}  // abclass
+} // namespace abclass
 
 #endif /* ABCLASS_MLOGIT_H */
