@@ -49,7 +49,7 @@ namespace abclass
         using AbclassCD<T_loss, T_x>::strong_rule_rhs;
 
         // specifying that a blockwise CD should be used
-        inline void set_active_ncol() override { active_ncol_ = 1; }
+        inline void set_active_ncol() { active_ncol_ = 1; }
 
         // group penalty for coefficients of one covariate
         inline double penalty1(const arma::rowvec& beta, const double l1_lambda,

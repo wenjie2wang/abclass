@@ -52,7 +52,7 @@ namespace abclass
         bool converged_;
 
         // specifying if a blockwise CD should be used
-        inline virtual void set_active_ncol()
+        inline void set_active_ncol()
         {
             active_ncol_ = static_cast<size_t>(p_data_->km1_);
         }
@@ -332,7 +332,6 @@ namespace abclass
         using AbclassLinear<T_loss, T_x>::p_data_;
 
         // from AbclassLinear
-        using AbclassLinear<T_loss, T_x>::pre_fit;
         using AbclassLinear<T_loss, T_x>::set_mm_lowerbound;
         using AbclassLinear<T_loss, T_x>::output_;
         using AbclassLinear<T_loss, T_x>::control_;
@@ -350,7 +349,7 @@ namespace abclass
         }
 
         // prepare for model fitting
-        inline void pre_fit() override
+        inline void pre_fit()
         {
             AbclassLinear<T_loss, T_x>::pre_fit();
             // set penalty factor from the control_

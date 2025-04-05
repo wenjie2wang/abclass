@@ -27,8 +27,8 @@
 namespace abclass
 {
     // angle-based classifiers with linear learning
-    // T_x is intended to be arma::mat or arma::sp_mat
-    // T_loss should be one of the loss function classes
+    // T_loss: one of the loss function classes
+    // T_x: arma::mat or arma::sp_mat
     template <typename T_loss, typename T_x = arma::mat>
     class AbclassLinear : public Abclass<T_loss, T_x>
     {
@@ -135,6 +135,15 @@ namespace abclass
             }
         }
 
+        // prepare for model fitting
+        inline void pre_fit()
+        {
+            Abclass<T_loss, T_x>::pre_fit();
+            set_coef_lower_limit(p_control_->lower_limit_);
+            set_coef_upper_limit(p_control_->upper_limit_);
+            scale_coef_limits();
+        }
+
     public:
         AbclassLinear() {}
 
@@ -154,15 +163,6 @@ namespace abclass
         using Abclass<T_loss, T_x>::accuracy;
         using Abclass<T_loss, T_x>::predict_prob;
         using Abclass<T_loss, T_x>::predict_y;
-
-        // prepare for model fitting
-        inline void pre_fit() override
-        {
-            Abclass<T_loss, T_x>::pre_fit();
-            set_coef_lower_limit(p_control_->lower_limit_);
-            set_coef_upper_limit(p_control_->upper_limit_);
-            scale_coef_limits();
-        }
 
         // set coef lower limit
         inline void set_coef_lower_limit(const arma::mat& lower_limit)

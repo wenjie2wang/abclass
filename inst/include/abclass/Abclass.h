@@ -47,6 +47,22 @@ namespace abclass
             return loss_fun_.dloss_df(p_data_, iter_cache_, k);
         }
 
+        // prepare for model fitting
+        inline void pre_fit()
+        {
+            if (empty_data()) {
+                throw std::invalid_argument("Data cannot be empty.");
+            }
+            if (p_data_->x_.empty()) {
+                throw std::invalid_argument("The 'x' cannot be empty.");
+            }
+            if (p_data_->y_.empty()) {
+                throw std::invalid_argument("The 'y' cannot be empty.");
+            }
+            output_.data_ = p_data_;
+            control_ = *p_control_;
+        }
+
     public:
         T_loss loss_fun_;      // loss funciton class
         IterCache iter_cache_; // intermediate results
@@ -56,7 +72,7 @@ namespace abclass
         const Data<T_x>* p_data_{nullptr};
         // outputs
         Output<T_x> output_;
-        Control& control_{output_.control_};
+        Control control_;
 
         // constructors
         Abclass() {}
@@ -83,24 +99,8 @@ namespace abclass
         // check data
         inline bool empty_data() { return p_data_ == nullptr; }
 
-        // prepare for model fitting
-        inline virtual void pre_fit()
-        {
-            if (empty_data()) {
-                throw std::invalid_argument("Data cannot be empty.");
-            }
-            if (p_data_->x_.empty()) {
-                throw std::invalid_argument("The 'x' cannot be empty.");
-            }
-            if (p_data_->y_.empty()) {
-                throw std::invalid_argument("The 'y' cannot be empty.");
-            }
-            output_.data_ = p_data_;
-            output_.control_ = *p_control_;
-        }
-
         // conditional class probability
-        inline virtual arma::mat predict_prob(const arma::mat& pred_f) const
+        inline arma::mat predict_prob(const arma::mat& pred_f) const
         {
             // pred_f: n x (k - 1) matrix
             // vertex_: (k - 1) x k matrix
