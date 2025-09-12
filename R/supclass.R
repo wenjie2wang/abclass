@@ -23,8 +23,8 @@
 ##' For the multinomial logistic model or the proximal SVM model, this function
 ##' utilizes the function \code{quadprog::solve.QP()} to solve the equivalent
 ##' quadratic problem; For the multi-class SVM, this function utilizes GNU GLPK
-##' to solve the equivalent linear programming problem via the package {Rglpk}.
-##' It is recommended to use a recent version of {GLPK}.
+##' to solve the equivalent linear programming problem via the package \pkg{Rglpk}.
+##' It is recommended to use a recent version of \pkg{GLPK}.
 ##'
 ##' @inheritParams abclass
 ##'
