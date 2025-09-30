@@ -137,7 +137,8 @@ abclass <- function(x, y,
 ##'     reciprocal gamma parameter for group SCAD or group MCP.  A close-to-zero
 ##'     \code{ncv_kappa} would give a solution close to lasso solution.
 ##' @param gel_tau A positive parameter tau for group exponential lasso penalty.
-##' @param mellowmax_omega A positive parameter omega for Mellowmax penalty.
+##' @param mellowmax_omega A positive parameter omega for Mellowmax penalty.  It
+##'     is experimental and subject to removal in future.
 ##' @param lower_limit,upper_limit Numeric matrices representing the desired
 ##'     lower and upper limits for the coefficient estimates, respectively.
 ##' @param epsilon A positive number specifying the relative tolerance that

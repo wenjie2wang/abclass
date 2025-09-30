@@ -3,7 +3,7 @@ abclass
 
 [![CRAN_Status_Badge](https://www.r-pkg.org/badges/version/abclass)](https://CRAN.R-project.org/package=abclass)
 [![Build
-Status](https://github.com/wenjie2wang/abclass/workflows/R-CMD-check/badge.svg)](https://github.com/wenjie2wang/abclass/actions)
+Status](https://github.com/wenjie2wang/abclass-pkg-gh/actions/workflows/R-CMD-check.yaml)](https://github.com/wenjie2wang/abclass/actions)
 [![codecov](https://codecov.io/gh/wenjie2wang/abclass/branch/main/graph/badge.svg)](https://app.codecov.io/gh/wenjie2wang/abclass)
 
 The package **abclass** provides implementations of the multi-category
@@ -42,7 +42,7 @@ library(abclass)
 packageVersion("abclass")
 ```
 
-    ## [1] '0.5.0.9230'
+    ## [1] '0.5.0'
 
 ``` r
 ## toy examples for demonstration purpose

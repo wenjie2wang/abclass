@@ -122,7 +122,8 @@ reciprocal gamma parameter for group SCAD or group MCP.  A close-to-zero
 
 \item{gel_tau}{A positive parameter tau for group exponential lasso penalty.}
 
-\item{mellowmax_omega}{A positive parameter omega for Mellowmax penalty.}
+\item{mellowmax_omega}{A positive parameter omega for Mellowmax penalty.  It
+is experimental and subject to removal in future.}
 
 \item{lower_limit, upper_limit}{Numeric matrices representing the desired
 lower and upper limits for the coefficient estimates, respectively.}

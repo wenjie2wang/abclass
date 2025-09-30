@@ -1,4 +1,8 @@
-# abclass 0.4.1.9010
+# abclass 0.5.0
+
+## Major changes
+
+* Simplified specification of group penalty via `abclass.control()`.
 
 ## Minor changes
 

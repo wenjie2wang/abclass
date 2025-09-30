@@ -1,6 +1,6 @@
 Package: abclass
 Title: Angle-Based Classification
-Version: 0.5.0.9240
+Version: 0.5.0
 Authors@R: c(
     person(given = "Wenjie", family = "Wang",
            email = "wang@wwenjie.org",
@@ -31,4 +31,4 @@ License: GPL (>= 3)
 URL: https://wwenjie.org/abclass, https://github.com/wenjie2wang/abclass
 BugReports: https://github.com/wenjie2wang/abclass/issues
 Encoding: UTF-8
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
