@@ -1,3 +1,11 @@
+# abclass 0.5.1
+
+## Minor changes
+
+* Replaced `qpmadr::solveqp()` with `quadprog::solve.QP()` because the {qpmadr}
+  package was archived on CRAN as of 2023-01-10.
+
+
 # abclass 0.5.0
 
 ## Major changes
