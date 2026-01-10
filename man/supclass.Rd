@@ -105,7 +105,7 @@ penalties proposed by Zhang, et al. (2008) and Li & Zhang (2021).
 }
 \details{
 For the multinomial logistic model or the proximal SVM model, this function
-utilizes the function \code{qpmadr::solveqp()} to solve the equivalent
+utilizes the function \code{quadprog::solve.QP()} to solve the equivalent
 quadratic problem.  For the multi-class SVM, this function utilizes GNU
 Linear Programming Kit (GLPK) to solve the equivalent linear programming
 problem via the package \pkg{Rglpk}.  It is recommended to use a recent

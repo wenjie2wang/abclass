@@ -21,7 +21,7 @@
 ##' penalties proposed by Zhang, et al. (2008) and Li & Zhang (2021).
 ##'
 ##' For the multinomial logistic model or the proximal SVM model, this function
-##' utilizes the function \code{qpmadr::solveqp()} to solve the equivalent
+##' utilizes the function \code{quadprog::solve.QP()} to solve the equivalent
 ##' quadratic problem.  For the multi-class SVM, this function utilizes GNU
 ##' Linear Programming Kit (GLPK) to solve the equivalent linear programming
 ##' problem via the package \pkg{Rglpk}.  It is recommended to use a recent
@@ -68,7 +68,8 @@ supclass <- function(x, y,
     model <- match.arg(as.character(model),
                        choices = c("logistic", "psvm", "svm"))
     if (model %in% c("logistic", "psvm")) {
-        suggest_pkg("qpmadr")
+        ## suggest_pkg("qpmadr")
+        suggest_pkg("quadprog")
     } else {
         suggest_pkg("Rglpk")
     }
@@ -414,18 +415,18 @@ supclass_mlog <- function(x, y, penalty, start, control)
                       }
                 dvec <- c(dvec0, dp)
                 qres <- tryCatch({
-                    ## quadprog::solve.QP(Dmat = Dmat,
-                    ##                    dvec = - dvec,
-                    ##                    Amat = Amat,
-                    ##                    bvec = b0vec,
-                    ##                    meq = pp)
-                    qpmadr::solveqp(
-                                H = Dmat,
-                                h = dvec,
-                                A = t_Amat,
-                                Alb = b0vec,
-                                Aub = c(rep(0, pp), rep(Inf, 2 * p * K))
-                            )
+                    quadprog::solve.QP(Dmat = Dmat,
+                                       dvec = - dvec,
+                                       Amat = Amat,
+                                       bvec = b0vec,
+                                       meq = pp)
+                    ## qpmadr::solveqp(
+                    ##             H = Dmat,
+                    ##             h = dvec,
+                    ##             A = t_Amat,
+                    ##             Alb = b0vec,
+                    ##             Aub = c(rep(0, pp), rep(Inf, 2 * p * K))
+                    ##         )
                 }, error = function(e) e)
                 beta1 <- if (inherits(qres, "error")) {
                              warning(
@@ -448,18 +449,18 @@ supclass_mlog <- function(x, y, penalty, start, control)
                     dp <- scaddp(control$scad_a, control$lambda[l], eta)
                     dvec <- c(dvec0, dp)
                     qres <- tryCatch({
-                        ## quadprog::solve.QP(Dmat = Dmat,
-                        ##                    dvec = - dvec,
-                        ##                    Amat = Amat,
-                        ##                    bvec = b0vec,
-                        ##                    meq = pp)
-                        qpmadr::solveqp(
-                                    H = Dmat,
-                                    h = dvec,
-                                    A = t_Amat,
-                                    Alb = b0vec,
-                                    Aub = c(rep(0, pp), rep(Inf, 2 * p * K))
-                                )
+                        quadprog::solve.QP(Dmat = Dmat,
+                                           dvec = - dvec,
+                                           Amat = Amat,
+                                           bvec = b0vec,
+                                           meq = pp)
+                        ## qpmadr::solveqp(
+                        ##             H = Dmat,
+                        ##             h = dvec,
+                        ##             A = t_Amat,
+                        ##             Alb = b0vec,
+                        ##             Aub = c(rep(0, pp), rep(Inf, 2 * p * K))
+                        ##         )
                     }, error = function(e) e)
                     if (inherits(qres, "error")) {
                         warning(
@@ -573,18 +574,18 @@ supclass_mpsvm <- function(x, y, penalty, start, control)
                   }
             dvec <- c(dvec0, dp)
             qres <- tryCatch({
-                ## quadprog::solve.QP(Dmat = Dmat,
-                ##                    dvec = - dvec,
-                ##                    Amat = Amat,
-                ##                    bvec = b0vec,
-                ##                    meq = pp)
-                qpmadr::solveqp(
-                            H = Dmat,
-                            h = dvec,
-                            A = t_Amat,
-                            Alb = b0vec,
-                            Aub = c(rep(0, pp), rep(Inf, 2 * p * K))
-                        )
+                quadprog::solve.QP(Dmat = Dmat,
+                                   dvec = - dvec,
+                                   Amat = Amat,
+                                   bvec = b0vec,
+                                   meq = pp)
+                ## qpmadr::solveqp(
+                ##             H = Dmat,
+                ##             h = dvec,
+                ##             A = t_Amat,
+                ##             Alb = b0vec,
+                ##             Aub = c(rep(0, pp), rep(Inf, 2 * p * K))
+                ##         )
             }, error = function(e) e)
             beta1 <- if (inherits(qres, "error")) {
                          warning(qres,
@@ -608,18 +609,18 @@ supclass_mpsvm <- function(x, y, penalty, start, control)
                 dp <- scaddp(control$scad_a, control$lambda[l], eta)
                 dvec <- c(dvec0, dp)
                 qres <- tryCatch({
-                    ## quadprog::solve.QP(Dmat = Dmat,
-                    ##                    dvec = - dvec,
-                    ##                    Amat = Amat,
-                    ##                    bvec = b0vec,
-                    ##                    meq = pp)
-                    qpmadr::solveqp(
-                                H = Dmat,
-                                h = dvec,
-                                A = t_Amat,
-                                Alb = b0vec,
-                                Aub = c(rep(0, pp), rep(Inf, 2 * p * K))
-                            )
+                    quadprog::solve.QP(Dmat = Dmat,
+                                       dvec = - dvec,
+                                       Amat = Amat,
+                                       bvec = b0vec,
+                                       meq = pp)
+                    ## qpmadr::solveqp(
+                    ##             H = Dmat,
+                    ##             h = dvec,
+                    ##             A = t_Amat,
+                    ##             Alb = b0vec,
+                    ##             Aub = c(rep(0, pp), rep(Inf, 2 * p * K))
+                    ##         )
                 }, error = function(e) e)
                 if (inherits(qres, "error")) {
                     warning(qres, "\nReverted to the solution from last step.")

@@ -1,6 +1,6 @@
 Package: abclass
 Title: Angle-Based Classification
-Version: 0.5.0
+Version: 0.5.1
 Authors@R: c(
     person(given = "Wenjie", family = "Wang",
            email = "wang@wwenjie.org",
@@ -24,7 +24,7 @@ LinkingTo:
 Suggests:
     Matrix,
     Rglpk,
-    qpmadr,
+    quadprog,
     tinytest
 Copyright: Eli Lilly and Company
 License: GPL (>= 3)
