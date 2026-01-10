@@ -7,7 +7,7 @@ bibentry(
     author = c(
         as.person("Wenjie Wang")
         ),
-    year = "2025",
+    year = "2026",
     url = "https://CRAN.R-project.org/package=abclass",
     note = "{R} package version 0.5.1"
 )
