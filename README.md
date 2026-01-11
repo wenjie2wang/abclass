@@ -144,6 +144,6 @@ mean(test_y == pred3) # accuracy
 
 ## License
 
-[GNU General Public License](https://www.gnu.org/licenses/) (≥ 3)
+GNU General Public License (≥ 3)
 
 Copyright holder: Eli Lilly and Company
