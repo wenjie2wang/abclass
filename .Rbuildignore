@@ -18,6 +18,7 @@
 ^\.\#
 ^\.clang-format$
 ^\.clangd$
+^\.claude$
 ^\.dir-locals\.el$
 ^\.git$
 ^\.github$

@@ -6,6 +6,7 @@
 .Rhistory
 .clang-format
 .clangd
+.claude
 GPATH
 GRTAGS
 GTAGS
