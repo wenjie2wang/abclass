@@ -1,6 +1,6 @@
 //
 // R package abclass developed by Wenjie Wang <wang@wwenjie.org>
-// Copyright (C) 2021-2025 Eli Lilly and Company
+// Copyright (C) 2021-2026 Eli Lilly and Company
 //
 // This file is part of the R package abclass.
 //
@@ -15,11 +15,11 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //
 
-#include <RcppArmadillo.h>
+#include <RcppEigen.h>
 #include <abclass.h>
 
 // [[Rcpp::export]]
-arma::mat rcpp_vertex(const unsigned int k)
+Eigen::MatrixXd rcpp_vertex(const unsigned int k)
 {
     abclass::Simplex obj { k };
     return obj.vertex_;

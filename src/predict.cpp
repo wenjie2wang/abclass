@@ -1,6 +1,6 @@
 //
 // R package abclass developed by Wenjie Wang <wang@wwenjie.org>
-// Copyright (C) 2021-2025 Eli Lilly and Company
+// Copyright (C) 2021-2026 Eli Lilly and Company
 //
 // This file is part of the R package abclass.
 //
@@ -15,16 +15,17 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //
 
-#include <RcppArmadillo.h>
+#include <RcppEigen.h>
 #include <abclass.h>
 
 template <typename T_x>
-arma::mat predict_prob(const T_x& x, const arma::mat& beta,
-                       const arma::mat& offset, const size_t loss_id,
-                       const Rcpp::List& loss_params)
+Eigen::MatrixXd predict_prob(const T_x& x, abclass::ConstRefMatrixXd beta,
+                             abclass::ConstRefMatrixXd offset,
+                             const size_t loss_id,
+                             const Rcpp::List& loss_params)
 {
-    const unsigned int k{beta.n_cols + 1};
-    const bool intercept{beta.n_rows > x.n_cols};
+    const unsigned int k{static_cast<unsigned int>(beta.cols()) + 1};
+    const bool intercept{beta.rows() > x.cols()};
     abclass::Data<T_x> new_data{k, intercept, false};
     switch (loss_id) {
     case 1: {
@@ -58,26 +59,19 @@ arma::mat predict_prob(const T_x& x, const arma::mat& beta,
         abclass::AbclassLinear<abclass::LikeBoost, T_x> object{new_data};
         return object.predict_prob(beta, x, offset);
     }
-    case 8: {
-        abclass::AbclassLinear<abclass::LikeHingeBoost, T_x> object{new_data};
-        return object.predict_prob(beta, x, offset);
-    }
-    case 9: {
-        abclass::AbclassLinear<abclass::LikeLum, T_x> object{new_data};
-        return object.predict_prob(beta, x, offset);
-    }
     default:
         break;
     }
-    return arma::mat();
+    return Eigen::MatrixXd();
 }
 
 template <typename T_x>
-arma::uvec predict_y(const T_x& x, const arma::mat& beta,
-                     const arma::mat& offset, const size_t loss_id)
+Eigen::VectorXi predict_y(const T_x& x, abclass::ConstRefMatrixXd beta,
+                           abclass::ConstRefMatrixXd offset,
+                           const size_t loss_id)
 {
-    const unsigned int k{beta.n_cols + 1};
-    const bool intercept{beta.n_rows > x.n_cols};
+    const unsigned int k{static_cast<unsigned int>(beta.cols()) + 1};
+    const bool intercept{beta.rows() > x.cols()};
     abclass::Data<T_x> new_data{k, intercept, false};
     switch (loss_id) {
     case 1: {
@@ -108,71 +102,73 @@ arma::uvec predict_y(const T_x& x, const arma::mat& beta,
         abclass::AbclassLinear<abclass::LikeBoost, T_x> object{new_data};
         return object.predict_y(beta, x, offset);
     }
-    case 8: {
-        abclass::AbclassLinear<abclass::LikeHingeBoost, T_x> object{new_data};
-        return object.predict_y(beta, x, offset);
-    }
-    case 9: {
-        abclass::AbclassLinear<abclass::LikeLum, T_x> object{new_data};
-        return object.predict_y(beta, x, offset);
-    }
     default:
         break;
     }
-    return arma::uvec();
+    return Eigen::VectorXi();
 }
 
 template <typename T_x>
-arma::mat predict_link(const T_x& x, const arma::mat& beta,
-                       const arma::mat& offset)
+Eigen::MatrixXd predict_link(const T_x& x, abclass::ConstRefMatrixXd beta,
+                              abclass::ConstRefMatrixXd offset)
 {
-    const unsigned int k{beta.n_cols + 1};
-    const bool intercept{beta.n_rows > x.n_cols};
+    const unsigned int k{static_cast<unsigned int>(beta.cols()) + 1};
+    const bool intercept{beta.rows() > x.cols()};
     abclass::Data<T_x> new_data{k, intercept, false};
     abclass::AbclassLinear<abclass::Logistic, T_x> object{new_data};
     return object.linear_score(beta, x, offset);
 }
 
 // [[Rcpp::export]]
-arma::mat rcpp_pred_prob(const arma::mat& beta, const arma::mat& x,
-                         const arma::mat& offset, const size_t loss_id,
-                         const Rcpp::List& loss_params)
+Eigen::MatrixXd rcpp_pred_prob(const Eigen::MatrixXd& beta,
+                               const Eigen::MatrixXd& x,
+                               const Eigen::MatrixXd& offset,
+                               const size_t loss_id,
+                               const Rcpp::List& loss_params)
 {
     return predict_prob(x, beta, offset, loss_id, loss_params);
 }
 
 // [[Rcpp::export]]
-arma::mat rcpp_pred_prob_sp(const arma::mat& beta, const arma::sp_mat& x,
-                            const arma::mat& offset, const size_t loss_id,
-                            const Rcpp::List& loss_params)
+Eigen::MatrixXd rcpp_pred_prob_sp(const Eigen::MatrixXd& beta,
+                                  const Eigen::SparseMatrix<double>& x,
+                                  const Eigen::MatrixXd& offset,
+                                  const size_t loss_id,
+                                  const Rcpp::List& loss_params)
 {
     return predict_prob(x, beta, offset, loss_id, loss_params);
 }
 
 // [[Rcpp::export]]
-arma::uvec rcpp_pred_y(const arma::mat& beta, const arma::mat& x,
-                       const arma::mat& offset, const size_t loss_id)
+Eigen::VectorXi rcpp_pred_y(const Eigen::MatrixXd& beta,
+                            const Eigen::MatrixXd& x,
+                            const Eigen::MatrixXd& offset,
+                            const size_t loss_id)
 {
     return predict_y(x, beta, offset, loss_id);
 }
 
 // [[Rcpp::export]]
-arma::uvec rcpp_pred_y_sp(const arma::mat& beta, const arma::sp_mat& x,
-                          const arma::mat& offset, const size_t loss_id)
+Eigen::VectorXi rcpp_pred_y_sp(const Eigen::MatrixXd& beta,
+                               const Eigen::SparseMatrix<double>& x,
+                               const Eigen::MatrixXd& offset,
+                               const size_t loss_id)
 {
     return predict_y(x, beta, offset, loss_id);
 }
 
 // [[Rcpp::export]]
-arma::mat rcpp_pred_link(const arma::mat& beta, const arma::mat& x,
-                         const arma::mat& offset)
+Eigen::MatrixXd rcpp_pred_link(const Eigen::MatrixXd& beta,
+                               const Eigen::MatrixXd& x,
+                               const Eigen::MatrixXd& offset)
 {
     return predict_link(x, beta, offset);
 }
 
 // [[Rcpp::export]]
-arma::mat rcpp_pred_link_sp(const arma::mat& beta, const arma::sp_mat& x,
-                            const arma::mat& offset)
+Eigen::MatrixXd rcpp_pred_link_sp(const Eigen::MatrixXd& beta,
+                                  const Eigen::SparseMatrix<double>& x,
+                                  const Eigen::MatrixXd& offset)
 {
     return predict_link(x, beta, offset);
 }
