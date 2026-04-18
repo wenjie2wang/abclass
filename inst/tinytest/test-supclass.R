@@ -1,3 +1,4 @@
+set.seed(123)
 ntrain <- 100
 ntest <- 1000
 p <- 2
