@@ -1,6 +1,7 @@
 \.Rcheck$
 \.Rout$
 \.Rproj$
+\.git$
 \.tar\.gz$
 ^GPATH$
 ^GRTAGS$
@@ -20,13 +21,13 @@
 ^\.clangd$
 ^\.claude$
 ^\.dir-locals\.el$
-^\.git$
 ^\.github$
 ^\.gitlab-ci.yml$
 ^\.travis\.yml$
 ^_pkgdown\.yml$
 ^appveyor\.yml$
 ^docs$
+^inst/include/README\.md$
 ^misc$
 ^revdep$
 ^test$

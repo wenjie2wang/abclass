@@ -1,0 +1,3 @@
+[submodule "inst/include"]
+	path = inst/include
+	url = git@github.com:wenjie2wang/abclass-cpp.git
