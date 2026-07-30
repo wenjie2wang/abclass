@@ -24,39 +24,53 @@ Eigen::MatrixXd predict_prob(const T_x& x, abclass::ConstRefMatrixXd beta,
                              const size_t loss_id,
                              const Rcpp::List& loss_params)
 {
-    const unsigned int k{static_cast<unsigned int>(beta.cols()) + 1};
+    const Eigen::Index k{beta.cols() + 1};
     const bool intercept{beta.rows() > x.cols()};
-    abclass::Data<T_x> new_data{k, intercept, false};
     switch (loss_id) {
     case 1: {
-        abclass::AbclassLinear<abclass::Logistic, T_x> object{new_data};
+        abclass::LogitNet<T_x> object;
+        object.data_.set_k(k);
+        object.ctrl_.set_intercept(intercept);
         return object.predict_prob(beta, x, offset);
     }
     case 2: {
-        abclass::AbclassLinear<abclass::Boost, T_x> object{new_data};
+        abclass::BoostNet<T_x> object;
+        object.data_.set_k(k);
+        object.ctrl_.set_intercept(intercept);
         object.loss_fun_.set_inner_min(loss_params["boost_umin"]);
         return object.predict_prob(beta, x, offset);
     }
     case 3: {
-        abclass::AbclassLinear<abclass::HingeBoost, T_x> object{new_data};
+        abclass::HBoostNet<T_x> object;
+        object.data_.set_k(k);
+        object.ctrl_.set_intercept(intercept);
         object.loss_fun_.set_c(loss_params["lum_c"]);
         return object.predict_prob(beta, x, offset);
     }
     case 4: {
-        abclass::AbclassLinear<abclass::Lum, T_x> object{new_data};
+        abclass::LumNet<T_x> object;
+        object.data_.set_k(k);
+        object.ctrl_.set_intercept(intercept);
         object.loss_fun_.set_ac(loss_params["lum_a"], loss_params["lum_c"]);
         return object.predict_prob(beta, x, offset);
     }
     case 5: {
-        abclass::AbclassLinear<abclass::Mlogit, T_x> object{new_data};
+        // "mlogit" loss: former Mlogit class, now an alias for LikeBoost
+        abclass::LeBoostNet<T_x> object;
+        object.data_.set_k(k);
+        object.ctrl_.set_intercept(intercept);
         return object.predict_prob(beta, x, offset);
     }
     case 6: {
-        abclass::AbclassLinear<abclass::LikeLogistic, T_x> object{new_data};
+        abclass::LeLogitNet<T_x> object;
+        object.data_.set_k(k);
+        object.ctrl_.set_intercept(intercept);
         return object.predict_prob(beta, x, offset);
     }
     case 7: {
-        abclass::AbclassLinear<abclass::LikeBoost, T_x> object{new_data};
+        abclass::LeBoostNet<T_x> object;
+        object.data_.set_k(k);
+        object.ctrl_.set_intercept(intercept);
         return object.predict_prob(beta, x, offset);
     }
     default:
@@ -70,36 +84,50 @@ Eigen::VectorXi predict_y(const T_x& x, abclass::ConstRefMatrixXd beta,
                            abclass::ConstRefMatrixXd offset,
                            const size_t loss_id)
 {
-    const unsigned int k{static_cast<unsigned int>(beta.cols()) + 1};
+    const Eigen::Index k{beta.cols() + 1};
     const bool intercept{beta.rows() > x.cols()};
-    abclass::Data<T_x> new_data{k, intercept, false};
     switch (loss_id) {
     case 1: {
-        abclass::AbclassLinear<abclass::Logistic, T_x> object{new_data};
+        abclass::LogitNet<T_x> object;
+        object.data_.set_k(k);
+        object.ctrl_.set_intercept(intercept);
         return object.predict_y(beta, x, offset);
     }
     case 2: {
-        abclass::AbclassLinear<abclass::Boost, T_x> object{new_data};
+        abclass::BoostNet<T_x> object;
+        object.data_.set_k(k);
+        object.ctrl_.set_intercept(intercept);
         return object.predict_y(beta, x, offset);
     }
     case 3: {
-        abclass::AbclassLinear<abclass::HingeBoost, T_x> object{new_data};
+        abclass::HBoostNet<T_x> object;
+        object.data_.set_k(k);
+        object.ctrl_.set_intercept(intercept);
         return object.predict_y(beta, x, offset);
     }
     case 4: {
-        abclass::AbclassLinear<abclass::Lum, T_x> object{new_data};
+        abclass::LumNet<T_x> object;
+        object.data_.set_k(k);
+        object.ctrl_.set_intercept(intercept);
         return object.predict_y(beta, x, offset);
     }
     case 5: {
-        abclass::AbclassLinear<abclass::Mlogit, T_x> object{new_data};
+        // "mlogit" loss: former Mlogit class, now an alias for LikeBoost
+        abclass::LeBoostNet<T_x> object;
+        object.data_.set_k(k);
+        object.ctrl_.set_intercept(intercept);
         return object.predict_y(beta, x, offset);
     }
     case 6: {
-        abclass::AbclassLinear<abclass::LikeLogistic, T_x> object{new_data};
+        abclass::LeLogitNet<T_x> object;
+        object.data_.set_k(k);
+        object.ctrl_.set_intercept(intercept);
         return object.predict_y(beta, x, offset);
     }
     case 7: {
-        abclass::AbclassLinear<abclass::LikeBoost, T_x> object{new_data};
+        abclass::LeBoostNet<T_x> object;
+        object.data_.set_k(k);
+        object.ctrl_.set_intercept(intercept);
         return object.predict_y(beta, x, offset);
     }
     default:
@@ -112,10 +140,11 @@ template <typename T_x>
 Eigen::MatrixXd predict_link(const T_x& x, abclass::ConstRefMatrixXd beta,
                               abclass::ConstRefMatrixXd offset)
 {
-    const unsigned int k{static_cast<unsigned int>(beta.cols()) + 1};
+    const Eigen::Index k{beta.cols() + 1};
     const bool intercept{beta.rows() > x.cols()};
-    abclass::Data<T_x> new_data{k, intercept, false};
-    abclass::AbclassLinear<abclass::Logistic, T_x> object{new_data};
+    abclass::LogitNet<T_x> object;
+    object.data_.set_k(k);
+    object.ctrl_.set_intercept(intercept);
     return object.linear_score(beta, x, offset);
 }
 

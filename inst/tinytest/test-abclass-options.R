@@ -32,8 +32,8 @@ for (pen in c("scad", "gscad", "mcp", "gmcp")) {
 ## intercept = FALSE
 ## -----------------------------------------------------------------------
 m_no_int <- abclass(train_x, train_y, nlambda = 5, intercept = FALSE)
-## coef always includes the intercept row (zeroed when intercept = FALSE)
-expect_equivalent(dim(coef(m_no_int, s = 5)), c(p + 1L, k - 1L))
+## coef excludes the intercept row when intercept = FALSE
+expect_equivalent(dim(coef(m_no_int, s = 5)), c(p, k - 1L))
 pred_no_int <- predict(m_no_int, test_x, s = 5)
 expect_equal(length(pred_no_int), ntest)
 
