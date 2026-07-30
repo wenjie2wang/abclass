@@ -35,8 +35,6 @@ abclass.control(
   epsilon = 1e-07,
   maxit = 100000L,
   standardize = TRUE,
-  varying_active_set = TRUE,
-  adjust_mm = FALSE,
   save_call = FALSE,
   verbose = 0L
 )
@@ -137,15 +135,6 @@ matrix should be standardized internally to have mean zero and standard
 deviation equal to the sample size.  The default value is \code{TRUE}.
 Notice that the coefficient estimates are always returned on the
 original scale.}
-
-\item{varying_active_set}{A logical value indicating if the active set
-should be updated after each cycle of coordinate-descent algorithm.  The
-default value is \code{TRUE} for usually more efficient estimation
-procedure.}
-
-\item{adjust_mm}{An experimental logical value specifying if the estimation
-procedure should track loss function and adjust the MM lower bound if
-needed.}
 
 \item{save_call}{A logical value indicating if the function call of the
 model fitting should be saved.  If \code{TRUE}, the function call will

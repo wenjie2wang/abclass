@@ -148,13 +148,6 @@ abclass <- function(x, y,
 ##'     deviation equal to the sample size.  The default value is \code{TRUE}.
 ##'     Notice that the coefficient estimates are always returned on the
 ##'     original scale.
-##' @param varying_active_set A logical value indicating if the active set
-##'     should be updated after each cycle of coordinate-descent algorithm.  The
-##'     default value is \code{TRUE} for usually more efficient estimation
-##'     procedure.
-##' @param adjust_mm An experimental logical value specifying if the estimation
-##'     procedure should track loss function and adjust the MM lower bound if
-##'     needed.
 ##' @param save_call A logical value indicating if the function call of the
 ##'     model fitting should be saved.  If \code{TRUE}, the function call will
 ##'     be saved in the returned object so that one can utilize
@@ -186,8 +179,6 @@ abclass.control <- function(## loss
                             epsilon = 1e-7,
                             maxit = 1e5L,
                             standardize = TRUE,
-                            varying_active_set = TRUE,
-                            adjust_mm = FALSE,
                             ## misc
                             save_call = FALSE,
                             verbose = 0L)
@@ -211,8 +202,6 @@ abclass.control <- function(## loss
         epsilon = epsilon,
         maxit = as.integer(maxit),
         standardize = standardize,
-        varying_active_set = varying_active_set,
-        adjust_mm = adjust_mm,
         save_call = save_call,
         verbose = as.integer(verbose)
     ), class = "abclass.control")

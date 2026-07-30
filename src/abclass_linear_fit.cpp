@@ -125,9 +125,7 @@ inline abclass::LinearControl abclass_control(const Rcpp::List& control)
         set_upper_limit(Rcpp::as<Eigen::MatrixXd>(control["upper_limit"])).
         reg_path(control["nlambda"],
                  control["lambda_min_ratio"],
-                 abclass::rvec2eigen(control["penalty_factor"]),
-                 control["varying_active_set"],
-                 control["adjust_mm"]).
+                 abclass::rvec2eigen(control["penalty_factor"])).
         reg_lambda(abclass::rvec2eigen(control["lambda"])).
         reg_ridge(control["alpha"],
                   control["lambda_max_alpha_min"]).
