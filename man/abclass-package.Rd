@@ -29,6 +29,11 @@ Useful links:
 \author{
 \strong{Maintainer}: Wenjie Wang \email{wang@wwenjie.org} (\href{https://orcid.org/0000-0003-0363-3180}{ORCID})
 
+Authors:
+\itemize{
+  \item Wenjie Wang \email{wang@wwenjie.org} (\href{https://orcid.org/0000-0003-0363-3180}{ORCID})
+}
+
 Other contributors:
 \itemize{
   \item  Eli Lilly and Company [copyright holder]

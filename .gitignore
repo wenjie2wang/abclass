@@ -4,8 +4,9 @@
 *.tar.gz
 *~
 .Rhistory
-.clang_complete
+.clang-format
 .clangd
+.claude
 GPATH
 GRTAGS
 GTAGS

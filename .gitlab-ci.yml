@@ -1,0 +1,7 @@
+job:
+  script:
+    - bash misc/deploy_docs.sh
+  only:
+    - main
+  tags:
+    - x220-shell

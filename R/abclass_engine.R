@@ -110,10 +110,10 @@
     }
     ## main
     call_list <- list(x = x, y = cat_y$y, control = ctrl)
-    fun_to_call <- if (is_x_sparse) {
-                       rcpp_abclass_fit_sp
+    fun_to_call <- if (!is_x_sparse) {
+                       rcpp_abclass_linear_fit
                    } else {
-                       rcpp_abclass_fit
+                       rcpp_abclass_linear_fit_sp
                    }
     res <- do.call(fun_to_call, call_list)
     ## post-process

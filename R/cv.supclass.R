@@ -46,6 +46,8 @@ cv.supclass <- function(x, y,
                         stratified = TRUE,
                         ...)
 {
+    model <- match.arg(model)
+    penalty <- match.arg(penalty)
     ## nfolds
     nfolds <- as.integer(nfolds)
     if (nfolds < 3L) {

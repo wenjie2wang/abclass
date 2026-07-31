@@ -42,7 +42,7 @@ library(abclass)
 packageVersion("abclass")
 ```
 
-    ## [1] '0.5.1'
+    ## [1] '0.5.1.9000'
 
 ``` r
 ## toy examples for demonstration purpose
@@ -78,17 +78,17 @@ table(test_y, pred1)
 
     ##          pred1
     ## test_y    label_1 label_2 label_3 label_4 label_5
-    ##   label_1    1704       0       3     296       0
-    ##   label_2       0    1862       0       0     106
-    ##   label_3       4      11    1739       0     198
-    ##   label_4       3      12       0    1947      70
-    ##   label_5       0      63      30       1    1951
+    ##   label_1    1583       0       2     418       0
+    ##   label_2       2    1853       0       0     113
+    ##   label_3       4      11    1728       0     209
+    ##   label_4       3      10       0    1927      92
+    ##   label_5       0      71      28       1    1945
 
 ``` r
 mean(test_y == pred1) # accuracy
 ```
 
-    ## [1] 0.9203
+    ## [1] 0.9036
 
 ``` r
 ### with groupwise lasso
@@ -100,17 +100,17 @@ table(test_y, pred2)
 
     ##          pred2
     ## test_y    label_1 label_2 label_3 label_4 label_5
-    ##   label_1    1994       1       2       3       3
-    ##   label_2       0    1784       0       0     184
-    ##   label_3       4       2    1336       0     610
-    ##   label_4      12      27       0    1963      30
-    ##   label_5       0      10       2       0    2033
+    ##   label_1    1993       2       2       4       2
+    ##   label_2       0    1821       0       0     147
+    ##   label_3       2       3    1501       0     446
+    ##   label_4       8      22       0    1981      21
+    ##   label_5       0      15       9       0    2021
 
 ``` r
 mean(test_y == pred2) # accuracy
 ```
 
-    ## [1] 0.911
+    ## [1] 0.9317
 
 ``` r
 ## tuning by ET-Lasso instead of cross-validation
@@ -123,16 +123,16 @@ table(test_y, pred3)
     ##          pred3
     ## test_y    label_1 label_2 label_3 label_4 label_5
     ##   label_1    1991       1       5       5       1
-    ##   label_2       0    1842       0       0     126
-    ##   label_3       3       7    1643       0     299
-    ##   label_4       7      13       0    1997      15
-    ##   label_5       0      18      11       0    2016
+    ##   label_2       0    1845       0       0     123
+    ##   label_3       3       7    1650       0     292
+    ##   label_4       7      13       0    1998      14
+    ##   label_5       0      20      12       0    2013
 
 ``` r
 mean(test_y == pred3) # accuracy
 ```
 
-    ## [1] 0.9489
+    ## [1] 0.9497
 
 ## References
 

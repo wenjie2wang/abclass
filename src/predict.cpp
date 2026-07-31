@@ -15,211 +15,189 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //
 
-#include <RcppArmadillo.h>
+#include <RcppEigen.h>
 #include <abclass.h>
 
 template <typename T_x>
-arma::mat predict_prob(const T_x& x,
-                       const arma::mat& beta,
-                       const arma::mat& offset,
-                       const size_t loss_id,
-                       const Rcpp::List& loss_params)
+Eigen::MatrixXd predict_prob(const T_x& x, abclass::ConstRefMatrixXd beta,
+                             abclass::ConstRefMatrixXd offset,
+                             const size_t loss_id,
+                             const Rcpp::List& loss_params)
 {
-    const unsigned int k { beta.n_cols + 1 };
+    const Eigen::Index k{beta.cols() + 1};
+    const bool intercept{beta.rows() > x.cols()};
     switch (loss_id) {
-        case 1:
-        {
-            abclass::AbclassLinear<abclass::Logistic, T_x> object { k };
-            object.set_intercept(beta.n_rows > x.n_cols);
-            return object.predict_prob(beta, x, offset);
-        }
-        case 2:
-        {
-            abclass::AbclassLinear<abclass::Boost, T_x> object { k };
-            object.loss_fun_.set_inner_min(loss_params["boost_umin"]);
-            object.set_intercept(beta.n_rows > x.n_cols);
-            return object.predict_prob(beta, x, offset);
-        }
-        case 3:
-        {
-            abclass::AbclassLinear<abclass::HingeBoost, T_x> object { k };
-            object.loss_fun_.set_c(loss_params["lum_c"]);
-            object.set_intercept(beta.n_rows > x.n_cols);
-            return object.predict_prob(beta, x, offset);
-        }
-        case 4:
-        {
-            abclass::AbclassLinear<abclass::Lum, T_x> object { k };
-            object.loss_fun_.set_ac(loss_params["lum_a"], loss_params["lum_c"]);
-            object.set_intercept(beta.n_rows > x.n_cols);
-            return object.predict_prob(beta, x, offset);
-        }
-        case 5:
-        {
-            abclass::AbclassLinear<abclass::Mlogit, T_x> object { k };
-            object.set_intercept(beta.n_rows > x.n_cols);
-            return object.predict_prob(beta, x, offset);
-        }
-        case 6:
-        {
-            abclass::AbclassLinear<abclass::LikeLogistic, T_x> object { k };
-            object.set_intercept(beta.n_rows > x.n_cols);
-            return object.predict_prob(beta, x, offset);
-        }
-        case 7:
-        {
-            abclass::AbclassLinear<abclass::LikeBoost, T_x> object { k };
-            object.set_intercept(beta.n_rows > x.n_cols);
-            return object.predict_prob(beta, x, offset);
-        }
-        case 8:
-        {
-            abclass::AbclassLinear<abclass::LikeHingeBoost, T_x> object { k };
-            object.set_intercept(beta.n_rows > x.n_cols);
-            return object.predict_prob(beta, x, offset);
-        }
-        case 9:
-        {
-            abclass::AbclassLinear<abclass::LikeLum, T_x> object { k };
-            object.set_intercept(beta.n_rows > x.n_cols);
-            return object.predict_prob(beta, x, offset);
-        }
-        default:
-            break;
+    case 1: {
+        abclass::LogitNet<T_x> object;
+        object.data_.set_k(k);
+        object.ctrl_.set_intercept(intercept);
+        return object.predict_prob(beta, x, offset);
     }
-    return arma::mat();
+    case 2: {
+        abclass::BoostNet<T_x> object;
+        object.data_.set_k(k);
+        object.ctrl_.set_intercept(intercept);
+        object.loss_fun_.set_inner_min(loss_params["boost_umin"]);
+        return object.predict_prob(beta, x, offset);
+    }
+    case 3: {
+        abclass::HBoostNet<T_x> object;
+        object.data_.set_k(k);
+        object.ctrl_.set_intercept(intercept);
+        object.loss_fun_.set_c(loss_params["lum_c"]);
+        return object.predict_prob(beta, x, offset);
+    }
+    case 4: {
+        abclass::LumNet<T_x> object;
+        object.data_.set_k(k);
+        object.ctrl_.set_intercept(intercept);
+        object.loss_fun_.set_ac(loss_params["lum_a"], loss_params["lum_c"]);
+        return object.predict_prob(beta, x, offset);
+    }
+    case 5: {
+        // "mlogit" loss: former Mlogit class, now an alias for LikeBoost
+        abclass::LeBoostNet<T_x> object;
+        object.data_.set_k(k);
+        object.ctrl_.set_intercept(intercept);
+        return object.predict_prob(beta, x, offset);
+    }
+    case 6: {
+        abclass::LeLogitNet<T_x> object;
+        object.data_.set_k(k);
+        object.ctrl_.set_intercept(intercept);
+        return object.predict_prob(beta, x, offset);
+    }
+    case 7: {
+        abclass::LeBoostNet<T_x> object;
+        object.data_.set_k(k);
+        object.ctrl_.set_intercept(intercept);
+        return object.predict_prob(beta, x, offset);
+    }
+    default:
+        break;
+    }
+    return Eigen::MatrixXd();
 }
 
 template <typename T_x>
-arma::uvec predict_y(const T_x& x,
-                     const arma::mat& beta,
-                     const arma::mat& offset,
-                     const size_t loss_id)
+Eigen::VectorXi predict_y(const T_x& x, abclass::ConstRefMatrixXd beta,
+                           abclass::ConstRefMatrixXd offset,
+                           const size_t loss_id)
 {
-    const unsigned int k { beta.n_cols + 1 };
+    const Eigen::Index k{beta.cols() + 1};
+    const bool intercept{beta.rows() > x.cols()};
     switch (loss_id) {
-        case 1:
-        {
-            abclass::AbclassLinear<abclass::Logistic, T_x> object { k };
-            object.set_intercept(beta.n_rows > x.n_cols);
-            return object.predict_y(beta, x, offset);
-        }
-        case 2:
-        {
-            abclass::AbclassLinear<abclass::Boost, T_x> object { k };
-            object.set_intercept(beta.n_rows > x.n_cols);
-            return object.predict_y(beta, x, offset);
-        }
-        case 3:
-        {
-            abclass::AbclassLinear<abclass::HingeBoost, T_x> object { k };
-            object.set_intercept(beta.n_rows > x.n_cols);
-            return object.predict_y(beta, x, offset);
-        }
-        case 4:
-        {
-            abclass::AbclassLinear<abclass::Lum, T_x> object { k };
-            object.set_intercept(beta.n_rows > x.n_cols);
-            return object.predict_y(beta, x, offset);
-        }
-        case 5:
-        {
-            abclass::AbclassLinear<abclass::Mlogit, T_x> object { k };
-            object.set_intercept(beta.n_rows > x.n_cols);
-            return object.predict_y(beta, x, offset);
-        }
-        case 6:
-        {
-            abclass::AbclassLinear<abclass::LikeLogistic, T_x> object { k };
-            object.set_intercept(beta.n_rows > x.n_cols);
-            return object.predict_y(beta, x, offset);
-        }
-        case 7:
-        {
-            abclass::AbclassLinear<abclass::LikeBoost, T_x> object { k };
-            object.set_intercept(beta.n_rows > x.n_cols);
-            return object.predict_y(beta, x, offset);
-        }
-        case 8:
-        {
-            abclass::AbclassLinear<abclass::LikeHingeBoost, T_x> object { k };
-            object.set_intercept(beta.n_rows > x.n_cols);
-            return object.predict_y(beta, x, offset);
-        }
-        case 9:
-        {
-            abclass::AbclassLinear<abclass::LikeLum, T_x> object { k };
-            object.set_intercept(beta.n_rows > x.n_cols);
-            return object.predict_y(beta, x, offset);
-        }
-        default:
-            break;
+    case 1: {
+        abclass::LogitNet<T_x> object;
+        object.data_.set_k(k);
+        object.ctrl_.set_intercept(intercept);
+        return object.predict_y(beta, x, offset);
     }
-    return arma::uvec();
+    case 2: {
+        abclass::BoostNet<T_x> object;
+        object.data_.set_k(k);
+        object.ctrl_.set_intercept(intercept);
+        return object.predict_y(beta, x, offset);
+    }
+    case 3: {
+        abclass::HBoostNet<T_x> object;
+        object.data_.set_k(k);
+        object.ctrl_.set_intercept(intercept);
+        return object.predict_y(beta, x, offset);
+    }
+    case 4: {
+        abclass::LumNet<T_x> object;
+        object.data_.set_k(k);
+        object.ctrl_.set_intercept(intercept);
+        return object.predict_y(beta, x, offset);
+    }
+    case 5: {
+        // "mlogit" loss: former Mlogit class, now an alias for LikeBoost
+        abclass::LeBoostNet<T_x> object;
+        object.data_.set_k(k);
+        object.ctrl_.set_intercept(intercept);
+        return object.predict_y(beta, x, offset);
+    }
+    case 6: {
+        abclass::LeLogitNet<T_x> object;
+        object.data_.set_k(k);
+        object.ctrl_.set_intercept(intercept);
+        return object.predict_y(beta, x, offset);
+    }
+    case 7: {
+        abclass::LeBoostNet<T_x> object;
+        object.data_.set_k(k);
+        object.ctrl_.set_intercept(intercept);
+        return object.predict_y(beta, x, offset);
+    }
+    default:
+        break;
+    }
+    return Eigen::VectorXi();
 }
 
 template <typename T_x>
-arma::mat predict_link(const T_x& x,
-                       const arma::mat& beta,
-                       const arma::mat& offset)
+Eigen::MatrixXd predict_link(const T_x& x, abclass::ConstRefMatrixXd beta,
+                              abclass::ConstRefMatrixXd offset)
 {
-    const unsigned int k { beta.n_cols + 1 };
-    abclass::AbclassLinear<abclass::Logistic, T_x> object { k };
-    object.set_intercept(beta.n_rows > x.n_cols);
+    const Eigen::Index k{beta.cols() + 1};
+    const bool intercept{beta.rows() > x.cols()};
+    abclass::LogitNet<T_x> object;
+    object.data_.set_k(k);
+    object.ctrl_.set_intercept(intercept);
     return object.linear_score(beta, x, offset);
 }
 
-
 // [[Rcpp::export]]
-arma::mat rcpp_pred_prob(const arma::mat& beta,
-                         const arma::mat& x,
-                         const arma::mat& offset,
-                         const size_t loss_id,
-                         const Rcpp::List& loss_params)
+Eigen::MatrixXd rcpp_pred_prob(const Eigen::MatrixXd& beta,
+                               const Eigen::MatrixXd& x,
+                               const Eigen::MatrixXd& offset,
+                               const size_t loss_id,
+                               const Rcpp::List& loss_params)
 {
     return predict_prob(x, beta, offset, loss_id, loss_params);
 }
 
 // [[Rcpp::export]]
-arma::mat rcpp_pred_prob_sp(const arma::mat& beta,
-                            const arma::sp_mat& x,
-                            const arma::mat& offset,
-                            const size_t loss_id,
-                            const Rcpp::List& loss_params)
+Eigen::MatrixXd rcpp_pred_prob_sp(const Eigen::MatrixXd& beta,
+                                  const Eigen::SparseMatrix<double>& x,
+                                  const Eigen::MatrixXd& offset,
+                                  const size_t loss_id,
+                                  const Rcpp::List& loss_params)
 {
     return predict_prob(x, beta, offset, loss_id, loss_params);
 }
 
 // [[Rcpp::export]]
-arma::uvec rcpp_pred_y(const arma::mat& beta,
-                       const arma::mat& x,
-                       const arma::mat& offset,
-                       const size_t loss_id)
+Eigen::VectorXi rcpp_pred_y(const Eigen::MatrixXd& beta,
+                            const Eigen::MatrixXd& x,
+                            const Eigen::MatrixXd& offset,
+                            const size_t loss_id)
 {
     return predict_y(x, beta, offset, loss_id);
 }
 
 // [[Rcpp::export]]
-arma::uvec rcpp_pred_y_sp(const arma::mat& beta,
-                          const arma::sp_mat& x,
-                          const arma::mat& offset,
-                          const size_t loss_id)
+Eigen::VectorXi rcpp_pred_y_sp(const Eigen::MatrixXd& beta,
+                               const Eigen::SparseMatrix<double>& x,
+                               const Eigen::MatrixXd& offset,
+                               const size_t loss_id)
 {
     return predict_y(x, beta, offset, loss_id);
 }
 
 // [[Rcpp::export]]
-arma::mat rcpp_pred_link(const arma::mat& beta,
-                         const arma::mat& x,
-                         const arma::mat& offset)
+Eigen::MatrixXd rcpp_pred_link(const Eigen::MatrixXd& beta,
+                               const Eigen::MatrixXd& x,
+                               const Eigen::MatrixXd& offset)
 {
     return predict_link(x, beta, offset);
 }
 
 // [[Rcpp::export]]
-arma::mat rcpp_pred_link_sp(const arma::mat& beta,
-                            const arma::sp_mat& x,
-                            const arma::mat& offset)
+Eigen::MatrixXd rcpp_pred_link_sp(const Eigen::MatrixXd& beta,
+                                  const Eigen::SparseMatrix<double>& x,
+                                  const Eigen::MatrixXd& offset)
 {
     return predict_link(x, beta, offset);
 }

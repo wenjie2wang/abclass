@@ -15,11 +15,11 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 //
 
-#include <RcppArmadillo.h>
+#include <RcppEigen.h>
 #include <abclass.h>
 
 // [[Rcpp::export]]
-arma::mat rcpp_vertex(const unsigned int k)
+Eigen::MatrixXd rcpp_vertex(const unsigned int k)
 {
     abclass::Simplex obj { k };
     return obj.vertex_;

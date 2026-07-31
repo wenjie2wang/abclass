@@ -2,7 +2,7 @@
 // Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 #include "../inst/include/abclass.h"
-#include <RcppArmadillo.h>
+#include <RcppEigen.h>
 #include <Rcpp.h>
 
 using namespace Rcpp;
@@ -12,54 +12,54 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// rcpp_abclass_fit
-Rcpp::List rcpp_abclass_fit(const arma::mat& x, const arma::uvec& y, const Rcpp::List& control);
-RcppExport SEXP _abclass_rcpp_abclass_fit(SEXP xSEXP, SEXP ySEXP, SEXP controlSEXP) {
+// rcpp_abclass_linear_fit
+Rcpp::List rcpp_abclass_linear_fit(const Eigen::MatrixXd& x, const Eigen::VectorXi& y, const Rcpp::List& control);
+RcppExport SEXP _abclass_rcpp_abclass_linear_fit(SEXP xSEXP, SEXP ySEXP, SEXP controlSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const arma::uvec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXi& >::type y(ySEXP);
     Rcpp::traits::input_parameter< const Rcpp::List& >::type control(controlSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpp_abclass_fit(x, y, control));
+    rcpp_result_gen = Rcpp::wrap(rcpp_abclass_linear_fit(x, y, control));
     return rcpp_result_gen;
 END_RCPP
 }
-// rcpp_abclass_fit_sp
-Rcpp::List rcpp_abclass_fit_sp(const arma::sp_mat& x, const arma::uvec& y, const Rcpp::List& control);
-RcppExport SEXP _abclass_rcpp_abclass_fit_sp(SEXP xSEXP, SEXP ySEXP, SEXP controlSEXP) {
+// rcpp_abclass_linear_fit_sp
+Rcpp::List rcpp_abclass_linear_fit_sp(const Eigen::SparseMatrix<double>& x, const Eigen::VectorXi& y, const Rcpp::List& control);
+RcppExport SEXP _abclass_rcpp_abclass_linear_fit_sp(SEXP xSEXP, SEXP ySEXP, SEXP controlSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::sp_mat& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const arma::uvec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const Eigen::SparseMatrix<double>& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXi& >::type y(ySEXP);
     Rcpp::traits::input_parameter< const Rcpp::List& >::type control(controlSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpp_abclass_fit_sp(x, y, control));
+    rcpp_result_gen = Rcpp::wrap(rcpp_abclass_linear_fit_sp(x, y, control));
     return rcpp_result_gen;
 END_RCPP
 }
 // cv_samples
-Rcpp::List cv_samples(const unsigned int nobs, const unsigned int nfolds, const arma::uvec& strata);
+Rcpp::List cv_samples(const unsigned int nobs, const unsigned int nfolds, const Eigen::VectorXi& strata);
 RcppExport SEXP _abclass_cv_samples(SEXP nobsSEXP, SEXP nfoldsSEXP, SEXP strataSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const unsigned int >::type nobs(nobsSEXP);
     Rcpp::traits::input_parameter< const unsigned int >::type nfolds(nfoldsSEXP);
-    Rcpp::traits::input_parameter< const arma::uvec& >::type strata(strataSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXi& >::type strata(strataSEXP);
     rcpp_result_gen = Rcpp::wrap(cv_samples(nobs, nfolds, strata));
     return rcpp_result_gen;
 END_RCPP
 }
 // rcpp_pred_prob
-arma::mat rcpp_pred_prob(const arma::mat& beta, const arma::mat& x, const arma::mat& offset, const size_t loss_id, const Rcpp::List& loss_params);
+Eigen::MatrixXd rcpp_pred_prob(const Eigen::MatrixXd& beta, const Eigen::MatrixXd& x, const Eigen::MatrixXd& offset, const size_t loss_id, const Rcpp::List& loss_params);
 RcppExport SEXP _abclass_rcpp_pred_prob(SEXP betaSEXP, SEXP xSEXP, SEXP offsetSEXP, SEXP loss_idSEXP, SEXP loss_paramsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type beta(betaSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type offset(offsetSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type offset(offsetSEXP);
     Rcpp::traits::input_parameter< const size_t >::type loss_id(loss_idSEXP);
     Rcpp::traits::input_parameter< const Rcpp::List& >::type loss_params(loss_paramsSEXP);
     rcpp_result_gen = Rcpp::wrap(rcpp_pred_prob(beta, x, offset, loss_id, loss_params));
@@ -67,14 +67,14 @@ BEGIN_RCPP
 END_RCPP
 }
 // rcpp_pred_prob_sp
-arma::mat rcpp_pred_prob_sp(const arma::mat& beta, const arma::sp_mat& x, const arma::mat& offset, const size_t loss_id, const Rcpp::List& loss_params);
+Eigen::MatrixXd rcpp_pred_prob_sp(const Eigen::MatrixXd& beta, const Eigen::SparseMatrix<double>& x, const Eigen::MatrixXd& offset, const size_t loss_id, const Rcpp::List& loss_params);
 RcppExport SEXP _abclass_rcpp_pred_prob_sp(SEXP betaSEXP, SEXP xSEXP, SEXP offsetSEXP, SEXP loss_idSEXP, SEXP loss_paramsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type beta(betaSEXP);
-    Rcpp::traits::input_parameter< const arma::sp_mat& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type offset(offsetSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< const Eigen::SparseMatrix<double>& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type offset(offsetSEXP);
     Rcpp::traits::input_parameter< const size_t >::type loss_id(loss_idSEXP);
     Rcpp::traits::input_parameter< const Rcpp::List& >::type loss_params(loss_paramsSEXP);
     rcpp_result_gen = Rcpp::wrap(rcpp_pred_prob_sp(beta, x, offset, loss_id, loss_params));
@@ -82,61 +82,61 @@ BEGIN_RCPP
 END_RCPP
 }
 // rcpp_pred_y
-arma::uvec rcpp_pred_y(const arma::mat& beta, const arma::mat& x, const arma::mat& offset, const size_t loss_id);
+Eigen::VectorXi rcpp_pred_y(const Eigen::MatrixXd& beta, const Eigen::MatrixXd& x, const Eigen::MatrixXd& offset, const size_t loss_id);
 RcppExport SEXP _abclass_rcpp_pred_y(SEXP betaSEXP, SEXP xSEXP, SEXP offsetSEXP, SEXP loss_idSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type beta(betaSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type offset(offsetSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type offset(offsetSEXP);
     Rcpp::traits::input_parameter< const size_t >::type loss_id(loss_idSEXP);
     rcpp_result_gen = Rcpp::wrap(rcpp_pred_y(beta, x, offset, loss_id));
     return rcpp_result_gen;
 END_RCPP
 }
 // rcpp_pred_y_sp
-arma::uvec rcpp_pred_y_sp(const arma::mat& beta, const arma::sp_mat& x, const arma::mat& offset, const size_t loss_id);
+Eigen::VectorXi rcpp_pred_y_sp(const Eigen::MatrixXd& beta, const Eigen::SparseMatrix<double>& x, const Eigen::MatrixXd& offset, const size_t loss_id);
 RcppExport SEXP _abclass_rcpp_pred_y_sp(SEXP betaSEXP, SEXP xSEXP, SEXP offsetSEXP, SEXP loss_idSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type beta(betaSEXP);
-    Rcpp::traits::input_parameter< const arma::sp_mat& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type offset(offsetSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< const Eigen::SparseMatrix<double>& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type offset(offsetSEXP);
     Rcpp::traits::input_parameter< const size_t >::type loss_id(loss_idSEXP);
     rcpp_result_gen = Rcpp::wrap(rcpp_pred_y_sp(beta, x, offset, loss_id));
     return rcpp_result_gen;
 END_RCPP
 }
 // rcpp_pred_link
-arma::mat rcpp_pred_link(const arma::mat& beta, const arma::mat& x, const arma::mat& offset);
+Eigen::MatrixXd rcpp_pred_link(const Eigen::MatrixXd& beta, const Eigen::MatrixXd& x, const Eigen::MatrixXd& offset);
 RcppExport SEXP _abclass_rcpp_pred_link(SEXP betaSEXP, SEXP xSEXP, SEXP offsetSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type beta(betaSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type offset(offsetSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type offset(offsetSEXP);
     rcpp_result_gen = Rcpp::wrap(rcpp_pred_link(beta, x, offset));
     return rcpp_result_gen;
 END_RCPP
 }
 // rcpp_pred_link_sp
-arma::mat rcpp_pred_link_sp(const arma::mat& beta, const arma::sp_mat& x, const arma::mat& offset);
+Eigen::MatrixXd rcpp_pred_link_sp(const Eigen::MatrixXd& beta, const Eigen::SparseMatrix<double>& x, const Eigen::MatrixXd& offset);
 RcppExport SEXP _abclass_rcpp_pred_link_sp(SEXP betaSEXP, SEXP xSEXP, SEXP offsetSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type beta(betaSEXP);
-    Rcpp::traits::input_parameter< const arma::sp_mat& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type offset(offsetSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< const Eigen::SparseMatrix<double>& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type offset(offsetSEXP);
     rcpp_result_gen = Rcpp::wrap(rcpp_pred_link_sp(beta, x, offset));
     return rcpp_result_gen;
 END_RCPP
 }
 // rcpp_vertex
-arma::mat rcpp_vertex(const unsigned int k);
+Eigen::MatrixXd rcpp_vertex(const unsigned int k);
 RcppExport SEXP _abclass_rcpp_vertex(SEXP kSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -148,8 +148,8 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_abclass_rcpp_abclass_fit", (DL_FUNC) &_abclass_rcpp_abclass_fit, 3},
-    {"_abclass_rcpp_abclass_fit_sp", (DL_FUNC) &_abclass_rcpp_abclass_fit_sp, 3},
+    {"_abclass_rcpp_abclass_linear_fit", (DL_FUNC) &_abclass_rcpp_abclass_linear_fit, 3},
+    {"_abclass_rcpp_abclass_linear_fit_sp", (DL_FUNC) &_abclass_rcpp_abclass_linear_fit_sp, 3},
     {"_abclass_cv_samples", (DL_FUNC) &_abclass_cv_samples, 3},
     {"_abclass_rcpp_pred_prob", (DL_FUNC) &_abclass_rcpp_pred_prob, 5},
     {"_abclass_rcpp_pred_prob_sp", (DL_FUNC) &_abclass_rcpp_pred_prob_sp, 5},
