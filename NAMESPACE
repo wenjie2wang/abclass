@@ -19,14 +19,18 @@ export(supclass)
 export(supclass.control)
 export(vertex)
 importFrom(Rcpp,sourceCpp)
-importFrom(graphics,axis)
-importFrom(graphics,lines)
-importFrom(graphics,matplot)
-importFrom(graphics,text)
+importFrom(graphics,
+  axis,
+  lines,
+  matplot,
+  text
+)
 importFrom(parallel,mclapply)
-importFrom(stats,BIC)
-importFrom(stats,coef)
-importFrom(stats,predict)
-importFrom(stats,runif)
-importFrom(stats,sd)
+importFrom(stats,
+  BIC,
+  coef,
+  predict,
+  runif,
+  sd
+)
 useDynLib(abclass)
