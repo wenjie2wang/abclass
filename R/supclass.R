@@ -404,7 +404,7 @@ supclass_mlog <- function(x, y, penalty, start, control)
             hess_mat <- lik_res$hess / n
             Dmat <- matrix(0, nrow = df, ncol = df)
             Dmat[seq_len(ppK), seq_len(ppK)] <- hess_mat
-            diag(Dmat) <- diag(Dmat) + sc
+            diag(Dmat) <- diag(Dmat) + max(sc, 1e-4 * max(1, max(diag(Dmat))))
             dvec0 <- grad_vec - hess_mat %*% as.numeric(outer_beta0)
             inner_beta0 <- outer_beta0
             if (penalty == "lasso") {
@@ -556,7 +556,7 @@ supclass_mpsvm <- function(x, y, penalty, start, control)
         Dmat[idx, idx] <- crossprod(delta[, k] * x, x)
     }
     sc <- sqrt(.Machine$double.eps)
-    diag(Dmat) <- diag(Dmat) + sc
+    diag(Dmat) <- diag(Dmat) + max(sc, 1e-4 * max(1, max(diag(Dmat))))
     ## initialize
     beta_array <- array(NA, dim = c(pp, K, length(control$lambda)))
     ## for a sequence of lambda's
