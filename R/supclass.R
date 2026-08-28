@@ -404,7 +404,7 @@ supclass_mlog <- function(x, y, penalty, start, control)
             hess_mat <- lik_res$hess / n
             Dmat <- matrix(0, nrow = df, ncol = df)
             Dmat[seq_len(ppK), seq_len(ppK)] <- hess_mat
-            diag(Dmat) <- diag(Dmat) + max(sc, 1e-4 * max(1, max(diag(Dmat))))
+            diag(Dmat) <- diag(Dmat) + max(sc, 1e-4 * min(diag(Dmat)))
             dvec0 <- grad_vec - hess_mat %*% as.numeric(outer_beta0)
             inner_beta0 <- outer_beta0
             if (penalty == "lasso") {

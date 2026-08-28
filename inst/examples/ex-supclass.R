@@ -28,7 +28,20 @@ if (requireNamespace("quadprog", quietly = TRUE)) {
     ## regularization with the supnorm lasso penalty
     options("mc.cores" = 1)
 
+    ## SVM
+    model <- supclass(train_x, train_y, model = "svm", penalty = "lasso")
+    pred <- predict(model, test_x)
+    table(test_y, pred)
+    mean(test_y == pred) # accuracy
+
+    ## PSVM
     model <- supclass(train_x, train_y, model = "psvm", penalty = "lasso")
+    pred <- predict(model, test_x)
+    table(test_y, pred)
+    mean(test_y == pred) # accuracy
+
+    ## Logistic
+    model <- supclass(train_x, train_y, model = "log", penalty = "lasso")
     pred <- predict(model, test_x)
     table(test_y, pred)
     mean(test_y == pred) # accuracy
