@@ -383,7 +383,7 @@ supclass_mlog <- function(x, y, penalty, start, control)
     Amat <- cbind(A0, Aineq)
     t_Amat <- t(Amat)
     b0vec <- rep(0, pp + 2 * p * K)
-    sc <- sqrt(.Machine$double.eps)
+    sc <- sqrt(sqrt(.Machine$double.eps))
     ## initialize
     beta_array <- array(NA, dim = c(pp, K, length(control$lambda)))
     nll_vec <- rep(NA, length(control$lambda))
@@ -404,7 +404,7 @@ supclass_mlog <- function(x, y, penalty, start, control)
             hess_mat <- lik_res$hess / n
             Dmat <- matrix(0, nrow = df, ncol = df)
             Dmat[seq_len(ppK), seq_len(ppK)] <- hess_mat
-            diag(Dmat) <- diag(Dmat) + max(sc, 1e-4 * min(diag(Dmat)))
+            diag(Dmat) <- diag(Dmat) + sc * max(1, diag(Dmat))
             dvec0 <- grad_vec - hess_mat %*% as.numeric(outer_beta0)
             inner_beta0 <- outer_beta0
             if (penalty == "lasso") {
@@ -555,8 +555,8 @@ supclass_mpsvm <- function(x, y, penalty, start, control)
         idx <- seq.int(1 + (k - 1) * pp, k * pp)
         Dmat[idx, idx] <- crossprod(delta[, k] * x, x)
     }
-    sc <- sqrt(.Machine$double.eps)
-    diag(Dmat) <- diag(Dmat) + max(sc, 1e-4 * max(1, max(diag(Dmat))))
+    sc <- sqrt(sqrt(.Machine$double.eps))
+    diag(Dmat) <- diag(Dmat) + sc * max(1, diag(Dmat))
     ## initialize
     beta_array <- array(NA, dim = c(pp, K, length(control$lambda)))
     ## for a sequence of lambda's
