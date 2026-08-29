@@ -28,8 +28,10 @@ Rcpp::List cv_samples(const unsigned int nobs,
     };
     Rcpp::List train_list, valid_list;
     for (size_t i {0}; i < nfolds; ++i) {
-        train_list.push_back(Rcpp::wrap(cv_obj.train_index_.at(i)));
-        valid_list.push_back(Rcpp::wrap(cv_obj.test_index_.at(i)));
+        train_list.push_back(
+            Rcpp::wrap(cv_obj.train_index_.at(i).array() + 1));
+        valid_list.push_back(
+            Rcpp::wrap(cv_obj.test_index_.at(i).array() + 1));
     }
     return Rcpp::List::create(
         Rcpp::Named("train_index") = train_list,

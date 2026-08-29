@@ -92,9 +92,10 @@ cv.supclass <- function(x, y,
                                          selection = "all"
                                      )
                                      if (nlambda > 1) {
-                                         sapply(
+                                         vapply(
                                              valid_pred,
-                                             function(a) mean(a == y[valid_idx])
+                                             function(a) mean(a == y[valid_idx]),
+                                             FUN.VALUE = numeric(1L)
                                          )
                                      } else {
                                          mean(valid_pred == y[valid_idx])
