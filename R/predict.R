@@ -39,6 +39,9 @@
 ##'     \code{selection = "all"} or no cross-validation results are available in
 ##'     the specified \code{object}.
 ##' @param newoffset An optional numeric matrix for the offsets.
+##' @param ... Other arguments passed to \code{coef.abclass()}, notably
+##'     \code{relax_gamma} for an \code{et.abclass} object fitted with
+##'     \code{relax} enabled.
 ##'
 ##' @return A vector representing the predictions or a list containing the
 ##'     predictions for each set of estimates along the solution path.
@@ -65,7 +68,7 @@ predict.abclass <- function(object,
         newx <- as.matrix(newx)
     }
     type <- match.arg(type, c("class", "probability", "link"))
-    res_coef <- coef(object, selection = selection)
+    res_coef <- coef(object, selection = selection, ...)
     loss_id <- .id_loss(object$specs$loss)
     loss_params <- object$control[c("boost_umin", "lum_a", "lum_c")]
     predict_prob_fun <- "rcpp_pred_prob"

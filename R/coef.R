@@ -31,6 +31,17 @@
 ##'     will be returned in an array if \code{selection = "all"} or no
 ##'     cross-validation results are available in the specified \code{abclass}
 ##'     object.
+##' @param relax_gamma A numeric value in \code{[0, 1]}, or a character value
+##'     (\code{"cv_min"} or \code{"cv_1se"}), specifying how to blend the
+##'     ET fit with its relaxed/debiased counterpart for an \code{et.abclass}
+##'     object fitted with \code{relax} enabled (see \code{et.abclass()}).
+##'     Only relevant when \code{relax} was enabled; ignored otherwise.  A
+##'     numeric value is used directly as the blending weight.  \code{"cv_min"}
+##'     and \code{"cv_1se"} select \code{relax_gamma} by cross-validation
+##'     accuracy, analogous to \code{selection}, and require the object to have
+##'     been fitted with \code{nfolds > 0}.  When \code{NULL} (the default),
+##'     \code{relax_gamma} is chosen as \code{"cv_1se"} if cross-validation
+##'     results are available, or \code{0} (the fully relaxed fit) otherwise.
 ##' @param ... Other arguments not used now.
 ##'
 ##' @return A matrix representing the coefficient estimates or an array
@@ -43,6 +54,7 @@
 ##' @export
 coef.abclass <- function(object,
                          selection = c("cv_1se", "cv_min", "all"),
+                         relax_gamma = NULL,
                          ...)
 {
     ## note: drop the dimension unless 'all' or multiple selected
@@ -63,7 +75,34 @@ coef.abclass <- function(object,
         return(coef.abclass(tmp, selection = selection, ...))
     }
     if (inherits(object, "et.abclass")) { # refit must be FALSE here
-        return(object$coefficients[, , 1L, drop = TRUE])
+        beta <- object$coefficients[, , 1L, drop = TRUE]
+        gamma_grid <- object$et$relax_gamma
+        if (is.null(gamma_grid) || length(gamma_grid) == 0L) {
+            return(beta)
+        }
+        relax_beta <- object$relax_coefficients[, , 1L, drop = TRUE]
+        cv <- object$cross_validation
+        has_cv <- ! is.null(cv) &&
+            length(cv$cv_accuracy_mean) == length(gamma_grid)
+        if (is.numeric(relax_gamma)) {
+            gamma_val <- relax_gamma[1L]
+        } else if (has_cv) {
+            gamma_sel <- if (is.null(relax_gamma)) {
+                             "cv_1se"
+                         } else {
+                             match.arg(relax_gamma, c("cv_1se", "cv_min"))
+                         }
+            idx <- select_gamma(gamma_grid, cv$cv_accuracy_mean,
+                                cv$cv_accuracy_sd)[[gamma_sel]]
+            gamma_val <- gamma_grid[idx]
+        } else if (is.null(relax_gamma)) {
+            gamma_val <- 0
+        } else {
+            stop("No cross-validation results are available to select ",
+                 "'relax_gamma' by \"", relax_gamma,
+                 "\"; specify a numeric 'relax_gamma' instead.")
+        }
+        return(gamma_val * beta + (1 - gamma_val) * relax_beta)
     }
     ## if only one solution
     dim_coef <- dim(object$coefficients)

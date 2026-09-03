@@ -42,13 +42,21 @@ inline SEXP coef_to_array(const std::vector<Eigen::MatrixXd>& coef)
 template <typename T_abclass>
 inline Rcpp::List get_et_res(const T_abclass& object)
 {
+    SEXP relax_gamma{R_NilValue};
+    SEXP relax_lambda{R_NilValue};
+    if (object.ctrl_.relax) {
+        relax_gamma = abclass::eigen2rvec(object.ctrl_.relax_gamma);
+        relax_lambda = Rcpp::wrap(object.ctrl_.relax_lambda);
+    }
     return Rcpp::List::create(
         Rcpp::Named("nstages") = object.ctrl_.et_nstages,
         Rcpp::Named("selected") = Rcpp::wrap(object.result_.et_vs_),
         Rcpp::Named("l1_lambda0") =
             abclass::eigen2rvec(object.result_.et_l1_lambda0_vec_),
         Rcpp::Named("l1_lambda1") =
-            abclass::eigen2rvec(object.result_.et_l1_lambda1_vec_));
+            abclass::eigen2rvec(object.result_.et_l1_lambda1_vec_),
+        Rcpp::Named("relax_lambda") = relax_lambda,
+        Rcpp::Named("relax_gamma") = relax_gamma);
 }
 
 // returns for cv procedure
@@ -71,18 +79,21 @@ template <typename T_abclass>
 inline Rcpp::List get_all_res(const T_abclass& object)
 {
     Rcpp::List et_res, cv_res;
+    SEXP relax_coef{R_NilValue};
     if (object.ctrl_.et_nstages > 0) {
         // et procedure
         et_res = get_et_res(object);
-        // add estimates from cv
-        if (object.ctrl_.cv_nfolds > 0) {
-            cv_res = get_cv_res(object);
+        // glmnet-style relaxed-lasso blend of the original et fit and the
+        // debiased fit via relax_gamma
+        if (object.ctrl_.relax) {
+            relax_coef = coef_to_array(object.result_.relax_coef_);
         }
-    } else {
-        // add cv results
-        if (object.ctrl_.cv_nfolds > 0) {
-            cv_res = get_cv_res(object);
-        }
+    }
+    // cv_accuracy_ is populated by exactly one of: plain et CV or plain
+    // (non-et) CV -- whichever ran, it's always the right thing to surface
+    // here
+    if (object.ctrl_.cv_nfolds > 0) {
+        cv_res = get_cv_res(object);
     }
     return Rcpp::List::create(
         Rcpp::Named("coefficients") = coef_to_array(object.result_.coef_),
@@ -110,7 +121,8 @@ inline Rcpp::List get_all_res(const T_abclass& object)
         abclass::eigen2rvec(object.data_.weights_),
         Rcpp::Named("offset") = Rcpp::wrap(object.data_.offsets_),
         Rcpp::Named("cross_validation") = cv_res,
-        Rcpp::Named("et") = et_res
+        Rcpp::Named("et") = et_res,
+        Rcpp::Named("relax_coefficients") = relax_coef
         );
 }
 
@@ -134,7 +146,10 @@ inline abclass::LinearControl abclass_control(const Rcpp::List& control)
         tune_cv(control["nfolds"],
                 control["stratified"],
                 control["alignment"]).
-        tune_et(control["nstages"]);
+        tune_et(control["nstages"]).
+        tune_relax(control["relax"],
+                   control["relax_lambda"],
+                   abclass::rvec2eigen(control["relax_gamma"]));
     return ctrl;
 }
 
@@ -146,6 +161,9 @@ inline void run_fit(T_abclass& obj, const abclass::Data<T_x>& train_data,
     obj.set_verbose(control["verbose"]);
     if (obj.ctrl_.et_nstages > 0) {
         abclass::et_lambda(obj, train_data);
+        if (obj.ctrl_.relax) {
+            abclass::relax_fit(obj);
+        }
         if (obj.ctrl_.cv_nfolds > 0) {
             abclass::et_cv_accuracy(obj);
         }

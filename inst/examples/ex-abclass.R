@@ -32,6 +32,6 @@ model <- abclass(
     penalty = "glasso"
 )
 
-pred <- predict(model, test_x, s = 5)
+pred <- predict(model, test_x, selection = 5)
 mean(test_y == pred) # accuracy
 table(test_y, pred)

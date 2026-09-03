@@ -69,6 +69,16 @@ select_lambda <- function(cv_mean, cv_sd) {
          cv_1se = cv_1se_idx)
 }
 
+## select gamma from a relax-gamma CV grid (mirrors select_lambda()); gamma
+## = 1 (no relaxation) is treated as the more conservative choice, so
+## cv_1se prefers the largest gamma within 1 se of the best mean accuracy
+select_gamma <- function(gamma_grid, cv_mean, cv_sd) {
+    ord <- order(gamma_grid, decreasing = TRUE)
+    idx_list <- select_lambda(cv_mean[ord], cv_sd[ord])
+    list(cv_min = ord[idx_list$cv_min],
+         cv_1se = ord[idx_list$cv_1se])
+}
+
 ## function formal names (formalArgs() from the methods package)
 formal_names <- function(def) {
     names(formals(def, envir = parent.frame()))

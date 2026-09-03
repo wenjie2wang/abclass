@@ -32,6 +32,20 @@
 ##' @param nstages A positive integer specifying for the number of stages in the
 ##'     ET-Lasso procedure.  By default, two rounds of tuning by random
 ##'     permutations will be performed as suggested in Yang, et al. (2019).
+##' @param relax A logical value or a list specifying whether and how to
+##'     obtain a relaxed-lasso-style debiased fit on the ET-selected support,
+##'     mirroring \pkg{glmnet}'s \code{relax = TRUE}.  The default,
+##'     \code{FALSE}, disables it.  \code{TRUE} enables it with the default
+##'     \code{gamma} grid \code{seq(0, 1, length.out = 11)} and
+##'     \code{lambda = 1e-6}.  A list may specify either or both of
+##'     \code{gamma} (a numeric vector of blending weights in \code{[0, 1]},
+##'     where \code{1} recovers the plain ET fit and \code{0} the fully
+##'     relaxed/debiased fit) and \code{lambda} (the near-zero regularization
+##'     used for the debiased refit on the ET-selected support).  When
+##'     \code{nfolds > 0}, the cross-validation accuracy is reported for
+##'     every \code{gamma} in the grid, and \code{coef.abclass()}/
+##'     \code{predict.abclass()} can select among them via their own
+##'     \code{gamma} argument.
 ##'
 ##' @return An S3 object of class \code{et.abclass} and \code{abclass}.
 ##'
@@ -55,6 +69,7 @@ et.abclass <- function(x, y,
                        stratified = TRUE,
                        alignment = c("fraction", "lambda"),
                        refit = FALSE,
+                       relax = FALSE,
                        ...)
 {
     loss <- match.arg(as.character(loss)[1],
@@ -65,6 +80,26 @@ et.abclass <- function(x, y,
     nstages <- as.integer(nstages)
     if (nstages < 1L) {
         stop("The 'nstages' must be a positive integer.")
+    }
+    ## relax
+    if (isFALSE(relax)) {
+        do_relax <- FALSE
+        relax_lambda <- 1e-6
+        relax_gamma <- seq(0, 1, length.out = 11)
+    } else {
+        if (isTRUE(relax)) {
+            relax <- list()
+        }
+        if (! is.list(relax)) {
+            stop("The 'relax' must be 'TRUE', 'FALSE', or a list.")
+        }
+        do_relax <- TRUE
+        relax_lambda <- if (is.null(relax$lambda)) 1e-6 else relax$lambda
+        relax_gamma <- if (is.null(relax$gamma)) {
+                              seq(0, 1, length.out = 11)
+                          } else {
+                              relax$gamma
+                          }
     }
     ## controls
     dot_list <- list(...)
@@ -82,7 +117,10 @@ et.abclass <- function(x, y,
         nstages = nstages,
         nfolds = nfolds,
         stratified = stratified,
-        alignment = alignment
+        alignment = alignment,
+        relax = do_relax,
+        relax_lambda = relax_lambda,
+        relax_gamma = relax_gamma
     )
     ## refit if needed
     if (! isFALSE(refit) && length(res$et$selected) > 0) {

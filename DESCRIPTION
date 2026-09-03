@@ -1,6 +1,6 @@
 Package: abclass
 Title: Angle-Based Classification
-Version: 0.5.2.9000
+Version: 0.5.2.9100
 Authors@R: c(
     person(given = "Wenjie", family = "Wang",
            email = "wang@wwenjie.org",

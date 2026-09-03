@@ -60,3 +60,40 @@ expect_equal(gw, model1$regularization$penalty_factor)
 expect_equivalent(dim(coef(model1)), c(p + 1, k - 1))
 pred1 <- predict(model1, test_x)
 expect_true(mean(test_y == pred1) > 0.3)
+
+## invalid 'relax'
+expect_error(et.abclass(train_x, train_y, relax = "bad"))
+
+## relax = TRUE, no cv: coef()/predict() default to relax_gamma = 0
+model2 <- et.abclass(train_x, train_y, relax = TRUE)
+expect_equal(model2$et$relax_gamma, seq(0, 1, length.out = 11))
+manual_beta <- 0 * model2$coefficients[, , 1L, drop = TRUE] +
+    1 * model2$relax_coefficients[, , 1L, drop = TRUE]
+expect_equal(coef(model2), manual_beta)
+expect_equivalent(dim(coef(model2)), c(p + 1, k - 1))
+pred2 <- predict(model2, test_x)
+expect_true(mean(test_y == pred2) > 0.3)
+
+## coef(..., relax_gamma = "cv_min") errors without cv results
+expect_error(coef(model2, relax_gamma = "cv_min"))
+
+## relax = TRUE with cv: relax_gamma selection by "cv_min"/"cv_1se"
+model3 <- et.abclass(train_x, train_y, relax = TRUE, nfolds = 3)
+expect_equal(length(model3$cross_validation$cv_accuracy_mean),
+             length(model3$et$relax_gamma))
+coef_min <- coef(model3, relax_gamma = "cv_min")
+coef_1se <- coef(model3, relax_gamma = "cv_1se")
+expect_equivalent(dim(coef_min), c(p + 1, k - 1))
+expect_equivalent(dim(coef_1se), c(p + 1, k - 1))
+pred3 <- predict(model3, test_x, relax_gamma = "cv_min")
+expect_true(mean(test_y == pred3) > 0.3)
+
+## relax as a list: custom gamma/lambda grid
+model4 <- et.abclass(train_x, train_y,
+                     relax = list(gamma = c(0, 1), lambda = 1e-3))
+expect_equal(model4$et$relax_gamma, c(0, 1))
+coef_explicit <- coef(model4, relax_gamma = 0.5)
+manual_explicit <- 0.5 * model4$coefficients[, , 1L, drop = TRUE] +
+    0.5 * model4$relax_coefficients[, , 1L, drop = TRUE]
+expect_equal(coef_explicit, manual_explicit)
+

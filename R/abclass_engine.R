@@ -47,6 +47,9 @@
                      alignment = 0L,
                      ## et
                      nstages = 0L,
+                     relax = FALSE,
+                     relax_lambda = 1e-6,
+                     relax_gamma = seq(0, 1, length.out = 11),
                      ## moml
                      moml_args = NULL)
 {
@@ -95,6 +98,9 @@
              stratified = stratified,
              alignment = as.integer(alignment),
              nstages = as.integer(nstages),
+             relax = isTRUE(relax),
+             relax_lambda = as.numeric(relax_lambda),
+             relax_gamma = as.numeric(relax_gamma),
              owl_reward = null2num0(moml_args$reward))
     )
     ctrl$lambda <- null2num0(ctrl$lambda)
