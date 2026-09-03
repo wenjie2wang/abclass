@@ -76,11 +76,11 @@ coef.abclass <- function(object,
     }
     if (inherits(object, "et.abclass")) { # refit must be FALSE here
         beta <- object$coefficients[, , 1L, drop = TRUE]
-        gamma_grid <- object$et$relax_gamma
-        if (is.null(gamma_grid) || length(gamma_grid) == 0L) {
+        if (! isTRUE(object$et$relax)) {
             return(beta)
         }
-        relax_beta <- object$relax_coefficients[, , 1L, drop = TRUE]
+        gamma_grid <- object$et$relax_gamma
+        relax_beta <- object$et$relax_coefficients[, , 1L, drop = TRUE]
         cv <- object$cross_validation
         has_cv <- ! is.null(cv) &&
             length(cv$cv_accuracy_mean) == length(gamma_grid)

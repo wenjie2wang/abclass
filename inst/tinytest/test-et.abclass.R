@@ -68,7 +68,7 @@ expect_error(et.abclass(train_x, train_y, relax = "bad"))
 model2 <- et.abclass(train_x, train_y, relax = TRUE)
 expect_equal(model2$et$relax_gamma, seq(0, 1, length.out = 11))
 manual_beta <- 0 * model2$coefficients[, , 1L, drop = TRUE] +
-    1 * model2$relax_coefficients[, , 1L, drop = TRUE]
+    1 * model2$et$relax_coefficients[, , 1L, drop = TRUE]
 expect_equal(coef(model2), manual_beta)
 expect_equivalent(dim(coef(model2)), c(p + 1, k - 1))
 pred2 <- predict(model2, test_x)
@@ -94,6 +94,6 @@ model4 <- et.abclass(train_x, train_y,
 expect_equal(model4$et$relax_gamma, c(0, 1))
 coef_explicit <- coef(model4, relax_gamma = 0.5)
 manual_explicit <- 0.5 * model4$coefficients[, , 1L, drop = TRUE] +
-    0.5 * model4$relax_coefficients[, , 1L, drop = TRUE]
+    0.5 * model4$et$relax_coefficients[, , 1L, drop = TRUE]
 expect_equal(coef_explicit, manual_explicit)
 

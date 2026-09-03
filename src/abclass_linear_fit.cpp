@@ -42,12 +42,6 @@ inline SEXP coef_to_array(const std::vector<Eigen::MatrixXd>& coef)
 template <typename T_abclass>
 inline Rcpp::List get_et_res(const T_abclass& object)
 {
-    SEXP relax_gamma{R_NilValue};
-    SEXP relax_lambda{R_NilValue};
-    if (object.ctrl_.relax) {
-        relax_gamma = abclass::eigen2rvec(object.ctrl_.relax_gamma);
-        relax_lambda = Rcpp::wrap(object.ctrl_.relax_lambda);
-    }
     return Rcpp::List::create(
         Rcpp::Named("nstages") = object.ctrl_.et_nstages,
         Rcpp::Named("selected") = Rcpp::wrap(object.result_.et_vs_),
@@ -55,8 +49,13 @@ inline Rcpp::List get_et_res(const T_abclass& object)
             abclass::eigen2rvec(object.result_.et_l1_lambda0_vec_),
         Rcpp::Named("l1_lambda1") =
             abclass::eigen2rvec(object.result_.et_l1_lambda1_vec_),
-        Rcpp::Named("relax_lambda") = relax_lambda,
-        Rcpp::Named("relax_gamma") = relax_gamma);
+        Rcpp::Named("relax") = object.ctrl_.relax,
+        Rcpp::Named("relax_lambda") = Rcpp::wrap(object.ctrl_.relax_lambda),
+        Rcpp::Named("relax_gamma") =
+            abclass::eigen2rvec(object.ctrl_.relax_gamma),
+        Rcpp::Named("relax_coefficients") =
+            coef_to_array(object.result_.relax_coef_)
+        );
 }
 
 // returns for cv procedure
@@ -79,15 +78,9 @@ template <typename T_abclass>
 inline Rcpp::List get_all_res(const T_abclass& object)
 {
     Rcpp::List et_res, cv_res;
-    SEXP relax_coef{R_NilValue};
     if (object.ctrl_.et_nstages > 0) {
         // et procedure
         et_res = get_et_res(object);
-        // glmnet-style relaxed-lasso blend of the original et fit and the
-        // debiased fit via relax_gamma
-        if (object.ctrl_.relax) {
-            relax_coef = coef_to_array(object.result_.relax_coef_);
-        }
     }
     // cv_accuracy_ is populated by exactly one of: plain et CV or plain
     // (non-et) CV -- whichever ran, it's always the right thing to surface
@@ -121,8 +114,7 @@ inline Rcpp::List get_all_res(const T_abclass& object)
         abclass::eigen2rvec(object.data_.weights_),
         Rcpp::Named("offset") = Rcpp::wrap(object.data_.offsets_),
         Rcpp::Named("cross_validation") = cv_res,
-        Rcpp::Named("et") = et_res,
-        Rcpp::Named("relax_coefficients") = relax_coef
+        Rcpp::Named("et") = et_res
         );
 }
 
