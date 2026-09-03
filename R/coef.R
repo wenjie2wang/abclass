@@ -80,7 +80,11 @@ coef.abclass <- function(object,
             return(beta)
         }
         gamma_grid <- object$et$relax_gamma
-        relax_beta <- object$et$relax_coefficients[, , 1L, drop = TRUE]
+        relax_coef <- object$et$relax_coefficients
+        if (is.null(relax_coef)) {
+            return(beta)
+        }
+        relax_beta <- relax_coef[, , 1L, drop = TRUE]
         cv <- object$cross_validation
         has_cv <- ! is.null(cv) &&
             length(cv$cv_accuracy_mean) == length(gamma_grid)
