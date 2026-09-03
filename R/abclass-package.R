@@ -15,7 +15,7 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ##
 
-##' Multi-Category Angle-Based Large-Margin Classifiers
+##' Multi-Category Angle-Based Classification
 ##'
 ##' This package provides implementations of the multi-category angle-based
 ##' classifiers (Zhang & Liu, 2014) with the large-margin unified machines (Liu,

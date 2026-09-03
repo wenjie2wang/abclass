@@ -26,7 +26,7 @@
 }
 .all_abclass_penalties <- c("lasso", "scad", "mcp",
                             "glasso", "gscad", "gmcp",
-                            "cmcp", "gel", "mlasso", "mmcp")
+                            "cmcp", "gel")
 .id_penalty <- function(penalty)
 {
     match(penalty, .all_abclass_penalties)

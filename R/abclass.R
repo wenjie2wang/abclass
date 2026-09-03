@@ -17,8 +17,8 @@
 
 ##' Multi-Category Angle-Based Classification
 ##'
-##' Multi-category angle-based large-margin classifiers with regularization by
-##' the elastic-net or groupwise penalty.
+##' Multi-category angle-based classifiers with regularization by the
+##' elastic-net or groupwise penalty.
 ##'
 ##' @name abclass
 ##'
