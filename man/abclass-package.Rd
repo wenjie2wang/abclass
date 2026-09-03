@@ -3,7 +3,7 @@
 \docType{package}
 \name{abclass-package}
 \alias{abclass-package}
-\title{Multi-Category Angle-Based Large-Margin Classifiers}
+\title{Multi-Category Angle-Based Classification}
 \description{
 This package provides implementations of the multi-category angle-based
 classifiers (Zhang & Liu, 2014) with the large-margin unified machines (Liu,

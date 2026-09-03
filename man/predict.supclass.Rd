@@ -34,7 +34,9 @@ prediction for the entire solution path will be returned in a list if
 \code{selection = "all"} or no cross-validation results are available in
 the specified \code{object}.}
 
-\item{...}{Other arguments not used now.}
+\item{...}{Other arguments passed to \code{coef.abclass()}, notably
+\code{relax_gamma} for an \code{et.abclass} object fitted with
+\code{relax} enabled.}
 }
 \value{
 A vector representing the predictions or a list containing the

@@ -4,7 +4,7 @@
 \alias{coef.abclass}
 \title{Coefficient Estimates of A Trained Angle-Based Classifier}
 \usage{
-\method{coef}{abclass}(object, selection = c("cv_1se", "cv_min", "all"), ...)
+\method{coef}{abclass}(object, selection = c("cv_1se", "cv_min", "all"), relax_gamma = NULL, ...)
 }
 \arguments{
 \item{object}{An object of class \code{abclass}.}
@@ -20,6 +20,18 @@ error of the smallest cross-validation error).  The entire solution path
 will be returned in an array if \code{selection = "all"} or no
 cross-validation results are available in the specified \code{abclass}
 object.}
+
+\item{relax_gamma}{A numeric value in \code{[0, 1]}, or a character value
+(\code{"cv_min"} or \code{"cv_1se"}), specifying how to blend the
+ET fit with its relaxed/debiased counterpart for an \code{et.abclass}
+object fitted with \code{relax} enabled (see \code{et.abclass()}).
+Only relevant when \code{relax} was enabled; ignored otherwise.  A
+numeric value is used directly as the blending weight.  \code{"cv_min"}
+and \code{"cv_1se"} select \code{relax_gamma} by cross-validation
+accuracy, analogous to \code{selection}, and require the object to have
+been fitted with \code{nfolds > 0}.  When \code{NULL} (the default),
+\code{relax_gamma} is chosen as \code{"cv_1se"} if cross-validation
+results are available, or \code{0} (the fully relaxed fit) otherwise.}
 
 \item{...}{Other arguments not used now.}
 }

@@ -37,7 +37,9 @@ the specified \code{object}.}
 
 \item{newoffset}{An optional numeric matrix for the offsets.}
 
-\item{...}{Other arguments not used now.}
+\item{...}{Other arguments passed to \code{coef.abclass()}, notably
+\code{relax_gamma} for an \code{et.abclass} object fitted with
+\code{relax} enabled.}
 }
 \value{
 A vector representing the predictions or a list containing the

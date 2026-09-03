@@ -18,6 +18,7 @@ et.abclass(
   stratified = TRUE,
   alignment = c("fraction", "lambda"),
   refit = FALSE,
+  relax = FALSE,
   ...
 )
 }
@@ -79,6 +80,21 @@ value is \code{"fraction"}.}
 trained using the selected predictors or a named list that will be
 passed to \code{abclass.control()} to specify how the new classifier
 should be trained.}
+
+\item{relax}{A logical value or a list specifying whether and how to
+obtain a relaxed-lasso-style debiased fit on the ET-selected support,
+mirroring \pkg{glmnet}'s \code{relax = TRUE}.  The default,
+\code{FALSE}, disables it.  \code{TRUE} enables it with the default
+\code{gamma} grid \code{seq(0, 1, length.out = 11)} and
+\code{lambda = 1e-6}.  A list may specify either or both of
+\code{gamma} (a numeric vector of blending weights in \code{[0, 1]},
+where \code{1} recovers the plain ET fit and \code{0} the fully
+relaxed/debiased fit) and \code{lambda} (the near-zero regularization
+used for the debiased refit on the ET-selected support).  When
+\code{nfolds > 0}, the cross-validation accuracy is reported for
+every \code{gamma} in the grid, and \code{coef.abclass()}/
+\code{predict.abclass()} can select among them via their own
+\code{gamma} argument.}
 
 \item{...}{Other control parameters passed to \code{abclass.control()}.}
 }

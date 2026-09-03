@@ -29,7 +29,6 @@ abclass.control(
   penalty_factor = NULL,
   ncv_kappa = 0.1,
   gel_tau = 0.33,
-  mellowmax_omega = 1,
   lower_limit = -Inf,
   upper_limit = Inf,
   epsilon = 1e-07,
@@ -120,9 +119,6 @@ reciprocal gamma parameter for group SCAD or group MCP.  A close-to-zero
 
 \item{gel_tau}{A positive parameter tau for group exponential lasso penalty.}
 
-\item{mellowmax_omega}{A positive parameter omega for Mellowmax penalty.  It
-is experimental and subject to removal in future.}
-
 \item{lower_limit, upper_limit}{Numeric matrices representing the desired
 lower and upper limits for the coefficient estimates, respectively.}
 
@@ -154,8 +150,8 @@ The function \code{abclass()} returns an object of class
     \code{abclass.control} representing a list of control parameters.
 }
 \description{
-Multi-category angle-based large-margin classifiers with regularization by
-the elastic-net or groupwise penalty.
+Multi-category angle-based classifiers with regularization by the
+elastic-net or groupwise penalty.
 }
 \examples{
 library(abclass)
@@ -192,7 +188,7 @@ model <- abclass(
     penalty = "glasso"
 )
 
-pred <- predict(model, test_x, s = 5)
+pred <- predict(model, test_x, selection = 5)
 mean(test_y == pred) # accuracy
 table(test_y, pred)
 }
