@@ -24,7 +24,8 @@ BIC.supclass <- function(object, ...)
         return(NULL)
     }
     k <- apply(object$coefficients, 3L, function(a) {
-        sum(abs(a) > .Machine$double.eps)
+        ## exclude intercept
+        sum(abs(a[-1L, ]) > .Machine$double.eps)
     })
     nobs <- length(object$category$y)
     log(nobs) * k + 2 * nll * nobs
