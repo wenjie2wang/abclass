@@ -313,7 +313,7 @@ nll_mlog <- function(x, y, beta) {
     sum_exp_xb <- rowSums(exp_xb)
     prob <- exp_xb / sum_exp_xb
     lnp <- log(prob[cbind(seq_along(y), y)])
-    - mean(lnp)
+    - sum(lnp)
 }
 
 ## multinomial logistic model with sup-norm penalties

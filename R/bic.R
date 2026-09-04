@@ -28,5 +28,20 @@ BIC.supclass <- function(object, ...)
         sum(abs(a[-1L, ]) > .Machine$double.eps)
     })
     nobs <- length(object$category$y)
-    log(nobs) * k + 2 * nll * nobs
+    log(nobs) * k + 2 * nll
+}
+
+##' @importFrom stats BIC
+##' @export
+BIC.abclass <- function(object, ...)
+{
+    nll <- object$optimization$loss
+    if (is.null(nll)) {
+        return(NULL)
+    }
+    k <- apply(object$coefficients, 3L, function(a) {
+        sum(abs(a) > .Machine$double.eps)
+    })
+    nobs <- length(object$category$y)
+    log(nobs) * k + 2 * nll
 }
